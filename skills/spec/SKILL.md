@@ -1,11 +1,22 @@
 ---
-name: vertical-slicing
-description: Story-first implementation strategy for Clean Architecture that delivers complete, working features incrementally through all architectural layers, avoiding horizontal layer building
+name: spec
+description: Plan and implement features using vertical slicing - a story-first strategy that delivers complete functionality through all architectural layers. Successor to spec.plan and spec.implement commands with enhanced project management integration for Linear, Jira, or manual workflows.
 ---
 
-# Vertical Slicing Implementation Strategy
+# Spec: Vertical Slicing Implementation Strategy
 
-This skill provides guidance on implementing features using vertical slicing - a story-first approach that delivers complete, working features incrementally.
+This skill (formerly `vertical-slicing`, successor to `/spec.plan` and `/spec.implement` commands) provides comprehensive guidance on planning and implementing features using vertical slicing - a story-first approach that delivers complete, working features incrementally. It combines philosophy with practical workflows for planning and implementation.
+
+## When to Use This Skill
+
+Activate this skill when:
+- Planning new features with vertical slicing approach
+- Implementing user stories end-to-end
+- Working with project management tools (Linear, Jira, or manual)
+- Converting from horizontal to vertical architecture
+- Breaking down complex features into deployable slices
+- Following Clean Architecture with story-first development
+- Need the functionality of former `/spec.plan` or `/spec.implement` commands
 
 ## Core Concept
 
@@ -234,6 +245,255 @@ def test_create_task_use_case():
 ### Step 5: Deploy
 
 This slice is complete and deployable! Users can now create tasks.
+
+## Planning Workflow
+
+When planning a feature implementation using vertical slicing, follow this structured approach:
+
+### 1. Identify the Work Item
+
+Start with your project management work item (Linear issue, Jira ticket, or manual specification):
+- Review title and description
+- Understand acceptance criteria
+- Note priority and constraints
+- Identify dependencies or blockers
+
+### 2. Analyze Current State
+
+Understand the existing codebase:
+```bash
+# Review code structure
+tree src/ -L 3
+
+# Search for related existing code
+grep -r "relevant_term" src/
+
+# Check for existing tests
+# Language-specific test discovery
+```
+
+### 3. Create Vertical Slice Plan
+
+For each user story, identify the minimal slice through all layers:
+
+#### Vertical Slice Template
+
+```markdown
+## Story: [ID] User story description
+
+### Vertical Slice:
+1. **Domain Layer**
+   - [ ] Entities/models needed (minimal properties)
+   - [ ] Validation rules
+   - [ ] Business logic
+
+2. **Application Layer**
+   - [ ] Use case implementation
+   - [ ] Request/Response models
+   - [ ] Business orchestration
+
+3. **Infrastructure Layer**
+   - [ ] Repository methods needed
+   - [ ] External service integrations
+   - [ ] Database changes (if needed)
+
+4. **Framework Layer**
+   - [ ] API endpoints or UI components
+   - [ ] Input validation
+   - [ ] Response formatting
+
+5. **Tests**
+   - [ ] Unit tests for domain logic
+   - [ ] Unit tests for use cases
+   - [ ] Integration tests for infrastructure
+   - [ ] E2E tests for complete flow
+
+### Dependencies:
+- List any prerequisites or blockers
+
+### Risk Assessment:
+- Complexity level
+- Technical unknowns
+- External dependencies
+```
+
+### 4. Break Down into Tasks
+
+Prioritize work using P1/P2/P3 classification:
+
+```markdown
+## Tasks for [Story ID]:
+
+### P1 - Must Have (for story completion)
+- [ ] Core domain entity with required fields
+- [ ] Primary use case implementation
+- [ ] Essential repository methods
+- [ ] Main API endpoint
+- [ ] Critical path tests
+
+### P2 - Should Have (improvements)
+- [ ] Additional validation
+- [ ] Enhanced error handling
+- [ ] Comprehensive test coverage
+- [ ] Performance optimizations
+
+### P3 - Nice to Have (polish)
+- [ ] Additional logging
+- [ ] Extended documentation
+- [ ] UI enhancements
+- [ ] Analytics integration
+```
+
+### 5. Document Technical Decisions
+
+Record important choices for future reference:
+
+```markdown
+## Technical Decisions:
+
+### Approach:
+- Why vertical slicing for this feature
+- Key architectural patterns used
+- Trade-offs considered
+
+### Patterns:
+- Repository pattern for data access
+- Use case pattern for business logic
+- Result pattern for error handling
+
+### Simplifications:
+- What we're explicitly NOT building yet
+- YAGNI decisions made
+- Future extension points
+```
+
+### 6. Create Planning Document
+
+Save your plan for team visibility and future reference:
+
+```markdown
+# [ID]: [Feature Title]
+
+## Story
+As a [user type], I want [capability] so that [benefit].
+
+## Acceptance Criteria
+- [ ] Criterion 1
+- [ ] Criterion 2
+- [ ] Criterion 3
+
+## Implementation Plan
+[Vertical slice details from template above]
+
+## Tasks
+[P1/P2/P3 breakdown]
+
+## Technical Decisions
+[Key decisions and rationale]
+
+## Testing Strategy
+- Unit tests: [approach]
+- Integration tests: [approach]
+- E2E tests: [approach]
+
+## Definition of Done
+- [ ] Code complete
+- [ ] All tests passing
+- [ ] Code review approved
+- [ ] Documentation updated
+- [ ] Quality checks passed
+```
+
+## Implementation Workflow
+
+After planning, follow this structured implementation approach:
+
+### 1. Review the Plan
+
+Before coding:
+- Review planning document if created
+- Understand the vertical slice scope
+- Check for any updates to requirements
+- Confirm technical decisions
+
+### 2. Implement Bottom-Up
+
+While we plan top-down (user story → layers), we implement bottom-up (domain → framework):
+
+#### Why Bottom-Up?
+- Domain logic is independent and testable
+- Each layer depends only on layers below
+- Errors caught early in foundational layers
+- Natural test-driven development flow
+
+#### Implementation Order:
+
+1. **Domain Layer First**
+   - Create minimal entities
+   - Add validation rules
+   - Implement business logic
+   - Write unit tests
+
+2. **Infrastructure Layer Second**
+   - Create repository interfaces
+   - Implement data access
+   - Add external integrations
+   - Write integration tests
+
+3. **Application Layer Third**
+   - Create use cases
+   - Define request/response models
+   - Orchestrate domain and infrastructure
+   - Write unit tests
+
+4. **Framework Layer Last**
+   - Create API endpoints or UI
+   - Add input validation
+   - Handle responses
+   - Write E2E tests
+
+### 3. Quality Checkpoints
+
+After implementing each layer:
+
+```markdown
+## Layer Completion Checklist:
+- [ ] Code implements planned functionality
+- [ ] Tests written and passing
+- [ ] No quality tool warnings
+- [ ] Code follows project patterns
+- [ ] Changes are atomic and focused
+```
+
+Run quality checks:
+- Linting and formatting
+- Type checking
+- Security scanning
+- Test coverage
+
+### 4. Test the Complete Slice
+
+Verify end-to-end functionality:
+- Run all layer tests
+- Perform manual testing
+- Check edge cases
+- Validate acceptance criteria
+
+### 5. Commit the Vertical Slice
+
+Create atomic commits that represent complete features:
+
+```
+feat(feature-area): implement story description
+
+- Add domain entity with validation
+- Implement use case for business logic
+- Add repository methods for persistence
+- Create API endpoint for user interaction
+- Include comprehensive test coverage
+
+Implements vertical slice for [Story ID]
+```
 
 ## Next Story Pattern
 
@@ -491,11 +751,167 @@ Good vertical slicing shows:
 2. Each API feature is a slice
 3. Don't design entire API surface first
 
+## Project Management Integration (Optional)
+
+This skill supports integration with project management tools to track and update work items throughout the vertical slicing process. Configure once per project for seamless workflow integration.
+
+### Configuration
+
+When first using this skill in a project, you'll be prompted to configure your project management tool preference if not already set.
+
+#### Settings Storage
+
+Configuration is stored in `.claude/settings.json`:
+
+```json
+{
+  "preferences": {
+    "project_management": {
+      "tool": "manual",  // Options: "linear", "jira", or "manual"
+      "update_on_commit": true,
+      "include_time_tracking": false
+    }
+  }
+}
+```
+
+#### First-Time Setup
+
+If no configuration exists, you'll see:
+```
+No project management tool configured for this project.
+Which tool are you using?
+1. Linear (for Linear issues like LIN-123)
+2. Jira (for Jira tickets like PROJ-456)
+3. Manual/Other (default - provides generic instructions)
+
+Your choice will be saved to .claude/settings.json
+```
+
+### Tool-Specific Workflows
+
+#### Linear Workflow
+
+For teams using Linear:
+
+**Issue Format**: `LIN-123`
+
+**Status Values**:
+- `Backlog` → `In Progress` → `In Review` → `Done`
+
+**Planning Phase**:
+1. Reference Linear issue: `LIN-123`
+2. Review issue description and acceptance criteria
+3. Update status to "In Progress"
+4. Add planning document link to issue
+
+**Implementation Phase**:
+1. Reference issue in commits: `feat: implement feature [LIN-123]`
+2. Update Linear with progress comments
+3. Move to "In Review" when code complete
+4. Move to "Done" after deployment
+
+**MCP Integration** (if available):
+- Use `mcp__linear__getIssue` to fetch details
+- Use `mcp__linear__updateIssue` for status updates
+- Use `mcp__linear__createComment` for progress notes
+
+#### Jira Workflow
+
+For teams using Jira:
+
+**Issue Format**: `PROJ-456` (project key varies)
+
+**Status Values**:
+- `To Do` → `In Progress` → `Code Review` → `Testing` → `Done`
+
+**Planning Phase**:
+1. Reference Jira ticket: `PROJ-456`
+2. Review description and acceptance criteria
+3. Transition to "In Progress"
+4. Add planning document as attachment or link
+
+**Implementation Phase**:
+1. Reference ticket in commits: `feat: implement feature [PROJ-456]`
+2. Log work and add comments
+3. Transition through workflow states
+4. Add testing evidence
+
+**MCP Integration** (if available):
+- Use `mcp__jira__getIssue` for ticket details
+- Use `mcp__jira__transitionIssue` for status changes
+- Use `mcp__jira__addComment` for updates
+- Use `mcp__jira__logWork` for time tracking
+
+#### Manual Workflow
+
+For teams using other tools or manual tracking:
+
+**Planning Phase**:
+1. Document work item ID and description
+2. Create planning document in project
+3. Share with team as appropriate
+4. Update tracking system manually
+
+**Implementation Phase**:
+1. Reference work item in commits
+2. Update status in your system
+3. Document completion
+4. Follow team's deployment process
+
+### Integration Points
+
+#### During Planning
+
+```markdown
+## Planning Document Header
+Work Item: [LIN-123 / PROJ-456 / CUSTOM-789]
+Status: Planning → In Progress
+Link: [URL to work item]
+```
+
+#### During Implementation
+
+```bash
+# Commit message format
+git commit -m "feat(area): description [WORK-ITEM-ID]
+
+- Implementation details
+- Testing approach
+- Related to: WORK-ITEM-ID"
+```
+
+#### After Deployment
+
+Update work item with:
+- Deployment confirmation
+- Link to merged PR/commit
+- Any relevant metrics
+- Time spent (if tracking)
+
+### Changing Configuration
+
+To switch project management tools:
+
+1. Edit `.claude/settings.json`
+2. Change `tool` value to "linear", "jira", or "manual"
+3. Save the file
+4. Next execution will use new settings
+
+### Best Practices
+
+1. **Configure Once**: Set up PM tool preference at project start
+2. **Consistent References**: Always include work item IDs
+3. **Regular Updates**: Update status at key milestones
+4. **Link Artifacts**: Connect planning docs, PRs, and deployments
+5. **Time Tracking**: Log effort if your team tracks time
+
 ## Remember
 
 - **YAGNI** - Build only what the current story needs
 - **Ship Early** - Deploy as soon as the slice works
 - **Refactor Continuously** - Clean up as patterns emerge
 - **Stay Vertical** - Resist the urge to build horizontal layers
+- **Track Progress** - Keep stakeholders informed through PM tool updates
 
 Vertical slicing is not just a technique, it's a mindset shift from "building systems" to "delivering value."
