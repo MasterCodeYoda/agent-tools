@@ -5,11 +5,13 @@ description: Guide projects through Clean Architecture patterns with strict laye
 
 # Clean Architecture
 
-A language-agnostic guide for implementing Clean Architecture principles with strict layer boundaries, vertical slicing, and dependency inversion.
+A language-agnostic guide for implementing Clean Architecture principles with strict layer boundaries, vertical slicing,
+and dependency inversion.
 
 ## When to Use This Skill
 
 Activate this skill when:
+
 - Starting a new Clean Architecture project
 - Implementing features with clear layer separation
 - Creating domain entities, value objects, or aggregates
@@ -26,28 +28,28 @@ Activate this skill when:
 Ask yourself these questions in order:
 
 1. **Is it a business rule or core concept?**
-   - YES → **Domain Layer**
-   - Pure business logic, no external dependencies
-   - Examples: Order, Customer, Money, OrderStatus
-   - See: `references/layer-patterns.md#domain`
+    - YES → **Domain Layer**
+    - Pure business logic, no external dependencies
+    - Examples: Order, Customer, Money, OrderStatus
+    - See: `references/layer-patterns.md#domain`
 
 2. **Does it orchestrate business operations?**
-   - YES → **Application Layer**
-   - Coordinates domain objects, defines workflows
-   - Examples: CreateOrderUseCase, ProcessPaymentUseCase
-   - See: `references/layer-patterns.md#application`
+    - YES → **Application Layer**
+    - Coordinates domain objects, defines workflows
+    - Examples: CreateOrderUseCase, ProcessPaymentUseCase
+    - See: `references/layer-patterns.md#application`
 
 3. **Does it connect to external systems?**
-   - YES → **Infrastructure Layer**
-   - Databases, APIs, file systems, email services
-   - Examples: SqlOrderRepository, EmailGateway
-   - See: `references/layer-patterns.md#infrastructure`
+    - YES → **Infrastructure Layer**
+    - Databases, APIs, file systems, email services
+    - Examples: SqlOrderRepository, EmailGateway
+    - See: `references/layer-patterns.md#infrastructure`
 
 4. **Is it a user interface or entry point?**
-   - YES → **Frameworks Layer**
-   - HTTP endpoints, CLI commands, GUI, message handlers
-   - Examples: OrderController, CreateOrderCommand
-   - See: `references/layer-patterns.md#frameworks`
+    - YES → **Frameworks Layer**
+    - HTTP endpoints, CLI commands, GUI, message handlers
+    - Examples: OrderController, CreateOrderCommand
+    - See: `references/layer-patterns.md#frameworks`
 
 ## Core Architectural Rules
 
@@ -61,6 +63,7 @@ Ask yourself these questions in order:
 ```
 
 **This means:**
+
 - Domain knows nothing about outer layers
 - Application knows only about Domain
 - Infrastructure knows about Application and Domain
@@ -73,11 +76,13 @@ Ask yourself these questions in order:
 We combine two orthogonal principles:
 
 **1. Vertical Slicing (WHEN to build)**
+
 - Build ONE user story at a time, end-to-end
 - Complete all layers for that story before moving on
 - Priority-driven: P1 (MVP) → P2 → P3
 
 **2. Layer Sanctity (HOW to build)**
+
 - Maintain strict architectural boundaries
 - Dependencies always flow inward
 - Each layer has specific responsibilities
@@ -107,12 +112,14 @@ Domain ← Application ← Infrastructure ← Framework
 ### Entities vs Value Objects
 
 **Entities:**
+
 - Have unique identity (ID)
 - Mutable state over time
 - Equality by ID
 - Example: Order, Customer, Product
 
 **Value Objects:**
+
 - No identity
 - Immutable
 - Equality by all attributes
@@ -132,6 +139,7 @@ See: `references/core-concepts.md#encapsulation`
 ### Use Cases and Application Services
 
 Each use case should:
+
 - Have single responsibility
 - Define clear Request/Response models
 - Orchestrate domain objects
@@ -139,6 +147,7 @@ Each use case should:
 - Return domain-agnostic responses
 
 Pattern:
+
 ```
 UseCase + Request + Response = Single File
 ```
@@ -150,16 +159,16 @@ See: `references/layer-patterns.md#application-patterns`
 Choose your implementation language for specific patterns, tools, and examples:
 
 - **Python**: `languages/python/guide.md`
-  - Type hints, dataclasses, protocols
-  - Tools: mypy, ruff, pytest
+    - Type hints, dataclasses, protocols
+    - Tools: mypy, ruff, pytest
 
 - **TypeScript**: `languages/typescript/guide.md`
-  - Interfaces, classes, type system
-  - Tools: ESLint, Jest, tsx
+    - Interfaces, classes, type system
+    - Tools: ESLint, Jest, tsx
 
 - **C#**: `languages/csharp/guide.md`
-  - Interfaces, dependency injection
-  - Tools: .NET CLI, xUnit
+    - Interfaces, dependency injection
+    - Tools: .NET CLI, xUnit
 
 - **Other Languages**: See `languages/README.md` for adding support
 
@@ -174,6 +183,7 @@ A complete, evolving example showing Clean Architecture patterns:
 - Frameworks: `example-task-manager/frameworks.md`
 
 The example starts simple (CRUD) and documents how to evolve it to handle:
+
 - Authentication and authorization
 - Complex business rules
 - Event-driven patterns
@@ -186,12 +196,14 @@ The example starts simple (CRUD) and documents how to evolve it to handle:
 Check your implementation with language-specific validators:
 
 **Python:**
+
 ```bash
 python .claude/skills/clean-architecture/languages/python/validators/validate_imports.py
 python .claude/skills/clean-architecture/languages/python/validators/validate_structure.py
 ```
 
 **TypeScript:**
+
 ```bash
 npx tsx .claude/skills/clean-architecture/languages/typescript/validators/validate_imports.ts
 ```
@@ -199,6 +211,7 @@ npx tsx .claude/skills/clean-architecture/languages/typescript/validators/valida
 ### Manual Review Checklist
 
 Before committing code:
+
 - [ ] Dependencies flow inward only
 - [ ] Domain has no external dependencies
 - [ ] Use cases are framework-agnostic
@@ -220,48 +233,53 @@ See: `templates/architecture-review.md`
 ### Workflow: Implementing a New Feature
 
 1. **Understand the requirement**
-   - Identify domain concepts
-   - Define use cases
-   - Plan data flow
+    - Identify domain concepts
+    - Define use cases
+    - Plan data flow
 
 2. **Implement vertically by story**
-   - Start with domain entities
-   - Add application use case
-   - Implement infrastructure
-   - Create framework entry point
-   - Write tests for each layer
+    - Start with domain entities
+    - Add application use case
+    - Implement infrastructure
+    - Create framework entry point
+    - Write tests for each layer
 
 3. **Validate architecture**
-   - Run language-specific validators
-   - Review dependency directions
-   - Check encapsulation
+    - Run language-specific validators
+    - Review dependency directions
+    - Check encapsulation
 
 4. **Checkpoint**
-   - Feature works end-to-end
-   - Tests pass
-   - Architecture intact
+    - Feature works end-to-end
+    - Tests pass
+    - Architecture intact
 
 See: `references/vertical-slicing.md`
 
 ## Common Pitfalls and Solutions
 
 ### Pitfall 1: Framework Logic in Domain
+
 **Problem**: HTTP concerns, database logic in entities
 **Solution**: Keep domain pure, move I/O to outer layers
 
 ### Pitfall 2: Anemic Domain Model
+
 **Problem**: Entities with only getters/setters
 **Solution**: Move behavior into entities, protect invariants
 
 ### Pitfall 3: Use Case Doing Too Much
+
 **Problem**: Business logic in application layer
 **Solution**: Push logic down to domain, orchestrate in application
 
 ### Pitfall 4: Skipping Layers
+
 **Problem**: Controller directly accessing repository
 **Solution**: Always go through use cases
 
 ### Pitfall 5: Shared Mutable State
+
 **Problem**: Entities exposing collections directly
 **Solution**: Return copies, use immutable value objects
 
@@ -272,24 +290,24 @@ See: `references/common-mistakes.md` for more anti-patterns.
 Essential reading for deep understanding:
 
 - **Core Concepts**: `references/core-concepts.md`
-  - Dependency Rule, SOLID principles
-  - Entities, Value Objects, Aggregates
-  - Domain services, Domain events
+    - Dependency Rule, SOLID principles
+    - Entities, Value Objects, Aggregates
+    - Domain services, Domain events
 
 - **Layer Patterns**: `references/layer-patterns.md`
-  - Detailed responsibilities per layer
-  - Common patterns and implementations
-  - Inter-layer communication
+    - Detailed responsibilities per layer
+    - Common patterns and implementations
+    - Inter-layer communication
 
 - **Vertical Slicing**: `references/vertical-slicing.md`
-  - Story-based development workflow
-  - Maintaining boundaries while iterating
-  - Checkpoint-driven development
+    - Story-based development workflow
+    - Maintaining boundaries while iterating
+    - Checkpoint-driven development
 
 - **Implementation Strategy**: `references/implementation-strategy.md`
-  - Combining vertical and horizontal approaches
-  - Priority-driven development
-  - Incremental architecture
+    - Combining vertical and horizontal approaches
+    - Priority-driven development
+    - Incremental architecture
 
 ## Testing Strategies
 
@@ -320,6 +338,7 @@ See: `references/testing-strategies.md`
 ## When NOT to Use Clean Architecture
 
 Be pragmatic. Skip Clean Architecture for:
+
 - Simple CRUD apps with no business logic
 - Prototypes and throwaway code
 - Scripts and utilities
@@ -327,6 +346,7 @@ Be pragmatic. Skip Clean Architecture for:
 - Short-lived projects (<3 months)
 
 Use Clean Architecture when:
+
 - Complex business rules exist
 - Multiple teams collaborate
 - Long-term maintenance expected
@@ -345,6 +365,7 @@ Use Clean Architecture when:
 ### Extended Resources
 
 For deeper learning (loaded on request only):
+
 - Academic papers: `references/external-resources.md#papers`
 - Books and articles: `references/external-resources.md#books`
 - Video courses: `references/external-resources.md#courses`
@@ -353,6 +374,7 @@ For deeper learning (loaded on request only):
 ## Contributing
 
 To add support for a new language:
+
 1. Read `languages/README.md`
 2. Create `languages/{language}/guide.md`
 3. Add examples following existing patterns
@@ -362,12 +384,14 @@ To add support for a new language:
 ## Summary
 
 Clean Architecture enables:
+
 - **Independence**: Change frameworks without touching business logic
 - **Testability**: Test each layer in isolation
 - **Maintainability**: Clear boundaries reduce complexity
 - **Flexibility**: Adapt to changing requirements
 
 Remember:
+
 - Dependencies flow inward
 - Build vertically, maintain horizontally
 - Start simple, evolve as needed
