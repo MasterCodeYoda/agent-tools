@@ -5,11 +5,15 @@ description: Plan and implement features using vertical slicing - a story-first 
 
 # Spec: Vertical Slicing Implementation Strategy
 
-This skill (formerly `vertical-slicing`, successor to `/spec.plan` and `/spec.implement` commands) provides comprehensive guidance on planning and implementing features using vertical slicing - a story-first approach that delivers complete, working features incrementally. It combines philosophy with practical workflows for planning and implementation.
+This skill (formerly `vertical-slicing`, successor to `/spec.plan` and `/spec.implement` commands) provides
+comprehensive guidance on planning and implementing features using vertical slicing - a story-first approach that
+delivers complete, working features incrementally. It combines philosophy with practical workflows for planning and
+implementation.
 
 ## When to Use This Skill
 
 Activate this skill when:
+
 - Planning new features with vertical slicing approach
 - Implementing user stories end-to-end
 - Working with project management tools (Linear, Jira, or manual)
@@ -20,13 +24,15 @@ Activate this skill when:
 
 ## Core Concept
 
-Vertical slicing means implementing features end-to-end through all architectural layers, rather than building layers horizontally. Each slice represents a complete, deployable feature that delivers user value.
+Vertical slicing means implementing features end-to-end through all architectural layers, rather than building layers
+horizontally. Each slice represents a complete, deployable feature that delivers user value.
 
 ## Philosophy
 
 > "Build by story, not by layer"
 
 Traditional (Horizontal) Approach ❌:
+
 1. Build all domain entities
 2. Build all repositories
 3. Build all use cases
@@ -35,6 +41,7 @@ Traditional (Horizontal) Approach ❌:
 6. Integrate and test
 
 Vertical Slicing Approach ✅:
+
 1. Pick highest priority user story
 2. Build ONLY what's needed for that story through ALL layers
 3. Deploy it
@@ -58,6 +65,7 @@ Start with a user story that provides clear value:
 Story: "As a user, I want to create a task so that I can track my work"
 
 Acceptance Criteria:
+
 - User can enter task title and description
 - Task is saved to the database
 - User sees confirmation of creation
@@ -94,6 +102,7 @@ from dataclasses import dataclass
 from datetime import datetime
 from typing import Optional
 
+
 @dataclass
 class Task:
     """Task entity - only what's needed for creation story."""
@@ -110,6 +119,7 @@ class Task:
 # infrastructure/repositories/task_repository.py
 from typing import Protocol
 from domain.models.task import Task
+
 
 class TaskRepository(Protocol):
     """Repository for task persistence."""
@@ -140,6 +150,7 @@ import uuid
 
 from domain.models.task import Task
 from infrastructure.repositories.task_repository import TaskRepository
+
 
 @dataclass
 class CreateTaskRequest:
@@ -195,6 +206,7 @@ from application.tasks.create import (
 )
 
 router = APIRouter(prefix="/tasks", tags=["tasks"])
+
 
 class CreateTaskApiRequest(BaseModel):
     """API model for task creation."""
@@ -253,6 +265,7 @@ When planning a feature implementation using vertical slicing, follow this struc
 ### 1. Identify the Work Item
 
 Start with your project management work item (Linear issue, Jira ticket, or manual specification):
+
 - Review title and description
 - Understand acceptance criteria
 - Note priority and constraints
@@ -261,6 +274,7 @@ Start with your project management work item (Linear issue, Jira ticket, or manu
 ### 2. Analyze Current State
 
 Understand the existing codebase:
+
 ```bash
 # Review code structure
 tree src/ -L 3
@@ -282,36 +296,39 @@ For each user story, identify the minimal slice through all layers:
 ## Story: [ID] User story description
 
 ### Vertical Slice:
+
 1. **Domain Layer**
-   - [ ] Entities/models needed (minimal properties)
-   - [ ] Validation rules
-   - [ ] Business logic
+    - [ ] Entities/models needed (minimal properties)
+    - [ ] Validation rules
+    - [ ] Business logic
 
 2. **Application Layer**
-   - [ ] Use case implementation
-   - [ ] Request/Response models
-   - [ ] Business orchestration
+    - [ ] Use case implementation
+    - [ ] Request/Response models
+    - [ ] Business orchestration
 
 3. **Infrastructure Layer**
-   - [ ] Repository methods needed
-   - [ ] External service integrations
-   - [ ] Database changes (if needed)
+    - [ ] Repository methods needed
+    - [ ] External service integrations
+    - [ ] Database changes (if needed)
 
 4. **Framework Layer**
-   - [ ] API endpoints or UI components
-   - [ ] Input validation
-   - [ ] Response formatting
+    - [ ] API endpoints or UI components
+    - [ ] Input validation
+    - [ ] Response formatting
 
 5. **Tests**
-   - [ ] Unit tests for domain logic
-   - [ ] Unit tests for use cases
-   - [ ] Integration tests for infrastructure
-   - [ ] E2E tests for complete flow
+    - [ ] Unit tests for domain logic
+    - [ ] Unit tests for use cases
+    - [ ] Integration tests for infrastructure
+    - [ ] E2E tests for complete flow
 
 ### Dependencies:
+
 - List any prerequisites or blockers
 
 ### Risk Assessment:
+
 - Complexity level
 - Technical unknowns
 - External dependencies
@@ -325,6 +342,7 @@ Prioritize work using P1/P2/P3 classification:
 ## Tasks for [Story ID]:
 
 ### P1 - Must Have (for story completion)
+
 - [ ] Core domain entity with required fields
 - [ ] Primary use case implementation
 - [ ] Essential repository methods
@@ -332,12 +350,14 @@ Prioritize work using P1/P2/P3 classification:
 - [ ] Critical path tests
 
 ### P2 - Should Have (improvements)
+
 - [ ] Additional validation
 - [ ] Enhanced error handling
 - [ ] Comprehensive test coverage
 - [ ] Performance optimizations
 
 ### P3 - Nice to Have (polish)
+
 - [ ] Additional logging
 - [ ] Extended documentation
 - [ ] UI enhancements
@@ -352,16 +372,19 @@ Record important choices for future reference:
 ## Technical Decisions:
 
 ### Approach:
+
 - Why vertical slicing for this feature
 - Key architectural patterns used
 - Trade-offs considered
 
 ### Patterns:
+
 - Repository pattern for data access
 - Use case pattern for business logic
 - Result pattern for error handling
 
 ### Simplifications:
+
 - What we're explicitly NOT building yet
 - YAGNI decisions made
 - Future extension points
@@ -375,28 +398,35 @@ Save your plan for team visibility and future reference:
 # [ID]: [Feature Title]
 
 ## Story
+
 As a [user type], I want [capability] so that [benefit].
 
 ## Acceptance Criteria
+
 - [ ] Criterion 1
 - [ ] Criterion 2
 - [ ] Criterion 3
 
 ## Implementation Plan
+
 [Vertical slice details from template above]
 
 ## Tasks
+
 [P1/P2/P3 breakdown]
 
 ## Technical Decisions
+
 [Key decisions and rationale]
 
 ## Testing Strategy
+
 - Unit tests: [approach]
 - Integration tests: [approach]
 - E2E tests: [approach]
 
 ## Definition of Done
+
 - [ ] Code complete
 - [ ] All tests passing
 - [ ] Code review approved
@@ -411,6 +441,7 @@ After planning, follow this structured implementation approach:
 ### 1. Review the Plan
 
 Before coding:
+
 - Review planning document if created
 - Understand the vertical slice scope
 - Check for any updates to requirements
@@ -421,6 +452,7 @@ Before coding:
 While we plan top-down (user story → layers), we implement bottom-up (domain → framework):
 
 #### Why Bottom-Up?
+
 - Domain logic is independent and testable
 - Each layer depends only on layers below
 - Errors caught early in foundational layers
@@ -429,28 +461,28 @@ While we plan top-down (user story → layers), we implement bottom-up (domain �
 #### Implementation Order:
 
 1. **Domain Layer First**
-   - Create minimal entities
-   - Add validation rules
-   - Implement business logic
-   - Write unit tests
+    - Create minimal entities
+    - Add validation rules
+    - Implement business logic
+    - Write unit tests
 
 2. **Infrastructure Layer Second**
-   - Create repository interfaces
-   - Implement data access
-   - Add external integrations
-   - Write integration tests
+    - Create repository interfaces
+    - Implement data access
+    - Add external integrations
+    - Write integration tests
 
 3. **Application Layer Third**
-   - Create use cases
-   - Define request/response models
-   - Orchestrate domain and infrastructure
-   - Write unit tests
+    - Create use cases
+    - Define request/response models
+    - Orchestrate domain and infrastructure
+    - Write unit tests
 
 4. **Framework Layer Last**
-   - Create API endpoints or UI
-   - Add input validation
-   - Handle responses
-   - Write E2E tests
+    - Create API endpoints or UI
+    - Add input validation
+    - Handle responses
+    - Write E2E tests
 
 ### 3. Quality Checkpoints
 
@@ -458,6 +490,7 @@ After implementing each layer:
 
 ```markdown
 ## Layer Completion Checklist:
+
 - [ ] Code implements planned functionality
 - [ ] Tests written and passing
 - [ ] No quality tool warnings
@@ -466,6 +499,7 @@ After implementing each layer:
 ```
 
 Run quality checks:
+
 - Linting and formatting
 - Type checking
 - Security scanning
@@ -474,6 +508,7 @@ Run quality checks:
 ### 4. Test the Complete Slice
 
 Verify end-to-end functionality:
+
 - Run all layer tests
 - Perform manual testing
 - Check edge cases
@@ -519,6 +554,7 @@ class Task:
 # infrastructure/repositories/task_repository.py
 class TaskRepository(Protocol):
     def create(self, task: Task) -> Task: ...
+
     def get(self, task_id: str) -> Optional[Task]: ...  # Added for view story
 ```
 
@@ -530,6 +566,7 @@ class TaskRepository(Protocol):
 class GetTaskRequest:
     task_id: str
 
+
 @dataclass
 class GetTaskResponse:
     id: str
@@ -539,8 +576,9 @@ class GetTaskResponse:
     created_at: datetime
     updated_at: datetime
 
+
 class GetTaskUseCase:
-    # Implementation
+# Implementation
 ```
 
 ## Common Pitfalls
@@ -548,34 +586,42 @@ class GetTaskUseCase:
 ### 1. Over-Engineering the First Slice
 
 ❌ **Wrong**:
+
 ```python
 class Task:
     def __init__(self, title, description, status, priority,
                  assignee, labels, attachments, comments, ...):
-        # Too much for "create task" story!
+# Too much for "create task" story!
 ```
 
 ✅ **Right**:
+
 ```python
 class Task:
     def __init__(self, title, description):
-        # Just what's needed for creation
+# Just what's needed for creation
 ```
 
 ### 2. Building Horizontal Infrastructure
 
 ❌ **Wrong**:
+
 ```python
 class TaskRepository:
     def create(self, task): ...
+
     def update(self, task): ...
+
     def delete(self, task_id): ...
+
     def find_by_status(self, status): ...
+
     def find_by_assignee(self, assignee): ...
     # Building everything upfront!
 ```
 
 ✅ **Right**:
+
 ```python
 class TaskRepository:
     def create(self, task): ...
@@ -585,22 +631,28 @@ class TaskRepository:
 ### 3. Premature Abstraction
 
 ❌ **Wrong**:
+
 ```python
 class BaseEntity:
-    # Complex base class for all entities
+
+
+# Complex base class for all entities
 
 class AuditableEntity(BaseEntity):
-    # Another layer of abstraction
+
+
+# Another layer of abstraction
 
 class Task(AuditableEntity):
-    # Overly complex for simple task creation
+# Overly complex for simple task creation
 ```
 
 ✅ **Right**:
+
 ```python
 @dataclass
 class Task:
-    # Simple, direct implementation
+# Simple, direct implementation
 ```
 
 ## Story Prioritization
@@ -613,6 +665,7 @@ Order stories by:
 4. **Dependencies** - What unblocks other stories?
 
 Example Story Order:
+
 1. Create task (P1 - Core functionality)
 2. List tasks (P1 - Users need to see what they created)
 3. Complete task (P1 - Core workflow)
@@ -627,14 +680,16 @@ As you add slices, refactor continuously:
 ### Extract Common Patterns
 
 After 3+ similar use cases:
+
 ```python
 # Before: Duplicate code in each use case
 class CreateTaskUseCase:
     def execute(self, request):
-        # Validation
-        # Business logic
-        # Persistence
-        # Response mapping
+# Validation
+# Business logic
+# Persistence
+# Response mapping
+
 
 # After: Extract common pattern
 class BaseUseCase[TRequest, TResponse]:
@@ -647,6 +702,7 @@ class BaseUseCase[TRequest, TResponse]:
 ### Consolidate Domain Logic
 
 When patterns emerge:
+
 ```python
 # After several stories reveal business rules
 class Task:
@@ -697,10 +753,10 @@ When multiple developers work on same codebase:
 
 ```python
 # application/tasks/
-├── create.py     # Developer A working on create
-├── update.py     # Developer B working on update
-├── assign.py     # Developer C working on assign
-└── views.py      # Shared view models (coordinate changes)
+├── create.py  # Developer A working on create
+├── update.py  # Developer B working on update
+├── assign.py  # Developer C working on assign
+└── views.py  # Shared view models (coordinate changes)
 ```
 
 ## Migration Strategy
@@ -708,14 +764,17 @@ When multiple developers work on same codebase:
 Converting existing horizontal architecture:
 
 ### Phase 1: Stop the Bleeding
+
 - New features use vertical slicing
 - Existing code remains as-is
 
 ### Phase 2: Incremental Migration
+
 - When touching existing code, refactor to vertical slices
 - One story at a time
 
 ### Phase 3: Cleanup
+
 - Remove unused horizontal layers
 - Consolidate duplicate code
 
@@ -729,6 +788,7 @@ Track success of vertical slicing:
 4. **Defect Rate** - Bugs per story
 
 Good vertical slicing shows:
+
 - ⬇️ Lead time (faster delivery)
 - ⬆️ Deployment frequency (more releases)
 - ⬆️ Story completion (more value delivered)
@@ -737,27 +797,32 @@ Good vertical slicing shows:
 ## Examples by Domain
 
 ### E-Commerce
+
 1. View product → Add to cart → Checkout → Payment
 2. Each step is a complete vertical slice
 3. Don't build entire product catalog first
 
 ### SaaS Platform
+
 1. User registration → Login → Create workspace → Invite team
 2. Each feature is independently valuable
 3. Don't build complete user management first
 
 ### API Development
+
 1. Single endpoint → Authentication → Rate limiting → Webhooks
 2. Each API feature is a slice
 3. Don't design entire API surface first
 
 ## Project Management Integration (Optional)
 
-This skill supports integration with project management tools to track and update work items throughout the vertical slicing process. Configure once per project for seamless workflow integration.
+This skill supports integration with project management tools to track and update work items throughout the vertical
+slicing process. Configure once per project for seamless workflow integration.
 
 ### Configuration
 
-When first using this skill in a project, you'll be prompted to configure your project management tool preference if not already set.
+When first using this skill in a project, you'll be prompted to configure your project management tool preference if not
+already set.
 
 #### Settings Storage
 
@@ -767,7 +832,8 @@ Configuration is stored in `.claude/settings.json`:
 {
   "preferences": {
     "project_management": {
-      "tool": "manual",  // Options: "linear", "jira", or "manual"
+      "tool": "manual",
+      // Options: "linear", "jira", or "manual"
       "update_on_commit": true,
       "include_time_tracking": false
     }
@@ -778,6 +844,7 @@ Configuration is stored in `.claude/settings.json`:
 #### First-Time Setup
 
 If no configuration exists, you'll see:
+
 ```
 No project management tool configured for this project.
 Which tool are you using?
@@ -797,21 +864,25 @@ For teams using Linear:
 **Issue Format**: `LIN-123`
 
 **Status Values**:
+
 - `Backlog` → `In Progress` → `In Review` → `Done`
 
 **Planning Phase**:
+
 1. Reference Linear issue: `LIN-123`
 2. Review issue description and acceptance criteria
 3. Update status to "In Progress"
 4. Add planning document link to issue
 
 **Implementation Phase**:
+
 1. Reference issue in commits: `feat: implement feature [LIN-123]`
 2. Update Linear with progress comments
 3. Move to "In Review" when code complete
 4. Move to "Done" after deployment
 
 **MCP Integration** (if available):
+
 - Use `mcp__linear__getIssue` to fetch details
 - Use `mcp__linear__updateIssue` for status updates
 - Use `mcp__linear__createComment` for progress notes
@@ -823,21 +894,25 @@ For teams using Jira:
 **Issue Format**: `PROJ-456` (project key varies)
 
 **Status Values**:
+
 - `To Do` → `In Progress` → `Code Review` → `Testing` → `Done`
 
 **Planning Phase**:
+
 1. Reference Jira ticket: `PROJ-456`
 2. Review description and acceptance criteria
 3. Transition to "In Progress"
 4. Add planning document as attachment or link
 
 **Implementation Phase**:
+
 1. Reference ticket in commits: `feat: implement feature [PROJ-456]`
 2. Log work and add comments
 3. Transition through workflow states
 4. Add testing evidence
 
 **MCP Integration** (if available):
+
 - Use `mcp__jira__getIssue` for ticket details
 - Use `mcp__jira__transitionIssue` for status changes
 - Use `mcp__jira__addComment` for updates
@@ -848,12 +923,14 @@ For teams using Jira:
 For teams using other tools or manual tracking:
 
 **Planning Phase**:
+
 1. Document work item ID and description
 2. Create planning document in project
 3. Share with team as appropriate
 4. Update tracking system manually
 
 **Implementation Phase**:
+
 1. Reference work item in commits
 2. Update status in your system
 3. Document completion
@@ -865,6 +942,7 @@ For teams using other tools or manual tracking:
 
 ```markdown
 ## Planning Document Header
+
 Work Item: [LIN-123 / PROJ-456 / CUSTOM-789]
 Status: Planning → In Progress
 Link: [URL to work item]
@@ -884,6 +962,7 @@ git commit -m "feat(area): description [WORK-ITEM-ID]
 #### After Deployment
 
 Update work item with:
+
 - Deployment confirmation
 - Link to merged PR/commit
 - Any relevant metrics

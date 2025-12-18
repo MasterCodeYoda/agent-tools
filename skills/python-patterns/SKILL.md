@@ -707,6 +707,37 @@ def process_entity[T](repo: Repository[T], entity_id: str) -> Optional[T]:
     return repo.get(entity_id)
 ```
 
+### Method Bodies: Docstring is Sufficient
+
+When a method has a docstring, no additional body statement is needed. The docstring serves as the method body.
+
+```python
+# WRONG - Unnecessary ellipsis with docstring
+class Repository(Protocol):
+    def get(self, id: str) -> Optional[T]:
+        """Retrieve entity by ID."""
+        ...  # Unnecessary!
+
+# WRONG - Unnecessary pass with docstring
+class Repository(Protocol):
+    def get(self, id: str) -> Optional[T]:
+        """Retrieve entity by ID."""
+        pass  # Also unnecessary!
+
+# RIGHT - Docstring alone is sufficient
+class Repository(Protocol):
+    def get(self, id: str) -> Optional[T]:
+        """Retrieve entity by ID."""
+        # The docstring IS the method body - nothing else needed
+
+# Only use ellipsis when there's NO docstring
+class Repository(Protocol):
+    def get(self, id: str) -> Optional[T]: ...
+    def save(self, entity: T) -> None: ...
+```
+
+This applies to **both** `Protocol` and `ABC` abstract methods. A comprehensive docstring makes `...` or `pass` redundant and clutters the code.
+
 ## Dataclasses vs Pydantic
 
 Choose the right tool:
