@@ -955,6 +955,508 @@ async def create_user(
     return UserResponse.from_domain(user)
 ```
 
+## Draft/Submission Patterns
+
+Multi-step forms often require backend support for saving partial data (drafts) before final submission. These patterns handle the draft lifecycle with optimistic locking and state management.
+
+### Draft Entity Pattern
+
+Model drafts as first-class domain entities with lifecycle states:
+
+```python
+from datetime import datetime
+from enum import Enum
+from typing import Optional, Generic, TypeVar
+from pydantic import BaseModel, Field
+
+class DraftStatus(str, Enum):
+    """Draft lifecycle states."""
+    ACTIVE = "active"        # Currently being edited
+    SUBMITTED = "submitted"  # Final submission complete
+    EXPIRED = "expired"      # Abandoned or timed out
+    CANCELLED = "cancelled"  # Explicitly cancelled by user
+
+TData = TypeVar("TData", bound=BaseModel)
+
+class Draft(BaseModel, Generic[TData]):
+    """Generic draft entity for multi-step form data."""
+    id: str
+    user_id: str
+    status: DraftStatus = DraftStatus.ACTIVE
+    data: TData
+    current_step: str
+    completed_steps: list[str] = Field(default_factory=list)
+    version: int = 1  # For optimistic locking
+    created_at: datetime
+    updated_at: datetime
+    expires_at: Optional[datetime] = None
+
+    def is_active(self) -> bool:
+        """Check if draft can still be modified."""
+        if self.status != DraftStatus.ACTIVE:
+            return False
+        if self.expires_at and datetime.utcnow() > self.expires_at:
+            return False
+        return True
+
+    def mark_step_complete(self, step_id: str) -> None:
+        """Mark a step as completed."""
+        if step_id not in self.completed_steps:
+            self.completed_steps.append(step_id)
+        self.updated_at = datetime.utcnow()
+
+    def can_submit(self, required_steps: list[str]) -> bool:
+        """Check if all required steps are complete."""
+        return all(step in self.completed_steps for step in required_steps)
+```
+
+### Draft Repository Pattern
+
+Abstract draft persistence with optimistic locking:
+
+```python
+from abc import ABC, abstractmethod
+from typing import Optional, Generic, TypeVar
+
+class DraftRepository(ABC, Generic[TData]):
+    """Repository interface for draft persistence."""
+
+    @abstractmethod
+    async def create(self, draft: Draft[TData]) -> Draft[TData]:
+        """Create a new draft."""
+
+    @abstractmethod
+    async def get(self, draft_id: str, user_id: str) -> Optional[Draft[TData]]:
+        """Retrieve a draft by ID and user."""
+
+    @abstractmethod
+    async def update(
+        self,
+        draft: Draft[TData],
+        expected_version: int
+    ) -> Draft[TData]:
+        """
+        Update draft with optimistic locking.
+
+        Raises:
+            ConcurrentModificationError: If version mismatch
+        """
+
+    @abstractmethod
+    async def delete(self, draft_id: str, user_id: str) -> bool:
+        """Delete a draft. Returns True if deleted."""
+
+    @abstractmethod
+    async def find_active_by_user(
+        self,
+        user_id: str,
+        draft_type: str
+    ) -> list[Draft[TData]]:
+        """Find all active drafts for a user."""
+
+
+class ConcurrentModificationError(Exception):
+    """Raised when draft was modified by another request."""
+    def __init__(self, draft_id: str, expected: int, actual: int):
+        self.draft_id = draft_id
+        self.expected_version = expected
+        self.actual_version = actual
+        super().__init__(
+            f"Draft {draft_id} was modified. "
+            f"Expected version {expected}, found {actual}"
+        )
+```
+
+### Draft Use Cases
+
+Application layer use cases for draft management:
+
+```python
+from dataclasses import dataclass
+from typing import TypeVar, Generic
+
+TData = TypeVar("TData", bound=BaseModel)
+
+@dataclass
+class SaveDraftRequest(Generic[TData]):
+    """Request to save draft progress."""
+    draft_id: Optional[str]
+    user_id: str
+    data: TData
+    current_step: str
+    completed_steps: list[str]
+    version: Optional[int] = None  # None for new drafts
+
+@dataclass
+class SaveDraftResponse:
+    """Response after saving draft."""
+    draft_id: str
+    version: int
+    saved_at: datetime
+
+class SaveDraftUseCase(Generic[TData]):
+    """Save or update a draft with optimistic locking."""
+
+    def __init__(
+        self,
+        repository: DraftRepository[TData],
+        id_generator: Callable[[], str],
+    ):
+        self._repository = repository
+        self._generate_id = id_generator
+
+    async def execute(self, request: SaveDraftRequest[TData]) -> SaveDraftResponse:
+        now = datetime.utcnow()
+
+        if request.draft_id is None:
+            # Create new draft
+            draft = Draft[TData](
+                id=self._generate_id(),
+                user_id=request.user_id,
+                data=request.data,
+                current_step=request.current_step,
+                completed_steps=request.completed_steps,
+                created_at=now,
+                updated_at=now,
+            )
+            saved = await self._repository.create(draft)
+        else:
+            # Update existing draft
+            existing = await self._repository.get(request.draft_id, request.user_id)
+
+            if existing is None:
+                raise DraftNotFoundError(request.draft_id)
+
+            if not existing.is_active():
+                raise DraftNotActiveError(request.draft_id, existing.status)
+
+            # Update fields
+            existing.data = request.data
+            existing.current_step = request.current_step
+            existing.completed_steps = request.completed_steps
+            existing.updated_at = now
+
+            # Optimistic locking - will raise if version mismatch
+            saved = await self._repository.update(
+                existing,
+                expected_version=request.version or existing.version
+            )
+
+        return SaveDraftResponse(
+            draft_id=saved.id,
+            version=saved.version,
+            saved_at=saved.updated_at,
+        )
+
+
+@dataclass
+class SubmitDraftRequest:
+    """Request to submit a completed draft."""
+    draft_id: str
+    user_id: str
+    version: int
+
+class SubmitDraftUseCase(Generic[TData]):
+    """Finalize and submit a draft."""
+
+    def __init__(
+        self,
+        repository: DraftRepository[TData],
+        required_steps: list[str],
+        on_submit: Callable[[Draft[TData]], Awaitable[None]],
+    ):
+        self._repository = repository
+        self._required_steps = required_steps
+        self._on_submit = on_submit
+
+    async def execute(self, request: SubmitDraftRequest) -> None:
+        draft = await self._repository.get(request.draft_id, request.user_id)
+
+        if draft is None:
+            raise DraftNotFoundError(request.draft_id)
+
+        if not draft.is_active():
+            raise DraftNotActiveError(request.draft_id, draft.status)
+
+        if not draft.can_submit(self._required_steps):
+            missing = [s for s in self._required_steps if s not in draft.completed_steps]
+            raise IncompleteSubmissionError(request.draft_id, missing)
+
+        # Process the submission (domain-specific logic)
+        await self._on_submit(draft)
+
+        # Mark as submitted
+        draft.status = DraftStatus.SUBMITTED
+        draft.updated_at = datetime.utcnow()
+
+        await self._repository.update(draft, expected_version=request.version)
+```
+
+### Draft API Endpoints
+
+FastAPI routes for draft management:
+
+```python
+from fastapi import APIRouter, Depends, HTTPException, status
+from typing import Annotated
+
+router = APIRouter(prefix="/drafts", tags=["drafts"])
+
+# Request/Response models for API layer
+class SaveDraftApiRequest(BaseModel):
+    """API request for saving draft."""
+    data: dict  # Partial form data
+    current_step: str
+    completed_steps: list[str]
+    version: Optional[int] = None
+
+class DraftApiResponse(BaseModel):
+    """API response for draft operations."""
+    draft_id: str
+    version: int
+    saved_at: datetime
+    status: DraftStatus
+
+class ConflictErrorResponse(BaseModel):
+    """Response for concurrent modification conflicts."""
+    error: str = "conflict"
+    message: str
+    current_version: int
+
+
+@router.post(
+    "/{draft_type}",
+    response_model=DraftApiResponse,
+    status_code=status.HTTP_201_CREATED,
+)
+async def create_draft(
+    draft_type: str,
+    request: SaveDraftApiRequest,
+    user: Annotated[User, Depends(get_current_user)],
+    use_case: Annotated[SaveDraftUseCase, Depends(get_save_draft_use_case)],
+) -> DraftApiResponse:
+    """Create a new draft."""
+    result = await use_case.execute(
+        SaveDraftRequest(
+            draft_id=None,
+            user_id=user.id,
+            data=request.data,
+            current_step=request.current_step,
+            completed_steps=request.completed_steps,
+        )
+    )
+    return DraftApiResponse(
+        draft_id=result.draft_id,
+        version=result.version,
+        saved_at=result.saved_at,
+        status=DraftStatus.ACTIVE,
+    )
+
+
+@router.put(
+    "/{draft_type}/{draft_id}",
+    response_model=DraftApiResponse,
+    responses={
+        409: {"model": ConflictErrorResponse},
+    },
+)
+async def update_draft(
+    draft_type: str,
+    draft_id: str,
+    request: SaveDraftApiRequest,
+    user: Annotated[User, Depends(get_current_user)],
+    use_case: Annotated[SaveDraftUseCase, Depends(get_save_draft_use_case)],
+) -> DraftApiResponse:
+    """Update an existing draft with optimistic locking."""
+    try:
+        result = await use_case.execute(
+            SaveDraftRequest(
+                draft_id=draft_id,
+                user_id=user.id,
+                data=request.data,
+                current_step=request.current_step,
+                completed_steps=request.completed_steps,
+                version=request.version,
+            )
+        )
+        return DraftApiResponse(
+            draft_id=result.draft_id,
+            version=result.version,
+            saved_at=result.saved_at,
+            status=DraftStatus.ACTIVE,
+        )
+    except ConcurrentModificationError as e:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail={
+                "error": "conflict",
+                "message": "Draft was modified by another request. Please refresh.",
+                "current_version": e.actual_version,
+            },
+        )
+
+
+@router.post(
+    "/{draft_type}/{draft_id}/submit",
+    status_code=status.HTTP_204_NO_CONTENT,
+)
+async def submit_draft(
+    draft_type: str,
+    draft_id: str,
+    version: int,
+    user: Annotated[User, Depends(get_current_user)],
+    use_case: Annotated[SubmitDraftUseCase, Depends(get_submit_draft_use_case)],
+) -> None:
+    """Submit a completed draft."""
+    try:
+        await use_case.execute(
+            SubmitDraftRequest(
+                draft_id=draft_id,
+                user_id=user.id,
+                version=version,
+            )
+        )
+    except IncompleteSubmissionError as e:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail={
+                "error": "incomplete",
+                "message": "Cannot submit incomplete draft",
+                "missing_steps": e.missing_steps,
+            },
+        )
+
+
+@router.get(
+    "/{draft_type}/{draft_id}",
+    response_model=DraftDetailResponse,
+)
+async def get_draft(
+    draft_type: str,
+    draft_id: str,
+    user: Annotated[User, Depends(get_current_user)],
+    repository: Annotated[DraftRepository, Depends(get_draft_repository)],
+) -> DraftDetailResponse:
+    """Retrieve a draft with its current data."""
+    draft = await repository.get(draft_id, user.id)
+
+    if draft is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Draft not found",
+        )
+
+    return DraftDetailResponse.from_domain(draft)
+```
+
+### Draft Expiration Pattern
+
+Background task to expire abandoned drafts:
+
+```python
+from datetime import timedelta
+import asyncio
+
+class DraftExpirationService:
+    """Service to expire abandoned drafts."""
+
+    def __init__(
+        self,
+        repository: DraftRepository,
+        expiration_hours: int = 24,
+    ):
+        self._repository = repository
+        self._expiration_delta = timedelta(hours=expiration_hours)
+
+    async def expire_stale_drafts(self) -> int:
+        """
+        Mark stale drafts as expired.
+
+        Returns count of expired drafts.
+        """
+        cutoff = datetime.utcnow() - self._expiration_delta
+        expired_count = await self._repository.expire_before(cutoff)
+        return expired_count
+
+
+# Background task runner
+async def run_draft_expiration(service: DraftExpirationService) -> None:
+    """Run draft expiration on a schedule."""
+    while True:
+        try:
+            count = await service.expire_stale_drafts()
+            if count > 0:
+                logger.info(f"Expired {count} stale drafts")
+        except Exception as e:
+            logger.error(f"Draft expiration failed: {e}")
+
+        # Run every hour
+        await asyncio.sleep(3600)
+```
+
+### Auto-Save Pattern (Backend Support)
+
+Debounced auto-save with version tracking from the inklings reference:
+
+```python
+from datetime import datetime
+from typing import Optional
+
+class AutoSaveRequest(BaseModel):
+    """Request for auto-save (partial updates)."""
+    draft_id: str
+    data: dict  # Partial data to merge
+    version: int
+
+class AutoSaveResponse(BaseModel):
+    """Response with new version for next save."""
+    version: int
+    saved_at: datetime
+
+class AutoSaveUseCase:
+    """
+    Handle auto-save requests with version tracking.
+
+    Merges partial data updates to support debounced saves
+    from the frontend.
+    """
+
+    def __init__(self, repository: DraftRepository):
+        self._repository = repository
+
+    async def execute(
+        self,
+        request: AutoSaveRequest,
+        user_id: str,
+    ) -> AutoSaveResponse:
+        draft = await self._repository.get(request.draft_id, user_id)
+
+        if draft is None:
+            raise DraftNotFoundError(request.draft_id)
+
+        if not draft.is_active():
+            raise DraftNotActiveError(request.draft_id, draft.status)
+
+        # Merge partial data with existing data
+        merged_data = {**draft.data.model_dump(), **request.data}
+        draft.data = type(draft.data)(**merged_data)
+        draft.updated_at = datetime.utcnow()
+
+        try:
+            saved = await self._repository.update(
+                draft,
+                expected_version=request.version
+            )
+            return AutoSaveResponse(
+                version=saved.version,
+                saved_at=saved.updated_at,
+            )
+        except ConcurrentModificationError:
+            # For auto-save, we can optionally force-save or return the conflict
+            # This depends on your UX requirements
+            raise
+```
+
 ## CLI Patterns with Typer
 
 ```python

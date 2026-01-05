@@ -269,6 +269,422 @@ export function useAuth(): AuthContextValue {
 }
 ```
 
+## SSR/Hybrid Rendering Patterns
+
+Modern React frameworks support hybrid rendering where some components run on the server (Server Components) and others run in the browser (Client Components). These patterns help you make the right decisions about where code should execute.
+
+### Server vs Client Component Decision
+
+Use this decision tree to determine where a component should render:
+
+```typescript
+/*
+ * SERVER COMPONENT (default) when:
+ * - Fetching data from databases or APIs
+ * - Accessing backend resources directly
+ * - Keeping sensitive data on the server (API keys, tokens)
+ * - Large dependencies that shouldn't ship to client
+ * - No interactivity needed (display only)
+ *
+ * CLIENT COMPONENT when:
+ * - Using React hooks (useState, useEffect, useContext, etc.)
+ * - Adding event handlers (onClick, onChange, etc.)
+ * - Using browser-only APIs (window, document, localStorage)
+ * - Using class components with lifecycle methods
+ * - Relying on custom hooks with state or effects
+ */
+
+// Server Component - fetches data, no interactivity
+async function ProductList({ categoryId }: { categoryId: string }) {
+  // Can fetch directly - runs on server
+  const products = await fetchProducts(categoryId);
+
+  return (
+    <ul>
+      {products.map((product) => (
+        <ProductCard key={product.id} product={product} />
+      ))}
+    </ul>
+  );
+}
+
+// Client Component - has interactivity
+'use client'; // Framework-specific directive
+
+import { useState } from 'react';
+
+function AddToCartButton({ productId }: { productId: string }) {
+  const [isAdding, setIsAdding] = useState(false);
+
+  const handleClick = async () => {
+    setIsAdding(true);
+    await addToCart(productId);
+    setIsAdding(false);
+  };
+
+  return (
+    <button onClick={handleClick} disabled={isAdding}>
+      {isAdding ? 'Adding...' : 'Add to Cart'}
+    </button>
+  );
+}
+```
+
+### Composition Patterns for Hybrid Rendering
+
+The key principle: Server Components can render Client Components, but Client Components cannot import Server Components. Use composition to work around this limitation.
+
+```typescript
+// WRONG - Client Component importing Server Component
+'use client';
+import { ServerDataDisplay } from './ServerDataDisplay'; // Error!
+
+function ClientWrapper() {
+  return <ServerDataDisplay />;
+}
+
+// RIGHT - Pass Server Component as children (slots pattern)
+// layout.tsx (Server Component)
+async function Layout({ children }: { children: React.ReactNode }) {
+  const user = await getCurrentUser();
+
+  return (
+    <div>
+      <Header user={user} />
+      <InteractiveShell>
+        {/* Server-rendered content passed as children */}
+        {children}
+      </InteractiveShell>
+    </div>
+  );
+}
+
+// InteractiveShell.tsx (Client Component)
+'use client';
+
+import { useState } from 'react';
+
+interface InteractiveShellProps {
+  children: React.ReactNode;
+}
+
+function InteractiveShell({ children }: InteractiveShellProps) {
+  const [sidebarOpen, setSidebarOpen] = useState(true);
+
+  return (
+    <div className={sidebarOpen ? 'with-sidebar' : 'full-width'}>
+      <button onClick={() => setSidebarOpen(!sidebarOpen)}>
+        Toggle Sidebar
+      </button>
+      {/* Server-rendered children passed through */}
+      <main>{children}</main>
+    </div>
+  );
+}
+```
+
+### Data Fetching Patterns
+
+Fetch data as close to where it's used as possible, leveraging automatic request deduplication:
+
+```typescript
+// Pattern: Parallel data fetching
+async function Dashboard() {
+  // These run in parallel, not sequentially
+  const [user, stats, notifications] = await Promise.all([
+    fetchUser(),
+    fetchStats(),
+    fetchNotifications(),
+  ]);
+
+  return (
+    <div>
+      <UserProfile user={user} />
+      <StatsPanel stats={stats} />
+      <NotificationList notifications={notifications} />
+    </div>
+  );
+}
+
+// Pattern: Colocated data fetching with deduplication
+// Both components fetch the same user - framework deduplicates the request
+async function UserAvatar() {
+  const user = await fetchUser(); // Deduped
+  return <Avatar src={user.avatarUrl} />;
+}
+
+async function UserGreeting() {
+  const user = await fetchUser(); // Same request, deduped
+  return <h1>Hello, {user.name}!</h1>;
+}
+
+// Pattern: Passing data vs fetching
+// WRONG - Prop drilling through many levels
+async function Page() {
+  const user = await fetchUser();
+  return <Layout user={user}><Content user={user} /></Layout>;
+}
+
+// RIGHT - Fetch where needed (leveraging deduplication)
+async function Page() {
+  return <Layout><Content /></Layout>;
+}
+
+async function Content() {
+  const user = await fetchUser(); // Fetch at point of use
+  return <div>{user.name}</div>;
+}
+```
+
+### Loading State Patterns
+
+Use streaming and suspense boundaries to show loading states without blocking:
+
+```typescript
+import { Suspense } from 'react';
+
+// Pattern: Granular loading boundaries
+async function Page() {
+  return (
+    <div>
+      {/* User info loads first */}
+      <Suspense fallback={<HeaderSkeleton />}>
+        <Header />
+      </Suspense>
+
+      <div className="content">
+        {/* Main content can load independently */}
+        <Suspense fallback={<ContentSkeleton />}>
+          <MainContent />
+        </Suspense>
+
+        {/* Sidebar loads independently */}
+        <Suspense fallback={<SidebarSkeleton />}>
+          <Sidebar />
+        </Suspense>
+      </div>
+    </div>
+  );
+}
+
+// Pattern: Nested suspense for progressive loading
+async function ProductPage({ id }: { id: string }) {
+  return (
+    <Suspense fallback={<ProductSkeleton />}>
+      <ProductDetails id={id} />
+      {/* Reviews can load after product details */}
+      <Suspense fallback={<ReviewsSkeleton />}>
+        <ProductReviews productId={id} />
+      </Suspense>
+    </Suspense>
+  );
+}
+
+// Skeleton component pattern
+function ProductSkeleton() {
+  return (
+    <div className="animate-pulse">
+      <div className="h-64 bg-gray-200 rounded" />
+      <div className="mt-4 h-8 bg-gray-200 rounded w-3/4" />
+      <div className="mt-2 h-4 bg-gray-200 rounded w-1/2" />
+    </div>
+  );
+}
+```
+
+### Layout Patterns
+
+Layouts persist across navigations and maintain state. Use them strategically:
+
+```typescript
+// Root layout - wraps entire application
+interface RootLayoutProps {
+  children: React.ReactNode;
+}
+
+async function RootLayout({ children }: RootLayoutProps) {
+  return (
+    <html>
+      <body>
+        <Providers>
+          <Header />
+          {children}
+          <Footer />
+        </Providers>
+      </body>
+    </html>
+  );
+}
+
+// Nested layout - wraps a route segment
+interface DashboardLayoutProps {
+  children: React.ReactNode;
+}
+
+async function DashboardLayout({ children }: DashboardLayoutProps) {
+  const user = await getCurrentUser();
+
+  // This layout persists when navigating between dashboard routes
+  return (
+    <div className="dashboard">
+      <DashboardNav user={user} />
+      <main>{children}</main>
+    </div>
+  );
+}
+
+// Pattern: Parallel routes for independent loading
+// Use when different sections of a page have different data needs
+interface DashboardPageProps {
+  overview: React.ReactNode;  // Slot for overview route
+  analytics: React.ReactNode; // Slot for analytics route
+}
+
+function DashboardPage({ overview, analytics }: DashboardPageProps) {
+  return (
+    <div className="grid grid-cols-2">
+      <section>{overview}</section>
+      <section>{analytics}</section>
+    </div>
+  );
+}
+```
+
+### Server Actions Pattern
+
+Server Actions allow client components to call server-side functions directly:
+
+```typescript
+// actions.ts - Server-side action
+'use server';
+
+import { revalidatePath } from 'next/cache';
+
+interface CreatePostResult {
+  success: boolean;
+  error?: string;
+  postId?: string;
+}
+
+export async function createPost(formData: FormData): Promise<CreatePostResult> {
+  const title = formData.get('title') as string;
+  const content = formData.get('content') as string;
+
+  // Validate
+  if (!title || title.length < 3) {
+    return { success: false, error: 'Title must be at least 3 characters' };
+  }
+
+  try {
+    const post = await db.post.create({
+      data: { title, content },
+    });
+
+    // Revalidate the posts list page
+    revalidatePath('/posts');
+
+    return { success: true, postId: post.id };
+  } catch (error) {
+    return { success: false, error: 'Failed to create post' };
+  }
+}
+
+// PostForm.tsx - Client component using server action
+'use client';
+
+import { useActionState } from 'react';
+import { createPost } from './actions';
+
+function PostForm() {
+  const [state, formAction, isPending] = useActionState(createPost, null);
+
+  return (
+    <form action={formAction}>
+      <input name="title" placeholder="Title" required />
+      <textarea name="content" placeholder="Content" required />
+
+      {state?.error && <p className="error">{state.error}</p>}
+
+      <button type="submit" disabled={isPending}>
+        {isPending ? 'Creating...' : 'Create Post'}
+      </button>
+    </form>
+  );
+}
+```
+
+### External API Integration
+
+When integrating with external APIs from server components:
+
+```typescript
+// Pattern: API client for server components
+async function fetchFromExternalAPI<T>(
+  endpoint: string,
+  options?: RequestInit
+): Promise<T> {
+  const response = await fetch(`${process.env.API_BASE_URL}${endpoint}`, {
+    ...options,
+    headers: {
+      'Authorization': `Bearer ${process.env.API_KEY}`,
+      'Content-Type': 'application/json',
+      ...options?.headers,
+    },
+    // Configure caching behavior
+    next: {
+      revalidate: 60, // Revalidate every 60 seconds
+      tags: ['api-data'], // Tag for manual revalidation
+    },
+  });
+
+  if (!response.ok) {
+    throw new Error(`API Error: ${response.status}`);
+  }
+
+  return response.json();
+}
+
+// Server component using external API
+async function ExternalDataDisplay() {
+  const data = await fetchFromExternalAPI<ExternalData>('/endpoint');
+
+  return <DataVisualization data={data} />;
+}
+
+// Pattern: Passing server-fetched data to client components
+async function ChartPage() {
+  // Fetch on server (keeps API keys secure)
+  const chartData = await fetchFromExternalAPI<ChartData[]>('/metrics');
+
+  // Pass data to client component for interactivity
+  return <InteractiveChart data={chartData} />;
+}
+
+// InteractiveChart.tsx
+'use client';
+
+interface InteractiveChartProps {
+  data: ChartData[];
+}
+
+function InteractiveChart({ data }: InteractiveChartProps) {
+  const [selectedRange, setSelectedRange] = useState('7d');
+
+  // Client-side filtering of server-fetched data
+  const filteredData = useMemo(
+    () => filterByRange(data, selectedRange),
+    [data, selectedRange]
+  );
+
+  return (
+    <div>
+      <RangeSelector value={selectedRange} onChange={setSelectedRange} />
+      <Chart data={filteredData} />
+    </div>
+  );
+}
+```
+
 ## State Management
 
 ### Zustand Store Pattern
@@ -1358,6 +1774,670 @@ export function UserForm({ onSubmit }: { onSubmit: (data: UserFormData) => void 
 }
 ```
 
+## Multi-Step Form (Wizard) Patterns
+
+Multi-step forms (wizards) collect data across multiple screens. These patterns handle step navigation, state management, validation, and persistence.
+
+### Wizard State Machine
+
+Use a state machine pattern to manage wizard flow with type safety:
+
+```typescript
+// types/wizard.ts
+interface WizardStep<TData> {
+  id: string;
+  title: string;
+  validate?: (data: Partial<TData>) => string[] | null;
+  isComplete: (data: Partial<TData>) => boolean;
+}
+
+interface WizardState<TData> {
+  currentStepIndex: number;
+  data: Partial<TData>;
+  completedSteps: Set<string>;
+  errors: Map<string, string[]>;
+  isDirty: boolean;
+}
+
+type WizardAction<TData> =
+  | { type: 'NEXT' }
+  | { type: 'BACK' }
+  | { type: 'GO_TO_STEP'; stepIndex: number }
+  | { type: 'UPDATE_DATA'; payload: Partial<TData> }
+  | { type: 'SET_ERRORS'; stepId: string; errors: string[] }
+  | { type: 'CLEAR_ERRORS'; stepId: string }
+  | { type: 'RESET' };
+
+function createWizardReducer<TData>(
+  steps: WizardStep<TData>[]
+) {
+  return function wizardReducer(
+    state: WizardState<TData>,
+    action: WizardAction<TData>
+  ): WizardState<TData> {
+    switch (action.type) {
+      case 'NEXT': {
+        const currentStep = steps[state.currentStepIndex];
+        const errors = currentStep.validate?.(state.data);
+
+        if (errors && errors.length > 0) {
+          return {
+            ...state,
+            errors: new Map(state.errors).set(currentStep.id, errors),
+          };
+        }
+
+        const nextIndex = Math.min(state.currentStepIndex + 1, steps.length - 1);
+        const completedSteps = new Set(state.completedSteps);
+        completedSteps.add(currentStep.id);
+
+        return {
+          ...state,
+          currentStepIndex: nextIndex,
+          completedSteps,
+          errors: new Map(state.errors),
+        };
+      }
+
+      case 'BACK':
+        return {
+          ...state,
+          currentStepIndex: Math.max(state.currentStepIndex - 1, 0),
+        };
+
+      case 'GO_TO_STEP': {
+        // Only allow jumping to completed steps or current step
+        const canNavigate =
+          action.stepIndex <= state.currentStepIndex ||
+          steps
+            .slice(0, action.stepIndex)
+            .every((step) => state.completedSteps.has(step.id));
+
+        if (!canNavigate) return state;
+
+        return {
+          ...state,
+          currentStepIndex: action.stepIndex,
+        };
+      }
+
+      case 'UPDATE_DATA':
+        return {
+          ...state,
+          data: { ...state.data, ...action.payload },
+          isDirty: true,
+        };
+
+      case 'SET_ERRORS': {
+        const errors = new Map(state.errors);
+        errors.set(action.stepId, action.errors);
+        return { ...state, errors };
+      }
+
+      case 'CLEAR_ERRORS': {
+        const errors = new Map(state.errors);
+        errors.delete(action.stepId);
+        return { ...state, errors };
+      }
+
+      case 'RESET':
+        return createInitialState<TData>();
+
+      default:
+        return state;
+    }
+  };
+}
+
+function createInitialState<TData>(): WizardState<TData> {
+  return {
+    currentStepIndex: 0,
+    data: {},
+    completedSteps: new Set(),
+    errors: new Map(),
+    isDirty: false,
+  };
+}
+```
+
+### useWizard Hook
+
+A reusable hook that encapsulates wizard logic:
+
+```typescript
+// hooks/useWizard.ts
+import { useReducer, useCallback, useMemo } from 'react';
+
+interface UseWizardOptions<TData> {
+  steps: WizardStep<TData>[];
+  initialData?: Partial<TData>;
+  onComplete?: (data: TData) => void | Promise<void>;
+}
+
+interface UseWizardReturn<TData> {
+  // State
+  currentStep: WizardStep<TData>;
+  currentStepIndex: number;
+  data: Partial<TData>;
+  errors: string[];
+  isFirstStep: boolean;
+  isLastStep: boolean;
+  completedSteps: string[];
+  progress: number;
+
+  // Actions
+  next: () => void;
+  back: () => void;
+  goToStep: (index: number) => void;
+  updateData: (data: Partial<TData>) => void;
+  reset: () => void;
+  submit: () => Promise<void>;
+}
+
+export function useWizard<TData>({
+  steps,
+  initialData = {},
+  onComplete,
+}: UseWizardOptions<TData>): UseWizardReturn<TData> {
+  const reducer = useMemo(() => createWizardReducer(steps), [steps]);
+
+  const [state, dispatch] = useReducer(reducer, {
+    ...createInitialState<TData>(),
+    data: initialData,
+  });
+
+  const currentStep = steps[state.currentStepIndex];
+
+  const next = useCallback(() => {
+    dispatch({ type: 'NEXT' });
+  }, []);
+
+  const back = useCallback(() => {
+    dispatch({ type: 'BACK' });
+  }, []);
+
+  const goToStep = useCallback((index: number) => {
+    dispatch({ type: 'GO_TO_STEP', stepIndex: index });
+  }, []);
+
+  const updateData = useCallback((data: Partial<TData>) => {
+    dispatch({ type: 'UPDATE_DATA', payload: data });
+  }, []);
+
+  const reset = useCallback(() => {
+    dispatch({ type: 'RESET' });
+  }, []);
+
+  const submit = useCallback(async () => {
+    // Validate final step
+    const errors = currentStep.validate?.(state.data);
+    if (errors && errors.length > 0) {
+      dispatch({ type: 'SET_ERRORS', stepId: currentStep.id, errors });
+      return;
+    }
+
+    // Call completion handler
+    await onComplete?.(state.data as TData);
+  }, [currentStep, state.data, onComplete]);
+
+  return {
+    currentStep,
+    currentStepIndex: state.currentStepIndex,
+    data: state.data,
+    errors: state.errors.get(currentStep.id) ?? [],
+    isFirstStep: state.currentStepIndex === 0,
+    isLastStep: state.currentStepIndex === steps.length - 1,
+    completedSteps: Array.from(state.completedSteps),
+    progress: ((state.currentStepIndex + 1) / steps.length) * 100,
+    next,
+    back,
+    goToStep,
+    updateData,
+    reset,
+    submit,
+  };
+}
+```
+
+### Conditional Step Flow
+
+Handle dynamic wizard paths based on user input:
+
+```typescript
+// Pattern: Conditional step inclusion
+interface ConditionalStep<TData> extends WizardStep<TData> {
+  condition?: (data: Partial<TData>) => boolean;
+}
+
+function useConditionalWizard<TData>(
+  allSteps: ConditionalStep<TData>[],
+  data: Partial<TData>
+) {
+  // Filter steps based on conditions
+  const activeSteps = useMemo(
+    () => allSteps.filter((step) => !step.condition || step.condition(data)),
+    [allSteps, data]
+  );
+
+  return useWizard({ steps: activeSteps, initialData: data });
+}
+
+// Usage example: Insurance quote wizard
+interface QuoteData {
+  insuranceType: 'auto' | 'home' | 'life';
+  vehicleInfo?: VehicleInfo;
+  propertyInfo?: PropertyInfo;
+  healthInfo?: HealthInfo;
+}
+
+const quoteSteps: ConditionalStep<QuoteData>[] = [
+  {
+    id: 'type',
+    title: 'Insurance Type',
+    isComplete: (data) => !!data.insuranceType,
+  },
+  {
+    id: 'vehicle',
+    title: 'Vehicle Information',
+    condition: (data) => data.insuranceType === 'auto',
+    isComplete: (data) => !!data.vehicleInfo,
+  },
+  {
+    id: 'property',
+    title: 'Property Information',
+    condition: (data) => data.insuranceType === 'home',
+    isComplete: (data) => !!data.propertyInfo,
+  },
+  {
+    id: 'health',
+    title: 'Health Information',
+    condition: (data) => data.insuranceType === 'life',
+    isComplete: (data) => !!data.healthInfo,
+  },
+  {
+    id: 'review',
+    title: 'Review & Submit',
+    isComplete: () => false, // Final step
+  },
+];
+```
+
+### Step-Level Validation
+
+Validate each step independently with schema composition:
+
+```typescript
+// schemas/wizardSchemas.ts
+import { z } from 'zod';
+
+// Individual step schemas
+const personalInfoSchema = z.object({
+  firstName: z.string().min(1, 'First name required'),
+  lastName: z.string().min(1, 'Last name required'),
+  email: z.string().email('Invalid email'),
+});
+
+const addressSchema = z.object({
+  street: z.string().min(1, 'Street required'),
+  city: z.string().min(1, 'City required'),
+  state: z.string().length(2, 'Use 2-letter state code'),
+  zip: z.string().regex(/^\d{5}(-\d{4})?$/, 'Invalid ZIP code'),
+});
+
+const preferencesSchema = z.object({
+  notifications: z.boolean(),
+  newsletter: z.boolean(),
+  theme: z.enum(['light', 'dark', 'system']),
+});
+
+// Combined schema for final submission
+const fullFormSchema = personalInfoSchema
+  .merge(addressSchema)
+  .merge(preferencesSchema);
+
+type FullFormData = z.infer<typeof fullFormSchema>;
+
+// Step definitions with validation
+const steps: WizardStep<FullFormData>[] = [
+  {
+    id: 'personal',
+    title: 'Personal Information',
+    validate: (data) => {
+      const result = personalInfoSchema.safeParse(data);
+      return result.success ? null : result.error.errors.map((e) => e.message);
+    },
+    isComplete: (data) => personalInfoSchema.safeParse(data).success,
+  },
+  {
+    id: 'address',
+    title: 'Address',
+    validate: (data) => {
+      const result = addressSchema.safeParse(data);
+      return result.success ? null : result.error.errors.map((e) => e.message);
+    },
+    isComplete: (data) => addressSchema.safeParse(data).success,
+  },
+  {
+    id: 'preferences',
+    title: 'Preferences',
+    validate: (data) => {
+      const result = preferencesSchema.safeParse(data);
+      return result.success ? null : result.error.errors.map((e) => e.message);
+    },
+    isComplete: (data) => preferencesSchema.safeParse(data).success,
+  },
+];
+```
+
+### Progress Persistence
+
+Save wizard progress to prevent data loss:
+
+```typescript
+// hooks/useWizardPersistence.ts
+import { useEffect, useCallback } from 'react';
+
+interface PersistenceOptions<TData> {
+  key: string;
+  data: Partial<TData>;
+  currentStepIndex: number;
+  debounceMs?: number;
+}
+
+export function useWizardPersistence<TData>({
+  key,
+  data,
+  currentStepIndex,
+  debounceMs = 1000,
+}: PersistenceOptions<TData>) {
+  // Save to storage with debounce
+  useEffect(() => {
+    const timeout = setTimeout(() => {
+      const state = {
+        data,
+        currentStepIndex,
+        savedAt: new Date().toISOString(),
+      };
+      localStorage.setItem(key, JSON.stringify(state));
+    }, debounceMs);
+
+    return () => clearTimeout(timeout);
+  }, [key, data, currentStepIndex, debounceMs]);
+
+  // Load from storage
+  const loadSavedState = useCallback(() => {
+    const saved = localStorage.getItem(key);
+    if (!saved) return null;
+
+    try {
+      return JSON.parse(saved) as {
+        data: Partial<TData>;
+        currentStepIndex: number;
+        savedAt: string;
+      };
+    } catch {
+      return null;
+    }
+  }, [key]);
+
+  // Clear saved state
+  const clearSavedState = useCallback(() => {
+    localStorage.removeItem(key);
+  }, [key]);
+
+  return { loadSavedState, clearSavedState };
+}
+
+// Pattern: API-based draft persistence
+interface DraftPersistenceOptions<TData> {
+  draftId?: string;
+  data: Partial<TData>;
+  onSave: (data: Partial<TData>) => Promise<{ draftId: string }>;
+  debounceMs?: number;
+}
+
+export function useApiDraftPersistence<TData>({
+  draftId,
+  data,
+  onSave,
+  debounceMs = 2000,
+}: DraftPersistenceOptions<TData>) {
+  const [isSaving, setIsSaving] = useState(false);
+  const [lastSaved, setLastSaved] = useState<Date | null>(null);
+  const [currentDraftId, setCurrentDraftId] = useState(draftId);
+
+  useEffect(() => {
+    const timeout = setTimeout(async () => {
+      setIsSaving(true);
+      try {
+        const result = await onSave(data);
+        setCurrentDraftId(result.draftId);
+        setLastSaved(new Date());
+      } finally {
+        setIsSaving(false);
+      }
+    }, debounceMs);
+
+    return () => clearTimeout(timeout);
+  }, [data, onSave, debounceMs]);
+
+  return { isSaving, lastSaved, draftId: currentDraftId };
+}
+```
+
+### Wizard UI Components
+
+Accessible, reusable wizard UI components:
+
+```typescript
+// components/Wizard.tsx
+interface WizardProps<TData> {
+  steps: WizardStep<TData>[];
+  wizard: UseWizardReturn<TData>;
+  renderStep: (step: WizardStep<TData>, wizard: UseWizardReturn<TData>) => React.ReactNode;
+}
+
+export function Wizard<TData>({
+  steps,
+  wizard,
+  renderStep,
+}: WizardProps<TData>) {
+  return (
+    <div className="wizard" role="region" aria-label="Multi-step form">
+      <WizardProgress steps={steps} wizard={wizard} />
+      <WizardContent>
+        {renderStep(wizard.currentStep, wizard)}
+      </WizardContent>
+      <WizardNavigation wizard={wizard} />
+    </div>
+  );
+}
+
+// Progress indicator with accessibility
+interface WizardProgressProps<TData> {
+  steps: WizardStep<TData>[];
+  wizard: UseWizardReturn<TData>;
+}
+
+function WizardProgress<TData>({ steps, wizard }: WizardProgressProps<TData>) {
+  return (
+    <nav aria-label="Form progress">
+      <ol className="wizard-steps" role="list">
+        {steps.map((step, index) => {
+          const isComplete = wizard.completedSteps.includes(step.id);
+          const isCurrent = index === wizard.currentStepIndex;
+          const isAccessible = isComplete || isCurrent;
+
+          return (
+            <li
+              key={step.id}
+              className={`wizard-step ${isCurrent ? 'current' : ''} ${isComplete ? 'complete' : ''}`}
+              aria-current={isCurrent ? 'step' : undefined}
+            >
+              <button
+                onClick={() => wizard.goToStep(index)}
+                disabled={!isAccessible}
+                aria-label={`${step.title}${isComplete ? ' (completed)' : ''}`}
+              >
+                <span className="step-number">{index + 1}</span>
+                <span className="step-title">{step.title}</span>
+              </button>
+            </li>
+          );
+        })}
+      </ol>
+      <div
+        className="progress-bar"
+        role="progressbar"
+        aria-valuenow={wizard.progress}
+        aria-valuemin={0}
+        aria-valuemax={100}
+        aria-label={`Form ${Math.round(wizard.progress)}% complete`}
+      >
+        <div className="progress-fill" style={{ width: `${wizard.progress}%` }} />
+      </div>
+    </nav>
+  );
+}
+
+// Navigation with proper focus management
+function WizardNavigation<TData>({ wizard }: { wizard: UseWizardReturn<TData> }) {
+  const nextButtonRef = useRef<HTMLButtonElement>(null);
+
+  // Focus management after navigation
+  useEffect(() => {
+    // Focus the main content area after step change
+    const content = document.querySelector('.wizard-content');
+    if (content instanceof HTMLElement) {
+      content.focus();
+    }
+  }, [wizard.currentStepIndex]);
+
+  return (
+    <div className="wizard-nav" role="group" aria-label="Form navigation">
+      <button
+        type="button"
+        onClick={wizard.back}
+        disabled={wizard.isFirstStep}
+        className="wizard-btn-back"
+      >
+        Back
+      </button>
+
+      {wizard.isLastStep ? (
+        <button
+          type="button"
+          onClick={wizard.submit}
+          className="wizard-btn-submit"
+          ref={nextButtonRef}
+        >
+          Submit
+        </button>
+      ) : (
+        <button
+          type="button"
+          onClick={wizard.next}
+          className="wizard-btn-next"
+          ref={nextButtonRef}
+        >
+          Continue
+        </button>
+      )}
+    </div>
+  );
+}
+```
+
+### Step Form Integration
+
+Pattern for integrating step forms with the wizard:
+
+```typescript
+// components/steps/PersonalInfoStep.tsx
+interface PersonalInfoStepProps {
+  data: Partial<FullFormData>;
+  onUpdate: (data: Partial<FullFormData>) => void;
+  errors: string[];
+}
+
+export function PersonalInfoStep({ data, onUpdate, errors }: PersonalInfoStepProps) {
+  // Use form library for the step's fields
+  const {
+    register,
+    formState: { errors: fieldErrors },
+    watch,
+  } = useForm({
+    defaultValues: {
+      firstName: data.firstName ?? '',
+      lastName: data.lastName ?? '',
+      email: data.email ?? '',
+    },
+  });
+
+  // Sync form changes to wizard state
+  const watchedValues = watch();
+  useEffect(() => {
+    onUpdate(watchedValues);
+  }, [watchedValues, onUpdate]);
+
+  return (
+    <div
+      className="wizard-step-content"
+      role="group"
+      aria-labelledby="step-title"
+      tabIndex={-1}
+    >
+      <h2 id="step-title">Personal Information</h2>
+
+      {/* Show step-level errors */}
+      {errors.length > 0 && (
+        <div role="alert" className="step-errors">
+          <ul>
+            {errors.map((error, i) => (
+              <li key={i}>{error}</li>
+            ))}
+          </ul>
+        </div>
+      )}
+
+      <div className="form-field">
+        <label htmlFor="firstName">First Name</label>
+        <input
+          id="firstName"
+          {...register('firstName')}
+          aria-invalid={!!fieldErrors.firstName}
+          aria-describedby={fieldErrors.firstName ? 'firstName-error' : undefined}
+        />
+        {fieldErrors.firstName && (
+          <span id="firstName-error" className="error">
+            {fieldErrors.firstName.message}
+          </span>
+        )}
+      </div>
+
+      <div className="form-field">
+        <label htmlFor="lastName">Last Name</label>
+        <input
+          id="lastName"
+          {...register('lastName')}
+          aria-invalid={!!fieldErrors.lastName}
+        />
+      </div>
+
+      <div className="form-field">
+        <label htmlFor="email">Email</label>
+        <input
+          id="email"
+          type="email"
+          {...register('email')}
+          aria-invalid={!!fieldErrors.email}
+        />
+      </div>
+    </div>
+  );
+}
+```
+
 ## Utility Types
 
 ### Common Patterns
@@ -1440,6 +2520,677 @@ export const Button = styled.button<ButtonProps>`
     cursor: not-allowed;
   }
 `;
+```
+
+## Data Visualization Patterns
+
+Patterns for building reusable, accessible chart and visualization components. These patterns are library-agnostic and focus on component composition, data transformation, and accessibility.
+
+### Chart Wrapper Component Pattern
+
+Create a composable wrapper that handles common concerns:
+
+```typescript
+// components/charts/ChartContainer.tsx
+import { useRef, useEffect, useState, ReactNode } from 'react';
+
+interface ChartContainerProps {
+  children: (dimensions: { width: number; height: number }) => ReactNode;
+  aspectRatio?: number;
+  minHeight?: number;
+  className?: string;
+  'aria-label': string;
+  'aria-describedby'?: string;
+}
+
+export function ChartContainer({
+  children,
+  aspectRatio = 16 / 9,
+  minHeight = 200,
+  className,
+  'aria-label': ariaLabel,
+  'aria-describedby': ariaDescribedBy,
+}: ChartContainerProps) {
+  const containerRef = useRef<HTMLDivElement>(null);
+  const [dimensions, setDimensions] = useState({ width: 0, height: 0 });
+
+  useEffect(() => {
+    if (!containerRef.current) return;
+
+    const resizeObserver = new ResizeObserver((entries) => {
+      const { width } = entries[0].contentRect;
+      const height = Math.max(width / aspectRatio, minHeight);
+      setDimensions({ width, height });
+    });
+
+    resizeObserver.observe(containerRef.current);
+    return () => resizeObserver.disconnect();
+  }, [aspectRatio, minHeight]);
+
+  return (
+    <div
+      ref={containerRef}
+      className={className}
+      role="img"
+      aria-label={ariaLabel}
+      aria-describedby={ariaDescribedBy}
+      style={{ width: '100%', height: dimensions.height || 'auto' }}
+    >
+      {dimensions.width > 0 && children(dimensions)}
+    </div>
+  );
+}
+
+// Usage
+function SalesChart({ data }: { data: SalesData[] }) {
+  return (
+    <>
+      <ChartContainer
+        aria-label="Monthly sales chart"
+        aria-describedby="sales-chart-description"
+        aspectRatio={2}
+      >
+        {({ width, height }) => (
+          <LineChart data={data} width={width} height={height} />
+        )}
+      </ChartContainer>
+      <p id="sales-chart-description" className="sr-only">
+        Line chart showing sales trends from January to December.
+        Highest sales in December at $45,000.
+      </p>
+    </>
+  );
+}
+```
+
+### Data Transformation Patterns
+
+Transform API data to chart-ready formats:
+
+```typescript
+// utils/chartTransformers.ts
+
+interface ApiDataPoint {
+  timestamp: string;
+  value: number;
+  category?: string;
+}
+
+interface ChartDataPoint {
+  x: number | string;
+  y: number;
+  label: string;
+}
+
+// Pattern: Generic transformer with accessor functions
+interface TransformConfig<TInput, TOutput> {
+  xAccessor: (item: TInput) => TOutput['x'];
+  yAccessor: (item: TInput) => number;
+  labelAccessor?: (item: TInput) => string;
+}
+
+function createChartTransformer<TInput>(
+  config: TransformConfig<TInput, ChartDataPoint>
+) {
+  return (data: TInput[]): ChartDataPoint[] =>
+    data.map((item) => ({
+      x: config.xAccessor(item),
+      y: config.yAccessor(item),
+      label: config.labelAccessor?.(item) ?? String(config.yAccessor(item)),
+    }));
+}
+
+// Usage: Transform API response to chart data
+const transformSalesData = createChartTransformer<ApiDataPoint>({
+  xAccessor: (item) => new Date(item.timestamp).getMonth(),
+  yAccessor: (item) => item.value,
+  labelAccessor: (item) => `$${item.value.toLocaleString()}`,
+});
+
+// Pattern: Aggregation transformer for grouped data
+interface GroupedChartData {
+  category: string;
+  data: ChartDataPoint[];
+}
+
+function groupByCategory<T>(
+  data: T[],
+  categoryAccessor: (item: T) => string,
+  transformer: (items: T[]) => ChartDataPoint[]
+): GroupedChartData[] {
+  const grouped = new Map<string, T[]>();
+
+  data.forEach((item) => {
+    const category = categoryAccessor(item);
+    const existing = grouped.get(category) ?? [];
+    grouped.set(category, [...existing, item]);
+  });
+
+  return Array.from(grouped.entries()).map(([category, items]) => ({
+    category,
+    data: transformer(items),
+  }));
+}
+
+// Pattern: Time-series bucketing
+interface TimeBucket {
+  start: Date;
+  end: Date;
+  value: number;
+  count: number;
+}
+
+function bucketByTime<T>(
+  data: T[],
+  dateAccessor: (item: T) => Date,
+  valueAccessor: (item: T) => number,
+  bucketSizeMs: number
+): TimeBucket[] {
+  if (data.length === 0) return [];
+
+  const sorted = [...data].sort(
+    (a, b) => dateAccessor(a).getTime() - dateAccessor(b).getTime()
+  );
+
+  const buckets: TimeBucket[] = [];
+  let currentBucket: TimeBucket | null = null;
+
+  sorted.forEach((item) => {
+    const date = dateAccessor(item);
+    const bucketStart = new Date(
+      Math.floor(date.getTime() / bucketSizeMs) * bucketSizeMs
+    );
+
+    if (!currentBucket || currentBucket.start.getTime() !== bucketStart.getTime()) {
+      currentBucket = {
+        start: bucketStart,
+        end: new Date(bucketStart.getTime() + bucketSizeMs),
+        value: 0,
+        count: 0,
+      };
+      buckets.push(currentBucket);
+    }
+
+    currentBucket.value += valueAccessor(item);
+    currentBucket.count += 1;
+  });
+
+  return buckets;
+}
+```
+
+### Reusable Chart Hook
+
+Encapsulate chart data and interaction logic:
+
+```typescript
+// hooks/useChartData.ts
+import { useMemo, useState, useCallback } from 'react';
+
+interface UseChartDataOptions<TRaw, TProcessed> {
+  rawData: TRaw[];
+  transform: (data: TRaw[]) => TProcessed[];
+  filterPredicate?: (item: TRaw) => boolean;
+}
+
+interface UseChartDataReturn<TProcessed> {
+  data: TProcessed[];
+  isEmpty: boolean;
+  selectedIndex: number | null;
+  hoveredIndex: number | null;
+  selectPoint: (index: number | null) => void;
+  hoverPoint: (index: number | null) => void;
+  getPointProps: (index: number) => {
+    selected: boolean;
+    hovered: boolean;
+    onMouseEnter: () => void;
+    onMouseLeave: () => void;
+    onClick: () => void;
+  };
+}
+
+export function useChartData<TRaw, TProcessed>({
+  rawData,
+  transform,
+  filterPredicate,
+}: UseChartDataOptions<TRaw, TProcessed>): UseChartDataReturn<TProcessed> {
+  const [selectedIndex, setSelectedIndex] = useState<number | null>(null);
+  const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
+
+  const data = useMemo(() => {
+    const filtered = filterPredicate
+      ? rawData.filter(filterPredicate)
+      : rawData;
+    return transform(filtered);
+  }, [rawData, transform, filterPredicate]);
+
+  const selectPoint = useCallback((index: number | null) => {
+    setSelectedIndex(index);
+  }, []);
+
+  const hoverPoint = useCallback((index: number | null) => {
+    setHoveredIndex(index);
+  }, []);
+
+  const getPointProps = useCallback(
+    (index: number) => ({
+      selected: selectedIndex === index,
+      hovered: hoveredIndex === index,
+      onMouseEnter: () => hoverPoint(index),
+      onMouseLeave: () => hoverPoint(null),
+      onClick: () => selectPoint(selectedIndex === index ? null : index),
+    }),
+    [selectedIndex, hoveredIndex, selectPoint, hoverPoint]
+  );
+
+  return {
+    data,
+    isEmpty: data.length === 0,
+    selectedIndex,
+    hoveredIndex,
+    selectPoint,
+    hoverPoint,
+    getPointProps,
+  };
+}
+```
+
+### Accessible Chart Patterns
+
+Make charts accessible to screen readers and keyboard navigation:
+
+```typescript
+// components/charts/AccessibleChart.tsx
+interface AccessibleChartProps<T> {
+  data: T[];
+  renderChart: (data: T[]) => ReactNode;
+  getDataDescription: (data: T[]) => string;
+  getDataTable: (data: T[]) => { headers: string[]; rows: string[][] };
+  title: string;
+  summary: string;
+}
+
+export function AccessibleChart<T>({
+  data,
+  renderChart,
+  getDataDescription,
+  getDataTable,
+  title,
+  summary,
+}: AccessibleChartProps<T>) {
+  const chartId = useId();
+  const descriptionId = `${chartId}-desc`;
+  const tableId = `${chartId}-table`;
+
+  const { headers, rows } = getDataTable(data);
+
+  return (
+    <figure aria-labelledby={chartId}>
+      <figcaption id={chartId}>{title}</figcaption>
+
+      {/* Visual chart */}
+      <div role="img" aria-describedby={descriptionId}>
+        {renderChart(data)}
+      </div>
+
+      {/* Screen reader description */}
+      <p id={descriptionId} className="sr-only">
+        {summary} {getDataDescription(data)}
+      </p>
+
+      {/* Accessible data table (visually hidden but available to AT) */}
+      <table id={tableId} className="sr-only">
+        <caption>Data for {title}</caption>
+        <thead>
+          <tr>
+            {headers.map((header, i) => (
+              <th key={i} scope="col">{header}</th>
+            ))}
+          </tr>
+        </thead>
+        <tbody>
+          {rows.map((row, i) => (
+            <tr key={i}>
+              {row.map((cell, j) => (
+                <td key={j}>{cell}</td>
+              ))}
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </figure>
+  );
+}
+
+// Usage
+function SalesLineChart({ data }: { data: SalesData[] }) {
+  return (
+    <AccessibleChart
+      data={data}
+      title="Monthly Sales Performance"
+      summary="Line chart displaying monthly sales figures."
+      renderChart={(d) => <LineChartVisual data={d} />}
+      getDataDescription={(d) =>
+        `Sales ranged from ${Math.min(...d.map((x) => x.amount))} to ` +
+        `${Math.max(...d.map((x) => x.amount))} over ${d.length} months.`
+      }
+      getDataTable={(d) => ({
+        headers: ['Month', 'Sales Amount'],
+        rows: d.map((item) => [item.month, `$${item.amount.toLocaleString()}`]),
+      })}
+    />
+  );
+}
+```
+
+### Interactive Tooltip Pattern
+
+Reusable tooltip positioning and content:
+
+```typescript
+// hooks/useChartTooltip.ts
+import { useState, useCallback, CSSProperties } from 'react';
+
+interface TooltipState<T> {
+  isVisible: boolean;
+  position: { x: number; y: number };
+  data: T | null;
+}
+
+interface UseChartTooltipReturn<T> {
+  tooltip: TooltipState<T>;
+  showTooltip: (data: T, event: React.MouseEvent) => void;
+  hideTooltip: () => void;
+  getTooltipStyle: () => CSSProperties;
+}
+
+export function useChartTooltip<T>(
+  offset = { x: 10, y: 10 }
+): UseChartTooltipReturn<T> {
+  const [tooltip, setTooltip] = useState<TooltipState<T>>({
+    isVisible: false,
+    position: { x: 0, y: 0 },
+    data: null,
+  });
+
+  const showTooltip = useCallback(
+    (data: T, event: React.MouseEvent) => {
+      const rect = event.currentTarget.getBoundingClientRect();
+      setTooltip({
+        isVisible: true,
+        position: {
+          x: event.clientX - rect.left + offset.x,
+          y: event.clientY - rect.top + offset.y,
+        },
+        data,
+      });
+    },
+    [offset.x, offset.y]
+  );
+
+  const hideTooltip = useCallback(() => {
+    setTooltip((prev) => ({ ...prev, isVisible: false }));
+  }, []);
+
+  const getTooltipStyle = useCallback((): CSSProperties => ({
+    position: 'absolute',
+    left: tooltip.position.x,
+    top: tooltip.position.y,
+    pointerEvents: 'none',
+    opacity: tooltip.isVisible ? 1 : 0,
+    transition: 'opacity 150ms ease-in-out',
+  }), [tooltip.position, tooltip.isVisible]);
+
+  return { tooltip, showTooltip, hideTooltip, getTooltipStyle };
+}
+
+// Tooltip component
+interface ChartTooltipProps<T> {
+  data: T | null;
+  isVisible: boolean;
+  style: CSSProperties;
+  renderContent: (data: T) => ReactNode;
+}
+
+export function ChartTooltip<T>({
+  data,
+  isVisible,
+  style,
+  renderContent,
+}: ChartTooltipProps<T>) {
+  if (!isVisible || !data) return null;
+
+  return (
+    <div
+      role="tooltip"
+      style={style}
+      className="chart-tooltip"
+    >
+      {renderContent(data)}
+    </div>
+  );
+}
+```
+
+### Loading and Empty States
+
+Consistent loading and empty state patterns for charts:
+
+```typescript
+// components/charts/ChartStates.tsx
+interface ChartLoadingProps {
+  height?: number;
+  message?: string;
+}
+
+export function ChartLoading({
+  height = 300,
+  message = 'Loading chart data...',
+}: ChartLoadingProps) {
+  return (
+    <div
+      className="chart-loading"
+      style={{ height }}
+      role="status"
+      aria-live="polite"
+    >
+      <div className="chart-loading-spinner" aria-hidden="true" />
+      <span className="sr-only">{message}</span>
+    </div>
+  );
+}
+
+interface ChartEmptyProps {
+  height?: number;
+  title?: string;
+  description?: string;
+  action?: ReactNode;
+}
+
+export function ChartEmpty({
+  height = 300,
+  title = 'No data available',
+  description = 'There is no data to display for the selected period.',
+  action,
+}: ChartEmptyProps) {
+  return (
+    <div
+      className="chart-empty"
+      style={{ height }}
+      role="status"
+    >
+      <div className="chart-empty-icon" aria-hidden="true">
+        {/* Icon SVG */}
+      </div>
+      <h3 className="chart-empty-title">{title}</h3>
+      <p className="chart-empty-description">{description}</p>
+      {action && <div className="chart-empty-action">{action}</div>}
+    </div>
+  );
+}
+
+interface ChartErrorProps {
+  height?: number;
+  error: Error;
+  onRetry?: () => void;
+}
+
+export function ChartError({
+  height = 300,
+  error,
+  onRetry,
+}: ChartErrorProps) {
+  return (
+    <div
+      className="chart-error"
+      style={{ height }}
+      role="alert"
+    >
+      <h3 className="chart-error-title">Failed to load chart</h3>
+      <p className="chart-error-message">{error.message}</p>
+      {onRetry && (
+        <button onClick={onRetry} className="chart-error-retry">
+          Try again
+        </button>
+      )}
+    </div>
+  );
+}
+
+// Wrapper component with all states
+interface ChartWithStatesProps<T> {
+  data: T[] | undefined;
+  isLoading: boolean;
+  error: Error | null;
+  onRetry?: () => void;
+  renderChart: (data: T[]) => ReactNode;
+  height?: number;
+}
+
+export function ChartWithStates<T>({
+  data,
+  isLoading,
+  error,
+  onRetry,
+  renderChart,
+  height = 300,
+}: ChartWithStatesProps<T>) {
+  if (isLoading) {
+    return <ChartLoading height={height} />;
+  }
+
+  if (error) {
+    return <ChartError height={height} error={error} onRetry={onRetry} />;
+  }
+
+  if (!data || data.length === 0) {
+    return <ChartEmpty height={height} />;
+  }
+
+  return <>{renderChart(data)}</>;
+}
+```
+
+### Custom SVG Component Pattern
+
+For charts that need custom SVG rendering:
+
+```typescript
+// components/charts/SVGChart.tsx
+interface SVGChartProps {
+  width: number;
+  height: number;
+  padding?: { top: number; right: number; bottom: number; left: number };
+  children: (innerDimensions: {
+    width: number;
+    height: number;
+    padding: { top: number; right: number; bottom: number; left: number };
+  }) => ReactNode;
+  className?: string;
+}
+
+const DEFAULT_PADDING = { top: 20, right: 20, bottom: 40, left: 50 };
+
+export function SVGChart({
+  width,
+  height,
+  padding = DEFAULT_PADDING,
+  children,
+  className,
+}: SVGChartProps) {
+  const innerWidth = width - padding.left - padding.right;
+  const innerHeight = height - padding.top - padding.bottom;
+
+  return (
+    <svg
+      width={width}
+      height={height}
+      className={className}
+      role="presentation"
+    >
+      <g transform={`translate(${padding.left}, ${padding.top})`}>
+        {children({ width: innerWidth, height: innerHeight, padding })}
+      </g>
+    </svg>
+  );
+}
+
+// Pattern: Scale creators for data-to-pixel mapping
+type ScaleFunction = (value: number) => number;
+
+interface CreateScaleOptions {
+  domain: [number, number];
+  range: [number, number];
+}
+
+function createLinearScale({ domain, range }: CreateScaleOptions): ScaleFunction {
+  const [d0, d1] = domain;
+  const [r0, r1] = range;
+  const ratio = (r1 - r0) / (d1 - d0);
+
+  return (value: number) => r0 + (value - d0) * ratio;
+}
+
+// Usage in a custom line chart
+function CustomLineChart({ data, width, height }: CustomLineChartProps) {
+  const xScale = createLinearScale({
+    domain: [0, data.length - 1],
+    range: [0, width],
+  });
+
+  const yScale = createLinearScale({
+    domain: [0, Math.max(...data.map((d) => d.value))],
+    range: [height, 0], // SVG y-axis is inverted
+  });
+
+  const pathData = data
+    .map((d, i) => `${i === 0 ? 'M' : 'L'} ${xScale(i)} ${yScale(d.value)}`)
+    .join(' ');
+
+  return (
+    <SVGChart width={width} height={height}>
+      {({ width: innerWidth, height: innerHeight }) => (
+        <>
+          <path
+            d={pathData}
+            fill="none"
+            stroke="currentColor"
+            strokeWidth={2}
+          />
+          {data.map((d, i) => (
+            <circle
+              key={i}
+              cx={xScale(i)}
+              cy={yScale(d.value)}
+              r={4}
+              fill="currentColor"
+            />
+          ))}
+        </>
+      )}
+    </SVGChart>
+  );
+}
 ```
 
 ## File Organization
