@@ -3,7 +3,9 @@
     "allow": [
       "Bash(chmod:*)",
       "WebFetch(domain:docs.nestjs.com)",
-      "WebFetch(domain:www.prisma.io)"
+      "WebFetch(domain:www.prisma.io)",
+      "Bash(git push)",
+      "WebFetch(domain:betterstack.com)"
     ],
     "deny": [],
     "ask": []

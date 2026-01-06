@@ -9,14 +9,694 @@ This skill provides TypeScript and React-specific coding standards, patterns, an
 
 ## Environment and Tooling
 
-- **Node Version**: 20+ LTS
-- **Package Manager**: npm (preferred) or yarn
+- **Runtime**: Bun (primary) or Node.js 20+ LTS (fallback)
+- **Package Manager**: npm, yarn, or bun
 - **TypeScript**: 5.3+ with strict mode
 - **React**: 18+ with functional components
 - **Build Tool**: Vite or Next.js
-- **Testing**: Vitest + React Testing Library
+- **Testing**: Vitest + React Testing Library (or bun:test)
 - **Linting**: ESLint with TypeScript parser
 - **Formatting**: Prettier
+
+## Runtime Environments
+
+Modern TypeScript applications can run on multiple server-side runtimes. Writing portable code enables flexibility for performance optimization, compliance requirements, and broad adoption. This section covers runtime selection, portable patterns, and adapter strategies for painless runtime switching.
+
+### Runtime Selection
+
+Choose your runtime based on project requirements:
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│                    RUNTIME DECISION TREE                        │
+├─────────────────────────────────────────────────────────────────┤
+│                                                                 │
+│  Use BUN when:                    Use NODE when:                │
+│  ─────────────────                ──────────────                │
+│  • Performance-critical apps      • Native addon dependencies   │
+│  • Native TypeScript preferred    • Enterprise compliance/HIPAA │
+│  • Greenfield projects            • Maximum npm compatibility   │
+│  • Internal tooling               • Open-source broad adoption  │
+│  • Development speed matters      • Mission-critical production │
+│  • Serverless/edge deployment     • Established large codebase  │
+│                                                                 │
+│  Performance: 3-4x faster startup, 2x request throughput        │
+│  Compatibility: ~95-99% npm packages work on Bun                │
+│                                                                 │
+└─────────────────────────────────────────────────────────────────┘
+```
+
+### Portable Web APIs
+
+WinterTC (formerly WinterCG) standardizes Web Platform APIs across server-side runtimes. These APIs work identically in Bun, Node.js 18+, and Deno:
+
+```typescript
+// PORTABLE: Use Web Standard APIs everywhere
+
+// HTTP with fetch (no imports needed)
+const response = await fetch('https://api.example.com/data');
+const data = await response.json();
+
+// URL manipulation
+const url = new URL('/api/users', 'https://example.com');
+url.searchParams.set('page', '1');
+
+// Text encoding/decoding
+const encoder = new TextEncoder();
+const decoder = new TextDecoder();
+const bytes = encoder.encode('Hello');
+const text = decoder.decode(bytes);
+
+// Cryptography
+const uuid = crypto.randomUUID();
+const hash = await crypto.subtle.digest(
+  'SHA-256',
+  encoder.encode('data')
+);
+
+// Streams
+const stream = new ReadableStream({
+  start(controller) {
+    controller.enqueue('chunk');
+    controller.close();
+  }
+});
+
+// Abort signals for cancellation
+const controller = new AbortController();
+await fetch(url, { signal: controller.signal });
+```
+
+**Portable APIs available across all runtimes:**
+- `fetch` / `Request` / `Response` / `Headers`
+- `URL` / `URLSearchParams`
+- `TextEncoder` / `TextDecoder`
+- `crypto.subtle` / `crypto.randomUUID()`
+- `AbortController` / `AbortSignal`
+- `ReadableStream` / `WritableStream` / `TransformStream`
+- `Blob` / `File` / `FormData`
+- `setTimeout` / `setInterval` / `queueMicrotask`
+
+### Runtime Detection
+
+Use WinterTC-standard detection for runtime-conditional code:
+
+```typescript
+// src/runtime/detect.ts
+
+type RuntimeType = 'bun' | 'node' | 'deno' | 'unknown';
+
+/**
+ * Detect the current JavaScript runtime using WinterTC standard.
+ * Uses navigator.userAgent which is standardized across runtimes.
+ */
+export function detectRuntime(): RuntimeType {
+  // WinterTC standard: use navigator.userAgent
+  if (typeof navigator !== 'undefined' && navigator.userAgent) {
+    const ua = navigator.userAgent;
+    if (ua.includes('Bun/')) return 'bun';
+    if (ua.includes('Deno/')) return 'deno';
+    if (ua.includes('Node.js/')) return 'node';
+  }
+
+  // Fallback for older Node.js versions (pre-21)
+  if (typeof process !== 'undefined' && process.versions?.node) {
+    return 'node';
+  }
+
+  return 'unknown';
+}
+
+// Export singleton detection results
+export const RUNTIME: RuntimeType = detectRuntime();
+export const IS_BUN = RUNTIME === 'bun';
+export const IS_NODE = RUNTIME === 'node';
+export const IS_DENO = RUNTIME === 'deno';
+```
+
+```typescript
+// WRONG - Unreliable global checks
+const isBun = typeof Bun !== 'undefined';
+const isNode = typeof process !== 'undefined';
+
+// WRONG - Non-standard version checks
+const runtime = process.versions.bun ? 'bun' : 'node';
+
+// RIGHT - WinterTC standard
+import { RUNTIME, IS_BUN } from './runtime/detect';
+
+if (IS_BUN) {
+  // Bun-optimized path
+}
+```
+
+### Runtime Adapters
+
+Use the adapter pattern to abstract runtime-specific features. This enables easy runtime switching without changing application code.
+
+#### Environment Variables Adapter
+
+```typescript
+// src/adapters/env.adapter.ts
+
+export interface EnvAdapter {
+  get(key: string): string | undefined;
+  getRequired(key: string): string;
+  getNumber(key: string, defaultValue?: number): number;
+  getBoolean(key: string, defaultValue?: boolean): boolean;
+}
+
+class BunEnvAdapter implements EnvAdapter {
+  get(key: string): string | undefined {
+    return Bun.env[key];
+  }
+
+  getRequired(key: string): string {
+    const value = Bun.env[key];
+    if (value === undefined) {
+      throw new Error(`Missing required environment variable: ${key}`);
+    }
+    return value;
+  }
+
+  getNumber(key: string, defaultValue = 0): number {
+    const value = Bun.env[key];
+    return value ? Number(value) : defaultValue;
+  }
+
+  getBoolean(key: string, defaultValue = false): boolean {
+    const value = Bun.env[key];
+    if (!value) return defaultValue;
+    return value.toLowerCase() === 'true' || value === '1';
+  }
+}
+
+class NodeEnvAdapter implements EnvAdapter {
+  get(key: string): string | undefined {
+    return process.env[key];
+  }
+
+  getRequired(key: string): string {
+    const value = process.env[key];
+    if (value === undefined) {
+      throw new Error(`Missing required environment variable: ${key}`);
+    }
+    return value;
+  }
+
+  getNumber(key: string, defaultValue = 0): number {
+    const value = process.env[key];
+    return value ? Number(value) : defaultValue;
+  }
+
+  getBoolean(key: string, defaultValue = false): boolean {
+    const value = process.env[key];
+    if (!value) return defaultValue;
+    return value.toLowerCase() === 'true' || value === '1';
+  }
+}
+
+// Factory function
+export function createEnvAdapter(runtime: RuntimeType): EnvAdapter {
+  return runtime === 'bun' ? new BunEnvAdapter() : new NodeEnvAdapter();
+}
+```
+
+#### File I/O Adapter
+
+```typescript
+// src/adapters/file.adapter.ts
+
+export interface FileAdapter {
+  readText(path: string): Promise<string>;
+  readJson<T>(path: string): Promise<T>;
+  writeText(path: string, content: string): Promise<void>;
+  writeJson(path: string, data: unknown): Promise<void>;
+  exists(path: string): Promise<boolean>;
+}
+
+class BunFileAdapter implements FileAdapter {
+  async readText(path: string): Promise<string> {
+    return Bun.file(path).text();
+  }
+
+  async readJson<T>(path: string): Promise<T> {
+    return Bun.file(path).json();
+  }
+
+  async writeText(path: string, content: string): Promise<void> {
+    await Bun.write(path, content);
+  }
+
+  async writeJson(path: string, data: unknown): Promise<void> {
+    await Bun.write(path, JSON.stringify(data, null, 2));
+  }
+
+  async exists(path: string): Promise<boolean> {
+    return Bun.file(path).exists();
+  }
+}
+
+class NodeFileAdapter implements FileAdapter {
+  async readText(path: string): Promise<string> {
+    const { readFile } = await import('node:fs/promises');
+    return readFile(path, 'utf-8');
+  }
+
+  async readJson<T>(path: string): Promise<T> {
+    const content = await this.readText(path);
+    return JSON.parse(content);
+  }
+
+  async writeText(path: string, content: string): Promise<void> {
+    const { writeFile } = await import('node:fs/promises');
+    await writeFile(path, content, 'utf-8');
+  }
+
+  async writeJson(path: string, data: unknown): Promise<void> {
+    await this.writeText(path, JSON.stringify(data, null, 2));
+  }
+
+  async exists(path: string): Promise<boolean> {
+    const { access } = await import('node:fs/promises');
+    try {
+      await access(path);
+      return true;
+    } catch {
+      return false;
+    }
+  }
+}
+
+export function createFileAdapter(runtime: RuntimeType): FileAdapter {
+  return runtime === 'bun' ? new BunFileAdapter() : new NodeFileAdapter();
+}
+```
+
+#### HTTP Server Adapter
+
+```typescript
+// src/adapters/server.adapter.ts
+
+export interface ServeOptions {
+  port: number;
+  hostname?: string;
+  handler: (request: Request) => Response | Promise<Response>;
+}
+
+export interface ServerHandle {
+  stop(): Promise<void>;
+  port: number;
+  url: string;
+}
+
+class BunServerAdapter {
+  serve(options: ServeOptions): ServerHandle {
+    const server = Bun.serve({
+      port: options.port,
+      hostname: options.hostname ?? 'localhost',
+      fetch: options.handler,
+    });
+
+    return {
+      stop: async () => server.stop(),
+      port: server.port,
+      url: `http://${server.hostname}:${server.port}`,
+    };
+  }
+}
+
+class NodeServerAdapter {
+  serve(options: ServeOptions): ServerHandle {
+    // Wrap node:http with Web Request/Response
+    const { createServer } = require('node:http');
+
+    const server = createServer(async (req, res) => {
+      const url = `http://${options.hostname ?? 'localhost'}:${options.port}${req.url}`;
+      const request = new Request(url, {
+        method: req.method,
+        headers: req.headers as HeadersInit,
+      });
+
+      const response = await options.handler(request);
+
+      res.statusCode = response.status;
+      response.headers.forEach((value, key) => {
+        res.setHeader(key, value);
+      });
+      res.end(await response.text());
+    });
+
+    server.listen(options.port, options.hostname);
+
+    return {
+      stop: () => new Promise((resolve) => server.close(resolve)),
+      port: options.port,
+      url: `http://${options.hostname ?? 'localhost'}:${options.port}`,
+    };
+  }
+}
+
+export function createServerAdapter(runtime: RuntimeType) {
+  return runtime === 'bun' ? new BunServerAdapter() : new NodeServerAdapter();
+}
+```
+
+#### SQLite Adapter
+
+```typescript
+// src/adapters/sqlite.adapter.ts
+
+export interface SQLiteDatabase {
+  run(sql: string, params?: unknown[]): void;
+  get<T>(sql: string, params?: unknown[]): T | undefined;
+  all<T>(sql: string, params?: unknown[]): T[];
+  close(): void;
+}
+
+export interface SQLiteAdapter {
+  open(path: string): SQLiteDatabase;
+}
+
+class BunSQLiteAdapter implements SQLiteAdapter {
+  open(path: string): SQLiteDatabase {
+    // bun:sqlite is 3-6x faster than better-sqlite3
+    const { Database } = require('bun:sqlite');
+    const db = new Database(path);
+
+    return {
+      run: (sql, params) => db.run(sql, params),
+      get: (sql, params) => db.query(sql).get(params),
+      all: (sql, params) => db.query(sql).all(params),
+      close: () => db.close(),
+    };
+  }
+}
+
+class NodeSQLiteAdapter implements SQLiteAdapter {
+  open(path: string): SQLiteDatabase {
+    const Database = require('better-sqlite3');
+    const db = new Database(path);
+
+    return {
+      run: (sql, params) => db.prepare(sql).run(params),
+      get: (sql, params) => db.prepare(sql).get(params),
+      all: (sql, params) => db.prepare(sql).all(params),
+      close: () => db.close(),
+    };
+  }
+}
+
+export function createSQLiteAdapter(runtime: RuntimeType): SQLiteAdapter {
+  return runtime === 'bun' ? new BunSQLiteAdapter() : new NodeSQLiteAdapter();
+}
+```
+
+#### Adapter Composition
+
+```typescript
+// src/adapters/index.ts
+
+import { detectRuntime, RuntimeType } from '../runtime/detect';
+import { createEnvAdapter, EnvAdapter } from './env.adapter';
+import { createFileAdapter, FileAdapter } from './file.adapter';
+import { createServerAdapter } from './server.adapter';
+import { createSQLiteAdapter, SQLiteAdapter } from './sqlite.adapter';
+
+export interface Adapters {
+  env: EnvAdapter;
+  file: FileAdapter;
+  server: ReturnType<typeof createServerAdapter>;
+  sqlite: SQLiteAdapter;
+}
+
+export function createAdapters(runtime: RuntimeType = detectRuntime()): Adapters {
+  return {
+    env: createEnvAdapter(runtime),
+    file: createFileAdapter(runtime),
+    server: createServerAdapter(runtime),
+    sqlite: createSQLiteAdapter(runtime),
+  };
+}
+
+// Singleton for application use
+export const adapters = createAdapters();
+```
+
+### Testing Across Runtimes
+
+Configure your project to test on both Bun and Node.js:
+
+#### Package.json Scripts
+
+```json
+{
+  "scripts": {
+    "test": "vitest",
+    "test:bun": "bun test",
+    "test:node": "vitest run",
+    "test:all": "npm run test:node && npm run test:bun",
+    "dev": "bun run src/index.ts",
+    "dev:node": "tsx src/index.ts",
+    "start": "node dist/index.js",
+    "start:bun": "bun run dist/index.js"
+  }
+}
+```
+
+#### CI Configuration
+
+```yaml
+# .github/workflows/test.yml
+name: Test
+
+on: [push, pull_request]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        runtime: [node, bun]
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Bun
+        if: matrix.runtime == 'bun'
+        uses: oven-sh/setup-bun@v1
+
+      - name: Setup Node
+        if: matrix.runtime == 'node'
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install dependencies
+        run: ${{ matrix.runtime == 'bun' && 'bun install' || 'npm ci' }}
+
+      - name: Run tests
+        run: npm run test:${{ matrix.runtime }}
+```
+
+#### Runtime-Conditional Tests
+
+```typescript
+// test/helpers/runtime.ts
+import { RUNTIME } from '../../src/runtime/detect';
+
+// Skip tests that only apply to specific runtimes
+export const describeBun = RUNTIME === 'bun' ? describe : describe.skip;
+export const describeNode = RUNTIME === 'node' ? describe : describe.skip;
+export const itBun = RUNTIME === 'bun' ? it : it.skip;
+export const itNode = RUNTIME === 'node' ? it : it.skip;
+```
+
+```typescript
+// test/adapters/sqlite.test.ts
+import { describeBun, describeNode } from '../helpers/runtime';
+
+describeBun('Bun SQLite', () => {
+  it('uses bun:sqlite natively', () => {
+    const adapter = new BunSQLiteAdapter();
+    // Test Bun-specific behavior
+  });
+});
+
+describeNode('Node SQLite', () => {
+  it('uses better-sqlite3', () => {
+    const adapter = new NodeSQLiteAdapter();
+    // Test Node-specific behavior
+  });
+});
+
+// Tests that run on all runtimes
+describe('SQLite Adapter', () => {
+  it('implements the interface correctly', () => {
+    const adapter = createSQLiteAdapter(RUNTIME);
+    // Common interface tests
+  });
+});
+```
+
+### Framework Considerations
+
+#### Hono for Runtime-Agnostic APIs
+
+Hono is a lightweight, runtime-agnostic web framework that works identically on Bun, Node.js, Deno, and edge platforms:
+
+```typescript
+// src/app.ts - Portable Hono application
+import { Hono } from 'hono';
+import { cors } from 'hono/cors';
+import { logger } from 'hono/logger';
+
+const app = new Hono();
+
+app.use('*', cors());
+app.use('*', logger());
+
+app.get('/api/health', (c) => c.json({ status: 'ok' }));
+
+app.get('/api/users/:id', async (c) => {
+  const id = c.req.param('id');
+  // Your business logic here
+  return c.json({ id, name: 'Example User' });
+});
+
+export default app;
+```
+
+```typescript
+// src/bun-entry.ts
+import app from './app';
+
+Bun.serve({
+  fetch: app.fetch,
+  port: Bun.env.PORT ?? 3000,
+});
+
+console.log('Bun server running on port', Bun.env.PORT ?? 3000);
+```
+
+```typescript
+// src/node-entry.ts
+import { serve } from '@hono/node-server';
+import app from './app';
+
+const port = Number(process.env.PORT) || 3000;
+
+serve({
+  fetch: app.fetch,
+  port,
+});
+
+console.log('Node server running on port', port);
+```
+
+#### NestJS Considerations
+
+NestJS works with Bun via `@nestjs/platform-express`. Use adapters for runtime-specific optimizations:
+
+```typescript
+// src/main.ts
+import { NestFactory } from '@nestjs/core';
+import { AppModule } from './app.module';
+import { adapters } from './adapters';
+
+async function bootstrap() {
+  const app = await NestFactory.create(AppModule);
+  const port = adapters.env.getNumber('PORT', 3000);
+
+  await app.listen(port);
+  console.log(`Application running on port ${port}`);
+}
+
+bootstrap();
+```
+
+```typescript
+// src/config/config.module.ts
+import { Module, Global } from '@nestjs/common';
+import { adapters } from '../adapters';
+
+@Global()
+@Module({
+  providers: [
+    {
+      provide: 'ENV_ADAPTER',
+      useValue: adapters.env,
+    },
+    {
+      provide: 'FILE_ADAPTER',
+      useValue: adapters.file,
+    },
+  ],
+  exports: ['ENV_ADAPTER', 'FILE_ADAPTER'],
+})
+export class ConfigModule {}
+```
+
+#### Next.js Considerations
+
+```typescript
+/*
+ * Next.js with Bun:
+ * - Development: `bun --bun next dev` for faster startup
+ * - Production: Standard Node.js deployment recommended for stability
+ * - API Routes: Can use portable adapters for runtime-agnostic code
+ */
+```
+
+```json
+// package.json
+{
+  "scripts": {
+    "dev": "bun --bun next dev",
+    "dev:node": "next dev",
+    "build": "next build",
+    "start": "next start"
+  }
+}
+```
+
+### Migration Patterns
+
+When switching between runtimes, follow this checklist:
+
+**Pre-Migration:**
+1. Audit native addon dependencies (check `node-gyp`, `.node` files)
+2. Check Bun compatibility tracker for critical packages
+3. Run full test suite as baseline
+
+**Migration Steps:**
+1. Replace direct `process.env` / `Bun.env` access with `EnvAdapter`
+2. Replace direct file I/O with `FileAdapter`
+3. Replace HTTP server setup with `ServerAdapter` or Hono
+4. Update `package.json` scripts for dual-runtime support
+5. Configure CI matrix for both runtimes
+6. Test native addon fallbacks
+
+**Post-Migration:**
+1. Benchmark performance on both runtimes
+2. Document runtime-specific behaviors
+3. Update deployment configurations
+
+```json
+// package.json - Dual-runtime support
+{
+  "scripts": {
+    "dev": "bun run src/index.ts",
+    "dev:node": "tsx src/index.ts",
+    "build": "tsc",
+    "start": "node dist/index.js",
+    "start:bun": "bun run dist/index.js",
+    "test": "npm run test:node && npm run test:bun",
+    "test:node": "vitest run",
+    "test:bun": "bun test"
+  }
+}
+```
 
 ## TypeScript Configuration
 
