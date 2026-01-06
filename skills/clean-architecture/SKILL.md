@@ -163,8 +163,10 @@ Choose your implementation language for specific patterns, tools, and examples:
     - Tools: mypy, ruff, pytest
 
 - **TypeScript**: `languages/typescript/guide.md`
-    - Interfaces, classes, type system
-    - Tools: ESLint, Jest, tsx
+    - Branded types, Result pattern, domain events
+    - Recommended: NestJS (backend), Next.js App Router (full-stack)
+    - ORM: Prisma (default), Drizzle (alternative)
+    - Tools: ESLint, Jest, Zod
 
 - **C#**: `languages/csharp/guide.md`
     - Interfaces, dependency injection

@@ -221,114 +221,240 @@ def get_complete_task_use_case(
     return CompleteTaskUseCase(repository)
 ```
 
-### TypeScript Implementation (Express)
+### TypeScript Implementation (NestJS)
 
 ```typescript
-// frameworks/express/app.ts
+// tasks/tasks.module.ts
 
-import express from "express";
-import { taskRouter } from "./routes/taskRoutes";
-import { errorHandler } from "./middleware/errorHandler";
-import { setupDependencies } from "./dependencies";
+import { Module } from '@nestjs/common';
+import { TasksController } from './presentation/tasks.controller';
+import { CreateTaskUseCase } from './application/use-cases/create-task.use-case';
+import { ListTasksUseCase } from './application/use-cases/list-tasks.use-case';
+import { CompleteTaskUseCase } from './application/use-cases/complete-task.use-case';
+import { TASK_REPOSITORY } from './tokens';
+import { PrismaTaskRepository } from './infrastructure/prisma-task.repository';
+import { PrismaModule } from '../shared/prisma/prisma.module';
 
-export function createApp(): express.Application {
-  const app = express();
-
-  // Middleware
-  app.use(express.json());
-
-  // Setup DI
-  const container = setupDependencies();
-  app.locals.container = container;
-
-  // Routes
-  app.use("/api/v1/tasks", taskRouter);
-
-  // Error handling
-  app.use(errorHandler);
-
-  return app;
-}
-
-// Server
-if (require.main === module) {
-  const app = createApp();
-  const PORT = process.env.PORT || 3000;
-
-  app.listen(PORT, () => {
-    console.log(`Server running on port ${PORT}`);
-  });
-}
+@Module({
+  imports: [PrismaModule],
+  controllers: [TasksController],
+  providers: [
+    CreateTaskUseCase,
+    ListTasksUseCase,
+    CompleteTaskUseCase,
+    {
+      provide: TASK_REPOSITORY,
+      useClass: PrismaTaskRepository,
+    },
+  ],
+})
+export class TasksModule {}
 ```
 
 ```typescript
-// frameworks/express/routes/taskRoutes.ts
+// tasks/presentation/tasks.controller.ts
 
-import { Router, Request, Response, NextFunction } from "express";
-import { CreateTaskRequest } from "../../../application/use-cases/CreateTaskUseCase";
-import { CompleteTaskRequest } from "../../../application/use-cases/CompleteTaskUseCase";
+import {
+  Controller,
+  Post,
+  Get,
+  Put,
+  Body,
+  Param,
+  HttpCode,
+  HttpStatus,
+} from '@nestjs/common';
+import { CreateTaskUseCase } from '../application/use-cases/create-task.use-case';
+import { ListTasksUseCase } from '../application/use-cases/list-tasks.use-case';
+import { CompleteTaskUseCase } from '../application/use-cases/complete-task.use-case';
+import { CreateTaskDto } from './dto/create-task.dto';
+import { DomainException } from '../../shared/domain/exceptions';
 
-export const taskRouter = Router();
+@Controller('api/v1/tasks')
+export class TasksController {
+  constructor(
+    private readonly createTaskUseCase: CreateTaskUseCase,
+    private readonly listTasksUseCase: ListTasksUseCase,
+    private readonly completeTaskUseCase: CompleteTaskUseCase,
+  ) {}
 
-// Create task
-taskRouter.post("/", async (req: Request, res: Response, next: NextFunction) => {
-  try {
-    const { container } = req.app.locals;
-    const useCase = container.createTaskUseCase;
-
-    const request = new CreateTaskRequest(req.body.description);
-    const response = await useCase.execute(request);
-
-    res.status(201).json({
-      id: response.taskId,
-      description: response.description,
-      completed: false,
-      createdAt: response.createdAt
+  @Post()
+  @HttpCode(HttpStatus.CREATED)
+  async createTask(@Body() dto: CreateTaskDto) {
+    const result = await this.createTaskUseCase.execute({
+      description: dto.description,
     });
-  } catch (error) {
-    next(error);
+
+    if (!result.success) {
+      throw new DomainException(result.error);
+    }
+
+    return {
+      id: result.value.taskId,
+      description: dto.description,
+      completed: false,
+      createdAt: result.value.createdAt,
+    };
   }
-});
 
-// List tasks
-taskRouter.get("/", async (req: Request, res: Response, next: NextFunction) => {
-  try {
-    const { container } = req.app.locals;
-    const useCase = container.listTasksUseCase;
+  @Get()
+  async listTasks() {
+    const result = await this.listTasksUseCase.execute({});
 
-    const response = await useCase.execute();
+    if (!result.success) {
+      throw new DomainException(result.error);
+    }
 
-    res.json({
-      tasks: response.tasks.map(task => ({
+    return {
+      tasks: result.value.tasks.map((task) => ({
         id: task.id,
         description: task.description,
         completed: task.completed,
         createdAt: task.createdAt,
-        completedAt: task.completedAt
-      }))
-    });
-  } catch (error) {
-    next(error);
+        completedAt: task.completedAt,
+      })),
+    };
   }
+
+  @Put(':id/complete')
+  async completeTask(@Param('id') id: string) {
+    const result = await this.completeTaskUseCase.execute({ taskId: id });
+
+    if (!result.success) {
+      throw new DomainException(result.error);
+    }
+
+    return {
+      success: true,
+      completedAt: result.value.completedAt,
+    };
+  }
+}
+```
+
+```typescript
+// main.ts
+
+import { NestFactory } from '@nestjs/core';
+import { AppModule } from './app.module';
+import { DomainExceptionFilter } from './shared/filters/domain-exception.filter';
+
+async function bootstrap() {
+  const app = await NestFactory.create(AppModule);
+
+  app.useGlobalFilters(new DomainExceptionFilter());
+
+  const port = process.env.PORT || 3000;
+  await app.listen(port);
+  console.log(`Server running on port ${port}`);
+}
+
+bootstrap();
+```
+
+### TypeScript Implementation (Next.js)
+
+```typescript
+// app/(features)/tasks/page.tsx
+
+import { getContainer } from '@/lib/container';
+import { TaskList } from './components/task-list';
+import { CreateTaskForm } from './components/create-task-form';
+
+export default async function TasksPage() {
+  const container = getContainer();
+  const result = await container.getListTasksUseCase().execute({});
+
+  if (!result.success) {
+    return <div>Error loading tasks</div>;
+  }
+
+  return (
+    <div>
+      <h1>Task Manager</h1>
+      <CreateTaskForm />
+      <TaskList tasks={result.value.tasks} />
+    </div>
+  );
+}
+```
+
+```typescript
+// app/(features)/tasks/actions.ts
+'use server';
+
+import { revalidatePath } from 'next/cache';
+import { getContainer } from '@/lib/container';
+import { z } from 'zod';
+
+const CreateTaskSchema = z.object({
+  description: z.string().min(1).max(500),
 });
 
-// Complete task
-taskRouter.put("/:id/complete", async (req: Request, res: Response, next: NextFunction) => {
-  try {
-    const { container } = req.app.locals;
-    const useCase = container.completeTaskUseCase;
+export async function createTask(formData: FormData) {
+  const parsed = CreateTaskSchema.safeParse({
+    description: formData.get('description'),
+  });
 
-    const request = new CompleteTaskRequest(req.params.id);
-    const response = await useCase.execute(request);
-
-    res.json({
-      success: response.success,
-      completedAt: response.completedAt
-    });
-  } catch (error) {
-    next(error);
+  if (!parsed.success) {
+    return { success: false, error: parsed.error.flatten() };
   }
-});
+
+  const container = getContainer();
+  const result = await container.getCreateTaskUseCase().execute({
+    description: parsed.data.description,
+  });
+
+  if (!result.success) {
+    return { success: false, error: result.error };
+  }
+
+  revalidatePath('/tasks');
+  return { success: true, data: result.value };
+}
+
+export async function completeTask(taskId: string) {
+  const container = getContainer();
+  const result = await container.getCompleteTaskUseCase().execute({ taskId });
+
+  if (!result.success) {
+    return { success: false, error: result.error };
+  }
+
+  revalidatePath('/tasks');
+  return { success: true, data: result.value };
+}
+```
+
+```typescript
+// app/(features)/tasks/components/create-task-form.tsx
+'use client';
+
+import { useActionState } from 'react';
+import { createTask } from '../actions';
+
+export function CreateTaskForm() {
+  const [state, formAction, isPending] = useActionState(
+    async (_: unknown, formData: FormData) => createTask(formData),
+    null,
+  );
+
+  return (
+    <form action={formAction}>
+      <input
+        name="description"
+        placeholder="Enter task description"
+        disabled={isPending}
+      />
+      <button type="submit" disabled={isPending}>
+        {isPending ? 'Creating...' : 'Create Task'}
+      </button>
+      {state && !state.success && (
+        <p className="error">{JSON.stringify(state.error)}</p>
+      )}
+    </form>
+  );
+}
 ```
 
 ### C# Implementation (ASP.NET Core)

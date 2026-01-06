@@ -1,7 +1,9 @@
 {
   "permissions": {
     "allow": [
-      "Bash(chmod:*)"
+      "Bash(chmod:*)",
+      "WebFetch(domain:docs.nestjs.com)",
+      "WebFetch(domain:www.prisma.io)"
     ],
     "deny": [],
     "ask": []

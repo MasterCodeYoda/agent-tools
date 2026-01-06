@@ -40,6 +40,422 @@ Enable strict mode in `tsconfig.json`:
 }
 ```
 
+### Branded Types for Type-Safe Identifiers
+
+Branded types prevent accidentally passing the wrong ID type at compile time:
+
+```typescript
+// Brand symbol for nominal typing
+declare const BrandSymbol: unique symbol;
+type Brand<T, B> = T & { readonly [BrandSymbol]: B };
+
+// Domain-specific ID types
+export type UserId = Brand<string, 'UserId'>;
+export type OrderId = Brand<string, 'OrderId'>;
+export type ProductId = Brand<string, 'ProductId'>;
+
+// Smart constructors with validation
+export const UserId = {
+  create(value: string): UserId {
+    if (!value || value.trim().length === 0) {
+      throw new Error('UserId cannot be empty');
+    }
+    return value as UserId;
+  },
+
+  generate(): UserId {
+    return crypto.randomUUID() as UserId;
+  }
+};
+
+// Compile-time safety - these errors are caught at build time
+function getUser(id: UserId): Promise<User> { /* ... */ }
+function getOrder(id: OrderId): Promise<Order> { /* ... */ }
+
+const userId = UserId.create('user-123');
+const orderId = OrderId.create('order-456');
+
+getUser(userId);   // ✅ Correct
+getUser(orderId);  // ❌ Compile error: OrderId not assignable to UserId
+```
+
+### Result Pattern for Error Handling
+
+The Result pattern makes error handling explicit without exceptions for expected failures:
+
+```typescript
+// Core Result type
+export type Result<T, E = Error> =
+  | { success: true; value: T }
+  | { success: false; error: E };
+
+// Result factory functions
+export const Result = {
+  ok<T>(value: T): Result<T, never> {
+    return { success: true, value };
+  },
+
+  fail<E>(error: E): Result<never, E> {
+    return { success: false, error };
+  },
+
+  // Combine multiple results - fails fast on first error
+  combine<T, E>(results: Result<T, E>[]): Result<T[], E> {
+    const values: T[] = [];
+    for (const result of results) {
+      if (!result.success) return result;
+      values.push(result.value);
+    }
+    return Result.ok(values);
+  }
+};
+
+// Domain error types
+export type DomainError =
+  | { type: 'VALIDATION_ERROR'; field: string; message: string }
+  | { type: 'NOT_FOUND'; entity: string; id: string }
+  | { type: 'BUSINESS_RULE_VIOLATION'; rule: string; message: string };
+
+// Usage in domain objects
+export class Email {
+  private constructor(private readonly value: string) {}
+
+  static create(value: string): Result<Email, DomainError> {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(value)) {
+      return Result.fail({
+        type: 'VALIDATION_ERROR',
+        field: 'email',
+        message: 'Invalid email format'
+      });
+    }
+    return Result.ok(new Email(value));
+  }
+
+  toString(): string {
+    return this.value;
+  }
+}
+
+// Caller must handle both cases
+const emailResult = Email.create(userInput);
+if (!emailResult.success) {
+  // Handle error - TypeScript knows emailResult.error exists
+  console.error(emailResult.error.message);
+  return;
+}
+// TypeScript knows emailResult.value is Email
+const email = emailResult.value;
+```
+
+### Entity Base Class with Domain Events
+
+Abstract base class for entities that supports domain event collection:
+
+```typescript
+export interface DomainEvent {
+  readonly occurredOn: Date;
+  readonly eventType: string;
+}
+
+export abstract class Entity<TId> {
+  private _domainEvents: DomainEvent[] = [];
+
+  protected constructor(protected readonly _id: TId) {}
+
+  get id(): TId {
+    return this._id;
+  }
+
+  get domainEvents(): ReadonlyArray<DomainEvent> {
+    return [...this._domainEvents];
+  }
+
+  protected addDomainEvent(event: DomainEvent): void {
+    this._domainEvents.push(event);
+  }
+
+  clearDomainEvents(): void {
+    this._domainEvents = [];
+  }
+
+  equals(other: Entity<TId>): boolean {
+    if (other === null || other === undefined) return false;
+    if (!(other instanceof Entity)) return false;
+    return this._id === other._id;
+  }
+}
+```
+
+### Aggregate Root Pattern
+
+Aggregates are clusters of entities with one root that enforces consistency:
+
+```typescript
+// Domain events for order aggregate
+export interface OrderCreatedEvent extends DomainEvent {
+  eventType: 'ORDER_CREATED';
+  orderId: OrderId;
+  customerId: CustomerId;
+}
+
+export interface OrderItemAddedEvent extends DomainEvent {
+  eventType: 'ORDER_ITEM_ADDED';
+  orderId: OrderId;
+  productId: ProductId;
+  quantity: number;
+}
+
+// Order aggregate root
+export class Order extends Entity<OrderId> {
+  private _items: OrderItem[] = [];
+  private _status: OrderStatus;
+  private readonly _customerId: CustomerId;
+  private readonly _createdAt: Date;
+
+  // Private constructor - use factory methods
+  private constructor(
+    id: OrderId,
+    customerId: CustomerId,
+    status: OrderStatus
+  ) {
+    super(id);
+    this._customerId = customerId;
+    this._status = status;
+    this._createdAt = new Date();
+  }
+
+  // Factory method with Result pattern
+  static create(customerId: CustomerId): Result<Order, DomainError> {
+    if (!customerId) {
+      return Result.fail({
+        type: 'VALIDATION_ERROR',
+        field: 'customerId',
+        message: 'Customer ID is required'
+      });
+    }
+
+    const order = new Order(
+      OrderId.generate(),
+      customerId,
+      OrderStatus.DRAFT
+    );
+
+    order.addDomainEvent({
+      eventType: 'ORDER_CREATED',
+      occurredOn: new Date(),
+      orderId: order.id,
+      customerId
+    } as OrderCreatedEvent);
+
+    return Result.ok(order);
+  }
+
+  // Reconstitute from persistence (no validation, no events)
+  static reconstitute(
+    id: OrderId,
+    customerId: CustomerId,
+    status: OrderStatus,
+    items: OrderItem[]
+  ): Order {
+    const order = new Order(id, customerId, status);
+    order._items = items;
+    return order;
+  }
+
+  // Business method with Result pattern
+  addItem(
+    productId: ProductId,
+    quantity: number,
+    unitPrice: Money
+  ): Result<void, DomainError> {
+    if (this._status !== OrderStatus.DRAFT) {
+      return Result.fail({
+        type: 'BUSINESS_RULE_VIOLATION',
+        rule: 'ORDER_MUST_BE_DRAFT',
+        message: 'Cannot modify a submitted order'
+      });
+    }
+
+    if (quantity <= 0) {
+      return Result.fail({
+        type: 'VALIDATION_ERROR',
+        field: 'quantity',
+        message: 'Quantity must be positive'
+      });
+    }
+
+    const existingItem = this._items.find(
+      item => item.productId === productId
+    );
+
+    if (existingItem) {
+      existingItem.increaseQuantity(quantity);
+    } else {
+      this._items.push(new OrderItem(productId, quantity, unitPrice));
+    }
+
+    this.addDomainEvent({
+      eventType: 'ORDER_ITEM_ADDED',
+      occurredOn: new Date(),
+      orderId: this.id,
+      productId,
+      quantity
+    } as OrderItemAddedEvent);
+
+    return Result.ok(undefined);
+  }
+
+  submit(): Result<void, DomainError> {
+    if (this._items.length === 0) {
+      return Result.fail({
+        type: 'BUSINESS_RULE_VIOLATION',
+        rule: 'ORDER_MUST_HAVE_ITEMS',
+        message: 'Cannot submit an empty order'
+      });
+    }
+
+    this._status = OrderStatus.SUBMITTED;
+    return Result.ok(undefined);
+  }
+
+  get total(): Money {
+    return this._items.reduce(
+      (sum, item) => sum.add(item.subtotal),
+      Money.zero('USD')
+    );
+  }
+
+  get items(): ReadonlyArray<OrderItem> {
+    return [...this._items];
+  }
+
+  get status(): OrderStatus {
+    return this._status;
+  }
+}
+
+export enum OrderStatus {
+  DRAFT = 'DRAFT',
+  SUBMITTED = 'SUBMITTED',
+  CONFIRMED = 'CONFIRMED',
+  SHIPPED = 'SHIPPED',
+  DELIVERED = 'DELIVERED',
+  CANCELLED = 'CANCELLED'
+}
+```
+
+### Enhanced Value Objects with Result Pattern
+
+Value objects use factory methods returning Result for validation:
+
+```typescript
+export class Money {
+  private constructor(
+    private readonly _amount: number,
+    private readonly _currency: string
+  ) {}
+
+  static create(amount: number, currency: string): Result<Money, DomainError> {
+    if (amount < 0) {
+      return Result.fail({
+        type: 'VALIDATION_ERROR',
+        field: 'amount',
+        message: 'Amount cannot be negative'
+      });
+    }
+    if (currency.length !== 3) {
+      return Result.fail({
+        type: 'VALIDATION_ERROR',
+        field: 'currency',
+        message: 'Currency must be 3-letter ISO code'
+      });
+    }
+    return Result.ok(new Money(amount, currency.toUpperCase()));
+  }
+
+  static zero(currency: string): Money {
+    // Internal use - we trust the currency is valid
+    return new Money(0, currency.toUpperCase());
+  }
+
+  get amount(): number {
+    return this._amount;
+  }
+
+  get currency(): string {
+    return this._currency;
+  }
+
+  add(other: Money): Money {
+    if (this._currency !== other._currency) {
+      throw new Error('Cannot add different currencies');
+    }
+    return new Money(this._amount + other._amount, this._currency);
+  }
+
+  multiply(factor: number): Money {
+    return new Money(this._amount * factor, this._currency);
+  }
+
+  equals(other: Money): boolean {
+    return (
+      this._amount === other._amount &&
+      this._currency === other._currency
+    );
+  }
+}
+
+// Additional value object example
+export class Address {
+  private constructor(
+    readonly street: string,
+    readonly city: string,
+    readonly postalCode: string,
+    readonly country: string
+  ) {}
+
+  static create(props: {
+    street: string;
+    city: string;
+    postalCode: string;
+    country: string;
+  }): Result<Address, DomainError> {
+    if (!props.street?.trim()) {
+      return Result.fail({
+        type: 'VALIDATION_ERROR',
+        field: 'street',
+        message: 'Street is required'
+      });
+    }
+    if (!props.city?.trim()) {
+      return Result.fail({
+        type: 'VALIDATION_ERROR',
+        field: 'city',
+        message: 'City is required'
+      });
+    }
+    // Additional validation...
+
+    return Result.ok(new Address(
+      props.street.trim(),
+      props.city.trim(),
+      props.postalCode.trim(),
+      props.country.toUpperCase()
+    ));
+  }
+
+  equals(other: Address): boolean {
+    return (
+      this.street === other.street &&
+      this.city === other.city &&
+      this.postalCode === other.postalCode &&
+      this.country === other.country
+    );
+  }
+}
+```
+
 ## Domain Layer Patterns
 
 ### Entities
@@ -163,143 +579,843 @@ export class CreateTaskUseCase
 
 ## Infrastructure Layer Patterns
 
-### Repository Implementation
+### Prisma Repository Implementation
+
+Prisma provides type-safe database access with auto-generated types from your schema:
+
+```prisma
+// prisma/schema.prisma
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Task {
+  id          String    @id @default(uuid())
+  description String
+  completed   Boolean   @default(false)
+  createdAt   DateTime  @default(now()) @map("created_at")
+  completedAt DateTime? @map("completed_at")
+  customerId  String    @map("customer_id")
+  customer    Customer  @relation(fields: [customerId], references: [id])
+
+  @@map("tasks")
+}
+
+model Customer {
+  id    String @id @default(uuid())
+  email String @unique
+  name  String
+  tasks Task[]
+
+  @@map("customers")
+}
+```
 
 ```typescript
-import { Repository } from "typeorm";
-import { Task } from "../../domain/entities/Task";
-import { TaskRepository } from "../../domain/repositories/TaskRepository";
-import { TaskEntity } from "./entities/TaskEntity";
+// infrastructure/repositories/prisma-task.repository.ts
+import { PrismaClient, Task as PrismaTask } from '@prisma/client';
+import { Task, TaskId } from '../../domain/entities/task';
+import { TaskRepository } from '../../domain/repositories/task.repository';
 
-export class TypeOrmTaskRepository implements TaskRepository {
-  constructor(
-    private readonly ormRepository: Repository<TaskEntity>
-  ) {}
+export class PrismaTaskRepository implements TaskRepository {
+  constructor(private readonly prisma: PrismaClient) {}
 
   async save(task: Task): Promise<void> {
-    const entity = this.toEntity(task);
-    await this.ormRepository.save(entity);
+    await this.prisma.task.upsert({
+      where: { id: task.id },
+      update: this.toData(task),
+      create: this.toData(task),
+    });
   }
 
-  async findById(id: string): Promise<Task | null> {
-    const entity = await this.ormRepository.findOne({ where: { id } });
-    return entity ? this.toDomain(entity) : null;
+  async findById(id: TaskId): Promise<Task | null> {
+    const data = await this.prisma.task.findUnique({
+      where: { id },
+    });
+    return data ? this.toDomain(data) : null;
+  }
+
+  async findByCustomerId(customerId: string): Promise<Task[]> {
+    const data = await this.prisma.task.findMany({
+      where: { customerId },
+      orderBy: { createdAt: 'desc' },
+    });
+    return data.map((d) => this.toDomain(d));
   }
 
   async findAll(): Promise<Task[]> {
-    const entities = await this.ormRepository.find();
-    return entities.map(e => this.toDomain(e));
+    const data = await this.prisma.task.findMany({
+      orderBy: { createdAt: 'desc' },
+    });
+    return data.map((d) => this.toDomain(d));
   }
 
-  private toDomain(entity: TaskEntity): Task {
-    // Map from persistence to domain
-    return new Task(entity.description, entity.id);
+  // Map from persistence to domain
+  private toDomain(data: PrismaTask): Task {
+    return Task.reconstitute(
+      TaskId.create(data.id),
+      data.description,
+      data.completed,
+      data.createdAt,
+      data.completedAt,
+    );
   }
 
-  private toEntity(task: Task): TaskEntity {
-    // Map from domain to persistence
-    const entity = new TaskEntity();
-    entity.id = task.id;
-    entity.description = task.description;
-    // ... map other fields
-    return entity;
+  // Map from domain to persistence
+  private toData(task: Task): Omit<PrismaTask, 'customer'> {
+    return {
+      id: task.id,
+      description: task.description,
+      completed: task.isCompleted,
+      createdAt: task.createdAt,
+      completedAt: task.completedAt,
+      customerId: task.customerId,
+    };
   }
 }
 ```
 
-## Frameworks Layer Patterns
+### Domain Event Publishing with Prisma
 
-### Express Controllers
+Publish domain events after successful persistence:
 
 ```typescript
-import { Router, Request, Response } from "express";
-import { CreateTaskUseCase } from "../../application/use-cases/CreateTaskUseCase";
-
-export class TaskController {
+// infrastructure/repositories/prisma-task.repository.ts
+export class PrismaTaskRepository implements TaskRepository {
   constructor(
-    private readonly createTaskUseCase: CreateTaskUseCase
+    private readonly prisma: PrismaClient,
+    private readonly eventPublisher: DomainEventPublisher,
   ) {}
 
-  async createTask(req: Request, res: Response): Promise<void> {
-    try {
-      const request = new CreateTaskRequest(req.body.description);
-      const response = await this.createTaskUseCase.execute(request);
+  async save(task: Task): Promise<void> {
+    // Capture events before clearing
+    const events = task.domainEvents;
 
-      res.status(201).json({
-        id: response.taskId,
-        created: response.created
-      });
-    } catch (error) {
-      res.status(400).json({ error: error.message });
+    await this.prisma.task.upsert({
+      where: { id: task.id },
+      update: this.toData(task),
+      create: this.toData(task),
+    });
+
+    // Publish events after successful persistence
+    task.clearDomainEvents();
+    for (const event of events) {
+      await this.eventPublisher.publish(event);
     }
   }
 }
 ```
 
-### Dependency Injection
+### Drizzle ORM (Alternative)
+
+For projects preferring SQL-like syntax with type safety:
 
 ```typescript
-// Simple DI Container
-export class Container {
-  private taskRepository: TaskRepository;
-  private createTaskUseCase: CreateTaskUseCase;
+// infrastructure/repositories/drizzle-task.repository.ts
+import { eq } from 'drizzle-orm';
+import { db } from '../database/drizzle';
+import { tasks } from '../database/schema';
+import { Task, TaskId } from '../../domain/entities/task';
+import { TaskRepository } from '../../domain/repositories/task.repository';
 
-  constructor() {
-    // Infrastructure
-    this.taskRepository = new InMemoryTaskRepository();
-
-    // Application
-    this.createTaskUseCase = new CreateTaskUseCase(this.taskRepository);
+export class DrizzleTaskRepository implements TaskRepository {
+  async save(task: Task): Promise<void> {
+    await db
+      .insert(tasks)
+      .values(this.toData(task))
+      .onConflictDoUpdate({
+        target: tasks.id,
+        set: this.toData(task),
+      });
   }
 
-  getCreateTaskUseCase(): CreateTaskUseCase {
-    return this.createTaskUseCase;
+  async findById(id: TaskId): Promise<Task | null> {
+    const [data] = await db
+      .select()
+      .from(tasks)
+      .where(eq(tasks.id, id));
+    return data ? this.toDomain(data) : null;
+  }
+
+  // ... mapping methods similar to Prisma
+}
+```
+
+## Frameworks Layer Patterns
+
+### Recommended Frameworks
+
+| Use Case | Recommended Framework |
+|----------|----------------------|
+| Backend API | NestJS |
+| Full-stack React | Next.js App Router |
+| Both (API + UI) | NestJS + Next.js |
+
+### NestJS Layer Mapping
+
+NestJS concepts map directly to Clean Architecture layers:
+
+| Clean Architecture | NestJS Concept |
+|-------------------|----------------|
+| Frameworks | Controllers, Modules, main.ts |
+| Infrastructure | Injectable Services, Repository implementations |
+| Application | Use Cases as @Injectable services |
+| Domain | Pure TypeScript classes (no decorators) |
+
+### NestJS Module Organization
+
+Organize modules by feature (bounded context), not by technical layer:
+
+```typescript
+// ✅ GOOD - Feature-based modules
+// tasks/tasks.module.ts
+@Module({
+  imports: [PrismaModule],
+  controllers: [TasksController],
+  providers: [
+    CreateTaskUseCase,
+    CompleteTaskUseCase,
+    {
+      provide: TASK_REPOSITORY,
+      useClass: PrismaTaskRepository,
+    },
+  ],
+  exports: [CreateTaskUseCase],
+})
+export class TasksModule {}
+
+// ❌ BAD - Technical-layer modules
+// controllers.module.ts, services.module.ts, repositories.module.ts
+```
+
+### NestJS Controllers
+
+Controllers are the entry point - convert HTTP to use case requests:
+
+```typescript
+import {
+  Controller,
+  Post,
+  Get,
+  Body,
+  Param,
+  HttpCode,
+  HttpStatus,
+} from '@nestjs/common';
+import { CreateTaskUseCase } from '../application/create-task.use-case';
+import { CreateTaskDto } from './dto/create-task.dto';
+
+@Controller('tasks')
+export class TasksController {
+  constructor(
+    private readonly createTaskUseCase: CreateTaskUseCase,
+  ) {}
+
+  @Post()
+  @HttpCode(HttpStatus.CREATED)
+  async create(@Body() dto: CreateTaskDto) {
+    const result = await this.createTaskUseCase.execute({
+      description: dto.description,
+    });
+
+    if (!result.success) {
+      // Exception filter handles this
+      throw new DomainExceptionFilter(result.error);
+    }
+
+    return {
+      id: result.value.taskId,
+      created: true,
+    };
+  }
+
+  @Get(':id')
+  async findOne(@Param('id') id: string) {
+    // ... similar pattern
+  }
+}
+```
+
+### Dependency Injection with Interface Tokens
+
+Use symbols to inject interfaces (Clean Architecture's dependency inversion):
+
+```typescript
+// tokens.ts - Define injection tokens
+export const TASK_REPOSITORY = Symbol('TASK_REPOSITORY');
+export const NOTIFICATION_SERVICE = Symbol('NOTIFICATION_SERVICE');
+
+// create-task.use-case.ts - Use case depends on interfaces
+@Injectable()
+export class CreateTaskUseCase {
+  constructor(
+    @Inject(TASK_REPOSITORY)
+    private readonly taskRepository: TaskRepository,
+    @Inject(NOTIFICATION_SERVICE)
+    private readonly notificationService: NotificationService,
+  ) {}
+
+  async execute(request: CreateTaskRequest): Promise<Result<CreateTaskResponse, DomainError>> {
+    const taskResult = Task.create(request.description);
+    if (!taskResult.success) return taskResult;
+
+    await this.taskRepository.save(taskResult.value);
+    await this.notificationService.notifyTaskCreated(taskResult.value);
+
+    return Result.ok({
+      taskId: taskResult.value.id,
+      created: true,
+    });
   }
 }
 
-// Or use a DI library like InversifyJS
-import { Container } from "inversify";
-import { TYPES } from "./types";
-
-const container = new Container();
-container.bind<TaskRepository>(TYPES.TaskRepository)
-  .to(InMemoryTaskRepository);
-container.bind<CreateTaskUseCase>(TYPES.CreateTaskUseCase)
-  .to(CreateTaskUseCase);
+// tasks.module.ts - Wire implementations
+@Module({
+  providers: [
+    CreateTaskUseCase,
+    {
+      provide: TASK_REPOSITORY,
+      useClass: PrismaTaskRepository,
+    },
+    {
+      provide: NOTIFICATION_SERVICE,
+      useClass: EmailNotificationService,
+    },
+  ],
+})
+export class TasksModule {}
 ```
+
+### Exception Filters
+
+Map domain errors to HTTP responses:
+
+```typescript
+import {
+  ExceptionFilter,
+  Catch,
+  ArgumentsHost,
+  HttpStatus,
+} from '@nestjs/common';
+import { Response } from 'express';
+import { DomainError } from '../domain/errors';
+
+export class DomainException extends Error {
+  constructor(public readonly domainError: DomainError) {
+    super(domainError.message);
+  }
+}
+
+@Catch(DomainException)
+export class DomainExceptionFilter implements ExceptionFilter {
+  catch(exception: DomainException, host: ArgumentsHost) {
+    const ctx = host.switchToHttp();
+    const response = ctx.getResponse<Response>();
+    const error = exception.domainError;
+
+    const statusMap: Record<DomainError['type'], number> = {
+      VALIDATION_ERROR: HttpStatus.BAD_REQUEST,
+      NOT_FOUND: HttpStatus.NOT_FOUND,
+      BUSINESS_RULE_VIOLATION: HttpStatus.UNPROCESSABLE_ENTITY,
+    };
+
+    response.status(statusMap[error.type]).json({
+      type: error.type,
+      message: error.message,
+      ...(error.type === 'VALIDATION_ERROR' && { field: error.field }),
+    });
+  }
+}
+```
+
+### Guards for Authorization
+
+```typescript
+import { Injectable, CanActivate, ExecutionContext } from '@nestjs/common';
+import { Reflector } from '@nestjs/core';
+
+@Injectable()
+export class RolesGuard implements CanActivate {
+  constructor(private reflector: Reflector) {}
+
+  canActivate(context: ExecutionContext): boolean {
+    const requiredRoles = this.reflector.get<string[]>(
+      'roles',
+      context.getHandler(),
+    );
+    if (!requiredRoles) return true;
+
+    const request = context.switchToHttp().getRequest();
+    const user = request.user;
+
+    return requiredRoles.some((role) => user.roles?.includes(role));
+  }
+}
+
+// Usage with decorator
+@Post()
+@Roles('admin')
+@UseGuards(RolesGuard)
+async createTask(@Body() dto: CreateTaskDto) {
+  // ...
+}
+```
+
+### Validation Pipes with Zod
+
+Use Zod for runtime validation that integrates with TypeScript types:
+
+```typescript
+import { PipeTransform, Injectable, BadRequestException } from '@nestjs/common';
+import { ZodSchema, ZodError } from 'zod';
+
+@Injectable()
+export class ZodValidationPipe implements PipeTransform {
+  constructor(private schema: ZodSchema) {}
+
+  transform(value: unknown) {
+    const result = this.schema.safeParse(value);
+    if (!result.success) {
+      throw new BadRequestException({
+        message: 'Validation failed',
+        errors: result.error.errors,
+      });
+    }
+    return result.data;
+  }
+}
+
+// DTO with Zod schema
+import { z } from 'zod';
+
+export const CreateTaskSchema = z.object({
+  description: z.string().min(1).max(500),
+  dueDate: z.string().datetime().optional(),
+});
+
+export type CreateTaskDto = z.infer<typeof CreateTaskSchema>;
+
+// Usage in controller
+@Post()
+async create(
+  @Body(new ZodValidationPipe(CreateTaskSchema)) dto: CreateTaskDto,
+) {
+  // dto is validated and typed
+}
+```
+
+### CQRS Pattern (Optional)
+
+For complex domains, separate read and write operations:
+
+```typescript
+import { CommandHandler, ICommandHandler, QueryHandler, IQueryHandler } from '@nestjs/cqrs';
+
+// Command
+export class CreateTaskCommand {
+  constructor(
+    public readonly description: string,
+    public readonly userId: UserId,
+  ) {}
+}
+
+@CommandHandler(CreateTaskCommand)
+export class CreateTaskHandler implements ICommandHandler<CreateTaskCommand> {
+  constructor(
+    @Inject(TASK_REPOSITORY)
+    private readonly taskRepository: TaskRepository,
+  ) {}
+
+  async execute(command: CreateTaskCommand): Promise<Result<TaskId, DomainError>> {
+    const taskResult = Task.create(command.description, command.userId);
+    if (!taskResult.success) return taskResult;
+
+    await this.taskRepository.save(taskResult.value);
+    return Result.ok(taskResult.value.id);
+  }
+}
+
+// Query
+export class GetTaskQuery {
+  constructor(public readonly taskId: TaskId) {}
+}
+
+@QueryHandler(GetTaskQuery)
+export class GetTaskHandler implements IQueryHandler<GetTaskQuery> {
+  constructor(
+    @Inject(TASK_REPOSITORY)
+    private readonly taskRepository: TaskRepository,
+  ) {}
+
+  async execute(query: GetTaskQuery): Promise<TaskView | null> {
+    return this.taskRepository.findById(query.taskId);
+  }
+}
+
+// Usage in controller
+@Controller('tasks')
+export class TasksController {
+  constructor(
+    private readonly commandBus: CommandBus,
+    private readonly queryBus: QueryBus,
+  ) {}
+
+  @Post()
+  async create(@Body() dto: CreateTaskDto, @CurrentUser() user: User) {
+    return this.commandBus.execute(
+      new CreateTaskCommand(dto.description, user.id),
+    );
+  }
+
+  @Get(':id')
+  async findOne(@Param('id') id: string) {
+    return this.queryBus.execute(new GetTaskQuery(TaskId.create(id)));
+  }
+}
+```
+
+> **When to use CQRS**: Complex domains with different read/write models, event sourcing, or high-scale read requirements. For simpler CRUD apps, standard use cases are sufficient.
+
+### Next.js App Router Patterns
+
+For full-stack React applications, Next.js App Router integrates cleanly with Clean Architecture:
+
+#### Next.js Layer Mapping
+
+| Clean Architecture | Next.js Implementation |
+|-------------------|----------------------|
+| Domain | `src/domain/` - Pure TypeScript |
+| Application | `src/application/` - Use cases |
+| Infrastructure | `src/infrastructure/` - Repositories |
+| Frameworks | `app/` - Routes, Components, Server Actions |
+
+#### Directory Structure
+
+```
+project/
+├── src/
+│   ├── domain/
+│   │   ├── entities/
+│   │   └── repositories/      # Interfaces only
+│   ├── application/
+│   │   └── use-cases/
+│   └── infrastructure/
+│       └── repositories/      # Prisma implementations
+├── app/                       # Frameworks layer
+│   ├── (features)/
+│   │   └── tasks/
+│   │       ├── page.tsx       # Server Component
+│   │       ├── actions.ts     # Server Actions
+│   │       └── components/
+│   └── api/                   # Route Handlers (optional)
+├── lib/
+│   └── container.ts           # DI composition root
+└── prisma/
+    └── schema.prisma
+```
+
+#### Server Components (Read Path)
+
+Server Components can directly invoke use cases for data fetching:
+
+```typescript
+// app/(features)/tasks/page.tsx
+import { getContainer } from '@/lib/container';
+
+export default async function TasksPage() {
+  const container = getContainer();
+  const listTasksUseCase = container.getListTasksUseCase();
+
+  const result = await listTasksUseCase.execute({});
+
+  if (!result.success) {
+    // Handle error - could throw to error boundary
+    return <ErrorDisplay error={result.error} />;
+  }
+
+  return (
+    <div>
+      <h1>Tasks</h1>
+      <TaskList tasks={result.value.tasks} />
+      <CreateTaskForm />
+    </div>
+  );
+}
+```
+
+#### Server Actions (Write Path)
+
+Server Actions are the transport layer for mutations:
+
+```typescript
+// app/(features)/tasks/actions.ts
+'use server';
+
+import { revalidatePath } from 'next/cache';
+import { getContainer } from '@/lib/container';
+import { CreateTaskSchema } from './schemas';
+
+export async function createTask(formData: FormData) {
+  // 1. Parse and validate input
+  const parsed = CreateTaskSchema.safeParse({
+    description: formData.get('description'),
+  });
+
+  if (!parsed.success) {
+    return {
+      success: false,
+      error: { type: 'VALIDATION_ERROR', errors: parsed.error.flatten() },
+    };
+  }
+
+  // 2. Call use case
+  const container = getContainer();
+  const useCase = container.getCreateTaskUseCase();
+  const result = await useCase.execute(parsed.data);
+
+  // 3. Handle result
+  if (!result.success) {
+    return { success: false, error: result.error };
+  }
+
+  // 4. Revalidate cache
+  revalidatePath('/tasks');
+
+  return { success: true, data: result.value };
+}
+
+export async function completeTask(taskId: string) {
+  const container = getContainer();
+  const useCase = container.getCompleteTaskUseCase();
+
+  const result = await useCase.execute({ taskId: TaskId.create(taskId) });
+
+  if (!result.success) {
+    return { success: false, error: result.error };
+  }
+
+  revalidatePath('/tasks');
+  return { success: true };
+}
+```
+
+#### Client Components
+
+Client components use `useActionState` for form handling:
+
+```typescript
+// app/(features)/tasks/components/CreateTaskForm.tsx
+'use client';
+
+import { useActionState } from 'react';
+import { createTask } from '../actions';
+
+export function CreateTaskForm() {
+  const [state, formAction, isPending] = useActionState(
+    async (_prevState: unknown, formData: FormData) => {
+      return createTask(formData);
+    },
+    null,
+  );
+
+  return (
+    <form action={formAction}>
+      <input
+        name="description"
+        placeholder="Task description"
+        disabled={isPending}
+      />
+      <button type="submit" disabled={isPending}>
+        {isPending ? 'Creating...' : 'Create Task'}
+      </button>
+
+      {state && !state.success && (
+        <p className="error">{state.error.message}</p>
+      )}
+    </form>
+  );
+}
+```
+
+#### DI Container for Next.js
+
+Simple composition root pattern:
+
+```typescript
+// lib/container.ts
+import { PrismaClient } from '@prisma/client';
+import { PrismaTaskRepository } from '@/infrastructure/repositories/prisma-task.repository';
+import { CreateTaskUseCase } from '@/application/use-cases/create-task.use-case';
+import { ListTasksUseCase } from '@/application/use-cases/list-tasks.use-case';
+
+// Singleton pattern for Prisma in Next.js
+const globalForPrisma = globalThis as unknown as { prisma: PrismaClient };
+const prisma = globalForPrisma.prisma ?? new PrismaClient();
+if (process.env.NODE_ENV !== 'production') globalForPrisma.prisma = prisma;
+
+class Container {
+  private taskRepository = new PrismaTaskRepository(prisma);
+
+  getCreateTaskUseCase() {
+    return new CreateTaskUseCase(this.taskRepository);
+  }
+
+  getListTasksUseCase() {
+    return new ListTasksUseCase(this.taskRepository);
+  }
+}
+
+let container: Container;
+
+export function getContainer(): Container {
+  if (!container) {
+    container = new Container();
+  }
+  return container;
+}
+```
+
+#### Route Handlers (Optional REST API)
+
+When you need REST endpoints alongside Server Actions:
+
+```typescript
+// app/api/tasks/route.ts
+import { NextRequest, NextResponse } from 'next/server';
+import { getContainer } from '@/lib/container';
+import { CreateTaskSchema } from '@/app/(features)/tasks/schemas';
+
+export async function GET() {
+  const container = getContainer();
+  const result = await container.getListTasksUseCase().execute({});
+
+  if (!result.success) {
+    return NextResponse.json({ error: result.error }, { status: 400 });
+  }
+
+  return NextResponse.json(result.value);
+}
+
+export async function POST(request: NextRequest) {
+  const body = await request.json();
+  const parsed = CreateTaskSchema.safeParse(body);
+
+  if (!parsed.success) {
+    return NextResponse.json(
+      { error: parsed.error.flatten() },
+      { status: 400 },
+    );
+  }
+
+  const container = getContainer();
+  const result = await container.getCreateTaskUseCase().execute(parsed.data);
+
+  if (!result.success) {
+    return NextResponse.json({ error: result.error }, { status: 422 });
+  }
+
+  return NextResponse.json(result.value, { status: 201 });
+}
+```
+
+#### Clean Architecture Rules for Next.js
+
+1. **Server Components call use cases**, not repositories directly
+2. **Server Actions are transport layer** - validate, call use case, revalidate
+3. **Domain and Application layers have no Next.js imports**
+4. **Client Components are pure UI** - delegate mutations to Server Actions
 
 ## Testing Patterns
 
-### Domain Layer Tests
+### Test Helpers for Result Pattern
+
+Create helpers to make Result assertions cleaner:
 
 ```typescript
-import { Task } from "../domain/entities/Task";
+// test/helpers/result.helpers.ts
+import { Result, DomainError } from '../../src/domain/result';
 
-describe("Task Entity", () => {
-  it("should create a valid task", () => {
-    const task = new Task("Learn TypeScript");
+export function expectSuccess<T, E>(result: Result<T, E>): T {
+  expect(result.success).toBe(true);
+  if (!result.success) throw new Error('Expected success');
+  return result.value;
+}
 
-    expect(task.description).toBe("Learn TypeScript");
-    expect(task.isCompleted).toBe(false);
-    expect(task.id).toBeDefined();
+export function expectFailure<T>(
+  result: Result<T, DomainError>,
+): DomainError {
+  expect(result.success).toBe(false);
+  if (result.success) throw new Error('Expected failure');
+  return result.error;
+}
+
+export function expectValidationError(
+  result: Result<unknown, DomainError>,
+  field: string,
+): void {
+  const error = expectFailure(result);
+  expect(error.type).toBe('VALIDATION_ERROR');
+  if (error.type === 'VALIDATION_ERROR') {
+    expect(error.field).toBe(field);
+  }
+}
+```
+
+### Domain Layer Tests with Result Pattern
+
+```typescript
+import { Task } from '../domain/entities/task';
+import { expectSuccess, expectFailure, expectValidationError } from './helpers/result.helpers';
+
+describe('Task Entity', () => {
+  describe('create', () => {
+    it('should create a valid task', () => {
+      const result = Task.create('Learn TypeScript', customerId);
+
+      const task = expectSuccess(result);
+      expect(task.description).toBe('Learn TypeScript');
+      expect(task.isCompleted).toBe(false);
+    });
+
+    it('should fail with empty description', () => {
+      const result = Task.create('', customerId);
+
+      expectValidationError(result, 'description');
+    });
+
+    it('should emit TaskCreated domain event', () => {
+      const result = Task.create('New task', customerId);
+
+      const task = expectSuccess(result);
+      expect(task.domainEvents).toHaveLength(1);
+      expect(task.domainEvents[0].eventType).toBe('TASK_CREATED');
+    });
   });
 
-  it("should not create task with empty description", () => {
-    expect(() => new Task("")).toThrow("Description cannot be empty");
-  });
+  describe('complete', () => {
+    it('should complete a task', () => {
+      const task = expectSuccess(Task.create('Test task', customerId));
 
-  it("should complete a task", () => {
-    const task = new Task("Test task");
-    task.complete();
+      const result = task.complete();
 
-    expect(task.isCompleted).toBe(true);
-  });
+      expectSuccess(result);
+      expect(task.isCompleted).toBe(true);
+    });
 
-  it("should not complete task twice", () => {
-    const task = new Task("Test task");
-    task.complete();
+    it('should fail when completing already completed task', () => {
+      const task = expectSuccess(Task.create('Test task', customerId));
+      task.complete();
 
-    expect(() => task.complete()).toThrow("Task already completed");
+      const result = task.complete();
+
+      const error = expectFailure(result);
+      expect(error.type).toBe('BUSINESS_RULE_VIOLATION');
+    });
   });
 });
 ```
@@ -307,84 +1423,313 @@ describe("Task Entity", () => {
 ### Application Layer Tests
 
 ```typescript
-import { CreateTaskUseCase } from "../application/use-cases/CreateTaskUseCase";
+import { CreateTaskUseCase } from '../application/use-cases/create-task.use-case';
+import { expectSuccess, expectFailure } from './helpers/result.helpers';
 
-describe("CreateTaskUseCase", () => {
-  it("should create a task", async () => {
-    const mockRepository = {
-      save: jest.fn(),
+describe('CreateTaskUseCase', () => {
+  let useCase: CreateTaskUseCase;
+  let mockRepository: jest.Mocked<TaskRepository>;
+
+  beforeEach(() => {
+    mockRepository = {
+      save: jest.fn().mockResolvedValue(undefined),
       findById: jest.fn(),
-      findAll: jest.fn()
+      findAll: jest.fn(),
     };
+    useCase = new CreateTaskUseCase(mockRepository);
+  });
 
-    const useCase = new CreateTaskUseCase(mockRepository);
-    const request = new CreateTaskRequest("New task");
+  it('should create a task successfully', async () => {
+    const result = await useCase.execute({
+      description: 'New task',
+      customerId: 'customer-123',
+    });
 
-    const response = await useCase.execute(request);
-
-    expect(response.created).toBe(true);
+    const response = expectSuccess(result);
+    expect(response.taskId).toBeDefined();
     expect(mockRepository.save).toHaveBeenCalledTimes(1);
   });
+
+  it('should propagate domain validation errors', async () => {
+    const result = await useCase.execute({
+      description: '', // Invalid
+      customerId: 'customer-123',
+    });
+
+    const error = expectFailure(result);
+    expect(error.type).toBe('VALIDATION_ERROR');
+  });
+});
+```
+
+### NestJS Integration Tests
+
+Use NestJS TestingModule to test with real DI:
+
+```typescript
+import { Test, TestingModule } from '@nestjs/testing';
+import { INestApplication } from '@nestjs/common';
+import * as request from 'supertest';
+import { AppModule } from '../src/app.module';
+import { TASK_REPOSITORY } from '../src/tasks/tokens';
+import { TaskRepository } from '../src/tasks/domain/repositories/task.repository';
+
+describe('TasksController (e2e)', () => {
+  let app: INestApplication;
+  let mockRepository: jest.Mocked<TaskRepository>;
+
+  beforeEach(async () => {
+    mockRepository = {
+      save: jest.fn().mockResolvedValue(undefined),
+      findById: jest.fn(),
+      findAll: jest.fn().mockResolvedValue([]),
+    };
+
+    const moduleFixture: TestingModule = await Test.createTestingModule({
+      imports: [AppModule],
+    })
+      .overrideProvider(TASK_REPOSITORY)
+      .useValue(mockRepository)
+      .compile();
+
+    app = moduleFixture.createNestApplication();
+    await app.init();
+  });
+
+  afterEach(async () => {
+    await app.close();
+  });
+
+  describe('POST /tasks', () => {
+    it('should create a task', async () => {
+      const response = await request(app.getHttpServer())
+        .post('/tasks')
+        .send({ description: 'Test task' })
+        .expect(201);
+
+      expect(response.body.id).toBeDefined();
+      expect(mockRepository.save).toHaveBeenCalled();
+    });
+
+    it('should return 400 for invalid input', async () => {
+      await request(app.getHttpServer())
+        .post('/tasks')
+        .send({ description: '' })
+        .expect(400);
+    });
+  });
+
+  describe('GET /tasks', () => {
+    it('should return all tasks', async () => {
+      mockRepository.findAll.mockResolvedValue([
+        Task.reconstitute(TaskId.create('1'), 'Task 1', false, new Date(), null),
+      ]);
+
+      const response = await request(app.getHttpServer())
+        .get('/tasks')
+        .expect(200);
+
+      expect(response.body).toHaveLength(1);
+    });
+  });
+});
+```
+
+### Unit Testing NestJS Services
+
+```typescript
+import { Test, TestingModule } from '@nestjs/testing';
+import { CreateTaskUseCase } from './create-task.use-case';
+import { TASK_REPOSITORY } from '../tokens';
+
+describe('CreateTaskUseCase', () => {
+  let useCase: CreateTaskUseCase;
+  let mockRepository: jest.Mocked<TaskRepository>;
+
+  beforeEach(async () => {
+    mockRepository = {
+      save: jest.fn(),
+      findById: jest.fn(),
+      findAll: jest.fn(),
+    };
+
+    const module: TestingModule = await Test.createTestingModule({
+      providers: [
+        CreateTaskUseCase,
+        {
+          provide: TASK_REPOSITORY,
+          useValue: mockRepository,
+        },
+      ],
+    }).compile();
+
+    useCase = module.get<CreateTaskUseCase>(CreateTaskUseCase);
+  });
+
+  it('should be defined', () => {
+    expect(useCase).toBeDefined();
+  });
+
+  // ... additional tests
 });
 ```
 
 ## Project Structure
 
+### NestJS Backend Structure
+
+Feature-based modules containing all layers:
+
 ```
 src/
-├── domain/
-│   ├── entities/
-│   │   └── Task.ts
-│   ├── value-objects/
-│   │   └── Money.ts
-│   ├── repositories/
-│   │   └── TaskRepository.ts
-│   └── exceptions/
-│       └── DomainException.ts
+├── main.ts                      # Bootstrap
+├── app.module.ts                # Root module
 │
-├── application/
-│   ├── use-cases/
-│   │   ├── CreateTaskUseCase.ts
-│   │   └── ListTasksUseCase.ts
-│   └── dto/
-│       └── TaskDto.ts
+├── tasks/                       # Feature module
+│   ├── tasks.module.ts
+│   ├── tokens.ts                # DI tokens
+│   │
+│   ├── domain/                  # Domain layer
+│   │   ├── entities/
+│   │   │   └── task.ts
+│   │   ├── value-objects/
+│   │   │   └── task-id.ts
+│   │   ├── repositories/
+│   │   │   └── task.repository.ts    # Interface
+│   │   └── events/
+│   │       └── task-created.event.ts
+│   │
+│   ├── application/             # Application layer
+│   │   └── use-cases/
+│   │       ├── create-task.use-case.ts
+│   │       └── list-tasks.use-case.ts
+│   │
+│   ├── infrastructure/          # Infrastructure layer
+│   │   └── repositories/
+│   │       └── prisma-task.repository.ts
+│   │
+│   └── presentation/            # Frameworks layer
+│       ├── controllers/
+│       │   └── tasks.controller.ts
+│       └── dto/
+│           └── create-task.dto.ts
 │
-├── infrastructure/
-│   ├── repositories/
-│   │   └── TypeOrmTaskRepository.ts
-│   ├── database/
-│   │   └── entities/
-│   │       └── TaskEntity.ts
-│   └── services/
-│       └── EmailService.ts
+├── shared/                      # Shared kernel
+│   ├── domain/
+│   │   ├── entity.base.ts
+│   │   ├── result.ts
+│   │   └── domain-event.ts
+│   └── infrastructure/
+│       └── prisma/
+│           └── prisma.module.ts
 │
-└── presentation/  // or frameworks
-    ├── express/
-    │   ├── controllers/
-    │   │   └── TaskController.ts
-    │   ├── routes/
-    │   │   └── taskRoutes.ts
-    │   └── app.ts
-    └── graphql/
-        └── resolvers/
-            └── taskResolver.ts
+└── config/
+    └── configuration.ts
+
+prisma/
+└── schema.prisma
+```
+
+### Next.js Full-Stack Structure
+
+Clean separation with `src/` for business logic and `app/` for framework:
+
+```
+├── src/                         # Business logic (framework-agnostic)
+│   ├── domain/
+│   │   ├── entities/
+│   │   │   └── task.ts
+│   │   ├── value-objects/
+│   │   │   └── task-id.ts
+│   │   └── repositories/
+│   │       └── task.repository.ts    # Interface
+│   │
+│   ├── application/
+│   │   └── use-cases/
+│   │       ├── create-task.use-case.ts
+│   │       └── list-tasks.use-case.ts
+│   │
+│   └── infrastructure/
+│       └── repositories/
+│           └── prisma-task.repository.ts
+│
+├── app/                         # Frameworks layer (Next.js)
+│   ├── layout.tsx
+│   ├── (features)/
+│   │   └── tasks/
+│   │       ├── page.tsx         # Server Component
+│   │       ├── actions.ts       # Server Actions
+│   │       ├── schemas.ts       # Zod schemas
+│   │       └── components/
+│   │           ├── task-list.tsx
+│   │           └── create-task-form.tsx
+│   │
+│   └── api/                     # Optional REST endpoints
+│       └── tasks/
+│           └── route.ts
+│
+├── lib/
+│   ├── container.ts             # DI composition root
+│   └── prisma.ts                # Prisma singleton
+│
+├── prisma/
+│   └── schema.prisma
+│
+└── test/
+    ├── helpers/
+    │   └── result.helpers.ts
+    └── domain/
+        └── task.test.ts
 ```
 
 ## TypeScript-Specific Tools
 
-### Development Dependencies
+### NestJS Backend Dependencies
 
 ```json
 {
+  "dependencies": {
+    "@nestjs/common": "^10.0.0",
+    "@nestjs/core": "^10.0.0",
+    "@nestjs/platform-express": "^10.0.0",
+    "@nestjs/cqrs": "^10.0.0",
+    "@prisma/client": "^5.0.0",
+    "reflect-metadata": "^0.1.13",
+    "rxjs": "^7.8.0",
+    "zod": "^3.22.0"
+  },
   "devDependencies": {
+    "@nestjs/cli": "^10.0.0",
+    "@nestjs/schematics": "^10.0.0",
+    "@nestjs/testing": "^10.0.0",
     "@types/node": "^20.0.0",
-    "@types/express": "^4.17.0",
-    "@typescript-eslint/eslint-plugin": "^6.0.0",
-    "@typescript-eslint/parser": "^6.0.0",
-    "eslint": "^8.0.0",
+    "@types/supertest": "^6.0.0",
+    "prisma": "^5.0.0",
+    "supertest": "^6.3.0",
     "jest": "^29.0.0",
     "ts-jest": "^29.0.0",
-    "ts-node": "^10.0.0",
+    "typescript": "^5.0.0"
+  }
+}
+```
+
+### Next.js Full-Stack Dependencies
+
+```json
+{
+  "dependencies": {
+    "next": "^15.0.0",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0",
+    "@prisma/client": "^5.0.0",
+    "zod": "^3.22.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "@types/react": "^18.0.0",
+    "prisma": "^5.0.0",
+    "jest": "^29.0.0",
+    "@testing-library/react": "^14.0.0",
     "typescript": "^5.0.0"
   }
 }
@@ -396,14 +1741,19 @@ src/
 {
   "extends": [
     "eslint:recommended",
-    "plugin:@typescript-eslint/recommended"
+    "plugin:@typescript-eslint/recommended",
+    "plugin:@typescript-eslint/strict-type-checked"
   ],
   "parser": "@typescript-eslint/parser",
+  "parserOptions": {
+    "project": true
+  },
   "plugins": ["@typescript-eslint"],
   "rules": {
     "@typescript-eslint/explicit-function-return-type": "error",
     "@typescript-eslint/no-explicit-any": "error",
-    "@typescript-eslint/no-unused-vars": "error"
+    "@typescript-eslint/no-unused-vars": "error",
+    "@typescript-eslint/strict-boolean-expressions": "error"
   }
 }
 ```
