@@ -140,11 +140,12 @@ public class Patient
 // Interfaces start with 'I'
 public interface IPatientRepository
 {
-    Task<Patient?> GetByIdAsync(string patientId);
+    Task<Patient?> GetById(string patientId);
 }
 
-// Async methods end with 'Async'
-public async Task<Result<Patient>> CreatePatientAsync(CreatePatientRequest request)
+// Async method naming: Do NOT use the '*Async' suffix
+// The return type (Task<T>) already signals async behavior
+public async Task<Result<Patient>> CreatePatient(CreatePatientRequest request)
 {
     // Implementation
 }
