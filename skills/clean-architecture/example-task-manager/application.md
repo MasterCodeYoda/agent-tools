@@ -305,6 +305,197 @@ namespace TaskManager.Application.UseCases.CreateTask
 }
 ```
 
+### Rust Implementation
+
+```rust
+// application/src/use_cases/create_task.rs
+use domain::{Task, TaskRepository, DomainError, RepositoryError};
+use serde::{Deserialize, Serialize};
+use chrono::{DateTime, Utc};
+
+// Request DTO
+#[derive(Debug, Deserialize)]
+pub struct CreateTaskRequest {
+    pub description: String,
+}
+
+// Response DTO
+#[derive(Debug, Serialize)]
+pub struct CreateTaskResponse {
+    pub task_id: String,
+    pub description: String,
+    pub created_at: DateTime<Utc>,
+}
+
+// Use Case Error
+#[derive(Debug, thiserror::Error)]
+pub enum CreateTaskError {
+    #[error("Validation failed: {0}")]
+    ValidationFailed(#[from] DomainError),
+
+    #[error("Failed to save task: {0}")]
+    PersistenceFailed(#[from] RepositoryError),
+}
+
+// Use Case
+pub struct CreateTaskUseCase<R: TaskRepository> {
+    repository: R,
+}
+
+impl<R: TaskRepository> CreateTaskUseCase<R> {
+    pub fn new(repository: R) -> Self {
+        Self { repository }
+    }
+
+    pub async fn execute(
+        &self,
+        request: CreateTaskRequest,
+    ) -> Result<CreateTaskResponse, CreateTaskError> {
+        // Create domain entity (validates business rules)
+        let task = Task::new(request.description)?;
+
+        // Persist via repository
+        self.repository.save(&task).await?;
+
+        // Return response DTO
+        Ok(CreateTaskResponse {
+            task_id: task.id().to_string(),
+            description: task.description().to_string(),
+            created_at: task.created_at(),
+        })
+    }
+}
+```
+
+```rust
+// application/src/use_cases/complete_task.rs
+use domain::{Task, TaskId, TaskRepository, DomainError, RepositoryError};
+use serde::{Deserialize, Serialize};
+use chrono::{DateTime, Utc};
+
+#[derive(Debug, Deserialize)]
+pub struct CompleteTaskRequest {
+    pub task_id: String,
+}
+
+#[derive(Debug, Serialize)]
+pub struct CompleteTaskResponse {
+    pub success: bool,
+    pub completed_at: Option<DateTime<Utc>>,
+}
+
+#[derive(Debug, thiserror::Error)]
+pub enum CompleteTaskError {
+    #[error("Invalid task ID: {0}")]
+    InvalidTaskId(String),
+
+    #[error("Task not found: {0}")]
+    TaskNotFound(String),
+
+    #[error("Domain error: {0}")]
+    DomainError(#[from] DomainError),
+
+    #[error("Repository error: {0}")]
+    RepositoryError(#[from] RepositoryError),
+}
+
+pub struct CompleteTaskUseCase<R: TaskRepository> {
+    repository: R,
+}
+
+impl<R: TaskRepository> CompleteTaskUseCase<R> {
+    pub fn new(repository: R) -> Self {
+        Self { repository }
+    }
+
+    pub async fn execute(
+        &self,
+        request: CompleteTaskRequest,
+    ) -> Result<CompleteTaskResponse, CompleteTaskError> {
+        // Parse task ID
+        let task_id: TaskId = request.task_id
+            .parse()
+            .map_err(|_| CompleteTaskError::InvalidTaskId(request.task_id.clone()))?;
+
+        // Find task
+        let mut task = self.repository
+            .find_by_id(&task_id)
+            .await?
+            .ok_or_else(|| CompleteTaskError::TaskNotFound(request.task_id))?;
+
+        // Execute domain logic
+        task.complete()?;
+
+        // Persist changes
+        self.repository.save(&task).await?;
+
+        Ok(CompleteTaskResponse {
+            success: true,
+            completed_at: task.completed_at(),
+        })
+    }
+}
+```
+
+```rust
+// application/src/use_cases/list_tasks.rs
+use domain::{Task, TaskRepository, RepositoryError};
+use serde::{Deserialize, Serialize};
+use chrono::{DateTime, Utc};
+
+#[derive(Debug, Default, Deserialize)]
+pub struct ListTasksRequest {}
+
+#[derive(Debug, Serialize)]
+pub struct TaskView {
+    pub id: String,
+    pub description: String,
+    pub completed: bool,
+    pub created_at: DateTime<Utc>,
+    pub completed_at: Option<DateTime<Utc>>,
+}
+
+impl From<&Task> for TaskView {
+    fn from(task: &Task) -> Self {
+        Self {
+            id: task.id().to_string(),
+            description: task.description().to_string(),
+            completed: task.is_completed(),
+            created_at: task.created_at(),
+            completed_at: task.completed_at(),
+        }
+    }
+}
+
+#[derive(Debug, Serialize)]
+pub struct ListTasksResponse {
+    pub tasks: Vec<TaskView>,
+    pub total: usize,
+}
+
+pub struct ListTasksUseCase<R: TaskRepository> {
+    repository: R,
+}
+
+impl<R: TaskRepository> ListTasksUseCase<R> {
+    pub fn new(repository: R) -> Self {
+        Self { repository }
+    }
+
+    pub async fn execute(
+        &self,
+        _request: ListTasksRequest,
+    ) -> Result<ListTasksResponse, RepositoryError> {
+        let tasks = self.repository.find_all().await?;
+
+        let views: Vec<TaskView> = tasks.iter().map(TaskView::from).collect();
+        let total = views.len();
+
+        Ok(ListTasksResponse { tasks: views, total })
+    }
+}
+```
+
 ## Repository Interface
 
 The repository interface is defined in the Domain layer but referenced by Application:

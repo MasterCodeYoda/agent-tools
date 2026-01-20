@@ -57,6 +57,21 @@ Covers:
 - Clean Architecture project structure
 - ASP.NET Core controller patterns
 
+### Working with Rust?
+
+**See: `languages/rust.md`**
+
+Covers:
+- Rust 1.75+ with Clippy pedantic lints
+- Trait-based dependency injection
+- async/await with Tokio
+- **Structured concurrency** (JoinSet, TaskTracker, CancellationToken)
+- Tauri v2 desktop app patterns
+- **tauri-specta** for type-safe frontend bindings
+- SQLx and Diesel database access
+- mockall, proptest, and **insta snapshot testing**
+- thiserror/anyhow/**snafu** for error handling
+
 ## Universal Principles
 
 These principles apply across all languages:

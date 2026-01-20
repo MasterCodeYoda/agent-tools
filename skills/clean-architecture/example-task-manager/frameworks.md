@@ -594,6 +594,218 @@ app.MapControllers();
 app.Run();
 ```
 
+### Rust/Tauri Implementation (Desktop)
+
+```rust
+// crates/tauri-app/src/commands.rs
+use tauri::State;
+use serde::{Deserialize, Serialize};
+use crate::state::AppState;
+use application::{
+    CreateTaskRequest, CreateTaskResponse, CreateTaskError,
+    CompleteTaskRequest, CompleteTaskResponse, CompleteTaskError,
+    ListTasksRequest, ListTasksResponse,
+};
+
+// Command response wrapper for frontend
+#[derive(Debug, Serialize)]
+#[serde(tag = "status", rename_all = "lowercase")]
+pub enum CommandResult<T> {
+    Success { data: T },
+    Error { message: String, code: String },
+}
+
+impl<T: Serialize> CommandResult<T> {
+    fn success(data: T) -> Self {
+        Self::Success { data }
+    }
+
+    fn error(message: impl ToString, code: impl ToString) -> Self {
+        Self::Error {
+            message: message.to_string(),
+            code: code.to_string(),
+        }
+    }
+}
+
+#[derive(Debug, Deserialize)]
+pub struct CreateTaskInput {
+    description: String,
+}
+
+#[tauri::command]
+pub async fn create_task(
+    input: CreateTaskInput,
+    state: State<'_, AppState>,
+) -> CommandResult<CreateTaskResponse> {
+    let request = CreateTaskRequest {
+        description: input.description,
+    };
+
+    match state.create_task.execute(request).await {
+        Ok(response) => CommandResult::success(response),
+        Err(CreateTaskError::ValidationFailed(e)) => {
+            CommandResult::error(e, "VALIDATION_ERROR")
+        }
+        Err(CreateTaskError::PersistenceFailed(e)) => {
+            CommandResult::error(e, "PERSISTENCE_ERROR")
+        }
+    }
+}
+
+#[tauri::command]
+pub async fn list_tasks(
+    state: State<'_, AppState>,
+) -> CommandResult<ListTasksResponse> {
+    let request = ListTasksRequest::default();
+
+    match state.list_tasks.execute(request).await {
+        Ok(response) => CommandResult::success(response),
+        Err(e) => CommandResult::error(e, "REPOSITORY_ERROR"),
+    }
+}
+
+#[tauri::command]
+pub async fn complete_task(
+    task_id: String,
+    state: State<'_, AppState>,
+) -> CommandResult<CompleteTaskResponse> {
+    let request = CompleteTaskRequest { task_id: task_id.clone() };
+
+    match state.complete_task.execute(request).await {
+        Ok(response) => CommandResult::success(response),
+        Err(CompleteTaskError::TaskNotFound(_)) => {
+            CommandResult::error(format!("Task {} not found", task_id), "NOT_FOUND")
+        }
+        Err(CompleteTaskError::DomainError(e)) => {
+            CommandResult::error(e, "DOMAIN_ERROR")
+        }
+        Err(e) => CommandResult::error(e, "INTERNAL_ERROR"),
+    }
+}
+```
+
+```rust
+// crates/tauri-app/src/state.rs
+use std::sync::Arc;
+use sqlx::{Pool, Sqlite};
+use infrastructure::SqlxTaskRepository;
+use application::{CreateTaskUseCase, ListTasksUseCase, CompleteTaskUseCase};
+
+pub struct AppState {
+    pub create_task: CreateTaskUseCase<Arc<SqlxTaskRepository>>,
+    pub list_tasks: ListTasksUseCase<Arc<SqlxTaskRepository>>,
+    pub complete_task: CompleteTaskUseCase<Arc<SqlxTaskRepository>>,
+}
+
+impl AppState {
+    pub async fn new(pool: Pool<Sqlite>) -> anyhow::Result<Self> {
+        infrastructure::database::run_migrations(&pool).await?;
+
+        let repository = Arc::new(SqlxTaskRepository::new(pool));
+
+        Ok(Self {
+            create_task: CreateTaskUseCase::new(Arc::clone(&repository)),
+            list_tasks: ListTasksUseCase::new(Arc::clone(&repository)),
+            complete_task: CompleteTaskUseCase::new(Arc::clone(&repository)),
+        })
+    }
+}
+```
+
+```rust
+// crates/tauri-app/src/main.rs
+#![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
+
+mod commands;
+mod state;
+
+use state::AppState;
+use tauri::Manager;
+
+fn main() {
+    tauri::Builder::default()
+        .setup(|app| {
+            let handle = app.handle().clone();
+
+            tauri::async_runtime::spawn(async move {
+                let app_dir = handle
+                    .path()
+                    .app_data_dir()
+                    .expect("Failed to get app data dir");
+
+                std::fs::create_dir_all(&app_dir).expect("Failed to create app dir");
+                let db_path = app_dir.join("tasks.db");
+                let db_url = format!("sqlite:{}?mode=rwc", db_path.display());
+
+                let pool = sqlx::sqlite::SqlitePoolOptions::new()
+                    .max_connections(5)
+                    .connect(&db_url)
+                    .await
+                    .expect("Failed to connect to database");
+
+                match AppState::new(pool).await {
+                    Ok(state) => {
+                        handle.manage(state);
+                    }
+                    Err(e) => {
+                        eprintln!("Failed to initialize: {}", e);
+                        std::process::exit(1);
+                    }
+                }
+            });
+
+            Ok(())
+        })
+        .invoke_handler(tauri::generate_handler![
+            commands::create_task,
+            commands::list_tasks,
+            commands::complete_task,
+        ])
+        .run(tauri::generate_context!())
+        .expect("error while running tauri application");
+}
+```
+
+```typescript
+// frontend/src/api/tasks.ts
+import { invoke } from '@tauri-apps/api/core';
+
+interface Task {
+  id: string;
+  description: string;
+  completed: boolean;
+  created_at: string;
+  completed_at: string | null;
+}
+
+type Result<T> =
+  | { status: 'success'; data: T }
+  | { status: 'error'; code: string; message: string };
+
+async function invokeCommand<T>(cmd: string, args?: object): Promise<T> {
+  const result = await invoke<Result<T>>(cmd, args);
+
+  if (result.status === 'error') {
+    throw new Error(`${result.code}: ${result.message}`);
+  }
+
+  return result.data;
+}
+
+export async function createTask(description: string): Promise<Task> {
+  return invokeCommand('create_task', { input: { description } });
+}
+
+export async function listTasks(): Promise<{ tasks: Task[]; total: number }> {
+  return invokeCommand('list_tasks');
+}
+
+export async function completeTask(taskId: string): Promise<Task> {
+  return invokeCommand('complete_task', { taskId });
+}
+```
+
 ## CLI Implementation Example
 
 ```python

@@ -226,6 +226,151 @@ namespace TaskManager.Domain.Entities
 }
 ```
 
+### Rust Implementation
+
+```rust
+// domain/src/entities/task.rs
+use chrono::{DateTime, Utc};
+use crate::{errors::DomainError, value_objects::TaskId};
+
+const MAX_DESCRIPTION_LENGTH: usize = 500;
+
+#[derive(Debug, Clone)]
+pub struct Task {
+    id: TaskId,
+    description: String,
+    completed: bool,
+    created_at: DateTime<Utc>,
+    completed_at: Option<DateTime<Utc>>,
+}
+
+impl Task {
+    /// Create a new task with validation
+    pub fn new(description: String) -> Result<Self, DomainError> {
+        Self::validate_description(&description)?;
+
+        Ok(Self {
+            id: TaskId::new(),
+            description,
+            completed: false,
+            created_at: Utc::now(),
+            completed_at: None,
+        })
+    }
+
+    /// Reconstitute from persistence (bypasses validation)
+    pub fn reconstitute(
+        id: TaskId,
+        description: String,
+        completed: bool,
+        created_at: DateTime<Utc>,
+        completed_at: Option<DateTime<Utc>>,
+    ) -> Self {
+        Self { id, description, completed, created_at, completed_at }
+    }
+
+    // Getters
+    pub fn id(&self) -> &TaskId { &self.id }
+    pub fn description(&self) -> &str { &self.description }
+    pub fn is_completed(&self) -> bool { self.completed }
+    pub fn created_at(&self) -> DateTime<Utc> { self.created_at }
+    pub fn completed_at(&self) -> Option<DateTime<Utc>> { self.completed_at }
+
+    // Behavior
+    pub fn complete(&mut self) -> Result<(), DomainError> {
+        if self.completed {
+            return Err(DomainError::AlreadyCompleted);
+        }
+        self.completed = true;
+        self.completed_at = Some(Utc::now());
+        Ok(())
+    }
+
+    fn validate_description(description: &str) -> Result<(), DomainError> {
+        let trimmed = description.trim();
+        if trimmed.is_empty() {
+            return Err(DomainError::EmptyDescription);
+        }
+        if trimmed.len() > MAX_DESCRIPTION_LENGTH {
+            return Err(DomainError::DescriptionTooLong {
+                max: MAX_DESCRIPTION_LENGTH
+            });
+        }
+        Ok(())
+    }
+}
+
+impl PartialEq for Task {
+    fn eq(&self, other: &Self) -> bool {
+        self.id == other.id  // Entity equality by ID
+    }
+}
+```
+
+```rust
+// domain/src/value_objects/task_id.rs
+use serde::{Deserialize, Serialize};
+use uuid::Uuid;
+
+#[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
+pub struct TaskId(Uuid);
+
+impl TaskId {
+    pub fn new() -> Self {
+        Self(Uuid::new_v4())
+    }
+
+    pub fn from_uuid(uuid: Uuid) -> Self {
+        Self(uuid)
+    }
+}
+
+impl std::fmt::Display for TaskId {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{}", self.0)
+    }
+}
+
+impl std::str::FromStr for TaskId {
+    type Err = uuid::Error;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        Ok(Self(Uuid::parse_str(s)?))
+    }
+}
+```
+
+```rust
+// domain/src/errors.rs
+use thiserror::Error;
+
+#[derive(Error, Debug)]
+pub enum DomainError {
+    #[error("Task description cannot be empty")]
+    EmptyDescription,
+
+    #[error("Task description exceeds maximum length of {max} characters")]
+    DescriptionTooLong { max: usize },
+
+    #[error("Task is already completed")]
+    AlreadyCompleted,
+}
+```
+
+```rust
+// domain/src/repositories/task_repository.rs
+use async_trait::async_trait;
+use crate::{entities::Task, value_objects::TaskId, errors::RepositoryError};
+
+#[async_trait]
+pub trait TaskRepository: Send + Sync {
+    async fn save(&self, task: &Task) -> Result<(), RepositoryError>;
+    async fn find_by_id(&self, id: &TaskId) -> Result<Option<Task>, RepositoryError>;
+    async fn find_all(&self) -> Result<Vec<Task>, RepositoryError>;
+    async fn delete(&self, id: &TaskId) -> Result<(), RepositoryError>;
+}
+```
+
 ## Key Domain Patterns
 
 ### 1. Encapsulation

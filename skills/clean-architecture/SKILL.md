@@ -172,6 +172,13 @@ Choose your implementation language for specific patterns, tools, and examples:
     - Interfaces, dependency injection
     - Tools: .NET CLI, xUnit
 
+- **Rust**: `languages/rust/guide.md`
+    - Traits, ownership, Result pattern
+    - Recommended: Axum (API), Tauri v2 (Desktop)
+    - Tauri v2: Capabilities/ACL, tauri-specta bindings, events
+    - Database: SQLx (default), Diesel (alternative)
+    - Tools: Clippy, rustfmt, cargo-nextest, insta
+
 - **Other Languages**: See `languages/README.md` for adding support
 
 ## Example Implementation: Task Manager

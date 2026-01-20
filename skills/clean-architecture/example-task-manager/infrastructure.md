@@ -280,6 +280,180 @@ namespace TaskManager.Infrastructure.Repositories
 }
 ```
 
+### Rust Implementation
+
+```rust
+// infrastructure/src/repositories/sqlx_task_repository.rs
+use async_trait::async_trait;
+use sqlx::{Pool, Sqlite, FromRow};
+use chrono::{DateTime, Utc};
+use domain::{Task, TaskId, TaskRepository, RepositoryError};
+use uuid::Uuid;
+
+// Database model (separate from domain entity)
+#[derive(Debug, FromRow)]
+struct TaskRow {
+    id: String,
+    description: String,
+    completed: bool,
+    created_at: DateTime<Utc>,
+    completed_at: Option<DateTime<Utc>>,
+}
+
+impl TaskRow {
+    fn to_domain(&self) -> Task {
+        let id = TaskId::from_uuid(
+            Uuid::parse_str(&self.id).expect("Invalid UUID in database")
+        );
+
+        Task::reconstitute(
+            id,
+            self.description.clone(),
+            self.completed,
+            self.created_at,
+            self.completed_at,
+        )
+    }
+}
+
+pub struct SqlxTaskRepository {
+    pool: Pool<Sqlite>,
+}
+
+impl SqlxTaskRepository {
+    pub fn new(pool: Pool<Sqlite>) -> Self {
+        Self { pool }
+    }
+}
+
+#[async_trait]
+impl TaskRepository for SqlxTaskRepository {
+    async fn save(&self, task: &Task) -> Result<(), RepositoryError> {
+        sqlx::query(
+            r#"
+            INSERT INTO tasks (id, description, completed, created_at, completed_at)
+            VALUES (?, ?, ?, ?, ?)
+            ON CONFLICT(id) DO UPDATE SET
+                description = excluded.description,
+                completed = excluded.completed,
+                completed_at = excluded.completed_at
+            "#
+        )
+        .bind(task.id().to_string())
+        .bind(task.description())
+        .bind(task.is_completed())
+        .bind(task.created_at())
+        .bind(task.completed_at())
+        .execute(&self.pool)
+        .await?;
+
+        Ok(())
+    }
+
+    async fn find_by_id(&self, id: &TaskId) -> Result<Option<Task>, RepositoryError> {
+        let row: Option<TaskRow> = sqlx::query_as(
+            "SELECT id, description, completed, created_at, completed_at FROM tasks WHERE id = ?"
+        )
+        .bind(id.to_string())
+        .fetch_optional(&self.pool)
+        .await?;
+
+        Ok(row.map(|r| r.to_domain()))
+    }
+
+    async fn find_all(&self) -> Result<Vec<Task>, RepositoryError> {
+        let rows: Vec<TaskRow> = sqlx::query_as(
+            "SELECT id, description, completed, created_at, completed_at FROM tasks ORDER BY created_at DESC"
+        )
+        .fetch_all(&self.pool)
+        .await?;
+
+        Ok(rows.iter().map(|r| r.to_domain()).collect())
+    }
+
+    async fn delete(&self, id: &TaskId) -> Result<(), RepositoryError> {
+        sqlx::query("DELETE FROM tasks WHERE id = ?")
+            .bind(id.to_string())
+            .execute(&self.pool)
+            .await?;
+
+        Ok(())
+    }
+}
+```
+
+```rust
+// infrastructure/src/repositories/in_memory_task_repository.rs
+use async_trait::async_trait;
+use std::collections::HashMap;
+use std::sync::RwLock;
+use domain::{Task, TaskId, TaskRepository, RepositoryError};
+
+pub struct InMemoryTaskRepository {
+    tasks: RwLock<HashMap<String, Task>>,
+}
+
+impl InMemoryTaskRepository {
+    pub fn new() -> Self {
+        Self {
+            tasks: RwLock::new(HashMap::new()),
+        }
+    }
+}
+
+#[async_trait]
+impl TaskRepository for InMemoryTaskRepository {
+    async fn save(&self, task: &Task) -> Result<(), RepositoryError> {
+        let mut tasks = self.tasks.write().unwrap();
+        tasks.insert(task.id().to_string(), task.clone());
+        Ok(())
+    }
+
+    async fn find_by_id(&self, id: &TaskId) -> Result<Option<Task>, RepositoryError> {
+        let tasks = self.tasks.read().unwrap();
+        Ok(tasks.get(&id.to_string()).cloned())
+    }
+
+    async fn find_all(&self) -> Result<Vec<Task>, RepositoryError> {
+        let tasks = self.tasks.read().unwrap();
+        Ok(tasks.values().cloned().collect())
+    }
+
+    async fn delete(&self, id: &TaskId) -> Result<(), RepositoryError> {
+        let mut tasks = self.tasks.write().unwrap();
+        tasks.remove(&id.to_string());
+        Ok(())
+    }
+}
+```
+
+```rust
+// infrastructure/src/database/migrations.rs
+use sqlx::{Pool, Sqlite};
+
+pub async fn run_migrations(pool: &Pool<Sqlite>) -> Result<(), sqlx::Error> {
+    sqlx::query(
+        r#"
+        CREATE TABLE IF NOT EXISTS tasks (
+            id TEXT PRIMARY KEY,
+            description TEXT NOT NULL,
+            completed BOOLEAN NOT NULL DEFAULT FALSE,
+            created_at DATETIME NOT NULL,
+            completed_at DATETIME
+        )
+        "#
+    )
+    .execute(pool)
+    .await?;
+
+    sqlx::query("CREATE INDEX IF NOT EXISTS idx_tasks_completed ON tasks(completed)")
+        .execute(pool)
+        .await?;
+
+    Ok(())
+}
+```
+
 ## Key Infrastructure Patterns
 
 ### 1. Mapping Between Layers

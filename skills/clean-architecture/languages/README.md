@@ -161,11 +161,11 @@ After adding a language, update these files:
 Currently supported languages:
 
 - **Python**: Full implementation with validators
-- **TypeScript**: (To be added)
-- **C#**: (To be added)
+- **TypeScript**: Full implementation with NestJS, Next.js patterns
+- **C#**: Full implementation with ASP.NET Core patterns
+- **Rust**: Full implementation with Axum and Tauri patterns
 - **Go**: (Community contribution welcome)
 - **Java**: (Community contribution welcome)
-- **Rust**: (Community contribution welcome)
 
 ## Guidelines for Language Implementations
 

@@ -73,6 +73,14 @@ Each language implements the same functionality with language-specific patterns:
 - Testing: xUnit
 - [View C# Implementation](csharp/README.md)
 
+### Rust/Tauri
+- Location: `rust/`
+- Framework: Tauri v2 (Desktop), Axum (API)
+- Database: SQLx with SQLite
+- Frontend: TypeScript/React (via Tauri invoke)
+- Testing: cargo test + mockall
+- [View Rust Implementation](rust/README.md)
+
 ## Running the Examples
 
 ### Quick Start (Any Language)
