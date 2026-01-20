@@ -6,6 +6,7 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 # Define source directories (absolute paths)
 SKILLS_SOURCE="${SCRIPT_DIR}/skills"
 COMMANDS_SOURCE="${SCRIPT_DIR}/commands"
+FACTORY_COMMANDS_SOURCE="${SCRIPT_DIR}/factory-commands"
 
 # Define target directories
 CLAUDE_DIR="${HOME}/.claude"
@@ -66,6 +67,39 @@ create_symlink() {
     fi
 }
 
+# Function to setup flattened factory commands
+# Factory.ai doesn't support folder namespacing, so we flatten:
+# commands/git/commit.md -> factory-commands/git-commit.md
+setup_factory_commands() {
+    local commands_dir="$1"
+    local factory_dir="$2"
+
+    echo "Setting up flattened factory commands in ${factory_dir}..."
+
+    # Create factory-commands directory
+    mkdir -p "$factory_dir"
+
+    # Clean up any existing symlinks in factory-commands
+    find "$factory_dir" -maxdepth 1 -type l -delete 2>/dev/null
+
+    # Find all subfolders in commands (1 level deep)
+    for subfolder in "$commands_dir"/*/; do
+        [ -d "$subfolder" ] || continue
+
+        local folder_name=$(basename "$subfolder")
+
+        # Find all .md files in the subfolder
+        for file in "$subfolder"*.md; do
+            [ -f "$file" ] || continue
+
+            local file_name=$(basename "$file")
+            local target_name="${folder_name}-${file_name}"
+
+            create_symlink "$file" "${factory_dir}/${target_name}"
+        done
+    done
+}
+
 # Main setup
 echo "========================================="
 echo "Setting up agent-tools symlinks"
@@ -96,10 +130,14 @@ create_symlink "$SKILLS_SOURCE" "${CLAUDE_DIR}/skills"
 create_symlink "$COMMANDS_SOURCE" "${CLAUDE_DIR}/commands"
 echo
 
+# Generate flattened factory commands
+setup_factory_commands "$COMMANDS_SOURCE" "$FACTORY_COMMANDS_SOURCE"
+echo
+
 # Create symlinks for ~/.factory
 echo "Setting up ~/.factory symlinks..."
 create_symlink "$SKILLS_SOURCE" "${FACTORY_DIR}/skills"
-create_symlink "$COMMANDS_SOURCE" "${FACTORY_DIR}/commands"
+create_symlink "$FACTORY_COMMANDS_SOURCE" "${FACTORY_DIR}/commands"
 echo
 
 echo "========================================="
@@ -110,4 +148,4 @@ echo "The following symlinks have been configured:"
 echo "  ~/.claude/skills -> $SKILLS_SOURCE"
 echo "  ~/.claude/commands -> $COMMANDS_SOURCE"
 echo "  ~/.factory/skills -> $SKILLS_SOURCE"
-echo "  ~/.factory/commands -> $COMMANDS_SOURCE"
+echo "  ~/.factory/commands -> $FACTORY_COMMANDS_SOURCE (flattened)"
