@@ -1,10 +1,10 @@
 # Planning Templates
 
-This document provides reusable templates for planning vertical slices.
+Reusable templates for planning vertical slices.
 
 ## Vertical Slice Template
 
-Use this template to plan each user story's implementation:
+Use for standard user story implementation:
 
 ```markdown
 ## Story: [WORK-ITEM-ID] Story Title
@@ -32,21 +32,16 @@ As a [user type], I want [capability] so that [benefit].
 #### 2. Application Layer
 - **Use Cases**
   - [ ] PrimaryUseCase (main flow)
-  - [ ] SecondaryUseCase (if needed)
 - **DTOs**
   - [ ] Request model
   - [ ] Response model
-- **Application Services**
-  - [ ] Orchestration logic
 
 #### 3. Infrastructure Layer
 - **Repository Methods**
   - [ ] create() / save()
   - [ ] findById() / get()
-  - [ ] Other query methods
 - **External Services**
   - [ ] API integrations
-  - [ ] Message queues
 - **Database**
   - [ ] Schema changes
   - [ ] Migrations
@@ -56,44 +51,28 @@ As a [user type], I want [capability] so that [benefit].
   - [ ] Endpoint/Component
   - [ ] Input validation
   - [ ] Response formatting
-- **Configuration**
-  - [ ] Routes
-  - [ ] Dependencies
-  - [ ] Security
 
 #### 5. Testing Strategy
 - **Unit Tests**
   - [ ] Domain entity tests
   - [ ] Use case tests
-  - [ ] Validation tests
 - **Integration Tests**
   - [ ] Repository tests
-  - [ ] External service tests
 - **E2E Tests**
   - [ ] Complete flow test
-  - [ ] Edge cases
 
 ### Dependencies
 - Blocked by: [List any blockers]
 - Depends on: [List dependencies]
-- Enables: [What this unblocks]
 
 ### Risk Assessment
 - **Complexity**: Low / Medium / High
 - **Unknowns**: [List technical unknowns]
-- **External Dependencies**: [List external systems]
-- **Mitigation**: [How to reduce risks]
-
-### Estimated Effort
-- Planning: [time]
-- Implementation: [time]
-- Testing: [time]
-- Total: [time]
 ```
 
 ## Quick Planning Template
 
-For simpler stories:
+For simpler stories that don't need full breakdown:
 
 ```markdown
 ## Story: [ID] Title
@@ -109,8 +88,6 @@ For simpler stories:
 **Tests**: [Testing approach]
 
 **Risks**: [Main concerns]
-
-**Estimate**: [Total time]
 ```
 
 ## Epic Planning Template
@@ -132,19 +109,16 @@ For larger features composed of multiple stories:
 - **Priority**: P1
 - **Slice**: [Brief description]
 - **Dependencies**: None
-- **Estimate**: [time]
 
 ### Story 2: [Title]
 - **Priority**: P1
 - **Slice**: [Brief description]
 - **Dependencies**: Story 1
-- **Estimate**: [time]
 
 ### Story 3: [Title]
 - **Priority**: P2
 - **Slice**: [Brief description]
 - **Dependencies**: Story 1
-- **Estimate**: [time]
 
 ## Implementation Order
 1. Story 1 - [Reason]
@@ -154,12 +128,10 @@ For larger features composed of multiple stories:
 ## Success Metrics
 - [ ] Metric 1
 - [ ] Metric 2
-- [ ] Metric 3
 
 ## Rollout Plan
 - Phase 1: [What ships first]
 - Phase 2: [What ships next]
-- Phase 3: [Final features]
 ```
 
 ## Technical Spike Template
@@ -204,7 +176,7 @@ For vertical slices that fix issues:
 [What's broken]
 
 ### Root Cause
-[Why it's broken]
+[Why it's broken - may need investigation]
 
 ### Solution
 [How to fix it]
@@ -224,3 +196,13 @@ For vertical slices that fix issues:
 ### Prevention
 [How to prevent similar issues]
 ```
+
+## Template Selection Guide
+
+| Scenario | Template |
+|----------|----------|
+| Standard feature story | Vertical Slice |
+| Small, clear change | Quick Planning |
+| Multi-story feature | Epic |
+| Research/investigation | Technical Spike |
+| Fixing bugs | Bug Fix |
