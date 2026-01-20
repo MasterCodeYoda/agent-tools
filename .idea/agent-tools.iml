@@ -3,6 +3,10 @@
   <component name="NewModuleRootManager">
     <content url="file://$MODULE_DIR$">
       <excludeFolder url="file://$MODULE_DIR$/commands/commands" />
+      <excludeFolder url="file://$MODULE_DIR$/factory-commands/workflow-compound.md" />
+      <excludeFolder url="file://$MODULE_DIR$/factory-commands/workflow-execute.md" />
+      <excludeFolder url="file://$MODULE_DIR$/factory-commands/workflow-plan.md" />
+      <excludeFolder url="file://$MODULE_DIR$/factory-commands/workflow-review.md" />
     </content>
     <orderEntry type="sourceFolder" forTests="false" />
   </component>
