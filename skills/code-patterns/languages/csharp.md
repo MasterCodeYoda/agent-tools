@@ -1,7 +1,4 @@
----
-name: csharp-patterns
-description: C# and .NET patterns for building enterprise applications with Clean Architecture, Entity Framework Core, dependency injection, Result pattern, RFC 7807 error handling, and testing strategies
----
+> This file is loaded on demand. See main SKILL.md for overview.
 
 # C# Patterns and Standards
 

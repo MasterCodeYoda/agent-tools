@@ -1,7 +1,4 @@
----
-name: python-patterns
-description: Python-specific coding standards, patterns, and idioms for building robust applications with type safety, testing patterns, async/await, and Clean Architecture implementation in Python
----
+> This file is loaded on demand. See main SKILL.md for overview.
 
 # Python Patterns and Standards
 
