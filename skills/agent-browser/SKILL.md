@@ -19,7 +19,38 @@ npm install -g agent-browser
 agent-browser install  # Download Chromium
 ```
 
-## Quick start
+## Using the Dedicated Chrome Profile (Recommended for Authenticated Sites)
+
+A dedicated Chrome profile is available with CDP (Chrome DevTools Protocol) on port 9222. This is the **preferred method** for sites requiring authentication (Sentry, GitHub, internal tools, etc.) as it uses your existing browser session with saved cookies and credentials.
+
+### Setup
+
+1. **Start Chrome with remote debugging** (run once, keeps running):
+   ```bash
+   /Applications/Google\ Chrome.app/Contents/MacOS/Google\ Chrome \
+     --remote-debugging-port=9222 \
+     --user-data-dir="$HOME/.chrome-agent-browser" &
+   ```
+
+2. **Log into sites** in this Chrome window as needed (Sentry, GitHub, etc.)
+
+3. **Connect agent-browser to CDP**:
+   ```bash
+   agent-browser connect 9222
+   ```
+
+4. **Use all commands normally** - they now use your authenticated session:
+   ```bash
+   agent-browser open https://sentry.io/issues/123
+   agent-browser snapshot -i
+   agent-browser click @e1
+   ```
+
+Note: Don't use `close` with CDP mode - it would close your persistent browser.
+
+## Quick start (Standalone Mode)
+
+For sites not requiring authentication, use standalone mode:
 
 ```bash
 agent-browser open <url>        # Navigate to page
@@ -248,20 +279,17 @@ agent-browser get text @e1 --json
 ## Debugging
 
 ```bash
-agent-browser open example.com --headed              # Show browser window
-agent-browser console                                # View console messages
-agent-browser errors                                 # View page errors
+agent-browser open example.com --headed   # Show browser window
+agent-browser console                     # View console messages
+agent-browser console --clear             # Clear console
+agent-browser errors                      # View page errors
+agent-browser errors --clear              # Clear errors
+agent-browser highlight @e1               # Highlight element
 agent-browser record start ./debug.webm   # Record from current page
-agent-browser record stop                            # Save recording
-agent-browser open example.com --headed  # Show browser window
-agent-browser --cdp 9222 snapshot        # Connect via CDP
-agent-browser console                    # View console messages
-agent-browser console --clear            # Clear console
-agent-browser errors                     # View page errors
-agent-browser errors --clear             # Clear errors
-agent-browser highlight @e1              # Highlight element
-agent-browser trace start                # Start recording trace
-agent-browser trace stop trace.zip       # Stop and save trace
+agent-browser record stop                 # Save recording
+agent-browser trace start                 # Start recording trace
+agent-browser trace stop trace.zip        # Stop and save trace
+agent-browser connect 9222                # Connect to Chrome via CDP (see above)
 ```
 
 ## References
