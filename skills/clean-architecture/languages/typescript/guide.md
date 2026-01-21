@@ -1,3 +1,5 @@
+<!-- Last reviewed: 2026-01-21 -->
+
 # TypeScript Clean Architecture Guide
 
 ## Overview
@@ -543,6 +545,104 @@ export class Money {
 }
 ```
 
+### Specification Pattern
+
+Encapsulate business rules as composable, reusable specifications:
+
+```typescript
+// domain/specifications/specification.ts
+export interface Specification<T> {
+  isSatisfiedBy(candidate: T): boolean;
+}
+
+export abstract class CompositeSpecification<T> implements Specification<T> {
+  abstract isSatisfiedBy(candidate: T): boolean;
+
+  and(other: Specification<T>): Specification<T> {
+    return new AndSpecification(this, other);
+  }
+
+  or(other: Specification<T>): Specification<T> {
+    return new OrSpecification(this, other);
+  }
+
+  not(): Specification<T> {
+    return new NotSpecification(this);
+  }
+}
+
+class AndSpecification<T> extends CompositeSpecification<T> {
+  constructor(
+    private left: Specification<T>,
+    private right: Specification<T>,
+  ) {
+    super();
+  }
+
+  isSatisfiedBy(candidate: T): boolean {
+    return (
+      this.left.isSatisfiedBy(candidate) &&
+      this.right.isSatisfiedBy(candidate)
+    );
+  }
+}
+
+class OrSpecification<T> extends CompositeSpecification<T> {
+  constructor(
+    private left: Specification<T>,
+    private right: Specification<T>,
+  ) {
+    super();
+  }
+
+  isSatisfiedBy(candidate: T): boolean {
+    return (
+      this.left.isSatisfiedBy(candidate) ||
+      this.right.isSatisfiedBy(candidate)
+    );
+  }
+}
+
+class NotSpecification<T> extends CompositeSpecification<T> {
+  constructor(private spec: Specification<T>) {
+    super();
+  }
+
+  isSatisfiedBy(candidate: T): boolean {
+    return !this.spec.isSatisfiedBy(candidate);
+  }
+}
+
+// Example: Order specifications
+export class OrderIsReadyToShip extends CompositeSpecification<Order> {
+  isSatisfiedBy(order: Order): boolean {
+    return order.status === OrderStatus.CONFIRMED && order.isPaid;
+  }
+}
+
+export class OrderHasMinimumValue extends CompositeSpecification<Order> {
+  constructor(private minValue: Money) {
+    super();
+  }
+
+  isSatisfiedBy(order: Order): boolean {
+    return order.total.amount >= this.minValue.amount;
+  }
+}
+
+// Usage
+const readyToShip = new OrderIsReadyToShip();
+// Note: For known-valid hardcoded values, we can assert non-null
+// In production code, always check result.success first
+const moneyResult = Money.create(100, 'USD');
+if (!moneyResult.success) throw new Error('Invalid money value');
+const highValue = new OrderHasMinimumValue(moneyResult.value);
+const priorityShipping = readyToShip.and(highValue);
+
+const orders = await orderRepository.findAll();
+const priorityOrders = orders.filter((o) => priorityShipping.isSatisfiedBy(o));
+```
+
 ## Application Layer Patterns
 
 ### Use Cases with DTOs
@@ -711,6 +811,63 @@ export class PrismaTaskRepository implements TaskRepository {
 }
 ```
 
+### Domain Event Dispatcher
+
+A complete domain event dispatcher with typed handlers:
+
+```typescript
+// shared/domain/events/domain-event.ts
+export interface DomainEvent {
+  readonly occurredOn: Date;
+  readonly eventType: string;
+}
+
+// shared/domain/events/event-dispatcher.ts
+export interface DomainEventHandler<T extends DomainEvent> {
+  handle(event: T): Promise<void>;
+}
+
+export class DomainEventDispatcher {
+  private handlers = new Map<string, DomainEventHandler<DomainEvent>[]>();
+
+  register<T extends DomainEvent>(
+    eventType: string,
+    handler: DomainEventHandler<T>,
+  ): void {
+    const existing = this.handlers.get(eventType) ?? [];
+    existing.push(handler as DomainEventHandler<DomainEvent>);
+    this.handlers.set(eventType, existing);
+  }
+
+  async dispatch(event: DomainEvent): Promise<void> {
+    const handlers = this.handlers.get(event.eventType) ?? [];
+    await Promise.all(handlers.map((h) => h.handle(event)));
+  }
+
+  async dispatchAll(events: DomainEvent[]): Promise<void> {
+    for (const event of events) {
+      await this.dispatch(event);
+    }
+  }
+}
+
+// Example handler
+export class SendWelcomeEmailHandler
+  implements DomainEventHandler<UserCreatedEvent>
+{
+  constructor(private readonly emailService: EmailService) {}
+
+  async handle(event: UserCreatedEvent): Promise<void> {
+    await this.emailService.sendWelcome(event.userId, event.email);
+  }
+}
+
+// Registration in module
+const dispatcher = new DomainEventDispatcher();
+dispatcher.register('USER_CREATED', new SendWelcomeEmailHandler(emailService));
+dispatcher.register('USER_CREATED', new CreateAuditLogHandler(auditService));
+```
+
 ### Drizzle ORM (Alternative)
 
 For projects preferring SQL-like syntax with type safety:
@@ -743,6 +900,108 @@ export class DrizzleTaskRepository implements TaskRepository {
   }
 
   // ... mapping methods similar to Prisma
+}
+```
+
+### Unit of Work Pattern
+
+Coordinate multiple repository operations within a single transaction:
+
+```typescript
+// application/interfaces/unit-of-work.ts
+export interface UnitOfWork {
+  taskRepository: TaskRepository;
+  orderRepository: OrderRepository;
+  begin(): Promise<void>;
+  commit(): Promise<void>;
+  rollback(): Promise<void>;
+}
+
+// infrastructure/unit-of-work/prisma-unit-of-work.ts
+import { PrismaClient, Prisma } from '@prisma/client';
+
+export class PrismaUnitOfWork implements UnitOfWork {
+  private tx: Prisma.TransactionClient | null = null;
+  private _taskRepository: TaskRepository | null = null;
+  private _orderRepository: OrderRepository | null = null;
+
+  constructor(private readonly prisma: PrismaClient) {}
+
+  get taskRepository(): TaskRepository {
+    if (!this.tx) throw new Error('Transaction not started');
+    if (!this._taskRepository) {
+      this._taskRepository = new PrismaTaskRepository(this.tx);
+    }
+    return this._taskRepository;
+  }
+
+  get orderRepository(): OrderRepository {
+    if (!this.tx) throw new Error('Transaction not started');
+    if (!this._orderRepository) {
+      this._orderRepository = new PrismaOrderRepository(this.tx);
+    }
+    return this._orderRepository;
+  }
+
+  async begin(): Promise<void> {
+    // Using Prisma's interactive transaction
+    return new Promise((resolve) => {
+      this.prisma.$transaction(async (tx) => {
+        this.tx = tx;
+        resolve();
+        // Transaction held open until commit/rollback
+        await new Promise((r) => (this.commitResolve = r));
+      });
+    });
+  }
+
+  private commitResolve: (() => void) | null = null;
+
+  async commit(): Promise<void> {
+    if (this.commitResolve) {
+      this.commitResolve();
+      this.tx = null;
+    }
+  }
+
+  async rollback(): Promise<void> {
+    if (this.tx) {
+      throw new Error('Rollback requested');
+    }
+  }
+}
+
+// Usage in use case
+export class PlaceOrderUseCase {
+  constructor(private readonly uow: UnitOfWork) {}
+
+  async execute(request: PlaceOrderRequest): Promise<Result<OrderId, DomainError>> {
+    await this.uow.begin();
+
+    try {
+      // Multiple operations in single transaction
+      const order = Order.create(request.customerId);
+      if (!order.success) {
+        await this.uow.rollback();
+        return order;
+      }
+
+      for (const item of request.items) {
+        order.value.addItem(item.productId, item.quantity, item.price);
+      }
+
+      await this.uow.orderRepository.save(order.value);
+      await this.uow.taskRepository.save(
+        Task.create(`Fulfill order ${order.value.id}`).value,
+      );
+
+      await this.uow.commit();
+      return Result.ok(order.value.id);
+    } catch (error) {
+      await this.uow.rollback();
+      throw error;
+    }
+  }
 }
 ```
 
@@ -1689,26 +1948,26 @@ Clean separation with `src/` for business logic and `app/` for framework:
 ```json
 {
   "dependencies": {
-    "@nestjs/common": "^10.0.0",
-    "@nestjs/core": "^10.0.0",
-    "@nestjs/platform-express": "^10.0.0",
-    "@nestjs/cqrs": "^10.0.0",
-    "@prisma/client": "^5.0.0",
+    "@nestjs/common": "^11.0.0",
+    "@nestjs/core": "^11.0.0",
+    "@nestjs/platform-express": "^11.0.0",
+    "@nestjs/cqrs": "^11.0.0",
+    "@prisma/client": "^6.0.0",
     "reflect-metadata": "^0.1.13",
     "rxjs": "^7.8.0",
-    "zod": "^3.22.0"
+    "zod": "^3.24.0"
   },
   "devDependencies": {
-    "@nestjs/cli": "^10.0.0",
-    "@nestjs/schematics": "^10.0.0",
-    "@nestjs/testing": "^10.0.0",
-    "@types/node": "^20.0.0",
+    "@nestjs/cli": "^11.0.0",
+    "@nestjs/schematics": "^11.0.0",
+    "@nestjs/testing": "^11.0.0",
+    "@types/node": "^22.0.0",
     "@types/supertest": "^6.0.0",
-    "prisma": "^5.0.0",
+    "prisma": "^6.0.0",
     "supertest": "^6.3.0",
     "jest": "^29.0.0",
     "ts-jest": "^29.0.0",
-    "typescript": "^5.0.0"
+    "typescript": "^5.5.0"
   }
 }
 ```
@@ -1718,19 +1977,19 @@ Clean separation with `src/` for business logic and `app/` for framework:
 ```json
 {
   "dependencies": {
-    "next": "^15.0.0",
+    "next": "^15.1.0",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
-    "@prisma/client": "^5.0.0",
-    "zod": "^3.22.0"
+    "@prisma/client": "^6.0.0",
+    "zod": "^3.24.0"
   },
   "devDependencies": {
-    "@types/node": "^20.0.0",
-    "@types/react": "^18.0.0",
-    "prisma": "^5.0.0",
+    "@types/node": "^22.0.0",
+    "@types/react": "^19.0.0",
+    "prisma": "^6.0.0",
     "jest": "^29.0.0",
-    "@testing-library/react": "^14.0.0",
-    "typescript": "^5.0.0"
+    "@testing-library/react": "^16.0.0",
+    "typescript": "^5.5.0"
   }
 }
 ```

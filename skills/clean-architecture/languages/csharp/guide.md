@@ -1,3 +1,5 @@
+<!-- Last reviewed: 2026-01-21 -->
+
 # C# Clean Architecture Guide
 
 ## Overview
@@ -39,11 +41,22 @@ Enable nullable reference types in C# 8.0+:
 ```xml
 <Project>
   <PropertyGroup>
+    <TargetFramework>net9.0</TargetFramework>
     <Nullable>enable</Nullable>
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
   </PropertyGroup>
 </Project>
 ```
+
+### C# 13 Features (November 2024)
+
+C# 13 with .NET 9 introduces:
+- `params` collections (not just arrays): `void Log(params ReadOnlySpan<string> messages)`
+- Improved `lock` with `System.Threading.Lock` type
+- Partial properties in partial classes
+- `\e` escape sequence for ANSI escape
+
+Most Clean Architecture code doesn't need these immediately, but `params` collections improve API flexibility.
 
 ## Domain Layer Patterns
 
@@ -56,30 +69,30 @@ namespace Domain.Entities
     {
         private string _description;
         private bool _completed;
-        private DateTime? _completedAt;
+        private DateTimeOffset? _completedAt;
 
         public string Id { get; }
         public string Description => _description;
         public bool IsCompleted => _completed;
-        public DateTime CreatedAt { get; }
-        public DateTime? CompletedAt => _completedAt;
+        public DateTimeOffset CreatedAt { get; }
+        public DateTimeOffset? CompletedAt => _completedAt;
 
-        public Task(string description) : this(description, Guid.NewGuid().ToString())
+        public Task(string description) : this(description, Guid.NewGuid().ToString(), DateTimeOffset.UtcNow)
         {
         }
 
-        public Task(string description, string id)
+        public Task(string description, string id, DateTimeOffset? createdAt = null)
         {
             ValidateDescription(description);
 
             Id = id;
             _description = description;
             _completed = false;
-            CreatedAt = DateTime.UtcNow;
+            CreatedAt = createdAt ?? DateTimeOffset.UtcNow;
             _completedAt = null;
         }
 
-        public void Complete()
+        public void Complete(DateTimeOffset? completedAt = null)
         {
             if (_completed)
             {
@@ -87,7 +100,7 @@ namespace Domain.Entities
             }
 
             _completed = true;
-            _completedAt = DateTime.UtcNow;
+            _completedAt = completedAt ?? DateTimeOffset.UtcNow;
         }
 
         private static void ValidateDescription(string description)
@@ -164,37 +177,44 @@ C# 9.0+ records are perfect for value objects:
 ```csharp
 namespace Domain.ValueObjects
 {
+    // Simple immutable record (no validation needed)
     public record Address(
+        string Street,
+        string City,
+        string State,
+        string ZipCode
+    );
+
+    // Record with validation using property initialization
+    public record ValidatedAddress(
         string Street,
         string City,
         string State,
         string ZipCode
     )
     {
-        public Address : this(Street, City, State, ZipCode)
-        {
-            if (string.IsNullOrWhiteSpace(Street))
-                throw new ArgumentException("Street is required");
-            if (string.IsNullOrWhiteSpace(City))
-                throw new ArgumentException("City is required");
-            // ... more validation
-        }
+        public string Street { get; init; } = !string.IsNullOrWhiteSpace(Street)
+            ? Street
+            : throw new ArgumentException("Street is required", nameof(Street));
+        public string City { get; init; } = !string.IsNullOrWhiteSpace(City)
+            ? City
+            : throw new ArgumentException("City is required", nameof(City));
     }
 }
 ```
 
 ## Application Layer Patterns
 
-### Use Cases with DTOs
+### Use Cases with Records (C# 9+)
+
+Use records for immutable request/response models:
 
 ```csharp
 namespace Application.UseCases.CreateTask
 {
-    // Request DTO
-    public class CreateTaskRequest
+    // Request record (immutable, value semantics)
+    public record CreateTaskRequest(string Description)
     {
-        public string Description { get; set; } = string.Empty;
-
         public void Validate()
         {
             if (string.IsNullOrWhiteSpace(Description))
@@ -204,38 +224,54 @@ namespace Application.UseCases.CreateTask
         }
     }
 
-    // Response DTO
-    public class CreateTaskResponse
+    // Response record
+    public record CreateTaskResponse(
+        string TaskId,
+        bool Created,
+        DateTimeOffset CreatedAt
+    );
+
+    // Use Case with primary constructor (C# 12+)
+    public class CreateTaskUseCase(ITaskRepository taskRepository)
+        : IUseCase<CreateTaskRequest, CreateTaskResponse>
     {
-        public string TaskId { get; set; } = string.Empty;
-        public bool Created { get; set; }
-        public DateTime CreatedAt { get; set; }
-    }
-
-    // Use Case
-    public class CreateTaskUseCase : IUseCase<CreateTaskRequest, CreateTaskResponse>
-    {
-        private readonly ITaskRepository _taskRepository;
-
-        public CreateTaskUseCase(ITaskRepository taskRepository)
-        {
-            _taskRepository = taskRepository;
-        }
-
         public async Task<CreateTaskResponse> ExecuteAsync(CreateTaskRequest request)
         {
             request.Validate();
 
             var task = new Domain.Entities.Task(request.Description);
-            await _taskRepository.SaveAsync(task);
+            await taskRepository.SaveAsync(task);
 
-            return new CreateTaskResponse
-            {
-                TaskId = task.Id,
-                Created = true,
-                CreatedAt = task.CreatedAt
-            };
+            return new CreateTaskResponse(
+                task.Id,
+                true,
+                task.CreatedAt
+            );
         }
+    }
+}
+```
+
+Alternative with traditional constructor (if needed for explicit field access):
+
+```csharp
+public class CreateTaskUseCase : IUseCase<CreateTaskRequest, CreateTaskResponse>
+{
+    private readonly ITaskRepository _taskRepository;
+
+    public CreateTaskUseCase(ITaskRepository taskRepository)
+    {
+        _taskRepository = taskRepository;
+    }
+
+    public async Task<CreateTaskResponse> ExecuteAsync(CreateTaskRequest request)
+    {
+        request.Validate();
+
+        var task = new Domain.Entities.Task(request.Description);
+        await _taskRepository.SaveAsync(task);
+
+        return new CreateTaskResponse(task.Id, true, task.CreatedAt);
     }
 }
 ```
@@ -245,31 +281,24 @@ namespace Application.UseCases.CreateTask
 Using MediatR for decoupled communication:
 
 ```csharp
-// Request
-public class CreateTaskCommand : IRequest<CreateTaskResult>
-{
-    public string Description { get; set; }
-}
+// Request as record
+public record CreateTaskCommand(string Description) : IRequest<CreateTaskResult>;
 
-// Handler
-public class CreateTaskCommandHandler
+// Result as record
+public record CreateTaskResult(string TaskId);
+
+// Handler with primary constructor (C# 12+)
+public class CreateTaskCommandHandler(ITaskRepository repository)
     : IRequestHandler<CreateTaskCommand, CreateTaskResult>
 {
-    private readonly ITaskRepository _repository;
-
-    public CreateTaskCommandHandler(ITaskRepository repository)
-    {
-        _repository = repository;
-    }
-
     public async Task<CreateTaskResult> Handle(
         CreateTaskCommand request,
         CancellationToken cancellationToken)
     {
         var task = new Task(request.Description);
-        await _repository.SaveAsync(task);
+        await repository.SaveAsync(task);
 
-        return new CreateTaskResult { TaskId = task.Id };
+        return new CreateTaskResult(task.Id);
     }
 }
 ```
@@ -281,24 +310,18 @@ public class CreateTaskCommandHandler
 ```csharp
 namespace Infrastructure.Persistence.Repositories
 {
-    public class EfTaskRepository : ITaskRepository
+    // Using primary constructor (C# 12+)
+    public class EfTaskRepository(AppDbContext context) : ITaskRepository
     {
-        private readonly AppDbContext _context;
-
-        public EfTaskRepository(AppDbContext context)
-        {
-            _context = context;
-        }
-
         public async Task SaveAsync(Domain.Entities.Task task)
         {
-            var entity = await _context.Tasks
+            var entity = await context.Tasks
                 .FirstOrDefaultAsync(t => t.Id == task.Id);
 
             if (entity == null)
             {
                 entity = new TaskEntity();
-                _context.Tasks.Add(entity);
+                context.Tasks.Add(entity);
             }
 
             // Map domain to persistence
@@ -308,12 +331,12 @@ namespace Infrastructure.Persistence.Repositories
             entity.CreatedAt = task.CreatedAt;
             entity.CompletedAt = task.CompletedAt;
 
-            await _context.SaveChangesAsync();
+            await context.SaveChangesAsync();
         }
 
         public async Task<Domain.Entities.Task?> FindByIdAsync(string id)
         {
-            var entity = await _context.Tasks.FindAsync(id);
+            var entity = await context.Tasks.FindAsync(id);
 
             if (entity == null)
                 return null;
@@ -324,7 +347,7 @@ namespace Infrastructure.Persistence.Repositories
 
         public async Task<IEnumerable<Domain.Entities.Task>> FindAllAsync()
         {
-            var entities = await _context.Tasks
+            var entities = await context.Tasks
                 .OrderByDescending(t => t.CreatedAt)
                 .ToListAsync();
 
@@ -367,6 +390,22 @@ namespace Infrastructure.Persistence
 }
 ```
 
+### EF Core 9 Improvements
+
+EF Core 9 provides:
+- Better LINQ translation (more queries run on database)
+- Improved `Contains` for large lists
+- `ExecuteUpdateAsync`/`ExecuteDeleteAsync` improvements
+- Better AOT compilation support
+
+For complex repositories, consider bulk operations:
+```csharp
+// Bulk update without loading entities
+await context.Tasks
+    .Where(t => t.Status == "pending" && t.CreatedAt < cutoff)
+    .ExecuteUpdateAsync(s => s.SetProperty(t => t.Status, "expired"));
+```
+
 ## Frameworks Layer Patterns
 
 ### ASP.NET Core Controllers
@@ -376,48 +415,28 @@ namespace WebApi.Controllers
 {
     [ApiController]
     [Route("api/v1/[controller]")]
-    public class TasksController : ControllerBase
+    public class TasksController(IMediator mediator) : ControllerBase
     {
-        private readonly IMediator _mediator;
-
-        public TasksController(IMediator mediator)
-        {
-            _mediator = mediator;
-        }
-
         [HttpPost]
         public async Task<ActionResult<TaskDto>> CreateTask(
             [FromBody] CreateTaskDto dto)
         {
-            var command = new CreateTaskCommand
-            {
-                Description = dto.Description
-            };
-
-            var result = await _mediator.Send(command);
+            var command = new CreateTaskCommand(dto.Description);
+            var result = await mediator.Send(command);
 
             return CreatedAtAction(
                 nameof(GetTask),
                 new { id = result.TaskId },
-                new TaskDto
-                {
-                    Id = result.TaskId,
-                    Description = dto.Description
-                });
+                new TaskDto(result.TaskId, dto.Description));
         }
 
         [HttpGet]
         public async Task<ActionResult<IEnumerable<TaskDto>>> GetTasks()
         {
             var query = new GetAllTasksQuery();
-            var tasks = await _mediator.Send(query);
+            var tasks = await mediator.Send(query);
 
-            return Ok(tasks.Select(t => new TaskDto
-            {
-                Id = t.Id,
-                Description = t.Description,
-                IsCompleted = t.IsCompleted
-            }));
+            return Ok(tasks.Select(t => new TaskDto(t.Id, t.Description, t.IsCompleted)));
         }
     }
 }
@@ -523,28 +542,29 @@ namespace Domain.Tests.Entities
 
 ### Application Layer Tests
 
+Using NSubstitute for mocking:
+
 ```csharp
+using NSubstitute;
+
 namespace Application.Tests.UseCases
 {
     public class CreateTaskUseCaseTests
     {
-        private readonly Mock<ITaskRepository> _repositoryMock;
+        private readonly ITaskRepository _repository;
         private readonly CreateTaskUseCase _useCase;
 
         public CreateTaskUseCaseTests()
         {
-            _repositoryMock = new Mock<ITaskRepository>();
-            _useCase = new CreateTaskUseCase(_repositoryMock.Object);
+            _repository = Substitute.For<ITaskRepository>();
+            _useCase = new CreateTaskUseCase(_repository);
         }
 
         [Fact]
         public async Task Execute_ValidRequest_ShouldCreateTask()
         {
             // Arrange
-            var request = new CreateTaskRequest
-            {
-                Description = "New task"
-            };
+            var request = new CreateTaskRequest("New task");
 
             // Act
             var response = await _useCase.ExecuteAsync(request);
@@ -552,7 +572,7 @@ namespace Application.Tests.UseCases
             // Assert
             Assert.True(response.Created);
             Assert.NotEmpty(response.TaskId);
-            _repositoryMock.Verify(r => r.SaveAsync(It.IsAny<Task>()), Times.Once);
+            await _repository.Received(1).SaveAsync(Arg.Any<Task>());
         }
     }
 }
@@ -611,19 +631,19 @@ src/
 <ItemGroup>
   <!-- Web API -->
   <PackageReference Include="Microsoft.AspNetCore.App" />
-  <PackageReference Include="Swashbuckle.AspNetCore" Version="6.*" />
+  <PackageReference Include="Swashbuckle.AspNetCore" Version="7.1.0" />
 
   <!-- Entity Framework -->
-  <PackageReference Include="Microsoft.EntityFrameworkCore" Version="7.*" />
-  <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" Version="7.*" />
+  <PackageReference Include="Microsoft.EntityFrameworkCore" Version="9.0.0" />
+  <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" Version="9.0.0" />
 
   <!-- MediatR (optional) -->
-  <PackageReference Include="MediatR" Version="12.*" />
+  <PackageReference Include="MediatR" Version="12.4.0" />
 
   <!-- Testing -->
-  <PackageReference Include="xunit" Version="2.*" />
-  <PackageReference Include="Moq" Version="4.*" />
-  <PackageReference Include="FluentAssertions" Version="6.*" />
+  <PackageReference Include="xunit" Version="2.9.2" />
+  <PackageReference Include="NSubstitute" Version="5.3.0" />
+  <PackageReference Include="FluentAssertions" Version="7.0.0" />
 </ItemGroup>
 ```
 
@@ -711,12 +731,14 @@ public class Task
 
 ## Summary
 
-C# and .NET features for Clean Architecture:
+C# 13 and .NET 9 features for Clean Architecture:
 - **Interfaces** define clear contracts
+- **Primary constructors** (C# 12+) reduce DI boilerplate
 - **Dependency Injection** built into ASP.NET Core
-- **Entity Framework** for persistence abstraction
-- **Records** for immutable value objects
+- **Entity Framework Core 9** for persistence abstraction
+- **Records** for immutable value objects and DTOs
 - **Nullable reference types** prevent null errors
 - **Async/await** for scalable I/O
+- **TimeProvider** for testable datetime operations
 
 The .NET ecosystem provides excellent tooling and patterns that align naturally with Clean Architecture principles.

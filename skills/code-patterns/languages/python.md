@@ -1,3 +1,5 @@
+<!-- Last reviewed: 2026-01-21 -->
+
 > This file is loaded on demand. See main SKILL.md for overview.
 
 # Python Patterns and Standards
@@ -10,6 +12,8 @@ This skill provides Python-specific coding standards, patterns, and idioms for c
 - **Package Manager**: UV (preferred) or pip
 - **Virtual Environment**: Always use venv
 - **Type Checking**: mypy with strict mode
+
+> **Python 3.14 Preview (October 2025)**: PEP 649 deferred evaluation of annotations (faster imports), PEP 728 TypedDict with extra items, and improved type hint error messages.
 
 ## Code Style and Formatting
 
@@ -35,8 +39,12 @@ disallow_untyped_defs = true
 # Standard library imports
 import json
 import sys
+from datetime import datetime, timezone
 from pathlib import Path
-from typing import Any, Optional
+from typing import Any  # Use T | None instead of Optional[T] (Python 3.10+)
+
+# Timezone-aware datetime (Python 3.12+ deprecates utcnow())
+now = datetime.now(timezone.utc)  # Always use timezone-aware datetimes
 
 # Third-party imports
 import httpx
@@ -79,23 +87,24 @@ Use Pydantic for all data validation:
 ```python
 from decimal import Decimal
 from datetime import datetime
-from typing import Optional
-from pydantic import BaseModel, Field, field_validator
+from pydantic import BaseModel, Field, field_validator, field_serializer
 
 class Product(BaseModel):
     id: str = Field(..., description="Unique product identifier")
     name: str = Field(..., min_length=1, max_length=200)
     price: Decimal = Field(..., gt=0, decimal_places=2)
     created_at: datetime
-    updated_at: Optional[datetime] = None
+    updated_at: datetime | None = None
 
-    model_config = {
-        "str_strip_whitespace": True,
-        "json_encoders": {
-            Decimal: str,
-            datetime: lambda v: v.isoformat(),
-        }
-    }
+    model_config = {"str_strip_whitespace": True}
+
+    @field_serializer("price")
+    def serialize_price(self, value: Decimal) -> str:
+        return str(value)
+
+    @field_serializer("created_at", "updated_at")
+    def serialize_datetime(self, value: datetime | None) -> str | None:
+        return value.isoformat() if value else None
 
     @field_validator("price")
     @classmethod
@@ -104,6 +113,8 @@ class Product(BaseModel):
             raise ValueError("Price must be positive")
         return v.quantize(Decimal("0.01"))
 ```
+
+> **Note**: For high-performance serialization (10-100x faster than Pydantic), consider `msgspec` for internal data structures. Pydantic remains preferred for API validation due to better error messages.
 
 ## Dependency Injection
 
@@ -155,6 +166,43 @@ class NotFoundError(DomainError):
         super().__init__(f"{entity_type} with id {entity_id} not found")
 ```
 
+### Functional Error Handling with Result Types
+
+For explicit error handling without exceptions, consider the `returns` library:
+
+```python
+from returns.result import Result, Success, Failure
+from returns.pipeline import is_successful
+
+class UserService:
+    def find_user(self, user_id: str) -> Result[User, UserNotFoundError]:
+        user = self._repository.get(user_id)
+        if user is None:
+            return Failure(UserNotFoundError(user_id))
+        return Success(user)
+
+    def update_email(
+        self, user_id: str, new_email: str
+    ) -> Result[User, UserNotFoundError | ValidationError]:
+        return self.find_user(user_id).bind(
+            lambda user: self._validate_and_update(user, new_email)
+        )
+
+# Usage with pattern matching
+result = service.find_user("123")
+match result:
+    case Success(user):
+        print(f"Found: {user.name}")
+    case Failure(error):
+        print(f"Error: {error}")
+
+# Or with is_successful
+if is_successful(result):
+    user = result.unwrap()
+```
+
+This pattern makes error cases explicit in type signatures and avoids exception-based control flow for expected failure cases.
+
 ### Context Managers
 
 Use context managers for resource management:
@@ -187,7 +235,6 @@ with database_transaction() as conn:
 
 ```python
 import asyncio
-from typing import list[str]
 
 # WRONG - Blocking in async
 async def fetch_all_wrong(urls: list[str]) -> list[str]:
@@ -274,7 +321,7 @@ asyncio_mode = "auto"
 ```python
 # conftest.py
 import pytest
-from datetime import datetime
+from datetime import datetime, timezone
 from decimal import Decimal
 from unittest.mock import Mock, AsyncMock
 
@@ -285,7 +332,7 @@ def sample_user():
         id="user-123",
         email="test@example.com",
         name="Test User",
-        created_at=datetime.utcnow()
+        created_at=datetime.now(timezone.utc)
     )
 
 @pytest.fixture
@@ -497,7 +544,7 @@ class TestUserEndpoints:
         # Mock use case response
         mock_use_cases.create_user.return_value = CreateUserResponse(
             user_id="user-123",
-            created_at=datetime.utcnow()
+            created_at=datetime.now(timezone.utc)
         )
 
         # Make request
@@ -681,13 +728,13 @@ from typing import Protocol, runtime_checkable
 class Repository[T](Protocol):
     """Protocol for repository pattern."""
 
-    def get(self, id: str) -> Optional[T]: ...
+    def get(self, id: str) -> T | None: ...
     def save(self, entity: T) -> None: ...
     def delete(self, id: str) -> None: ...
 
 # Can be used with any class that matches the protocol
 class UserRepository:
-    def get(self, id: str) -> Optional[User]:
+    def get(self, id: str) -> User | None:
         # Implementation
         pass
 
@@ -700,7 +747,7 @@ class UserRepository:
         pass
 
 # Type checking works without inheritance
-def process_entity[T](repo: Repository[T], entity_id: str) -> Optional[T]:
+def process_entity[T](repo: Repository[T], entity_id: str) -> T | None:
     return repo.get(entity_id)
 ```
 
@@ -711,25 +758,25 @@ When a method has a docstring, no additional body statement is needed. The docst
 ```python
 # WRONG - Unnecessary ellipsis with docstring
 class Repository(Protocol):
-    def get(self, id: str) -> Optional[T]:
+    def get(self, id: str) -> T | None:
         """Retrieve entity by ID."""
         ...  # Unnecessary!
 
 # WRONG - Unnecessary pass with docstring
 class Repository(Protocol):
-    def get(self, id: str) -> Optional[T]:
+    def get(self, id: str) -> T | None:
         """Retrieve entity by ID."""
         pass  # Also unnecessary!
 
 # RIGHT - Docstring alone is sufficient
 class Repository(Protocol):
-    def get(self, id: str) -> Optional[T]:
+    def get(self, id: str) -> T | None:
         """Retrieve entity by ID."""
         # The docstring IS the method body - nothing else needed
 
 # Only use ellipsis when there's NO docstring
 class Repository(Protocol):
-    def get(self, id: str) -> Optional[T]: ...
+    def get(self, id: str) -> T | None: ...
     def save(self, entity: T) -> None: ...
 ```
 
@@ -802,7 +849,7 @@ class UserService:
 
 ```python
 from functools import lru_cache, cached_property
-from typing import Optional
+from typing import Any
 
 class DataService:
     @cached_property
@@ -811,9 +858,26 @@ class DataService:
         return self._load_config()
 
     @lru_cache(maxsize=128)
-    def get_user(self, user_id: str) -> Optional[User]:
+    def get_user(self, user_id: str) -> User | None:
         """Cache user lookups."""
         return self._repository.get(user_id)
+```
+
+### Updating Immutable Objects (Python 3.13+)
+
+```python
+import copy
+from dataclasses import dataclass
+
+@dataclass(frozen=True)
+class Config:
+    host: str
+    port: int
+    debug: bool = False
+
+config = Config(host="localhost", port=8080)
+# Create copy with updated field
+new_config = copy.replace(config, debug=True)
 ```
 
 ### Generators for Large Data
@@ -902,7 +966,7 @@ Use clear, purpose-driven names for your models:
 class CreateUserRequest(BaseModel):
     email: EmailStr
     name: str = Field(min_length=1, max_length=100)
-    role: Optional[str] = None
+    role: str | None = None
 
 # Response models - data going OUT of the API
 class UserResponse(BaseModel):
@@ -952,6 +1016,48 @@ async def create_user(
     return UserResponse.from_domain(user)
 ```
 
+### Configuration with Pydantic Settings
+
+Use `pydantic-settings` for type-safe configuration:
+
+```python
+from pydantic_settings import BaseSettings, SettingsConfigDict
+from pydantic import Field, SecretStr
+
+class Settings(BaseSettings):
+    """Application settings loaded from environment variables."""
+
+    model_config = SettingsConfigDict(
+        env_file=".env",
+        env_file_encoding="utf-8",
+        case_sensitive=False,
+    )
+
+    # Database
+    database_url: str = Field(alias="DATABASE_URL")
+    database_pool_size: int = Field(default=5, ge=1, le=20)
+
+    # API Keys (use SecretStr for sensitive data)
+    stripe_api_key: SecretStr = Field(alias="STRIPE_API_KEY")
+
+    # Feature flags
+    enable_cache: bool = Field(default=True)
+    debug_mode: bool = Field(default=False)
+
+# Usage with FastAPI dependency
+from functools import lru_cache
+
+@lru_cache
+def get_settings() -> Settings:
+    return Settings()
+
+# Access in application
+settings = get_settings()
+# settings.stripe_api_key.get_secret_value()  # For sensitive values
+```
+
+Install with: `uv add pydantic-settings`
+
 ## Draft/Submission Patterns
 
 Multi-step forms often require backend support for saving partial data (drafts) before final submission. These patterns handle the draft lifecycle with optimistic locking and state management.
@@ -961,9 +1067,9 @@ Multi-step forms often require backend support for saving partial data (drafts) 
 Model drafts as first-class domain entities with lifecycle states:
 
 ```python
-from datetime import datetime
+from datetime import datetime, timezone
 from enum import Enum
-from typing import Optional, Generic, TypeVar
+from typing import Generic, TypeVar
 from pydantic import BaseModel, Field
 
 class DraftStatus(str, Enum):
@@ -986,13 +1092,13 @@ class Draft(BaseModel, Generic[TData]):
     version: int = 1  # For optimistic locking
     created_at: datetime
     updated_at: datetime
-    expires_at: Optional[datetime] = None
+    expires_at: datetime | None = None
 
     def is_active(self) -> bool:
         """Check if draft can still be modified."""
         if self.status != DraftStatus.ACTIVE:
             return False
-        if self.expires_at and datetime.utcnow() > self.expires_at:
+        if self.expires_at and datetime.now(timezone.utc) > self.expires_at:
             return False
         return True
 
@@ -1000,7 +1106,7 @@ class Draft(BaseModel, Generic[TData]):
         """Mark a step as completed."""
         if step_id not in self.completed_steps:
             self.completed_steps.append(step_id)
-        self.updated_at = datetime.utcnow()
+        self.updated_at = datetime.now(timezone.utc)
 
     def can_submit(self, required_steps: list[str]) -> bool:
         """Check if all required steps are complete."""
@@ -1013,7 +1119,7 @@ Abstract draft persistence with optimistic locking:
 
 ```python
 from abc import ABC, abstractmethod
-from typing import Optional, Generic, TypeVar
+from typing import Generic, TypeVar
 
 class DraftRepository(ABC, Generic[TData]):
     """Repository interface for draft persistence."""
@@ -1023,7 +1129,7 @@ class DraftRepository(ABC, Generic[TData]):
         """Create a new draft."""
 
     @abstractmethod
-    async def get(self, draft_id: str, user_id: str) -> Optional[Draft[TData]]:
+    async def get(self, draft_id: str, user_id: str) -> Draft[TData] | None:
         """Retrieve a draft by ID and user."""
 
     @abstractmethod
@@ -1077,12 +1183,12 @@ TData = TypeVar("TData", bound=BaseModel)
 @dataclass
 class SaveDraftRequest(Generic[TData]):
     """Request to save draft progress."""
-    draft_id: Optional[str]
+    draft_id: str | None
     user_id: str
     data: TData
     current_step: str
     completed_steps: list[str]
-    version: Optional[int] = None  # None for new drafts
+    version: int | None = None  # None for new drafts
 
 @dataclass
 class SaveDraftResponse:
@@ -1103,7 +1209,7 @@ class SaveDraftUseCase(Generic[TData]):
         self._generate_id = id_generator
 
     async def execute(self, request: SaveDraftRequest[TData]) -> SaveDraftResponse:
-        now = datetime.utcnow()
+        now = datetime.now(timezone.utc)
 
         if request.draft_id is None:
             # Create new draft
@@ -1184,7 +1290,7 @@ class SubmitDraftUseCase(Generic[TData]):
 
         # Mark as submitted
         draft.status = DraftStatus.SUBMITTED
-        draft.updated_at = datetime.utcnow()
+        draft.updated_at = datetime.now(timezone.utc)
 
         await self._repository.update(draft, expected_version=request.version)
 ```
@@ -1205,7 +1311,7 @@ class SaveDraftApiRequest(BaseModel):
     data: dict  # Partial form data
     current_step: str
     completed_steps: list[str]
-    version: Optional[int] = None
+    version: int | None = None
 
 class DraftApiResponse(BaseModel):
     """API response for draft operations."""
@@ -1371,7 +1477,7 @@ class DraftExpirationService:
 
         Returns count of expired drafts.
         """
-        cutoff = datetime.utcnow() - self._expiration_delta
+        cutoff = datetime.now(timezone.utc) - self._expiration_delta
         expired_count = await self._repository.expire_before(cutoff)
         return expired_count
 
@@ -1437,7 +1543,7 @@ class AutoSaveUseCase:
         # Merge partial data with existing data
         merged_data = {**draft.data.model_dump(), **request.data}
         draft.data = type(draft.data)(**merged_data)
-        draft.updated_at = datetime.utcnow()
+        draft.updated_at = datetime.now(timezone.utc)
 
         try:
             saved = await self._repository.update(
@@ -1458,7 +1564,6 @@ class AutoSaveUseCase:
 
 ```python
 import typer
-from typing import Optional
 from pathlib import Path
 
 app = typer.Typer(help="PROJECT_NAME CLI")
@@ -1473,7 +1578,7 @@ def process(
         dir_okay=False,
         readable=True,
     ),
-    output: Optional[Path] = typer.Option(
+    output: Path | None = typer.Option(
         None,
         "--output",
         "-o",
@@ -1505,7 +1610,6 @@ def process(
 
 ```python
 import re
-from typing import Optional
 
 def sanitize_filename(filename: str) -> str:
     """Remove potentially dangerous characters from filename."""

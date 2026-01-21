@@ -1,14 +1,18 @@
+<!-- Last reviewed: 2026-01-21 -->
+
 > This file is loaded on demand. See main SKILL.md for overview.
 
 # TypeScript/React Patterns and Standards
 
 This skill provides TypeScript and React-specific coding standards, patterns, and best practices for building robust web applications.
 
+> **TypeScript 7 (2026)**: Microsoft announced a Go-based TypeScript compiler targeting 10x faster builds. TypeScript 7 will include breaking changes: strict-by-default, ES5 target dropped, AMD/UMD/SystemJS removed. Current projects should already follow strict mode as documented here.
+
 ## Environment and Tooling
 
-- **Runtime**: Bun (primary) or Node.js 20+ LTS (fallback)
+- **Runtime**: Bun (primary) or Node.js 22+ LTS (fallback)
 - **Package Manager**: npm, yarn, or bun
-- **TypeScript**: 5.3+ with strict mode
+- **TypeScript**: 5.5+ with strict mode (5.7+ recommended)
 - **React**: 18+ with functional components
 - **Build Tool**: Vite or Next.js
 - **Testing**: Vitest + React Testing Library (or bun:test)
@@ -93,6 +97,41 @@ await fetch(url, { signal: controller.signal });
 - `ReadableStream` / `WritableStream` / `TransformStream`
 - `Blob` / `File` / `FormData`
 - `setTimeout` / `setInterval` / `queueMicrotask`
+
+### Node.js Native TypeScript Support (22.18.0+)
+
+Starting with Node.js 22.18.0 (released July 2025), Node can execute TypeScript files directly without compilation:
+
+```bash
+# Run TypeScript directly (Node 22.18.0+)
+node --experimental-strip-types app.ts
+
+# Or with type checking (slower startup)
+node --experimental-transform-types app.ts
+```
+
+**When to use native execution:**
+- Development scripts and CLI tools
+- Quick prototyping
+- Simple applications without build requirements
+
+**When to continue using tsc/bundlers:**
+- Production builds (tree-shaking, minification)
+- Complex projects with path aliases
+- Projects targeting multiple runtimes
+- When you need source maps
+
+```typescript
+// package.json for projects using native TypeScript
+{
+  "type": "module",
+  "scripts": {
+    "dev": "node --experimental-strip-types src/index.ts",
+    "build": "tsc",
+    "start": "node dist/index.js"
+  }
+}
+```
 
 ### Runtime Detection
 
@@ -727,6 +766,44 @@ When switching between runtimes, follow this checklist:
 }
 ```
 
+### ESM-First Configuration
+
+ESM (ECMAScript Modules) is now the standard. Configure projects for ESM from the start:
+
+```json
+// package.json
+{
+  "type": "module"
+}
+```
+
+```json
+// tsconfig.json
+{
+  "compilerOptions": {
+    "module": "ESNext",
+    "moduleResolution": "bundler",  // or "node16" for pure Node.js
+    "verbatimModuleSyntax": true    // Enforces explicit type imports
+  }
+}
+```
+
+**ESM Best Practices:**
+- Always use `import`/`export`, never `require()`
+- Use `.js` extensions in imports when targeting Node.js directly
+- Prefer `import type { }` for type-only imports
+- Use top-level await where appropriate
+
+```typescript
+// Correct ESM with verbatimModuleSyntax
+import type { User } from './types.js';
+import { createUser } from './services.js';
+
+// Avoid - CommonJS patterns
+const { createUser } = require('./services');
+module.exports = { handler };
+```
+
 ## Type-First Development
 
 ### Type Everything Explicitly
@@ -786,6 +863,52 @@ function transferMoney(
 
 // Type branding for compile-time safety
 const accountId = '12345' as AccountId;
+```
+
+### Leveraging TypeScript 5.5+ Features
+
+#### Inferred Type Predicates
+
+TypeScript 5.5+ automatically infers type predicates in filter operations:
+
+```typescript
+// Before 5.5 - Required explicit type predicate
+const users = [getUser(), null, getUser(), undefined];
+
+// Pre-5.5: filter doesn't narrow types
+const validUsers = users.filter(u => u !== null && u !== undefined);
+// validUsers: (User | null | undefined)[] - still nullable!
+
+// Pre-5.5: Required explicit type guard
+function isNotNull<T>(value: T | null | undefined): value is T {
+  return value !== null && value !== undefined;
+}
+const validUsersOld = users.filter(isNotNull);
+// validUsersOld: User[]
+
+// TypeScript 5.5+: Automatic inference
+const validUsersNew = users.filter(u => u !== null && u !== undefined);
+// validUsersNew: User[] - correctly narrowed!
+
+// Works with custom conditions too
+interface Task { id: string; completed: boolean }
+const tasks: Task[] = getTasks();
+
+// TS 5.5+ infers the type predicate automatically
+const completedTasks = tasks.filter(t => t.completed);
+// completedTasks: Task[] (not Task | undefined)
+```
+
+#### Regex Literal Checking
+
+TypeScript 5.5+ validates regex patterns at compile time:
+
+```typescript
+// Caught at compile time in 5.5+
+const emailRegex = /[a-z+@/;  // Error: Invalid regex
+
+// Valid regex passes compilation
+const validEmailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 ```
 
 ## React Patterns
@@ -1546,6 +1669,41 @@ async function fetchUser(id: string): Promise<Result<User>> {
 }
 ```
 
+### Result Pattern Libraries
+
+For larger projects, consider using established libraries:
+
+**neverthrow** - Lightweight, well-typed Result implementation:
+
+```typescript
+import { ok, err, Result, ResultAsync } from 'neverthrow';
+
+// Synchronous
+function divide(a: number, b: number): Result<number, Error> {
+  if (b === 0) return err(new Error('Division by zero'));
+  return ok(a / b);
+}
+
+// Async with ResultAsync
+function fetchUser(id: string): ResultAsync<User, ApiError> {
+  return ResultAsync.fromPromise(
+    fetch(`/api/users/${id}`).then(r => r.json()),
+    (error) => new ApiError('Failed to fetch user', error)
+  );
+}
+
+// Chaining
+const result = await fetchUser('123')
+  .map(user => user.email)
+  .mapErr(err => ({ code: 'USER_ERROR', message: err.message }));
+
+if (result.isOk()) {
+  console.log(result.value);  // Typed as string (email)
+}
+```
+
+> **Note**: neverthrow maintenance has slowed. For new projects, the inline Result pattern in this guide is sufficient. Consider neverthrow for consistency if already in your stack.
+
 ## API Integration
 
 ### Type-Safe API Client
@@ -2281,7 +2439,22 @@ describe('LargeList Performance', () => {
 });
 ```
 
-### Accessibility Testing
+### Automated Accessibility Testing
+
+Integrate accessibility checks into your test suite and CI:
+
+```typescript
+// vitest.setup.ts
+import { configureAxe } from 'vitest-axe';
+
+// Configure axe for your project's requirements
+configureAxe({
+  rules: {
+    // Disable specific rules if needed
+    'color-contrast': { enabled: false },  // For dark mode testing
+  },
+});
+```
 
 ```typescript
 // components/Form.test.tsx
@@ -2328,6 +2501,17 @@ describe('Form Accessibility', () => {
     expect(screen.getByRole('button')).toHaveFocus();
   });
 });
+```
+
+**CI Integration - Lighthouse for Production A11y Audits:**
+
+```yaml
+# GitHub Actions - Lighthouse CI
+- name: Lighthouse CI
+  uses: treosh/lighthouse-ci-action@v10
+  with:
+    configPath: './lighthouserc.json'
+    uploadArtifacts: true
 ```
 
 ## Performance Optimization
@@ -2449,6 +2633,61 @@ export function UserForm({ onSubmit }: { onSubmit: (data: UserFormData) => void 
     </form>
   );
 }
+```
+
+### Zod Validation Best Practices
+
+Prefer `safeParse` over `parse` for non-throwing validation:
+
+```typescript
+import { z } from 'zod';
+
+const UserSchema = z.object({
+  email: z.string().email(),
+  age: z.number().min(18),
+});
+
+// Throws on invalid input
+try {
+  const user = UserSchema.parse(input);
+} catch (error) {
+  if (error instanceof z.ZodError) {
+    // Handle validation error
+  }
+}
+
+// Preferred - returns Result-like object
+const result = UserSchema.safeParse(input);
+if (!result.success) {
+  // result.error contains detailed validation errors
+  console.log(result.error.flatten());
+  return;
+}
+// result.data is typed as { email: string; age: number }
+const user = result.data;
+```
+
+**Environment Variable Validation with Zod:**
+
+```typescript
+// src/config/env.ts
+import { z } from 'zod';
+
+const EnvSchema = z.object({
+  NODE_ENV: z.enum(['development', 'production', 'test']),
+  DATABASE_URL: z.string().url(),
+  API_KEY: z.string().min(1),
+  PORT: z.coerce.number().default(3000),  // Coerce string to number
+});
+
+// Validate at startup
+const result = EnvSchema.safeParse(process.env);
+if (!result.success) {
+  console.error('Invalid environment variables:', result.error.flatten());
+  process.exit(1);
+}
+
+export const env = result.data;
 ```
 
 ## Multi-Step Form (Wizard) Patterns

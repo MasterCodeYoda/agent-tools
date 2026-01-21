@@ -1,4 +1,5 @@
 > This file is loaded on demand. See main SKILL.md for overview.
+<!-- Last reviewed: 2026-01-21 -->
 
 # C# Patterns and Standards
 
@@ -6,8 +7,10 @@ This skill provides C#/.NET-specific coding standards, patterns, and idioms for 
 
 ## Environment and Tooling
 
-- **.NET Version**: .NET 8+
-- **Language Version**: C# 12+ with nullable reference types enabled
+- **.NET Version**: .NET 9+ (LTS: .NET 8)
+- **Language Version**: C# 13+ with nullable reference types enabled
+
+> Note: .NET 9 (November 2024) brings HybridCache for distributed + in-memory caching, built-in OpenTelemetry improvements, EF Core 9 with better LINQ translation, and improved AOT compilation support. For LTS support, .NET 8 remains supported until November 2026.
 - **IDE**: Visual Studio 2022 or VS Code with C# Dev Kit
 - **Package Manager**: NuGet or dotnet CLI
 - **Build Tool**: MSBuild via dotnet CLI
@@ -45,7 +48,7 @@ Solution/
 <!-- Domain.csproj - No dependencies -->
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <TargetFramework>net8.0</TargetFramework>
+    <TargetFramework>net9.0</TargetFramework>
     <Nullable>enable</Nullable>
   </PropertyGroup>
 </Project>
@@ -164,17 +167,67 @@ public class Patient
 {
     public string Id { get; private set; }
     public string Email { get; private set; }
-    public DateTime CreatedAt { get; private set; }
+    public DateTimeOffset CreatedAt { get; private set; }
 
     private Patient() { } // EF Core constructor
 
-    public Patient(string email)
+    public Patient(string email) : this(email, DateTimeOffset.UtcNow)
+    {
+    }
+
+    public Patient(string email, DateTimeOffset createdAt)
     {
         Id = Guid.NewGuid().ToString();
         Email = email;
-        CreatedAt = DateTime.UtcNow;
+        CreatedAt = createdAt;
     }
 }
+```
+
+### Testable Time with TimeProvider
+
+Use `TimeProvider` instead of `DateTime.UtcNow` for testability:
+
+```csharp
+// Use case controls time - preferred approach
+public class CreatePatientUseCase
+{
+    private readonly TimeProvider _timeProvider;
+    private readonly IPatientRepository _repository;
+
+    public CreatePatientUseCase(TimeProvider timeProvider, IPatientRepository repository)
+    {
+        _timeProvider = timeProvider;
+        _repository = repository;
+    }
+
+    public Result<Patient> Execute(CreatePatientRequest request)
+    {
+        var patient = new Patient(request.Email, _timeProvider.GetUtcNow());
+        // ...
+    }
+}
+
+// In tests:
+using Microsoft.Extensions.Time.Testing;
+
+[Fact]
+public void CreatePatient_SetsCorrectTimestamp()
+{
+    // Arrange
+    var fakeTime = new FakeTimeProvider(new DateTimeOffset(2024, 1, 15, 10, 0, 0, TimeSpan.Zero));
+    var useCase = new CreatePatientUseCase(fakeTime, _repositoryMock.Object);
+
+    // Act
+    var result = useCase.Execute(new CreatePatientRequest { Email = "test@example.com" });
+
+    // Assert
+    result.Value.CreatedAt.Should().Be(fakeTime.GetUtcNow());
+
+    // Advance time if needed
+    fakeTime.Advance(TimeSpan.FromDays(1));
+}
+```
 
 // Value Object
 public record Address(
@@ -422,6 +475,56 @@ public class PatientService : IPatientService
 }
 ```
 
+### Primary Constructors (C# 12+)
+
+Simplify dependency injection with primary constructors:
+
+```csharp
+// OLD - Verbose constructor injection
+public class PatientService : IPatientService
+{
+    private readonly IPatientRepository _repository;
+    private readonly ILogger<PatientService> _logger;
+    private readonly IEmailService _emailService;
+
+    public PatientService(
+        IPatientRepository repository,
+        ILogger<PatientService> logger,
+        IEmailService emailService)
+    {
+        _repository = repository ?? throw new ArgumentNullException(nameof(repository));
+        _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+        _emailService = emailService ?? throw new ArgumentNullException(nameof(emailService));
+    }
+
+    public async Task<Patient?> GetPatientAsync(string id)
+    {
+        return await _repository.GetByIdAsync(id);
+    }
+}
+
+// NEW - Primary constructor (C# 12+)
+public class PatientService(
+    IPatientRepository repository,
+    ILogger<PatientService> logger,
+    IEmailService emailService) : IPatientService
+{
+    public async Task<Patient?> GetPatientAsync(string id)
+    {
+        logger.LogInformation("Getting patient {PatientId}", id);
+        return await repository.GetByIdAsync(id);
+    }
+}
+```
+
+Note: Primary constructor parameters are captured, not fields. If you need to expose them or use `readonly` semantics, assign to a field:
+```csharp
+public class PatientService(IPatientRepository repository) : IPatientService
+{
+    private readonly IPatientRepository _repository = repository; // Explicit field if needed
+}
+```
+
 ## Entity Framework Core Patterns
 
 ### DbContext Configuration
@@ -516,20 +619,21 @@ public class PatientRepository : IPatientRepository
 <!-- Domain.Tests.csproj -->
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <TargetFramework>net8.0</TargetFramework>
+    <TargetFramework>net9.0</TargetFramework>
     <Nullable>enable</Nullable>
     <IsPackable>false</IsPackable>
     <IsTestProject>true</IsTestProject>
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.8.0" />
-    <PackageReference Include="xunit" Version="2.6.1" />
-    <PackageReference Include="xunit.runner.visualstudio" Version="2.5.3" />
-    <PackageReference Include="coverlet.collector" Version="6.0.0" />
-    <PackageReference Include="Moq" Version="4.20.69" />
-    <PackageReference Include="FluentAssertions" Version="6.12.0" />
-    <PackageReference Include="Bogus" Version="34.0.2" />
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.12.0" />
+    <PackageReference Include="xunit" Version="2.9.2" />
+    <PackageReference Include="xunit.runner.visualstudio" Version="3.0.0" />
+    <PackageReference Include="coverlet.collector" Version="6.0.2" />
+    <PackageReference Include="NSubstitute" Version="5.3.0" />
+    <PackageReference Include="FluentAssertions" Version="7.0.0" />
+    <PackageReference Include="Bogus" Version="35.6.0" />
+    <PackageReference Include="Microsoft.Extensions.TimeProvider.Testing" Version="9.0.0" />
   </ItemGroup>
 </Project>
 ```
@@ -730,6 +834,39 @@ public class CreateOrderHandlerTests
     }
 }
 ```
+
+### Mocking with NSubstitute
+
+NSubstitute provides a fluent, readable syntax for test mocks:
+
+```csharp
+using NSubstitute;
+
+[Fact]
+public async Task CreateOrder_WithValidRequest_SavesOrder()
+{
+    // Arrange - Create substitutes
+    var orderRepository = Substitute.For<IOrderRepository>();
+    var customerRepository = Substitute.For<ICustomerRepository>();
+
+    customerRepository.GetByIdAsync("CUST-001")
+        .Returns(new Customer("CUST-001", "test@example.com"));
+
+    var handler = new CreateOrderHandler(orderRepository, customerRepository);
+
+    // Act
+    var result = await handler.Handle(new CreateOrderRequest { CustomerId = "CUST-001" });
+
+    // Assert - Verify calls
+    await orderRepository.Received(1).AddAsync(Arg.Any<Order>());
+    await orderRepository.DidNotReceive().DeleteAsync(Arg.Any<string>());
+
+    // Verify specific arguments
+    await orderRepository.Received().AddAsync(Arg.Is<Order>(o => o.CustomerId == "CUST-001"));
+}
+```
+
+Both Moq and NSubstitute are valid choices. NSubstitute has cleaner syntax; Moq has larger ecosystem.
 
 ### Infrastructure Layer Testing
 
@@ -1110,7 +1247,7 @@ public class SerializationTests
 // Install-Package BenchmarkDotNet
 
 [MemoryDiagnoser]
-[SimpleJob(RuntimeMoniker.Net80)]
+[SimpleJob(RuntimeMoniker.Net90)]
 public class OrderCalculationBenchmarks
 {
     private Order _smallOrder;
@@ -1344,6 +1481,31 @@ public void ProcessPatients(IEnumerable<Patient> patients)
 }
 ```
 
+### Collection Expressions (C# 12+)
+
+Unified syntax for collection initialization:
+
+```csharp
+// OLD
+List<string> names = new List<string> { "Alice", "Bob", "Charlie" };
+int[] numbers = new int[] { 1, 2, 3, 4, 5 };
+string[] empty = Array.Empty<string>();
+
+// NEW - Collection expressions
+List<string> names = ["Alice", "Bob", "Charlie"];
+int[] numbers = [1, 2, 3, 4, 5];
+string[] empty = [];
+
+// Spread operator
+int[] first = [1, 2, 3];
+int[] second = [4, 5, 6];
+int[] combined = [..first, ..second]; // [1, 2, 3, 4, 5, 6]
+
+// Works with any collection type
+ImmutableArray<int> immutable = [1, 2, 3];
+Span<int> span = [1, 2, 3];
+```
+
 ## Controller Patterns
 
 ### Thin Controllers
@@ -1388,6 +1550,46 @@ public class PatientsController : ControllerBase
     }
 }
 ```
+
+### Minimal APIs (Alternative to Controllers)
+
+For simpler endpoints, minimal APIs reduce boilerplate:
+
+```csharp
+// Program.cs
+var builder = WebApplication.CreateBuilder(args);
+builder.Services.AddApplicationServices();
+
+var app = builder.Build();
+
+// Map endpoints
+app.MapGet("/api/patients/{id}", async (string id, IMediator mediator) =>
+{
+    var result = await mediator.Send(new GetPatientQuery(id));
+    return result.IsSuccess
+        ? Results.Ok(result.Value)
+        : Results.NotFound();
+})
+.WithName("GetPatient")
+.Produces<PatientView>(200)
+.Produces(404);
+
+app.MapPost("/api/patients", async (CreatePatientRequest request, IMediator mediator) =>
+{
+    var result = await mediator.Send(request);
+    return result.IsSuccess
+        ? Results.Created($"/api/patients/{result.Value.Id}", result.Value)
+        : Results.BadRequest(result.Error);
+})
+.WithName("CreatePatient")
+.Produces<CreatePatientResponse>(201)
+.ProducesValidationProblem();
+
+app.Run();
+```
+
+Use minimal APIs for: simple CRUD, microservices, rapid prototyping.
+Use controllers for: complex routing, extensive middleware, OpenAPI customization.
 
 ## Validation with FluentValidation
 
@@ -1459,6 +1661,27 @@ public class PatientService
     }
 }
 ```
+
+### Observability with OpenTelemetry
+
+For production observability, add OpenTelemetry:
+
+```csharp
+// Program.cs
+builder.Services.AddOpenTelemetry()
+    .ConfigureResource(resource => resource.AddService("MyService"))
+    .WithTracing(tracing => tracing
+        .AddAspNetCoreInstrumentation()
+        .AddHttpClientInstrumentation()
+        .AddEntityFrameworkCoreInstrumentation()
+        .AddOtlpExporter())
+    .WithMetrics(metrics => metrics
+        .AddAspNetCoreInstrumentation()
+        .AddHttpClientInstrumentation()
+        .AddOtlpExporter());
+```
+
+This integrates with Jaeger, Zipkin, Azure Monitor, Datadog, etc.
 
 ## Security Patterns
 
@@ -1605,5 +1828,64 @@ public class CachedPatientService : IPatientService
     }
 }
 ```
+
+### HybridCache (.NET 9+)
+
+.NET 9 introduces `HybridCache` combining in-memory and distributed caching:
+
+```csharp
+// Program.cs
+builder.Services.AddHybridCache(options =>
+{
+    options.DefaultEntryOptions = new HybridCacheEntryOptions
+    {
+        LocalCacheExpiration = TimeSpan.FromMinutes(5),
+        Expiration = TimeSpan.FromMinutes(30)
+    };
+});
+
+// Optionally add distributed cache backend
+builder.Services.AddStackExchangeRedisCache(options =>
+{
+    options.Configuration = builder.Configuration.GetConnectionString("Redis");
+});
+
+// Service using HybridCache
+public class PatientService(
+    HybridCache cache,
+    IPatientRepository repository)
+{
+    public async Task<Patient?> GetPatientAsync(string id, CancellationToken ct = default)
+    {
+        return await cache.GetOrCreateAsync(
+            $"patient_{id}",
+            async token => await repository.GetByIdAsync(id, token),
+            cancellationToken: ct);
+    }
+
+    public async Task InvalidatePatientCacheAsync(string id, CancellationToken ct = default)
+    {
+        await cache.RemoveAsync($"patient_{id}", ct);
+    }
+}
+```
+
+HybridCache automatically handles:
+- L1 (in-memory) and L2 (distributed) cache coordination
+- Stampede protection (prevents multiple cache fills)
+- Serialization for distributed cache
+
+## Cloud-Native Development with .NET Aspire
+
+For cloud-native applications, consider .NET Aspire:
+- Orchestrates microservices locally
+- Integrates service discovery, health checks, telemetry
+- Simplifies container deployment
+
+```bash
+dotnet new aspire-starter -n MyApp
+```
+
+Aspire provides `AppHost` for local orchestration and dashboard for observability.
 
 Remember: Follow Clean Architecture principles, maintain clear layer boundaries, and prioritize testability and maintainability.

@@ -1,3 +1,5 @@
+<!-- Last reviewed: 2026-01-21 -->
+
 # Python Clean Architecture Guide
 
 ## Overview
@@ -11,12 +13,12 @@ This guide provides Python-specific patterns and idioms for implementing Clean A
 Always use type hints for architectural clarity:
 
 ```python
-from typing import Protocol, Optional, List
+from typing import Protocol
 from dataclasses import dataclass
 
 # Clear contracts with type hints
 class OrderRepository(Protocol):
-    async def find_by_id(self, order_id: str) -> Optional[Order]: ...
+    async def find_by_id(self, order_id: str) -> Order | None: ...
     async def save(self, order: Order) -> None: ...
 ```
 
@@ -42,17 +44,16 @@ if not isinstance(gateway, PaymentGateway):
 
 ```python
 from dataclasses import dataclass, field
-from typing import List
-from datetime import datetime
+from datetime import datetime, timezone
 import uuid
 
 @dataclass
 class Order:
     customer_id: str
     _id: str = field(default_factory=lambda: str(uuid.uuid4()))
-    _items: List[OrderItem] = field(default_factory=list, repr=False)
+    _items: list[OrderItem] = field(default_factory=list, repr=False)
     _status: str = field(default="draft", repr=False)
-    _created_at: datetime = field(default_factory=datetime.now)
+    _created_at: datetime = field(default_factory=lambda: datetime.now(timezone.utc))
 
     @property
     def id(self) -> str:
@@ -111,12 +112,10 @@ class Money:
 ### Domain Services
 
 ```python
-from typing import List
-
 class PricingService:
     """Domain service for complex pricing calculations."""
 
-    def calculate_total(self, items: List[OrderItem], customer: Customer) -> Money:
+    def calculate_total(self, items: list[OrderItem], customer: Customer) -> Money:
         subtotal = sum(item.total for item in items)
         discount = self._calculate_discount(subtotal, customer)
         return subtotal.subtract(discount)
@@ -127,25 +126,69 @@ class PricingService:
         return Money(Decimal("0"), amount.currency)
 ```
 
+### Domain Events
+
+Decouple side effects from domain logic:
+
+```python
+from dataclasses import dataclass, field
+from datetime import datetime, timezone
+from typing import Protocol
+from decimal import Decimal
+
+@dataclass(frozen=True)
+class DomainEvent:
+    """Base class for domain events."""
+    occurred_at: datetime = field(default_factory=lambda: datetime.now(timezone.utc))
+
+@dataclass(frozen=True)
+class OrderPlaced(DomainEvent):
+    order_id: str
+    customer_id: str
+    total_amount: Decimal
+
+class EventPublisher(Protocol):
+    async def publish(self, event: DomainEvent) -> None: ...
+
+# In aggregate
+@dataclass
+class Order:
+    _events: list[DomainEvent] = field(default_factory=list, repr=False)
+
+    def place(self) -> None:
+        if self._status != "draft":
+            raise ValueError("Order already placed")
+        self._status = "placed"
+        self._events.append(OrderPlaced(
+            order_id=self.id,
+            customer_id=self.customer_id,
+            total_amount=self.total
+        ))
+
+    def collect_events(self) -> list[DomainEvent]:
+        events = self._events.copy()
+        self._events.clear()
+        return events
+```
+
 ## Application Layer Patterns
 
 ### Use Cases with Pydantic
 
 ```python
 from pydantic import BaseModel, Field
-from typing import List, Optional
 from datetime import datetime
 
 # Request/Response models with validation
 class CreateOrderRequest(BaseModel):
     customer_id: str = Field(..., min_length=1)
-    items: List[OrderItemRequest]
+    items: list[OrderItemRequest]
     shipping_address: AddressRequest
 
-    class Config:
-        # Pydantic configuration
-        str_strip_whitespace = True
-        use_enum_values = True
+    model_config = {
+        "str_strip_whitespace": True,
+        "use_enum_values": True,
+    }
 
 class CreateOrderResponse(BaseModel):
     order_id: str
@@ -204,12 +247,11 @@ class CreateOrderUseCase:
 # application/orders/create_order.py
 
 from pydantic import BaseModel
-from typing import List
 
 # Request model
 class CreateOrderRequest(BaseModel):
     customer_id: str
-    items: List[OrderItemRequest]
+    items: list[OrderItemRequest]
 
 # Response model
 class CreateOrderResponse(BaseModel):
@@ -233,7 +275,6 @@ class CreateOrderUseCase:
 ```python
 from sqlalchemy.orm import Session
 from sqlalchemy import select
-from typing import Optional, List
 
 from domain.entities import Order
 from domain.repositories import OrderRepository
@@ -243,7 +284,7 @@ class SqlOrderRepository(OrderRepository):
     def __init__(self, session: Session):
         self._session = session
 
-    async def find_by_id(self, order_id: str) -> Optional[Order]:
+    async def find_by_id(self, order_id: str) -> Order | None:
         stmt = select(OrderModel).where(OrderModel.id == order_id)
         result = await self._session.execute(stmt)
         model = result.scalar_one_or_none()
@@ -282,11 +323,65 @@ class SqlOrderRepository(OrderRepository):
         )
 ```
 
+### Unit of Work Pattern
+
+Coordinate multiple repository operations in a single transaction:
+
+```python
+from typing import Protocol
+from contextlib import asynccontextmanager
+
+class UnitOfWork(Protocol):
+    """Coordinates transactional operations across repositories."""
+
+    orders: OrderRepository
+    customers: CustomerRepository
+
+    async def commit(self) -> None: ...
+    async def rollback(self) -> None: ...
+
+class SqlUnitOfWork:
+    def __init__(self, session_factory):
+        self._session_factory = session_factory
+        self._session = None
+
+    async def __aenter__(self):
+        self._session = self._session_factory()
+        self.orders = SqlOrderRepository(self._session)
+        self.customers = SqlCustomerRepository(self._session)
+        return self
+
+    async def __aexit__(self, exc_type, exc_val, exc_tb):
+        if exc_type:
+            await self.rollback()
+        await self._session.close()
+
+    async def commit(self) -> None:
+        await self._session.commit()
+
+    async def rollback(self) -> None:
+        await self._session.rollback()
+
+# Usage in use case
+class TransferMoneyUseCase:
+    def __init__(self, uow_factory):
+        self._uow_factory = uow_factory
+
+    async def execute(self, request: TransferRequest) -> None:
+        async with self._uow_factory() as uow:
+            from_account = await uow.accounts.get(request.from_id)
+            to_account = await uow.accounts.get(request.to_id)
+
+            from_account.withdraw(request.amount)
+            to_account.deposit(request.amount)
+
+            await uow.commit()  # Single transaction
+```
+
 ### Gateway Implementation
 
 ```python
 import httpx
-from typing import Optional
 
 from application.gateways import PaymentGateway
 from domain.value_objects import Money, PaymentResult
@@ -344,7 +439,7 @@ class StripePaymentGateway(PaymentGateway):
 ```python
 from fastapi import APIRouter, Depends, HTTPException, status
 from pydantic import BaseModel
-from typing import Dict, Any
+from typing import Any
 
 from application.orders import CreateOrderUseCase, CreateOrderRequest
 from .dependencies import get_create_order_use_case
@@ -354,13 +449,13 @@ router = APIRouter(prefix="/orders", tags=["orders"])
 class CreateOrderDTO(BaseModel):
     """HTTP request DTO."""
     customer_id: str
-    items: List[Dict[str, Any]]
-    shipping_address: Dict[str, str]
+    items: list[dict[str, Any]]
+    shipping_address: dict[str, str]
 
 @router.post(
     "/",
     status_code=status.HTTP_201_CREATED,
-    response_model=Dict[str, Any]
+    response_model=dict[str, Any]
 )
 async def create_order(
     dto: CreateOrderDTO,
@@ -429,6 +524,34 @@ def get_create_order_use_case(
     gateway: PaymentGateway = Depends(get_payment_gateway)
 ) -> CreateOrderUseCase:
     return CreateOrderUseCase(repository, gateway)
+```
+
+## Advanced Patterns
+
+### Specification Pattern (for complex queries)
+
+```python
+from typing import Protocol, TypeVar
+from dataclasses import dataclass
+
+T = TypeVar("T")
+
+class Specification(Protocol[T]):
+    def is_satisfied_by(self, entity: T) -> bool: ...
+
+@dataclass
+class ActiveOrdersForCustomer(Specification[Order]):
+    customer_id: str
+
+    def is_satisfied_by(self, order: Order) -> bool:
+        return (
+            order.customer_id == self.customer_id
+            and order.status in ("pending", "processing")
+        )
+
+# Repository can accept specifications
+class OrderRepository(Protocol):
+    async def find_matching(self, spec: Specification[Order]) -> list[Order]: ...
 ```
 
 ## Testing Patterns
@@ -625,32 +748,33 @@ name = "clean-architecture-example"
 version = "0.1.0"
 dependencies = [
     # Web framework
-    "fastapi>=0.104.0",
-    "uvicorn[standard]>=0.24.0",
+    "fastapi>=0.115.0",
+    "uvicorn[standard]>=0.32.0",
 
     # Database
-    "sqlalchemy>=2.0.0",
-    "alembic>=1.12.0",
-    "asyncpg>=0.29.0",  # PostgreSQL
+    "sqlalchemy>=2.0.36",
+    "alembic>=1.14.0",
+    "asyncpg>=0.30.0",  # PostgreSQL
 
     # Validation
-    "pydantic>=2.5.0",
+    "pydantic>=2.10.0",
+    "pydantic-settings>=2.6.0",
 
     # HTTP client
-    "httpx>=0.25.0",
+    "httpx>=0.28.0",
 ]
 
 [project.optional-dependencies]
 dev = [
     # Testing
-    "pytest>=7.4.0",
-    "pytest-asyncio>=0.21.0",
-    "pytest-cov>=4.1.0",
+    "pytest>=8.3.0",
+    "pytest-asyncio>=0.24.0",
+    "pytest-cov>=6.0.0",
 
     # Code quality
-    "ruff>=0.1.0",
-    "mypy>=1.7.0",
-    "bandit>=1.7.0",
+    "ruff>=0.8.0",
+    "mypy>=1.13.0",
+    "bandit>=1.8.0",
 
     # Development
     "ipython>=8.17.0",
