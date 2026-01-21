@@ -20,6 +20,7 @@ This guide covers Rust-specific coding standards, patterns, and best practices f
 | `cargo-nextest` | Faster test runner | `cargo install cargo-nextest` |
 | `cargo-watch` | Auto-rebuild on changes | `cargo install cargo-watch` |
 | `cargo-audit` | Security vulnerability scanner | `cargo install cargo-audit` |
+| `cargo-deny` | License compliance, duplicate deps, advisories | `cargo install cargo-deny` |
 
 ### Cargo.toml Best Practices
 
@@ -55,6 +56,11 @@ nursery = "warn"
 # Allow specific pedantic lints
 module_name_repetitions = "allow"
 must_use_candidate = "allow"
+
+# Production safety - force deliberate error handling
+unwrap_used = "warn"     # Prefer expect() or proper error handling
+expect_used = "warn"     # Make panics explicit and documented
+panic = "warn"           # Discourage panics in library code
 
 [profile.release]
 lto = true
@@ -186,6 +192,27 @@ fn transfer(from: AccountId, to: AccountId, amount: Money) {
     // Can't accidentally swap types
 }
 ```
+
+**Reducing boilerplate with `derive_more`**:
+
+```rust
+use derive_more::{Display, From, AsRef, Into};
+
+// derive_more reduces newtype boilerplate significantly
+#[derive(Debug, Clone, PartialEq, Eq, Hash, Display, From, AsRef)]
+pub struct Email(String);
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, From, Into)]
+pub struct UserId(i64);
+
+// Now you get:
+// - Display: println!("{}", email) works
+// - From: Email::from("user@example.com".to_string())
+// - AsRef: email.as_ref() returns &str
+// - Into: let id: i64 = user_id.into()
+```
+
+**Caution**: Avoid `Deref` for domain newtypes - it defeats type safety by allowing implicit conversion to the inner type.
 
 ### Builder Pattern
 
@@ -512,6 +539,44 @@ fn load_config(path: &str) -> Result<Config, DataStoreError> {
 | **thiserror** | Libraries, public APIs | Minimal boilerplate, `#[from]` for conversion |
 | **anyhow** | Applications, binaries | Flexible context, ergonomic `?` usage |
 | **snafu** | Large systems, debugging | Rich context fields, automatic backtraces |
+| **miette** | CLI applications | Beautiful error rendering, source snippets |
+
+#### miette for CLI Applications
+
+For CLI tools that need user-friendly error display with source context:
+
+```rust
+use miette::{Diagnostic, SourceSpan, NamedSource, Report};
+use thiserror::Error;
+
+#[derive(Error, Diagnostic, Debug)]
+#[error("Parse error at line {line}")]
+#[diagnostic(
+    code(parser::invalid_syntax),
+    help("Check the syntax at the indicated position")
+)]
+pub struct ParseError {
+    line: usize,
+    #[source_code]
+    src: NamedSource<String>,
+    #[label("error occurred here")]
+    span: SourceSpan,
+}
+
+// In main.rs - enable pretty printing
+fn main() -> miette::Result<()> {
+    miette::set_hook(Box::new(|_| {
+        Box::new(miette::MietteHandlerOpts::new()
+            .terminal_links(true)
+            .context_lines(2)
+            .build())
+    }))?;
+
+    run().map_err(Report::from)
+}
+```
+
+> **When to use miette**: Choose miette for user-facing CLI tools where error presentation matters. For libraries or internal services, thiserror/anyhow are simpler choices.
 
 ### Context Patterns (Best Practice)
 
@@ -570,6 +635,37 @@ fn log_error_chain(err: &dyn std::error::Error) {
 }
 ```
 
+### Structured Logging with tracing
+
+Use `tracing` for structured, contextual logging. The `#[instrument]` attribute automatically captures function arguments:
+
+```rust
+use tracing::{info, warn, instrument, Level};
+
+#[instrument(skip(self, password), fields(user_id = %user_id))]
+pub async fn authenticate(&self, user_id: &str, password: &str) -> Result<Token, AuthError> {
+    info!("Authenticating user");
+
+    let user = self.repo.find_user(user_id).await?;
+
+    if !verify_password(&user, password) {
+        warn!("Invalid password attempt");
+        return Err(AuthError::InvalidCredentials);
+    }
+
+    info!("Authentication successful");
+    Ok(Token::new(&user))
+}
+```
+
+Key patterns:
+- `skip(self, password)` - Exclude sensitive or non-Debug fields
+- `fields(user_id = %user_id)` - Add custom span fields (`%` uses Display)
+- Use `info!`, `warn!`, `error!` for structured events within spans
+- Spans automatically track timing when using async
+
+> **Setup**: Configure a subscriber in main (e.g., `tracing_subscriber::fmt::init()` for development).
+
 ---
 
 ## Async Patterns
@@ -591,18 +687,17 @@ async fn main() {
 // Use async-trait for async trait methods
 ```
 
-### async_trait Usage
+### Async Traits
+
+**Rust 1.75+ (preferred)**: Native `async fn` in traits works for most cases:
 
 ```rust
-use async_trait::async_trait;
-
-#[async_trait]
+// Native async traits - no crate needed, zero overhead
 pub trait Repository: Send + Sync {
     async fn find(&self, id: &str) -> Result<Option<Entity>, Error>;
     async fn save(&self, entity: &Entity) -> Result<(), Error>;
 }
 
-#[async_trait]
 impl Repository for SqlRepository {
     async fn find(&self, id: &str) -> Result<Option<Entity>, Error> {
         // Implementation
@@ -613,6 +708,34 @@ impl Repository for SqlRepository {
     }
 }
 ```
+
+**When you still need `async_trait`**: For object-safe traits (dyn dispatch):
+
+```rust
+use async_trait::async_trait;
+
+// async_trait required for: Box<dyn Repository>
+#[async_trait]
+pub trait DynRepository: Send + Sync {
+    async fn find(&self, id: &str) -> Result<Option<Entity>, Error>;
+}
+
+// Now you can use trait objects
+fn create_repo(use_mock: bool) -> Box<dyn DynRepository> {
+    if use_mock {
+        Box::new(MockRepository::new())
+    } else {
+        Box::new(SqlRepository::new())
+    }
+}
+```
+
+**Decision guide**:
+| Scenario | Use |
+|----------|-----|
+| Generic parameters `<R: Repository>` | Native async traits |
+| Trait objects `Box<dyn Repository>` | `async_trait` |
+| Rust < 1.75 | `async_trait` |
 
 ### Concurrent Operations with join!
 
@@ -848,6 +971,121 @@ async fn process_with_concurrency_limit(
         .collect()
 }
 ```
+
+### Mutex Selection: std vs tokio
+
+**Critical distinction** - using the wrong mutex causes deadlocks:
+
+```rust
+// WRONG - std::sync::Mutex held across .await = DEADLOCK RISK
+async fn bad_example() {
+    let data = std::sync::Mutex::new(vec![]);
+    let mut guard = data.lock().unwrap();
+    fetch_more_data().await;  // BUG: std mutex held across await!
+    guard.push(item);
+}
+
+// RIGHT - tokio::sync::Mutex for async critical sections
+async fn good_example() {
+    let data = tokio::sync::Mutex::new(vec![]);
+    let mut guard = data.lock().await;
+    fetch_more_data().await;  // Safe: tokio mutex is await-aware
+    guard.push(item);
+}
+```
+
+**Decision guide**:
+
+| Scenario | Use | Why |
+|----------|-----|-----|
+| Lock held across `.await` | `tokio::sync::Mutex` | Await-aware, prevents deadlock |
+| Short sync-only critical section | `std::sync::Mutex` | Lower overhead, no async penalty |
+| Read-heavy workloads | `tokio::sync::RwLock` | Multiple concurrent readers |
+
+```rust
+// std::sync::Mutex is fine for quick sync operations
+fn sync_update(cache: &std::sync::Mutex<HashMap<String, Value>>, key: &str, val: Value) {
+    let mut map = cache.lock().unwrap();
+    map.insert(key.to_string(), val);
+    // Lock released immediately, no .await inside
+}
+```
+
+### Async Channels
+
+Tokio provides several channel types for different communication patterns:
+
+```rust
+use tokio::sync::{mpsc, oneshot, broadcast, watch};
+
+// === mpsc: Multiple producers, single consumer (most common) ===
+async fn mpsc_example() {
+    // ALWAYS use bounded channels to prevent unbounded memory growth
+    let (tx, mut rx) = mpsc::channel::<Message>(100);
+
+    // Clone sender for multiple producers
+    let tx2 = tx.clone();
+
+    tokio::spawn(async move {
+        tx.send(Message::new("from task 1")).await.expect("receiver dropped");
+    });
+
+    tokio::spawn(async move {
+        tx2.send(Message::new("from task 2")).await.expect("receiver dropped");
+    });
+
+    // Receive messages
+    while let Some(msg) = rx.recv().await {
+        process(msg);
+    }
+}
+
+// === oneshot: Single value, single consumer (request/response) ===
+async fn oneshot_example() -> Result<Response, Error> {
+    let (tx, rx) = oneshot::channel();
+
+    tokio::spawn(async move {
+        let result = compute_expensive_result().await;
+        let _ = tx.send(result); // Ignoring error if receiver dropped
+    });
+
+    // Wait for the single response
+    rx.await.map_err(|_| Error::Cancelled)
+}
+
+// === watch: Latest value only (config/state changes) ===
+async fn watch_example() {
+    let (tx, mut rx) = watch::channel(AppConfig::default());
+
+    // Receiver always gets the latest value
+    tokio::spawn(async move {
+        loop {
+            rx.changed().await.expect("sender dropped");
+            let config = rx.borrow().clone();
+            apply_config(&config);
+        }
+    });
+
+    // Sender updates the value
+    tx.send(AppConfig::new()).expect("receiver dropped");
+}
+
+// === broadcast: Fan-out to multiple consumers ===
+async fn broadcast_example() {
+    let (tx, _) = broadcast::channel::<Event>(16);
+
+    // Each subscriber gets all messages
+    let mut rx1 = tx.subscribe();
+    let mut rx2 = tx.subscribe();
+
+    tx.send(Event::UserJoined).expect("no receivers");
+}
+```
+
+**When to use channels vs simpler patterns**:
+- For most CRUD apps, request/response (async fn returns Result) is simpler
+- For Tauri apps, use Tauri events for Rust→frontend communication
+- Channels are best for: background workers, event streaming, work distribution
 
 ---
 
@@ -1738,6 +1976,152 @@ export async function completeTask(taskId: string): Promise<Task> {
 }
 ```
 
+### Tauri v2 Security Patterns
+
+#### Content Security Policy (CSP)
+
+Configure CSP in `tauri.conf.json` or via meta tag:
+
+```json
+// tauri.conf.json
+{
+  "app": {
+    "security": {
+      "csp": "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'"
+    }
+  }
+}
+```
+
+Or in `index.html`:
+
+```html
+<meta http-equiv="Content-Security-Policy"
+      content="default-src 'self'; script-src 'self'">
+```
+
+#### Command Input Validation
+
+**Always validate inputs in commands** - frontend can be bypassed:
+
+```rust
+#[command]
+pub async fn create_task(
+    input: CreateTaskInput,
+    state: State<'_, AppState>,
+) -> CommandResult<TaskOutput> {
+    // ALWAYS validate - frontend validation can be bypassed
+    let description = input.description.trim();
+
+    if description.is_empty() {
+        return CommandResult::error("VALIDATION", "Description required");
+    }
+    if description.len() > 1000 {
+        return CommandResult::error("VALIDATION", "Description too long (max 1000 chars)");
+    }
+    if description.chars().any(|c| c.is_control() && c != '\n') {
+        return CommandResult::error("VALIDATION", "Invalid characters in description");
+    }
+
+    // Now safe to process
+    match state.create_task.execute(description.to_string()).await {
+        Ok(task) => CommandResult::success(TaskOutput::from(task)),
+        Err(e) => CommandResult::error("CREATE_FAILED", e.to_string()),
+    }
+}
+```
+
+#### Path Traversal Prevention
+
+For file operations, validate paths to prevent directory traversal attacks:
+
+```rust
+use std::path::{Path, PathBuf};
+
+/// Safely resolve a path within an allowed directory
+fn safe_path(base: &Path, user_path: &str) -> Result<PathBuf, SecurityError> {
+    // Reject obvious traversal attempts
+    if user_path.contains("..") {
+        return Err(SecurityError::PathTraversal);
+    }
+
+    let full_path = base.join(user_path);
+    let canonical = full_path.canonicalize()
+        .map_err(|_| SecurityError::InvalidPath)?;
+
+    // Verify the resolved path is within the allowed directory
+    if !canonical.starts_with(base.canonicalize()?) {
+        return Err(SecurityError::PathTraversal);
+    }
+
+    Ok(canonical)
+}
+
+#[command]
+pub async fn read_user_file(
+    filename: String,
+    state: State<'_, AppState>,
+) -> CommandResult<String> {
+    let base = state.user_data_dir();
+
+    let path = match safe_path(base, &filename) {
+        Ok(p) => p,
+        Err(_) => return CommandResult::error("SECURITY", "Invalid file path"),
+    };
+
+    match tokio::fs::read_to_string(&path).await {
+        Ok(content) => CommandResult::success(content),
+        Err(e) => CommandResult::error("READ_FAILED", e.to_string()),
+    }
+}
+```
+
+#### Capability-Based Permissions
+
+Define granular permissions for commands:
+
+```toml
+# src-tauri/capabilities/permissions/task-commands.toml
+[[permission]]
+identifier = "allow-read-tasks"
+description = "Allow reading tasks"
+commands.allow = ["list_tasks", "get_task"]
+
+[[permission]]
+identifier = "allow-write-tasks"
+description = "Allow creating and modifying tasks"
+commands.allow = ["create_task", "update_task", "complete_task"]
+
+[[permission]]
+identifier = "allow-delete-tasks"
+description = "Allow deleting tasks (privileged)"
+commands.allow = ["delete_task"]
+
+[[set]]
+identifier = "task-read-only"
+description = "Read-only task access"
+permissions = ["allow-read-tasks"]
+
+[[set]]
+identifier = "task-management"
+description = "Full task management (no delete)"
+permissions = ["allow-read-tasks", "allow-write-tasks"]
+```
+
+Reference in capabilities:
+
+```json
+// src-tauri/capabilities/main.json
+{
+  "identifier": "main-window",
+  "windows": ["main"],
+  "permissions": [
+    "core:default",
+    "task-management"
+  ]
+}
+```
+
 ---
 
 ## Performance Patterns
@@ -1787,28 +2171,52 @@ pub async fn create_pool(database_url: &str) -> Result<Pool<Sqlite>, sqlx::Error
 
 ### Lazy Initialization
 
+**Rust 1.80+ (preferred)**: Use `std::sync::LazyLock` for static lazy values:
+
 ```rust
-use std::sync::OnceLock;
+use std::sync::LazyLock;
+use regex::Regex;
 
-// Global lazy initialization
-static CONFIG: OnceLock<Config> = OnceLock::new();
-
-pub fn get_config() -> &'static Config {
-    CONFIG.get_or_init(|| {
-        Config::from_env().expect("Failed to load config")
-    })
-}
-
-// Local lazy initialization
-use once_cell::sync::Lazy;
-
-static REGEX: Lazy<Regex> = Lazy::new(|| {
+// Rust 1.80+: Prefer std::sync::LazyLock - no external crate needed
+static REGEX: LazyLock<Regex> = LazyLock::new(|| {
     Regex::new(r"^\d{4}-\d{2}-\d{2}$").unwrap()
 });
 
 fn is_date_format(s: &str) -> bool {
     REGEX.is_match(s)
 }
+```
+
+**For on-demand initialization** (set value later): Use `OnceLock`:
+
+```rust
+use std::sync::OnceLock;
+
+// When you need to set the value at runtime
+static CONFIG: OnceLock<Config> = OnceLock::new();
+
+pub fn init_config(config: Config) {
+    CONFIG.set(config).expect("Config already initialized");
+}
+
+pub fn get_config() -> &'static Config {
+    CONFIG.get().expect("Config not initialized")
+}
+
+// Or with lazy fallback
+pub fn get_config_or_default() -> &'static Config {
+    CONFIG.get_or_init(|| Config::default())
+}
+```
+
+**For Rust < 1.80**: Use `once_cell::sync::Lazy`:
+
+```rust
+use once_cell::sync::Lazy;
+
+static REGEX: Lazy<Regex> = Lazy::new(|| {
+    Regex::new(r"^\d{4}-\d{2}-\d{2}$").unwrap()
+});
 ```
 
 ### Efficient String Building

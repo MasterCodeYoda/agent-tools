@@ -215,7 +215,15 @@ impl Task {
         })
     }
 
-    /// Reconstitute from persistence (bypasses validation)
+    /// Reconstitute from persistence - bypasses validation.
+    ///
+    /// Use this when rebuilding entities from trusted storage (database, cache).
+    /// Unlike `new()`, this doesn't validate because:
+    /// 1. Data was already validated when first created via `new()`
+    /// 2. Storage is trusted - if your DB is corrupted, you have bigger problems
+    /// 3. Allows loading historical data that might not pass current validation rules
+    ///
+    /// **Never use reconstitute with untrusted input** - always go through `new()`.
     pub fn reconstitute(
         id: TaskId,
         description: String,
@@ -373,6 +381,78 @@ impl TaskScheduler {
 }
 ```
 
+### Domain Events
+
+Domain events capture something meaningful that happened in the domain. Return events from entity methods rather than publishing them directly:
+
+```rust
+// domain/src/events.rs
+use chrono::{DateTime, Utc};
+use serde::{Deserialize, Serialize};
+use crate::value_objects::TaskId;
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub enum DomainEvent {
+    TaskCreated(TaskCreatedEvent),
+    TaskCompleted(TaskCompletedEvent),
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct TaskCreatedEvent {
+    pub task_id: TaskId,
+    pub description: String,
+    pub created_at: DateTime<Utc>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct TaskCompletedEvent {
+    pub task_id: TaskId,
+    pub completed_at: DateTime<Utc>,
+}
+```
+
+Entity methods return events alongside state changes:
+
+```rust
+impl Task {
+    pub fn complete(&mut self) -> Result<TaskCompletedEvent, DomainError> {
+        if self.completed {
+            return Err(DomainError::AlreadyCompleted);
+        }
+
+        let completed_at = Utc::now();
+        self.completed = true;
+        self.completed_at = Some(completed_at);
+
+        Ok(TaskCompletedEvent {
+            task_id: self.id.clone(),
+            completed_at,
+        })
+    }
+}
+```
+
+Use cases collect and handle events:
+
+```rust
+impl<R: TaskRepository> CompleteTaskUseCase<R> {
+    pub async fn execute(&self, request: CompleteTaskRequest) -> Result<CompleteTaskResponse, Error> {
+        let mut task = self.repository.find_by_id(&request.task_id).await?
+            .ok_or(Error::NotFound)?;
+
+        // Domain method returns the event
+        let event = task.complete()?;
+
+        // Save task and event atomically
+        self.repository.save_with_events(&task, &[DomainEvent::TaskCompleted(event.clone())]).await?;
+
+        Ok(CompleteTaskResponse {
+            completed_at: event.completed_at,
+        })
+    }
+}
+```
+
 ### Repository Traits
 
 Defined in domain, implemented in infrastructure:
@@ -395,6 +475,90 @@ pub trait TaskRepository: Send + Sync {
     async fn find_completed(&self) -> Result<Vec<Task>, RepositoryError>;
     async fn delete(&self, id: &TaskId) -> Result<(), RepositoryError>;
     async fn exists(&self, id: &TaskId) -> Result<bool, RepositoryError>;
+}
+```
+
+### Aggregate Roots
+
+An aggregate is a cluster of domain objects treated as a single unit for data changes. The **aggregate root** is the only entry point for modifications, ensuring invariants are maintained.
+
+```rust
+// Order is the aggregate root - it owns OrderItems
+pub struct Order {
+    id: OrderId,
+    customer_id: CustomerId,
+    items: Vec<OrderItem>,  // Owned by Order
+    status: OrderStatus,
+    created_at: DateTime<Utc>,
+}
+
+// OrderItem can only be accessed through Order
+pub struct OrderItem {
+    product_id: ProductId,
+    quantity: u32,
+    unit_price: Money,
+}
+
+impl Order {
+    const MAX_ITEMS: usize = 100;
+
+    pub fn new(customer_id: CustomerId) -> Self {
+        Self {
+            id: OrderId::new(),
+            customer_id,
+            items: Vec::new(),
+            status: OrderStatus::Draft,
+            created_at: Utc::now(),
+        }
+    }
+
+    /// Add item - aggregate root enforces invariants
+    pub fn add_item(
+        &mut self,
+        product_id: ProductId,
+        quantity: u32,
+        unit_price: Money,
+    ) -> Result<(), DomainError> {
+        if self.status != OrderStatus::Draft {
+            return Err(DomainError::OrderNotModifiable);
+        }
+        if self.items.len() >= Self::MAX_ITEMS {
+            return Err(DomainError::TooManyItems);
+        }
+        if quantity == 0 {
+            return Err(DomainError::InvalidQuantity);
+        }
+
+        self.items.push(OrderItem { product_id, quantity, unit_price });
+        Ok(())
+    }
+
+    /// Read-only access to items - Rust enforces this naturally
+    pub fn items(&self) -> &[OrderItem] {
+        &self.items
+    }
+
+    pub fn total(&self) -> Money {
+        self.items.iter()
+            .map(|item| item.unit_price * item.quantity)
+            .sum()
+    }
+}
+```
+
+**Rust advantages for aggregates**:
+- **Ownership**: `Vec<OrderItem>` inside `Order` naturally prevents external modification
+- **Encapsulation**: Private fields with public methods enforce the aggregate boundary
+- **No leaking**: Returning `&[OrderItem]` (immutable slice) prevents mutation
+
+**Repository pattern with aggregates**: Load and save entire aggregates, not individual items:
+
+```rust
+#[async_trait]
+pub trait OrderRepository: Send + Sync {
+    async fn save(&self, order: &Order) -> Result<(), RepositoryError>;
+    async fn find_by_id(&self, id: &OrderId) -> Result<Option<Order>, RepositoryError>;
+    // No find_order_item() - items come with their order
 }
 ```
 
@@ -507,6 +671,27 @@ impl<R: TaskRepository> UseCase<CreateTaskRequest, CreateTaskResponse, CreateTas
     }
 }
 ```
+
+> ⚠️ **Warning: Avoid Over-Abstraction**
+>
+> The generic `UseCase<Request, Response, Error>` trait above is shown for completeness but can lead to unnecessary complexity. **Prefer the concrete generic approach** shown in the examples below:
+>
+> ```rust
+> // Preferred: Concrete struct with repository generic
+> pub struct CreateTaskUseCase<R: TaskRepository> {
+>     repository: R,
+> }
+>
+> impl<R: TaskRepository> CreateTaskUseCase<R> {
+>     pub async fn execute(&self, request: CreateTaskRequest) -> Result<CreateTaskResponse, CreateTaskError> {
+>         // Direct implementation - no trait ceremony
+>     }
+> }
+> ```
+>
+> The abstract trait is only valuable when you need to:
+> - Execute use cases through a uniform interface (rare)
+> - Build middleware that wraps arbitrary use cases (uncommon)
 
 ### Complete Task Use Case
 
@@ -654,6 +839,85 @@ impl<R: TaskRepository> ListTasksUseCase<R> {
     }
 }
 ```
+
+### Transactions and Unit of Work
+
+For operations requiring atomicity across multiple entities, encapsulate the transaction in the repository:
+
+**Simple approach** - Transaction within repository method:
+
+```rust
+impl SqlxTaskRepository {
+    /// Save task and its events atomically
+    pub async fn save_with_events(
+        &self,
+        task: &Task,
+        events: &[DomainEvent],
+    ) -> Result<(), RepositoryError> {
+        let mut tx = self.pool.begin().await?;
+
+        // Save task
+        sqlx::query("INSERT INTO tasks ... ON CONFLICT DO UPDATE ...")
+            .bind(task.id().to_string())
+            .bind(task.description())
+            .execute(&mut *tx)
+            .await?;
+
+        // Save events
+        for event in events {
+            sqlx::query("INSERT INTO domain_events ...")
+                .bind(serde_json::to_string(event)?)
+                .execute(&mut *tx)
+                .await?;
+        }
+
+        tx.commit().await?;
+        Ok(())
+    }
+}
+```
+
+**Cross-aggregate transactions** - Use a Unit of Work when spanning multiple repositories:
+
+```rust
+// Define a Unit of Work trait
+#[async_trait]
+pub trait UnitOfWork: Send + Sync {
+    type TaskRepo: TaskRepository;
+    type OrderRepo: OrderRepository;
+
+    fn task_repository(&self) -> &Self::TaskRepo;
+    fn order_repository(&self) -> &Self::OrderRepo;
+
+    async fn commit(self) -> Result<(), RepositoryError>;
+    async fn rollback(self) -> Result<(), RepositoryError>;
+}
+
+// Use case with multiple repositories
+pub struct TransferTaskUseCase<U: UnitOfWork> {
+    unit_of_work_factory: Box<dyn Fn() -> U + Send + Sync>,
+}
+
+impl<U: UnitOfWork> TransferTaskUseCase<U> {
+    pub async fn execute(&self, request: TransferRequest) -> Result<(), UseCaseError> {
+        let uow = (self.unit_of_work_factory)();
+
+        // Perform operations on both repositories
+        let task = uow.task_repository().find_by_id(&request.task_id).await?;
+        // ... modify task ...
+        uow.task_repository().save(&task).await?;
+
+        // ... update order ...
+        uow.order_repository().save(&order).await?;
+
+        // Commit atomically
+        uow.commit().await?;
+        Ok(())
+    }
+}
+```
+
+**Guidance**: Start with simple repository-level transactions. Only introduce Unit of Work when you genuinely need cross-aggregate atomicity - it adds significant complexity.
 
 ### Application Module Structure
 
@@ -1190,6 +1454,23 @@ sqlx = { version = "0.7", features = ["runtime-tokio", "sqlite"] }
 tauri = { version = "2", features = ["test"] }
 ```
 
+**Using workspace dependencies in crates:**
+
+```toml
+# crates/domain/Cargo.toml
+[package]
+name = "domain"
+version.workspace = true       # Inherit from [workspace.package]
+edition.workspace = true
+
+[dependencies]
+chrono = { workspace = true }  # Uses version from [workspace.dependencies]
+uuid = { workspace = true }
+thiserror = { workspace = true }
+```
+
+This pattern ensures all crates use the same dependency versions, avoiding conflicts and simplifying updates.
+
 ### Tauri Commands as Thin Controllers
 
 ```rust
@@ -1337,22 +1618,20 @@ mod commands;
 mod state;
 
 use state::AppState;
+use tokio::sync::OnceCell;
+
+// Global state with guaranteed initialization
+static APP_STATE: OnceCell<AppState> = OnceCell::const_new();
 
 fn main() {
     tauri::Builder::default()
         .setup(|app| {
-            // Initialize state asynchronously
+            // Block on async initialization - guarantees state is ready before commands
             let handle = app.handle().clone();
-            tauri::async_runtime::spawn(async move {
-                match AppState::new(&handle).await {
-                    Ok(state) => {
-                        handle.manage(state);
-                    }
-                    Err(e) => {
-                        eprintln!("Failed to initialize app state: {}", e);
-                        std::process::exit(1);
-                    }
-                }
+            tauri::async_runtime::block_on(async move {
+                let state = AppState::new(&handle).await
+                    .expect("Failed to initialize app state");
+                APP_STATE.set(state).expect("State already initialized");
             });
             Ok(())
         })
@@ -1364,6 +1643,9 @@ fn main() {
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
 }
+
+// In commands, access state via the OnceCell:
+// let state = APP_STATE.get().expect("State not initialized");
 ```
 
 ### TypeScript Frontend Integration
@@ -1788,6 +2070,98 @@ async fn find_pending_and_completed() {
 }
 ```
 
+### Contract Testing for Repositories
+
+Contract tests ensure your mock and real implementations behave identically. Define shared test functions that run against any implementation:
+
+```rust
+// tests/repository_contract.rs
+use domain::{Task, TaskId, TaskRepository};
+
+/// Contract tests that any TaskRepository implementation must pass
+pub mod task_repository_contract {
+    use super::*;
+
+    pub async fn test_save_and_find_by_id<R: TaskRepository>(repo: &R) {
+        let task = Task::new("Contract test".to_string()).unwrap();
+        let id = task.id().clone();
+
+        repo.save(&task).await.unwrap();
+
+        let found = repo.find_by_id(&id).await.unwrap();
+        assert!(found.is_some());
+        assert_eq!(found.unwrap().description(), "Contract test");
+    }
+
+    pub async fn test_find_missing_returns_none<R: TaskRepository>(repo: &R) {
+        let missing_id = TaskId::new();
+        let found = repo.find_by_id(&missing_id).await.unwrap();
+        assert!(found.is_none());
+    }
+
+    pub async fn test_save_updates_existing<R: TaskRepository>(repo: &R) {
+        let mut task = Task::new("Original".to_string()).unwrap();
+        let id = task.id().clone();
+
+        repo.save(&task).await.unwrap();
+
+        task.complete().unwrap();
+        repo.save(&task).await.unwrap();
+
+        let found = repo.find_by_id(&id).await.unwrap().unwrap();
+        assert!(found.is_completed());
+    }
+
+    pub async fn test_delete_removes_task<R: TaskRepository>(repo: &R) {
+        let task = Task::new("To delete".to_string()).unwrap();
+        let id = task.id().clone();
+
+        repo.save(&task).await.unwrap();
+        repo.delete(&id).await.unwrap();
+
+        let found = repo.find_by_id(&id).await.unwrap();
+        assert!(found.is_none());
+    }
+}
+```
+
+Run contract tests against both implementations:
+
+```rust
+// infrastructure/tests/sqlx_contract_tests.rs
+use crate::tests::repository_contract::task_repository_contract;
+use infrastructure::SqlxTaskRepository;
+
+#[tokio::test]
+async fn sqlx_save_and_find() {
+    let repo = create_sqlx_repo().await;
+    task_repository_contract::test_save_and_find_by_id(&repo).await;
+}
+
+#[tokio::test]
+async fn sqlx_find_missing() {
+    let repo = create_sqlx_repo().await;
+    task_repository_contract::test_find_missing_returns_none(&repo).await;
+}
+
+// infrastructure/tests/in_memory_contract_tests.rs
+use infrastructure::InMemoryTaskRepository;
+
+#[tokio::test]
+async fn in_memory_save_and_find() {
+    let repo = InMemoryTaskRepository::new();
+    task_repository_contract::test_save_and_find_by_id(&repo).await;
+}
+
+#[tokio::test]
+async fn in_memory_find_missing() {
+    let repo = InMemoryTaskRepository::new();
+    task_repository_contract::test_find_missing_returns_none(&repo).await;
+}
+```
+
+**Why contract tests matter**: If your mocks behave differently from your real implementations, tests pass but production fails. Contract tests catch these mismatches.
+
 ---
 
 ## Project Structure
@@ -2111,6 +2485,55 @@ async fn save(&self, task: &Task) -> Result<(), Error> {
 
 Tauri v2 introduces a capability-based security model. Instead of a global allowlist, you define granular permissions per window.
 
+### Content Security Policy (CSP)
+
+Always configure CSP to prevent XSS attacks:
+
+```json
+// tauri.conf.json
+{
+  "app": {
+    "security": {
+      "csp": "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'"
+    }
+  }
+}
+```
+
+### Input Validation in Commands
+
+**Critical**: Always validate inputs in Tauri commands - frontend validation can be bypassed:
+
+```rust
+#[tauri::command]
+pub async fn create_task(
+    input: CreateTaskInput,
+    state: State<'_, AppState>,
+) -> CommandResult<CreateTaskResponse> {
+    // Validate at the command layer before reaching use cases
+    let description = input.description.trim();
+
+    if description.is_empty() {
+        return CommandResult::error("Description is required", "VALIDATION_ERROR");
+    }
+    if description.len() > 1000 {
+        return CommandResult::error("Description too long (max 1000)", "VALIDATION_ERROR");
+    }
+
+    // Now delegate to use case (which also validates domain rules)
+    let request = CreateTaskRequest {
+        description: description.to_string(),
+    };
+
+    match state.create_task.execute(request).await {
+        Ok(response) => CommandResult::success(response),
+        Err(e) => CommandResult::error(e, "CREATE_FAILED"),
+    }
+}
+```
+
+**Note**: Commands should perform basic validation (length, format) while domain entities enforce business rules (e.g., description content rules).
+
 ### Capability Files
 
 Create capability files in `src-tauri/capabilities/`:
@@ -2202,6 +2625,35 @@ Reference capabilities in `tauri.conf.json`:
   }
 }
 ```
+
+### Mapping Capabilities to Use Cases
+
+Structure capabilities to match your Clean Architecture use cases:
+
+```toml
+# Organize permissions by use case category
+[[set]]
+identifier = "task-queries"
+description = "Read-only task operations (Query use cases)"
+permissions = ["allow-list-tasks", "allow-get-task"]
+
+[[set]]
+identifier = "task-commands"
+description = "Task modification operations (Command use cases)"
+permissions = ["allow-create-task", "allow-complete-task", "allow-update-task"]
+
+[[set]]
+identifier = "task-admin"
+description = "Administrative task operations (requires elevated trust)"
+permissions = ["allow-delete-task", "allow-bulk-delete"]
+```
+
+This creates a clear mapping:
+- **Query use cases** → Read-only permission sets
+- **Command use cases** → Write permission sets
+- **Administrative use cases** → Privileged permission sets
+
+Each window can then be granted appropriate access based on its role.
 
 ---
 
