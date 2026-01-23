@@ -645,6 +645,105 @@ const priorityOrders = orders.filter((o) => priorityShipping.isSatisfiedBy(o));
 
 ## Application Layer Patterns
 
+### Service Interfaces in Application Layer
+
+Service interfaces (repository interfaces, gateway protocols) belong in the **application layer**, colocated with use cases. This matches the Rust pattern and provides better cohesion:
+
+**Why Application Layer?**
+
+1. **Closer to consumers**: Use cases consume these interfaces; changes are reflected locally
+2. **Clearer ownership**: Each bounded context owns its service definitions
+3. **Reduces coupling**: Domain layer stays pure with zero dependencies
+4. **Avoids "ports" confusion**: The term "services" is more intuitive
+
+**File structure:**
+
+```
+src/application/
+├── workspace/
+│   ├── index.ts                  # Re-exports
+│   ├── services.ts               # WorkspaceRepository interface + errors
+│   ├── initialize-workspace.use-case.ts
+│   └── create-workspace.use-case.ts
+└── page/
+    ├── index.ts
+    ├── services.ts               # PageRepository interface + errors
+    └── create-page.use-case.ts
+```
+
+**Service interfaces:**
+
+```typescript
+// src/application/workspace/services.ts
+import { Workspace } from '@/domain/entities/workspace';
+
+export class WorkspaceError extends Error {
+  constructor(
+    message: string,
+    public readonly code: 'NOT_FOUND' | 'ALREADY_EXISTS' | 'IO_ERROR',
+  ) {
+    super(message);
+    this.name = 'WorkspaceError';
+  }
+}
+
+export interface WorkspaceRepository {
+  save(workspace: Workspace): Promise<void>;
+  findByPath(path: string): Promise<Workspace | null>;
+  exists(path: string): Promise<boolean>;
+}
+```
+
+**Use case consuming the service:**
+
+```typescript
+// src/application/workspace/initialize-workspace.use-case.ts
+import { Workspace } from '@/domain/entities/workspace';
+import { WorkspaceRepository, WorkspaceError } from './services';
+
+export interface InitializeWorkspaceRequest {
+  path: string;
+  name: string;
+}
+
+export interface InitializeWorkspaceResponse {
+  workspaceId: string;
+  path: string;
+}
+
+export class InitializeWorkspaceUseCase {
+  constructor(private readonly repository: WorkspaceRepository) {}
+
+  async execute(
+    request: InitializeWorkspaceRequest,
+  ): Promise<InitializeWorkspaceResponse> {
+    if (await this.repository.exists(request.path)) {
+      throw new WorkspaceError(
+        `Workspace already exists at path: ${request.path}`,
+        'ALREADY_EXISTS',
+      );
+    }
+
+    const workspace = Workspace.create(request.name, request.path);
+    await this.repository.save(workspace);
+
+    return {
+      workspaceId: workspace.id,
+      path: request.path,
+    };
+  }
+}
+```
+
+**Re-exports:**
+
+```typescript
+// src/application/workspace/index.ts
+export * from './services';
+export * from './initialize-workspace.use-case';
+export * from './create-workspace.use-case';
+```
+
 ### Use Cases with DTOs
 
 ```typescript
@@ -678,6 +777,105 @@ export class CreateTaskUseCase
 ```
 
 ## Infrastructure Layer Patterns
+
+### Infrastructure Organization: By Provider vs By Context
+
+Two valid approaches exist for organizing infrastructure implementations:
+
+**Provider-based organization** (recommended when you have many external systems):
+
+```
+src/infrastructure/
+├── postgres/
+│   ├── connection.ts
+│   ├── workspace.repository.ts
+│   ├── page.repository.ts
+│   └── user.repository.ts
+├── redis/
+│   ├── connection.ts
+│   └── cache.repository.ts
+├── s3/
+│   └── file-storage.ts
+└── email/
+    └── smtp-gateway.ts
+```
+
+**Context-based organization** (recommended when domain complexity dominates):
+
+```
+src/infrastructure/
+├── workspace/
+│   ├── prisma-workspace.repository.ts
+│   └── file-workspace.repository.ts
+├── page/
+│   └── prisma-page.repository.ts
+└── shared/
+    └── prisma-client.ts
+```
+
+**Decision tree:**
+
+```
+How many external systems do you integrate with?
+├── Few (1-2 databases, maybe cache)
+│   └── Use context-based organization
+│       - Keeps related implementations together
+│       - Easier navigation by feature
+│
+└── Many (multiple databases, caches, APIs, queues)
+    └── Use provider-based organization
+        - Groups similar connection/configuration code
+        - Easier to swap providers
+        - Clear technology boundaries
+```
+
+**Provider-based example:**
+
+```typescript
+// src/infrastructure/postgres/workspace.repository.ts
+import { PrismaClient } from '@prisma/client';
+import { Workspace } from '@/domain/entities/workspace';
+import { WorkspaceRepository, WorkspaceError } from '@/application/workspace/services';
+
+export class PrismaWorkspaceRepository implements WorkspaceRepository {
+  constructor(private readonly prisma: PrismaClient) {}
+
+  async save(workspace: Workspace): Promise<void> {
+    await this.prisma.workspace.upsert({
+      where: { id: workspace.id },
+      update: this.toData(workspace),
+      create: this.toData(workspace),
+    });
+  }
+
+  async findByPath(path: string): Promise<Workspace | null> {
+    const data = await this.prisma.workspace.findFirst({
+      where: { path },
+    });
+    return data ? this.toDomain(data) : null;
+  }
+
+  async exists(path: string): Promise<boolean> {
+    const count = await this.prisma.workspace.count({
+      where: { path },
+    });
+    return count > 0;
+  }
+
+  private toData(workspace: Workspace) {
+    return {
+      id: workspace.id,
+      name: workspace.name,
+      path: workspace.path,
+      createdAt: workspace.createdAt,
+    };
+  }
+
+  private toDomain(data: { id: string; name: string; path: string; createdAt: Date }): Workspace {
+    return Workspace.reconstitute(data.id, data.name, data.path, data.createdAt);
+  }
+}
+```
 
 ### Prisma Repository Implementation
 

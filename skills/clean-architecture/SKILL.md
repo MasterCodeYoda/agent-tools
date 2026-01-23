@@ -51,6 +51,11 @@ Ask yourself these questions in order:
     - Examples: OrderController, CreateOrderCommand
     - See: `references/layer-patterns.md#frameworks`
 
+5. **Should I use separate packages/crates for layers?**
+    - Team >3 developers OR project >6 months OR strict compliance needed → **Yes, use separate packages**
+    - Prototype or small team → **Single package with module separation is fine**
+    - See: `references/polyglot-projects.md#three-packagecrate-architecture`
+
 ## Core Architectural Rules
 
 ### The Dependency Rule (MANDATORY)
@@ -70,6 +75,29 @@ Ask yourself these questions in order:
 - Frameworks knows about all inner layers
 
 **Never violate this rule.** Inner layers cannot import from, reference, or know about outer layers.
+
+### Compile-Time Enforcement
+
+For projects requiring strict compliance, **separate packages/crates** enforce layer boundaries at compile time:
+
+- **Rust**: Separate crates (`project-domain`, `project-application`, `project-infrastructure`)
+- **TypeScript**: Separate packages (`@project/domain`, `@project/application`)
+
+The compiler itself prevents architecture violations - domain crate literally cannot import infrastructure. See `references/polyglot-projects.md` for multi-package patterns.
+
+### Service Abstractions Placement
+
+Service abstractions (repository interfaces, gateway protocols) belong in the **application layer**, colocated with use cases - not in a separate "ports" layer:
+
+```
+application/
+└── workspace/
+    ├── services.ts       # WorkspaceRepository interface + errors
+    ├── initialize.ts     # InitializeWorkspaceUseCase
+    └── create.ts         # CreateWorkspaceUseCase
+```
+
+This keeps abstractions close to their consumers and avoids the "ports vs adapters" naming confusion.
 
 ### Implementation Strategy: Vertical Slicing + Layer Sanctity
 
@@ -317,6 +345,12 @@ Essential reading for deep understanding:
     - Combining vertical and horizontal approaches
     - Priority-driven development
     - Incremental architecture
+
+- **Polyglot Projects**: `references/polyglot-projects.md`
+    - Multi-language monorepo structure (apps/, packages/, crates/)
+    - Type generation pipelines (Specta, JSON Schema)
+    - Three-crate/package architecture for compile-time enforcement
+    - Service abstractions in application layer pattern
 
 - **Agent-Native Architecture**: `references/agent-native-architecture.md`
     - Building applications where agents are first-class citizens

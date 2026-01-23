@@ -11,6 +11,153 @@ Rust's ownership model and strong type system make it exceptionally well-suited 
 - **Cargo workspaces**: Physical layer separation with dependency constraints
 - **No inheritance**: Composition over inheritance is the default
 
+---
+
+## Three-Crate Architecture Pattern
+
+For projects requiring strict architectural compliance, separate Cargo crates enforce layer boundaries at compile time. The compiler itself prevents architecture violations.
+
+### Why Separate Crates?
+
+| Aspect | Single Crate | Three Crates |
+|--------|--------------|--------------|
+| **Dependency enforcement** | Requires discipline and tooling | Compile-time errors |
+| **Build speed** | Faster (one compilation unit) | Parallel builds offset multi-crate overhead |
+| **Refactoring** | Easier to move code | More ceremony, clearer boundaries |
+| **Team scaling** | Harder to maintain boundaries | Clear ownership per crate |
+
+**Recommendation:** Use three-crate architecture when:
+- Team has 3+ developers
+- Project will live >6 months
+- Strict architectural compliance required
+- Multiple applications share domain logic
+
+### Crate Structure
+
+```
+crates/
+├── project-domain/           # Pure business entities - NO internal dependencies
+│   └── src/
+│       ├── lib.rs
+│       ├── workspace.rs      # Workspace entity
+│       ├── page.rs           # Page entity
+│       └── block.rs          # Block entity
+│
+├── project-application/      # Use cases + service abstractions
+│   └── src/                  # Depends on: domain
+│       ├── lib.rs
+│       └── workspace/
+│           ├── mod.rs
+│           ├── services.rs   # WorkspaceRepository trait + errors
+│           ├── initialize.rs # InitializeWorkspaceUseCase
+│           └── create.rs     # CreateWorkspaceUseCase
+│
+└── project-infrastructure/   # Concrete implementations
+    └── src/                  # Depends on: application, domain
+        └── filesystem/
+            └── workspace_repository.rs
+```
+
+### Cargo.toml Dependency Structure
+
+```toml
+# crates/project-domain/Cargo.toml
+[package]
+name = "project-domain"
+version.workspace = true
+edition.workspace = true
+
+[dependencies]
+# External crates only - NO project dependencies
+chrono = { workspace = true }
+uuid = { workspace = true }
+thiserror = { workspace = true }
+serde = { workspace = true }
+```
+
+```toml
+# crates/project-application/Cargo.toml
+[package]
+name = "project-application"
+version.workspace = true
+edition.workspace = true
+
+[dependencies]
+project-domain = { path = "../project-domain" }  # Domain only
+async-trait = { workspace = true }
+thiserror = { workspace = true }
+```
+
+```toml
+# crates/project-infrastructure/Cargo.toml
+[package]
+name = "project-infrastructure"
+version.workspace = true
+edition.workspace = true
+
+[dependencies]
+project-domain = { path = "../project-domain" }
+project-application = { path = "../project-application" }
+tokio = { workspace = true }
+# Database/storage dependencies here
+```
+
+### Compile-Time Enforcement
+
+With separate crates, this code **won't compile**:
+
+```rust
+// In project-domain/src/workspace.rs
+use project_infrastructure::FileSystemWorkspaceRepository;  // ❌ ERROR: unknown crate
+
+// The compiler prevents domain from knowing about infrastructure
+```
+
+This is enforced by Cargo's dependency resolution - domain crate has no dependency on infrastructure, so it literally cannot import from it.
+
+### Workspace Root Configuration
+
+```toml
+# Cargo.toml (workspace root)
+[workspace]
+resolver = "2"
+members = [
+    "crates/project-domain",
+    "crates/project-application",
+    "crates/project-infrastructure",
+    "apps/desktop/src-tauri",
+]
+
+[workspace.package]
+version = "0.1.0"
+edition = "2021"
+
+[workspace.dependencies]
+# Centralized versions for all crates
+tokio = { version = "1", features = ["full"] }
+serde = { version = "1", features = ["derive"] }
+chrono = { version = "0.4", features = ["serde"] }
+uuid = { version = "1", features = ["v4", "serde"] }
+thiserror = "1"
+async-trait = "0.1"
+```
+
+### When to Use Single-Crate Instead
+
+For smaller projects or prototypes, a single crate with module-based separation is simpler:
+
+```
+src/
+├── domain/
+├── application/
+├── infrastructure/
+└── lib.rs
+```
+
+The tradeoff: you rely on code review discipline rather than the compiler to prevent cross-layer imports.
+
+---
+
 ## Rust Type System for Clean Architecture
 
 ### Traits for Abstractions
@@ -584,6 +731,156 @@ pub use repositories::TaskRepository;
 ## Application Layer Patterns
 
 The application layer orchestrates use cases using domain objects.
+
+### Service Abstractions in Application Layer
+
+Service abstractions (repository traits, gateway interfaces) belong in the **application layer**, colocated with use cases - not in the domain layer. This is a departure from some Clean Architecture interpretations but offers practical benefits:
+
+**Why Application Layer?**
+
+1. **Closer to consumers**: Use cases consume these abstractions; changes to use case needs are reflected locally
+2. **Clearer ownership**: Each bounded context owns its service definitions
+3. **Reduces coupling**: Domain layer stays pure with zero dependencies
+4. **Avoids "ports" confusion**: The term "services" is more intuitive than "ports"
+
+```rust
+// crates/project-application/src/workspace/services.rs
+use async_trait::async_trait;
+use project_domain::Workspace;
+use std::path::Path;
+use thiserror::Error;
+
+#[derive(Error, Debug)]
+pub enum WorkspaceError {
+    #[error("Workspace not found at path: {0}")]
+    NotFound(String),
+
+    #[error("IO error: {0}")]
+    IoError(#[from] std::io::Error),
+
+    #[error("Workspace already exists at path: {0}")]
+    AlreadyExists(String),
+}
+
+/// Repository abstraction defined in application layer, implemented in infrastructure
+#[async_trait]
+pub trait WorkspaceRepository: Send + Sync {
+    async fn save(&self, workspace: &Workspace) -> Result<(), WorkspaceError>;
+    async fn find_by_path(&self, path: &Path) -> Result<Option<Workspace>, WorkspaceError>;
+    async fn exists(&self, path: &Path) -> Result<bool, WorkspaceError>;
+}
+```
+
+### File-Per-Use-Case Pattern
+
+Each bounded context gets its own directory with:
+- `mod.rs` for re-exports
+- `services.rs` for repository/gateway traits and errors
+- One file per use case
+
+```
+crates/project-application/src/
+├── lib.rs                        # Re-exports all contexts
+├── workspace/                    # Bounded context
+│   ├── mod.rs                    # Re-exports
+│   ├── services.rs               # WorkspaceRepository trait + errors
+│   ├── initialize.rs             # InitializeWorkspaceUseCase
+│   ├── create.rs                 # CreateWorkspaceUseCase
+│   └── get.rs                    # GetWorkspaceUseCase
+├── page/
+│   ├── mod.rs
+│   ├── services.rs               # PageRepository trait + errors
+│   ├── create.rs
+│   ├── update.rs
+│   └── delete.rs
+└── block/
+    └── ...
+```
+
+**Module re-exports:**
+
+```rust
+// crates/project-application/src/workspace/mod.rs
+mod services;
+mod initialize;
+mod create;
+mod get;
+
+pub use services::{WorkspaceRepository, WorkspaceError};
+pub use initialize::{InitializeWorkspaceUseCase, InitializeWorkspaceRequest, InitializeWorkspaceResponse};
+pub use create::{CreateWorkspaceUseCase, CreateWorkspaceRequest, CreateWorkspaceResponse};
+pub use get::{GetWorkspaceUseCase, GetWorkspaceRequest, GetWorkspaceResponse};
+```
+
+```rust
+// crates/project-application/src/lib.rs
+pub mod workspace;
+pub mod page;
+pub mod block;
+
+// Convenience re-exports
+pub use workspace::*;
+pub use page::*;
+pub use block::*;
+```
+
+### Use Case Structure
+
+Each use case file contains:
+- Request struct (input DTO)
+- Response struct (output DTO)
+- Use case struct with repository dependency
+- Execute method
+
+```rust
+// crates/project-application/src/workspace/initialize.rs
+use super::services::{WorkspaceRepository, WorkspaceError};
+use project_domain::Workspace;
+use std::path::PathBuf;
+
+pub struct InitializeWorkspaceRequest {
+    pub path: PathBuf,
+    pub name: String,
+}
+
+pub struct InitializeWorkspaceResponse {
+    pub workspace_id: String,
+    pub path: PathBuf,
+}
+
+pub struct InitializeWorkspaceUseCase<R: WorkspaceRepository> {
+    repository: R,
+}
+
+impl<R: WorkspaceRepository> InitializeWorkspaceUseCase<R> {
+    pub fn new(repository: R) -> Self {
+        Self { repository }
+    }
+
+    pub async fn execute(
+        &self,
+        request: InitializeWorkspaceRequest,
+    ) -> Result<InitializeWorkspaceResponse, WorkspaceError> {
+        // Check if workspace already exists
+        if self.repository.exists(&request.path).await? {
+            return Err(WorkspaceError::AlreadyExists(
+                request.path.display().to_string(),
+            ));
+        }
+
+        // Create domain entity
+        let workspace = Workspace::new(request.name, request.path.clone());
+
+        // Persist via repository
+        self.repository.save(&workspace).await?;
+
+        Ok(InitializeWorkspaceResponse {
+            workspace_id: workspace.id().to_string(),
+            path: request.path,
+        })
+    }
+}
+```
 
 ### Use Cases with Generics
 
@@ -1647,6 +1944,81 @@ fn main() {
 // In commands, access state via the OnceCell:
 // let state = APP_STATE.get().expect("State not initialized");
 ```
+
+### Environment-Aware Path Configuration
+
+Development and production environments need different paths to isolate data. Create a dedicated paths module:
+
+```rust
+// apps/desktop/src-tauri/src/paths.rs
+use std::path::PathBuf;
+
+pub struct AppPaths {
+    pub workspaces: PathBuf,
+    pub settings: PathBuf,
+}
+
+impl AppPaths {
+    pub fn resolve() -> Self {
+        if Self::is_dev_mode() {
+            Self::dev_paths()
+        } else {
+            Self::prod_paths()
+        }
+    }
+
+    fn is_dev_mode() -> bool {
+        // Environment variable takes precedence
+        if let Ok(val) = std::env::var("APP_DEV") {
+            return !matches!(val.as_str(), "0" | "false" | "no");
+        }
+        // Fall back to debug assertions
+        cfg!(debug_assertions)
+    }
+
+    fn dev_paths() -> Self {
+        let project_root = std::env::current_dir().expect("No current dir");
+        Self {
+            workspaces: project_root.join(".data/workspaces"),
+            settings: project_root.join(".data/settings"),
+        }
+    }
+
+    fn prod_paths() -> Self {
+        let home = dirs::home_dir().expect("No home directory");
+        Self {
+            workspaces: home.join("AppName/Workspaces"),
+            settings: dirs::config_dir()
+                .expect("No config dir")
+                .join("AppName"),
+        }
+    }
+}
+```
+
+**Path isolation strategy:**
+
+| Environment | Workspaces | Settings |
+|-------------|------------|----------|
+| Development | `{project}/.data/workspaces/` | `{project}/.data/settings/` |
+| Production | `~/AppName/Workspaces/` | `~/Library/Application Support/AppName/` |
+
+**Usage in state initialization:**
+
+```rust
+// In AppState::new()
+let paths = AppPaths::resolve();
+std::fs::create_dir_all(&paths.workspaces)?;
+std::fs::create_dir_all(&paths.settings)?;
+
+let repository = Arc::new(FileSystemWorkspaceRepository::new(paths.workspaces));
+```
+
+**Benefits:**
+- Development data is git-ignored in `.data/`
+- Production data uses platform-standard locations
+- `APP_DEV=0 cargo tauri dev` forces production paths for testing
+- Clear separation prevents accidental data corruption
 
 ### TypeScript Frontend Integration
 
