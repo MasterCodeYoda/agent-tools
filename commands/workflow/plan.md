@@ -146,6 +146,10 @@ Generate `./planning/<project>/implementation-plan.md`:
 
 ### Slice 1: [Core Functionality]
 
+**Issue**: [ISSUE-ID]
+**Commit Point**: After all layers complete for this slice
+**PM Update**: Mark [ISSUE-ID] as Done
+
 #### Domain Layer
 - [ ] [Entity/model with specific fields]
 - [ ] [Validation rules]
@@ -164,8 +168,13 @@ Generate `./planning/<project>/implementation-plan.md`:
 - [ ] [API endpoints or UI components]
 - [ ] [Input validation]
 
+#### Slice Completion
+- [ ] Tests passing
+- [ ] Code committed with issue reference
+- [ ] PM tool updated (issue → Done)
+
 ### Slice 2: [Enhancement] (if applicable)
-[Similar breakdown]
+[Same structure - include Issue, Commit Point, PM Update, and Slice Completion]
 
 ## Task Breakdown
 
@@ -209,8 +218,16 @@ Generate `./planning/<project>/implementation-plan.md`:
 3. [Continue...]
 
 ## Definition of Done
+
+### Per Slice/Story
+- [ ] All layers implemented for this slice
+- [ ] Tests passing for this slice
+- [ ] Code committed with issue reference
+- [ ] PM tool updated (issue → Done)
+
+### Per Feature (Epic)
+- [ ] All slices complete (using above checklist per slice)
 - [ ] All P1 tasks complete
-- [ ] Tests passing
 - [ ] Code reviewed
 - [ ] Documentation updated
 - [ ] Deployed to staging

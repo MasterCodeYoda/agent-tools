@@ -117,7 +117,41 @@ while (tasks remain):
   6. Run tests after changes
   7. Mark task completed in TodoWrite
   8. Update plan file ([ ] -> [x])
-  9. Check for session boundary
+  9. Check for story/slice completion
+  10. Check for session boundary
+```
+
+### Story/Slice Completion Checkpoint
+
+**CRITICAL**: When implementing multi-story features (epics), commit each story independently:
+
+```
+For each story/slice in an epic:
+1. Implement story end-to-end (all layers)
+2. Run full test suite
+3. Mark task completed in TodoWrite
+4. Commit with message: `feat(scope): description (ISSUE-ID)`
+5. Update PM tool (Linear/Jira) - mark story Done
+6. Move to next story
+```
+
+**Why This Matters**:
+- Each commit is a safe checkpoint to return to
+- PM tools show real progress, not "everything in progress"
+- Git history enables bisect and blame
+- Risk of work loss is minimized
+
+**Anti-Pattern to Avoid**:
+```
+❌ Work on all 4 stories, commit once at the end
+   - No incremental progress visible
+   - Risk of losing significant work
+   - Hard to review and debug
+
+✅ Complete story → commit → update PM → next story
+   - Clear progress tracking
+   - Easy rollback if needed
+   - Better collaboration
 ```
 
 ### Quality Gates
@@ -327,6 +361,8 @@ Provide complete handoff for next session:
 - [ ] Plan checkbox updated
 - [ ] Session state reflects progress
 - [ ] No introduced regressions
+- [ ] Committed (if completing a story/slice)
+- [ ] PM tool updated (story marked Done)
 
 ## Definition of Done (Per Session)
 

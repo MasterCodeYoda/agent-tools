@@ -104,6 +104,55 @@ Verify each layer and complete vertical slice meets standards.
 - [ ] No new warnings
 - [ ] Code follows patterns
 
+## Slice Completion Protocol
+
+### When to Commit
+
+Commit at the completion of each **vertical slice** (story), NOT at:
+- Session boundaries only
+- Feature/epic completion only
+- Arbitrary "stopping points"
+
+### Slice Completion Checklist
+
+Before moving to the next slice:
+
+- [ ] All acceptance criteria for THIS slice met
+- [ ] Tests pass for THIS slice
+- [ ] Code committed with descriptive message and issue ID
+- [ ] PM tool updated (issue marked Done)
+- [ ] Session state updated (if tracking)
+
+### Commit Command Template
+
+```bash
+git add [specific files for this slice]
+git commit -m "$(cat <<'EOF'
+feat(scope): description (ISSUE-ID)
+
+- Implementation detail 1
+- Implementation detail 2
+
+Co-Authored-By: Claude <noreply@anthropic.com>
+EOF
+)"
+```
+
+### PM Tool Update
+
+Immediately after commit:
+- **Linear**: Update issue state to Done
+- **Jira**: Transition issue to Done
+- **Manual**: Update issue status in your tracker
+
+### Warning Signs
+
+You may have batched commits if:
+- More than one story's worth of changes uncommitted
+- Multiple Linear/Jira issues stuck in "In Progress"
+- Large `git diff` output spanning multiple features
+- Anxiety about losing accumulated work
+
 ## Security Checkpoint
 
 ### Basic Security
