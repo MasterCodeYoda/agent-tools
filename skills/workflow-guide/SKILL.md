@@ -246,7 +246,7 @@ For detailed templates and patterns, reference these sections:
 - `implementation/quality-checkpoints.md` - Per-layer quality gates
 
 ### PM Integration
-- `pm-integration.md` - Linear, Jira, and manual workflow guides
+- `planning/pm-integration.md` - Linear, Jira, and manual workflow guides
 
 ### Examples
 - `examples/planning-example.md` - Complete planning walkthrough
