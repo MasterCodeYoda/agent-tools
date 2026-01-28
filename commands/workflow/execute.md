@@ -24,7 +24,53 @@ Parse input to determine session mode:
 | `./planning/` or empty | Auto-detect from `./planning/*.md` or `./planning/*/` |
 | `*.md` file path | Execute specific plan file |
 | `continue` | Resume last active session |
+| `LIN-[0-9]+` | Direct execution from Linear issue |
+| `[A-Z]+-[0-9]+` | Direct execution from Jira ticket |
 | Text summary | Steering input for next session |
+
+## Direct Issue Execution
+
+For simple tasks that don't require detailed planning documents, execute directly from an issue tracker item.
+
+### When to Use Direct Execution
+
+- Bug fixes with clear reproduction steps
+- Small enhancements with well-defined scope
+- Tasks where the issue description IS the plan
+- Quick iterations where planning overhead isn't justified
+
+### Direct Execution Flow
+
+```
+1. Fetch issue details (via MCP or API)
+2. Extract:
+   - Title → task subject
+   - Description → requirements
+   - Acceptance criteria (if present) → quality gates
+3. Create minimal session state (in-memory or temporary)
+4. Display issue context to user:
+   ```markdown
+   ## Direct Execution: [ISSUE-ID]
+   **Title**: [issue title]
+   **Description**: [issue description]
+   **Status**: [current status]
+   ```
+5. Confirm with user before proceeding
+6. Execute using standard Execution Loop (below)
+7. On completion:
+   - Commit with issue reference
+   - Update issue status to Done
+   - Offer to create planning docs if scope expanded
+```
+
+### Escalation to Full Planning
+
+If during direct execution the task proves more complex than expected:
+
+1. Pause execution
+2. Suggest running `/workflow:plan [ISSUE-ID]`
+3. Create proper planning documents
+4. Resume with full session tracking
 
 ## Session Initialization
 

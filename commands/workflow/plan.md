@@ -310,6 +310,60 @@ Created:
 4. **Create Branch** - `git checkout -b [suggested-branch]`
 ```
 
+## Execution Handoff
+
+**CRITICAL**: When the user approves the plan and wants to begin implementation immediately, you MUST follow the `/workflow:execute` protocol. This ensures proper session tracking, quality gates, and commit discipline.
+
+### Handoff Protocol
+
+1. **Invoke `/workflow:execute`** with the planning directory:
+   ```
+   /workflow:execute ./planning/[project]/
+   ```
+
+2. **If continuing in the same conversation**, follow these steps from `/workflow:execute`:
+
+   a. **Display Session Context** (execute.md §Context Review):
+      ```markdown
+      ## Session Context
+      **Project**: [project-name]
+      **Session**: #1 of work
+      **Progress**: 0/[Y] tasks (0% complete)
+      **Current Focus**: [first P1 task]
+      ```
+
+   b. **Initialize TodoWrite** with tasks from implementation-plan.md
+
+   c. **Follow the Execution Loop** (execute.md §Execution Loop):
+      - Mark task in_progress in TodoWrite
+      - Look for existing patterns
+      - Implement following conventions
+      - Write tests
+      - Run tests
+      - Mark task completed in TodoWrite
+      - Update plan checkbox
+      - Check for slice completion → commit with issue reference
+
+   d. **Quality Gates** (execute.md §Quality Gates):
+      - Implementation matches plan requirements
+      - Tests pass for new functionality
+      - No linting/type errors introduced
+      - Code follows existing patterns
+      - Changes are focused and atomic
+
+   e. **Story/Slice Completion** (execute.md §Story/Slice Completion):
+      - Commit with message: `feat(scope): description (ISSUE-ID)`
+      - Update PM tool (mark story Done)
+      - Move to next story
+
+### Why This Matters
+
+- **Session state becomes source of truth** for multi-session continuity
+- **TodoWrite integration** enables clear task tracking
+- **Quality gates** prevent regressions
+- **Commit-per-slice** discipline ensures incremental progress visibility
+- **PM tool updates** show real progress to stakeholders
+
 ## Key Principles
 
 ### Separate What from How
