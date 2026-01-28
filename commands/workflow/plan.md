@@ -247,7 +247,7 @@ progress:
   completed: 0
   percent: 0%
 current_layer: not_started
-branch: [suggested branch name]
+branch: <type>/<issue-key or description>
 created: [timestamp]
 ---
 ## Status
@@ -307,7 +307,7 @@ Created:
 1. **Start Implementation** - Run `/workflow:execute ./planning/[project]/`
 2. **Review Plan** - Open plan files for review
 3. **Refine** - Make changes to plan
-4. **Create Branch** - `git checkout -b [suggested-branch]`
+4. **Create Branch** - `git checkout -b feat/ISSUE-123` (or `fix/ISSUE-123` for bugs)
 ```
 
 ## Execution Handoff

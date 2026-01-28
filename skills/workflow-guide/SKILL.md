@@ -153,7 +153,7 @@ progress:
   completed: [Y]
   percent: [Z%]
 current_layer: [domain|infrastructure|application|framework]
-branch: [feature-branch]
+branch: <type>/<issue-key or description>
 ---
 ## Current Focus
 [What's being worked on]
@@ -164,6 +164,20 @@ branch: [feature-branch]
 ## Session History
 [Append-only log]
 ```
+
+### Branch Naming Convention
+
+Use a consistent `<type>/<identifier>` pattern for branch names:
+
+| Type | With Issue Key | Without Issue Key |
+|------|----------------|-------------------|
+| Bug fix | `fix/INK-123` | `fix/login-validation` |
+| Feature | `feat/INK-124` | `feat/user-dashboard` |
+
+**Guidelines**:
+- Prefer issue keys when available—they link branches to tracking systems
+- Use lowercase with hyphens for descriptions
+- Keep descriptions short (2-4 words)
 
 ### Handoff Protocol
 

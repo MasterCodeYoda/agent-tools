@@ -260,7 +260,7 @@ progress:
   completed: [Y]
   percent: [Z%]
 current_layer: [domain|infrastructure|application|framework]
-branch: [feature-branch]
+branch: <type>/<issue-key or description>
 last_updated: [timestamp]
 ---
 ## Current Focus
@@ -338,7 +338,7 @@ Provide complete handoff for next session:
 - [Decision 2]: [Rationale]
 
 ### Current State
-- Branch: [branch-name]
+- Branch: `feat/ISSUE-123` or `fix/ISSUE-123`
 - Tests: [passing/failing]
 - Progress: [X%]
 

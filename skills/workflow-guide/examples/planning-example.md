@@ -176,7 +176,7 @@ progress:
   completed: 0
   percent: 0%
 current_layer: not_started
-branch: feat/user-registration
+branch: feat/LIN-789
 work_item: LIN-789
 pm_tool: linear
 created: 2024-01-15
