@@ -270,3 +270,14 @@ For detailed templates and patterns, reference these sections:
 - **Refactor Continuously** - Clean up as patterns emerge
 - **Stay Vertical** - Resist building horizontal layers
 - **Compound Knowledge** - Each problem solved helps future work
+
+## References
+
+### Knowledge Compounding
+
+The concept of "compounding" AI assistance—capturing solutions so each problem solved makes future work easier—is adapted from:
+
+- **"How to Use AI to Do Practical Stuff: A New Guide"** by Ethan Mollick, Every.to
+  https://every.to/chain-of-thought/how-to-use-ai-to-do-practical-stuff-a-new-guide
+
+This idea drives the `/workflow:compound` command: systematically documenting solutions creates a knowledge base that accumulates value over time, making the AI assistant increasingly effective for your specific codebase and patterns.
