@@ -1,12 +1,14 @@
 ---
 name: workflow:plan
-description: Requirements gathering and implementation planning for features
-argument-hint: "[feature description, work item ID (LIN-123, PROJ-456), or URL]"
+description: Create implementation plans from requirements
+argument-hint: "[requirements.md path, work item ID (LIN-123, PROJ-456), or feature description]"
 ---
 
-# Requirements and Implementation Planning
+# Implementation Planning
 
-Transform feature descriptions into structured planning documents with clear requirements, implementation plans, and task breakdowns.
+Transform requirements into actionable implementation plans with task breakdowns and technical decisions.
+
+**Note**: For discovering and refining requirements, use `/workflow:refine` first. This command expects clear requirements as input.
 
 ## User Input
 
@@ -14,7 +16,10 @@ Transform feature descriptions into structured planning documents with clear req
 $ARGUMENTS
 ```
 
-**If input is empty**, ask: "What feature would you like to plan? Describe the functionality, provide a work item ID, or share a URL."
+**If input is empty**, check for existing requirements:
+1. Look for `./planning/*/requirements.md` files
+2. If found, list them and ask which to plan
+3. If not found, ask: "What would you like to plan? Provide a requirements.md path, work item ID, or describe the feature."
 
 ## Input Detection
 
@@ -22,11 +27,15 @@ Parse input to determine source type:
 
 | Pattern | Source Type | Action |
 |---------|-------------|--------|
-| `LIN-[0-9]+` | Linear issue | Fetch via Linear MCP or API |
-| `[A-Z]+-[0-9]+` | Jira ticket | Fetch via Jira MCP or API |
+| `./planning/<project>/requirements.md` | Requirements doc | Load requirements, create implementation plan |
+| `./planning/<project>/` | Planning directory | Load requirements.md from directory |
+| `LIN-[0-9]+` | Linear issue | Fetch via Linear MCP - treat as requirements |
+| `[A-Z]+-[0-9]+` | Jira ticket | Fetch via Jira MCP - treat as requirements |
 | `http(s)://` | URL | Fetch and parse content |
 | Directory path | Existing plan | Load and review |
-| Text | Feature description | Use directly |
+| Text | Feature description | Use directly (suggest /workflow:refine for complex features) |
+
+**For text input**: If the description is vague or complex, suggest: "This sounds like it might benefit from requirements discovery. Would you like to run `/workflow:refine` first to clarify requirements?"
 
 ## Context Gathering
 
@@ -65,66 +74,34 @@ Run parallel exploration to understand context:
 - Security considerations
 - Performance implications
 
-## Requirements Document
+## Load Requirements
 
-For detailed planning templates, reference @workflow-guide (planning templates)
+### From requirements.md
 
-### Create Requirements Document
+If input is a requirements.md path or planning directory:
+1. Read the requirements document
+2. Extract key information:
+   - Problem statement / overview
+   - User stories
+   - Must-have vs nice-to-have requirements
+   - Success criteria
+   - Related issue IDs
 
-Generate `./planning/<project>/requirements.md`:
+### From Work Item
 
-```markdown
-# [Feature Title]
-
-## Overview
-[One paragraph description of what we're building and why]
-
-## User Story
-As a [user type], I want [capability] so that [benefit].
-
-## Acceptance Criteria
-- [ ] Criterion 1 - [specific, testable requirement]
-- [ ] Criterion 2 - [specific, testable requirement]
-- [ ] Criterion 3 - [specific, testable requirement]
-
-## Scope
-
-### In Scope
-- [What IS included]
-- [Functionality we ARE building]
-
-### Out of Scope
-- [What is NOT included]
-- [Explicitly deferred items]
-
-## Constraints
-- [Technical constraints]
-- [Business constraints]
-- [Timeline constraints]
-
-## Dependencies
-- [External dependencies]
-- [Internal dependencies]
-- [Blockers]
-
-## Success Metrics
-- [How we measure success]
-- [KPIs if applicable]
-
-## References
-- Work Item: [ID and link]
-- Related: [Links to related items]
-- Documentation: [Relevant docs]
-```
+If input is a Linear or Jira issue:
+1. Fetch issue details via MCP
+2. Extract requirements from description and acceptance criteria
+3. Note the issue ID for linking
 
 ### Review with User
 
 Present requirements summary and ask:
-1. "Does this capture the requirements correctly?"
-2. "Any acceptance criteria to add or modify?"
-3. "Anything explicitly out of scope?"
+1. "Do these requirements look complete for planning?"
+2. "Any clarifications needed before creating the implementation plan?"
+3. "Should we run `/workflow:refine` first to clarify requirements?"
 
-Refine based on feedback before proceeding to implementation planning.
+Proceed to implementation planning once requirements are confirmed.
 
 ## Implementation Plan
 
@@ -298,15 +275,16 @@ Present options to user:
 ```markdown
 ## Planning Complete
 
-Created:
-- `./planning/[project]/requirements.md`
+**Requirements**: `./planning/[project]/requirements.md` (input)
+
+**Created**:
 - `./planning/[project]/implementation-plan.md`
 - `./planning/[project]/session-state.md`
 
 **What's next?**
 1. **Start Implementation** - Run `/workflow:execute ./planning/[project]/`
 2. **Review Plan** - Open plan files for review
-3. **Refine** - Make changes to plan
+3. **Refine Plan** - Make changes to implementation plan
 4. **Create Branch** - `git checkout -b feat/ISSUE-123` (or `fix/ISSUE-123` for bugs)
 ```
 

@@ -2,6 +2,58 @@
 
 The workflow commands work with any tracking system: Linear, Jira, or manual.
 
+## Issue Creation (from /workflow:refine)
+
+When requirements are complete, `/workflow:refine` can create a tracking issue.
+
+### Linear Issue Creation
+
+```bash
+mcp__linear__createIssue({
+  title: "[Feature Title from requirements]",
+  description: "[Problem statement + proposed solution summary]",
+  teamId: "[from config or prompt user]"
+})
+```
+
+**Field Mapping**:
+| Requirements.md Section | Linear Field |
+|------------------------|--------------|
+| Feature Title | `title` |
+| Problem Statement | `description` (first paragraph) |
+| Proposed Solution | `description` (second paragraph) |
+| Must Have requirements | `description` (bullet list) |
+| Success Criteria | `description` (acceptance criteria) |
+
+### Jira Issue Creation
+
+```bash
+mcp__jira__createIssue({
+  projectKey: "[from config or prompt user]",
+  summary: "[Feature Title from requirements]",
+  description: "[Problem statement + proposed solution]",
+  issueType: "Story"  // or "Task", "Bug" based on context
+})
+```
+
+**Field Mapping**:
+| Requirements.md Section | Jira Field |
+|------------------------|------------|
+| Feature Title | `summary` |
+| Problem Statement + Solution | `description` |
+| User Stories | `description` (formatted as list) |
+| Success Criteria | `description` (acceptance criteria section) |
+
+### After Issue Creation
+
+Update `requirements.md` with the new issue ID:
+
+```markdown
+## Related
+- Issue: [NEW-ISSUE-ID]
+- Implementation Plan: [Link when created]
+```
+
 ## Auto-Detection
 
 Commands detect your PM tool from:

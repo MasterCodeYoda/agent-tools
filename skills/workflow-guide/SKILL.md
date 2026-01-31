@@ -57,17 +57,25 @@ While we plan **top-down** (user story → layers), we implement **bottom-up**:
 
 This order ensures each layer depends only on layers below it.
 
-## The Four Commands
+## The Five Commands
 
-### /workflow:plan
-**Purpose**: Transform features into actionable plans
+### /workflow:refine
+**Purpose**: Discover and refine requirements through conversation
 
 **Outputs**:
-- `./planning/<project>/requirements.md` - What and why
-- `./planning/<project>/implementation-plan.md` - How
+- `./planning/<project>/requirements.md` - Problem, solution, user stories, requirements
+- PM issue (optional) - Linear or Jira issue creation
+
+**When to use**: When starting from a vague idea, unclear requirements, or needing stakeholder alignment before planning
+
+### /workflow:plan
+**Purpose**: Create implementation plans from requirements
+
+**Outputs**:
+- `./planning/<project>/implementation-plan.md` - How to build it
 - `./planning/<project>/session-state.md` - Continuity tracking
 
-**When to use**: Starting new features or projects
+**When to use**: After requirements are clear (from `/workflow:refine` or existing documentation)
 
 ### /workflow:execute
 **Purpose**: Session-based work with progress tracking
@@ -134,9 +142,9 @@ Can be deferred to future iterations.
 ```
 ./planning/
 ├── <project-name>/
-│   ├── requirements.md          # What we're building
-│   ├── implementation-plan.md   # How we're building it
-│   ├── session-state.md         # Multi-session tracking
+│   ├── requirements.md          # What we're building (from /workflow:refine)
+│   ├── implementation-plan.md   # How we're building it (from /workflow:plan)
+│   ├── session-state.md         # Multi-session tracking (from /workflow:plan)
 │   └── technical-decisions.md   # Key decisions (optional)
 └── archive/                     # Completed work
 ```
