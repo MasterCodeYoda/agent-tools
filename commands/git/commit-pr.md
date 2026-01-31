@@ -7,7 +7,7 @@ description: Commit, push, and open a PR
 ## Your task
 
 1. Create a new branch if on main
-2. 1. Evalute user input, establish context, and commit changes by following all instructions in `commit.md`
+2. Evalute user input, establish context, and commit changes by following all instructions in `commit.md` (or `git-commit.md` in flat command structures)
 3. Push the branch to origin
 4. Create a pull request using `gh pr create`
 5. You have the capability to call multiple tools in a single response. You MUST do all of the above in a single
