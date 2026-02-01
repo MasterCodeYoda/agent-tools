@@ -6,7 +6,7 @@ argument-hint: "[optional: initial feature idea or problem description]"
 
 # Requirements Discovery and Refinement
 
-Transform vague ideas into clear requirements through guided conversation.
+Transform ideas into clear requirements through guided conversation.
 
 ## User Input
 
@@ -18,18 +18,24 @@ $ARGUMENTS
 
 Parse input to determine discovery mode:
 
-| Input Pattern | Interpretation |
-|--------------|----------------|
-| Empty | Prompt for initial description |
-| `./planning/<project>/requirements.md` | Refine existing requirements |
-| `continue` | Resume in-progress refinement |
-| Text | Start discovery with initial context |
+| Input Pattern                          | Interpretation                       |
+|----------------------------------------|--------------------------------------|
+| Empty                                  | Prompt for initial description       |
+| `./planning/<project>/requirements.md` | Refine existing requirements         |
+| `continue`                             | Resume in-progress refinement        |
+| Text                                   | Start discovery with initial context |
 
-**If input is empty**, ask: "What feature or problem would you like to explore? Describe the idea, user need, or problem you're trying to solve."
+**If input is empty**, ask: "What feature or problem would you like to explore? Describe the idea, user need, or problem
+you're trying to solve."
 
 **If path to existing requirements.md**, load and review for refinement.
 
 **If `continue`**, check for `./planning/*/requirements.md` with `Status: Draft` and resume.
+
+**When conducting problem discovery**, use the `AskUserQuestion` tool, if available, to guide the user through the
+information gathering process. If such a tool is not available, ask the user questions one at a time, or in small groups
+of questions that are interrelated, waiting for their answer after each question before proceeding. Ask followup
+questions when necessary.
 
 ## Phase 1: Problem Discovery
 
@@ -38,20 +44,20 @@ Parse input to determine discovery mode:
 Ask clarifying questions to understand:
 
 1. **Who has this problem?**
-   - Who are the users affected?
-   - What's their role or context?
+    - Who are the users affected?
+    - What's their role or context?
 
 2. **What's happening now?**
-   - How do users currently handle this?
-   - What's painful or inefficient?
+    - How do users currently handle this?
+    - What's painful or inefficient?
 
 3. **What triggers the need?**
-   - When does this problem occur?
-   - What situations make it worse?
+    - When does this problem occur?
+    - What situations make it worse?
 
 4. **What's the impact?**
-   - What happens if this isn't solved?
-   - How much time/effort is wasted?
+    - What happens if this isn't solved?
+    - How much time/effort is wasted?
 
 ### Capture Problem Statement
 
@@ -73,19 +79,19 @@ Confirm with user: "Does this capture the core problem?"
 Discuss possible solutions:
 
 1. **What would ideal look like?**
-   - If constraints didn't exist, what would you build?
+    - If constraints didn't exist, what would you build?
 
 2. **What's the minimum viable solution?**
-   - What's the smallest change that would help?
+    - What's the smallest change that would help?
 
 3. **What similar solutions exist?**
-   - Are there patterns we can follow?
-   - What have others done?
+    - Are there patterns we can follow?
+    - What have others done?
 
 4. **What constraints exist?**
-   - Technical limitations?
-   - Time or resource constraints?
-   - Organizational considerations?
+    - Technical limitations?
+    - Time or resource constraints?
+    - Organizational considerations?
 
 ### Capture Proposed Solution
 
@@ -95,10 +101,12 @@ Discuss possible solutions:
 [High-level approach description]
 
 ### Why This Approach
+
 - [Reason 1]
 - [Reason 2]
 
 ### Alternatives Considered
+
 - [Alternative 1]: [Why not chosen]
 - [Alternative 2]: [Why not chosen]
 ```
@@ -115,14 +123,17 @@ For each distinct user need, create a user story:
 ## User Stories
 
 ### Core Stories (Must Have)
+
 - As a [user], I want [capability] so that [benefit]
 - As a [user], I want [capability] so that [benefit]
 
 ### Supporting Stories (Nice to Have)
+
 - As a [user], I want [capability] so that [benefit]
 ```
 
 Ask:
+
 - "Are there other user types who would use this?"
 - "What's the most important story - the one that defines success?"
 
@@ -134,18 +145,22 @@ Ask:
 ## Key Requirements
 
 ### Must Have
+
 - [Essential requirement] - [why essential]
 - [Essential requirement] - [why essential]
 
 ### Nice to Have
+
 - [Optional enhancement] - [value it adds]
 - [Optional enhancement] - [value it adds]
 
 ### Out of Scope
+
 - [Explicitly excluded] - [why excluded]
 ```
 
 Ask:
+
 - "If we could only ship one thing, what would it be?"
 - "What can we explicitly defer to a future iteration?"
 
@@ -157,18 +172,22 @@ Ask:
 ## Success Criteria
 
 ### Functional
+
 - [ ] [Specific testable criterion]
 - [ ] [Specific testable criterion]
 
 ### Quality
+
 - [ ] [Performance/reliability criterion]
 - [ ] [User experience criterion]
 
 ### Business (if applicable)
+
 - [Measurable business outcome]
 ```
 
 Ask:
+
 - "How will we know this is working?"
 - "What would make this a success vs. just 'done'?"
 
@@ -211,37 +230,47 @@ Write `./planning/<project>/requirements.md`:
 # [Feature Title]
 
 ## Problem Statement
+
 [Who has this problem and what happens - from Phase 1]
 
 ## Proposed Solution
+
 [High-level approach - from Phase 2]
 
 ## User Stories
 
 ### Core Stories
+
 - As a [user], I want [capability] so that [benefit]
 
 ### Supporting Stories
+
 - As a [user], I want [capability] so that [benefit]
 
 ## Key Requirements
 
 ### Must Have
+
 - [Essential requirement]
 
 ### Nice to Have
+
 - [Optional requirement]
 
 ### Out of Scope
+
 - [Explicitly excluded]
 
 ## Open Questions
+
 - [ ] [Unresolved items needing input]
 
 ## Success Criteria
+
 - [ ] [Measurable outcome]
 
 ## Related
+
 - Issue: [ISSUE-ID or "Not created"]
 - Implementation Plan: [Link when created]
 
@@ -290,8 +319,10 @@ mcp__linear__createIssue({
 ```
 
 Update requirements.md with issue ID:
+
 ```markdown
 ## Related
+
 - Issue: LIN-[new-id]
 ```
 
@@ -309,8 +340,10 @@ mcp__jira__createIssue({
 ```
 
 Update requirements.md with issue key:
+
 ```markdown
 ## Related
+
 - Issue: [PROJ-new-id]
 ```
 
@@ -324,6 +357,7 @@ If no PM integration:
 Requirements saved to: `./planning/[project]/requirements.md`
 
 To track this work:
+
 1. Create an issue in your tracking system
 2. Update the "Related" section with the issue ID
 3. Run `/workflow:plan` when ready to create implementation plan
@@ -341,6 +375,7 @@ Issue: [ISSUE-ID or "Not created"]
 Status: Ready for Planning
 
 ### Summary
+
 **Problem**: [one-line problem statement]
 **Solution**: [one-line approach]
 **Core Stories**: [count]
@@ -357,21 +392,25 @@ Status: Ready for Planning
 ## Key Principles
 
 ### Discovery Over Documentation
+
 - Focus on understanding the problem
 - Documentation captures understanding, not drives it
 - Questions are more valuable than assumptions
 
 ### Conversation Is the Tool
+
 - Guide through questions, not templates
 - Adapt based on user responses
 - Skip phases that aren't relevant
 
 ### Minimum Viable Requirements
+
 - Capture enough to start planning
 - Don't over-specify details that will emerge during implementation
 - Mark unknowns as open questions
 
 ### Separate Concerns
+
 - Requirements define "what" and "why"
 - Planning (next step) defines "how"
 - This command focuses on requirements only
