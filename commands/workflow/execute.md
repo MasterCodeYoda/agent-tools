@@ -18,15 +18,15 @@ $ARGUMENTS
 
 Parse input to determine session mode:
 
-| Input Pattern | Interpretation |
-|--------------|----------------|
-| `./planning/<project>/` | Start/continue project from planning subdirectory |
-| `./planning/` or empty | Auto-detect from `./planning/*.md` or `./planning/*/` |
-| `*.md` file path | Execute specific plan file |
-| `continue` | Resume last active session |
-| `LIN-[0-9]+` | Direct execution from Linear issue |
-| `[A-Z]+-[0-9]+` | Direct execution from Jira ticket |
-| Text summary | Steering input for next session |
+| Input Pattern           | Interpretation                                        |
+|-------------------------|-------------------------------------------------------|
+| `./planning/<project>/` | Start/continue project from planning subdirectory     |
+| `./planning/` or empty  | Auto-detect from `./planning/*.md` or `./planning/*/` |
+| `*.md` file path        | Execute specific plan file                            |
+| `continue`              | Resume last active session                            |
+| `LIN-[0-9]+`            | Direct execution from Linear issue                    |
+| `[A-Z]+-[0-9]+`         | Direct execution from Jira ticket                     |
+| Text summary            | Steering input for next session                       |
 
 ## Direct Issue Execution
 
@@ -49,18 +49,19 @@ For simple tasks that don't require detailed planning documents, execute directl
    - Acceptance criteria (if present) → quality gates
 3. Create minimal session state (in-memory or temporary)
 4. Display issue context to user:
-   ```markdown
-   ## Direct Execution: [ISSUE-ID]
-   **Title**: [issue title]
-   **Description**: [issue description]
-   **Status**: [current status]
-   ```
+      ```markdown
+      ## Direct Execution: [ISSUE-ID]
+      **Title**: [issue title]
+      **Description**: [issue description]
+      **Status**: [current status]
+      ```
 5. Confirm with user before proceeding
 6. Execute using standard Execution Loop (below)
 7. On completion:
-   - Commit with issue reference
-   - Update issue status to Done
-   - Offer to create planning docs if scope expanded
+    - Commit with issue reference
+    - Update issue status to Done
+    - Offer to create planning docs if scope expanded
+
 ```
 
 ### Escalation to Full Planning
@@ -108,17 +109,20 @@ ls ./planning/*.md 2>/dev/null
 ### 2. Load Session State
 
 **If session-state.md exists** (in subfolder or directly in ./planning/):
+
 - Read current session context
 - Display progress summary
 - Confirm task continuation
 
 **If no session state but planning docs exist:**
+
 - Read @planning/*.md for context (requirements, implementation plan)
 - Create new session-state.md
 - Initialize from implementation-plan.md
 - Set session_count: 1
 
 **If multiple project subdirectories exist:**
+
 - List available projects
 - Ask user which to continue
 
@@ -144,12 +148,14 @@ Using the implementation plan and session state:
 2. If all P1 complete, move to P2 tasks
 3. If all P2 complete, move to P3 tasks
 4. Consider user input for task steering
+5. Evaluate task steps to identify parallel execution opportunties, and use sub-agents where feasible
 
 Ask user to confirm task selection if unclear.
 
 ## Execution Loop
 
-For detailed implementation guidance and quality checkpoints, reference @workflow-guide (quality checkpoints, layer guidance)
+For detailed implementation guidance and quality checkpoints, reference @workflow-guide (quality checkpoints, layer
+guidance)
 
 ### Task Execution Pattern
 
@@ -182,12 +188,14 @@ For each story/slice in an epic:
 ```
 
 **Why This Matters**:
+
 - Each commit is a safe checkpoint to return to
 - PM tools show real progress, not "everything in progress"
 - Git history enables bisect and blame
 - Risk of work loss is minimized
 
 **Anti-Pattern to Avoid**:
+
 ```
 ❌ Work on all 4 stories, commit once at the end
    - No incremental progress visible
@@ -225,6 +233,7 @@ Keep the plan file updated as you work:
 
 ```markdown
 ### P1 Tasks
+
 - [x] Create domain entity  <- completed
 - [ ] Implement use case    <- next
 - [ ] Add API endpoint
@@ -237,6 +246,7 @@ Update session-state.md after each significant milestone.
 ### Detecting Boundary Conditions
 
 Check for session end when:
+
 - Major task group completed (all P1s)
 - Significant milestone reached
 - User indicates session ending
@@ -263,6 +273,7 @@ current_layer: [domain|infrastructure|application|framework]
 branch: <type>/<issue-key or description>
 last_updated: [timestamp]
 ---
+
 ## Current Focus
 [What's being worked on]
 
@@ -313,12 +324,14 @@ This session you worked on:
 [Summary of work]
 
 **Discoveries or solutions worth documenting?**
+
 1. Yes - run /workflow:compound with context
 2. No - continue to handoff
 3. Note for later - add to session notes
 ```
 
 If user selects "Yes", invoke compound with pre-filled context:
+
 ```
 /workflow:compound "[brief context of what was solved]"
 ```
@@ -331,32 +344,39 @@ Provide complete handoff for next session:
 ## Session #N Complete
 
 ### What Was Done
+
 - [Detailed list of accomplishments]
 
 ### Key Decisions Made
+
 - [Decision 1]: [Rationale]
 - [Decision 2]: [Rationale]
 
 ### Current State
+
 - Branch: `feat/ISSUE-123` or `fix/ISSUE-123`
 - Tests: [passing/failing]
 - Progress: [X%]
 
 ### Recommended Next Steps
+
 1. **Next Priority**: [specific task]
 2. **Consider**: [upcoming decision point]
 3. **Watch For**: [potential blockers]
 
 ### Files Modified
+
 - `path/to/file1.py` - [what changed]
 - `path/to/file2.py` - [what changed]
 
 ### To Resume
+
 ```bash
 /workflow:execute ./planning/[project]/
 # Or with this summary:
 /workflow:execute "[paste this summary for context]"
 ```
+
 ```
 
 ## Error Recovery
