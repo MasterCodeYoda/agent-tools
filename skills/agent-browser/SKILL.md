@@ -19,9 +19,20 @@ npm install -g agent-browser
 agent-browser install  # Download Chromium
 ```
 
-## Using the Dedicated Chrome Profile (Recommended for Authenticated Sites)
+## Operating Mode Priority
 
-A dedicated Chrome profile is available with CDP (Chrome DevTools Protocol) on port 9222. This is the **preferred method** for sites requiring authentication (Sentry, GitHub, internal tools, etc.) as it uses your existing browser session with saved cookies and credentials.
+1. **Try CDP first**: Check if Chrome is running with remote debugging:
+   ```bash
+   agent-browser connect 9222 2>/dev/null && echo "CDP connected" || echo "CDP unavailable, use standalone"
+   ```
+   - If connection succeeds → use CDP mode for all operations
+   - Benefits: accurate DOM traversal, persistent session state, existing cookies/credentials, better performance
+2. **Fall back to standalone**: If CDP is unavailable (Chrome not running, port not open)
+   - Use `agent-browser open <url>` for headless/headed Playwright
+
+## Primary Mode: Chrome CDP Connection
+
+CDP (Chrome DevTools Protocol) connects agent-browser to a running Chrome instance on port 9222. This provides the most reliable browser automation — accurate DOM traversal, persistent session state, access to existing cookies and credentials, and better overall performance.
 
 ### Setup
 
@@ -39,18 +50,18 @@ A dedicated Chrome profile is available with CDP (Chrome DevTools Protocol) on p
    agent-browser connect 9222
    ```
 
-4. **Use all commands normally** - they now use your authenticated session:
+4. **Use all commands normally** — they now operate against the real browser context:
    ```bash
    agent-browser open https://sentry.io/issues/123
    agent-browser snapshot -i
    agent-browser click @e1
    ```
 
-Note: Don't use `close` with CDP mode - it would close your persistent browser.
+Note: Don't use `close` with CDP mode — it would close your persistent browser.
 
-## Quick start (Standalone Mode)
+## Fallback: Standalone Mode
 
-For sites not requiring authentication, use standalone mode:
+When CDP is unavailable (Chrome not running or port not open), use standalone mode. This launches an isolated Playwright-managed browser:
 
 ```bash
 agent-browser open <url>        # Navigate to page
@@ -229,9 +240,12 @@ agent-browser dialog dismiss        # Dismiss dialog
 agent-browser eval "document.title"   # Run JavaScript
 ```
 
-## Example: Form submission
+## Example: CDP-first workflow
 
 ```bash
+# Always try CDP first
+agent-browser connect 9222 2>/dev/null
+# If connected, proceed with full browser context:
 agent-browser open https://example.com/form
 agent-browser snapshot -i
 # Output shows: textbox "Email" [ref=e1], textbox "Password" [ref=e2], button "Submit" [ref=e3]
@@ -243,10 +257,10 @@ agent-browser wait --load networkidle
 agent-browser snapshot -i  # Check result
 ```
 
-## Example: Authentication with saved state
+## Example: Authentication with saved state (standalone)
 
 ```bash
-# Login once
+# When CDP isn't available, save/load state in standalone mode:
 agent-browser open https://app.example.com/login
 agent-browser snapshot -i
 agent-browser fill @e1 "username"
