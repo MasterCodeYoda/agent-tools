@@ -48,6 +48,9 @@ Support human-readable range descriptions:
 
 ### 1. Identify Changes
 
+Run all git commands from the working directory. Do not use `git -C <path>` unless the working directory cannot be the
+target repo.
+
 ```bash
 # For PR
 gh pr view $PR_NUMBER --json files,additions,deletions,title,body

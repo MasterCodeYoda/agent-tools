@@ -6,6 +6,9 @@ allowed-tools: Bash(agent-browser:*)
 
 # Browser Automation with agent-browser
 
+This skill is named `agent-browser` (with hyphen). Invoke via the Skill tool with `skill: "agent-browser"`. All browser
+interactions use the `agent-browser` CLI.
+
 ## Installation
 
 To test if the agent-browser CLI is available:
