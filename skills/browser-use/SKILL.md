@@ -1,13 +1,13 @@
 ---
-name: agent-browser
-description: Automates browser interactions for web testing, form filling, screenshots, and data extraction. Use when the user needs to navigate websites, interact with web pages, fill forms, take screenshots, test web applications, or extract information from web pages.
+name: browser-use
+description: Browser automation using the agent-browser CLI tool. Use when the user needs to navigate websites, fill forms, take screenshots, scrape data, or test web applications via command-line browser automation.
 allowed-tools: Bash(agent-browser:*)
 ---
 
-# Browser Automation with agent-browser
+# Browser Use
 
-This skill is named `agent-browser` (with hyphen). Invoke via the Skill tool with `skill: "agent-browser"`. All browser
-interactions use the `agent-browser` CLI.
+This skill wraps the `agent-browser` CLI tool for browser automation. The skill name (`browser-use`) and the CLI
+command (`agent-browser`) are different — all shell commands use `agent-browser`.
 
 ## Installation
 
