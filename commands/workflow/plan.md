@@ -32,9 +32,9 @@ Parse input to determine source type:
 |----------------------------------------|---------------------|--------------------------------------------------------------|
 | `./planning/<project>/requirements.md` | Requirements doc    | Load requirements, create implementation plan                |
 | `./planning/<project>/`                | Planning directory  | Load requirements.md from directory                          |
-| `LIN-[0-9]+`                           | Linear issue        | Fetch via Linear MCP - treat as requirements                 |
-| `[A-Z]+-[0-9]+`                        | Jira ticket         | Fetch via Jira MCP - treat as requirements                   |
-| `http(s)://`                           | URL                 | Fetch and parse content                                      |
+| `LIN-[0-9]+`                           | Linear issue        | Fetch via Issue Retrieval Strategy — treat as requirements    |
+| `[A-Z]+-[0-9]+`                        | Jira ticket         | Fetch via Issue Retrieval Strategy — treat as requirements    |
+| `http(s)://`                           | URL                 | Fetch via Issue Retrieval Strategy if PM URL, else WebFetch — treat as requirements |
 | Directory path                         | Existing plan       | Load and review                                              |
 | Text                                   | Feature description | Use directly (suggest /workflow:refine for complex features) |
 
@@ -99,8 +99,8 @@ If input is a requirements.md path or planning directory:
 
 If input is a Linear or Jira issue:
 
-1. Fetch issue details via MCP
-2. Extract requirements from description and acceptance criteria
+1. Fetch issue details using the Issue Retrieval Strategy from @workflow-guide (PM integration)
+2. Extract requirements from title, description, and acceptance criteria
 3. Note the issue ID for linking
 
 ### Review with User

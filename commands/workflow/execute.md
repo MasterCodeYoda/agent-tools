@@ -24,8 +24,8 @@ Parse input to determine session mode:
 | `./planning/` or empty  | Auto-detect from `./planning/*.md` or `./planning/*/` |
 | `*.md` file path        | Execute specific plan file                            |
 | `continue`              | Resume last active session                            |
-| `LIN-[0-9]+`            | Direct execution from Linear issue                    |
-| `[A-Z]+-[0-9]+`         | Direct execution from Jira ticket                     |
+| `LIN-[0-9]+`            | Fetch via Issue Retrieval Strategy, then direct execution |
+| `[A-Z]+-[0-9]+`         | Fetch via Issue Retrieval Strategy, then direct execution |
 | Text summary            | Steering input for next session                       |
 
 ## Direct Issue Execution
@@ -42,7 +42,7 @@ For simple tasks that don't require detailed planning documents, execute directl
 ### Direct Execution Flow
 
 ```
-1. Fetch issue details (via MCP or API)
+1. Fetch issue details using the Issue Retrieval Strategy from @workflow-guide (PM integration)
 2. Extract:
    - Title → task subject
    - Description → requirements
@@ -63,6 +63,8 @@ For simple tasks that don't require detailed planning documents, execute directl
     - Offer to create planning docs if scope expanded
 
 ```
+
+For detailed retrieval strategy (browser-first with MCP fallback), reference @workflow-guide (PM integration).
 
 ### Escalation to Full Planning
 

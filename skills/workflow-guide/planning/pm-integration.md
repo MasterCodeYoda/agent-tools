@@ -77,11 +77,120 @@ Store preference in `.claude/settings.json`:
 {
   "preferences": {
     "project_management": {
-      "tool": "linear"
+      "tool": "linear",
+      "linear": {
+        "workspace": "my-team",
+        "base_url": "https://linear.app/my-team/issue"
+      },
+      "jira": {
+        "domain": "mycompany",
+        "base_url": "https://mycompany.atlassian.net/browse"
+      }
     }
   }
 }
 ```
+
+**URL Patterns**:
+- Linear: `{base_url}/{key}` → `https://linear.app/my-team/issue/LIN-123`
+- Jira: `{base_url}/{key}` → `https://mycompany.atlassian.net/browse/PROJ-456`
+
+## Issue Retrieval Strategy
+
+When a command needs to **read** issue details (title, description, status, acceptance criteria), use the following priority-ordered retrieval chain. Stop at the first method that succeeds.
+
+### 1. Construct URL
+
+If input is an issue key (not a full URL), build the URL from config:
+
+```bash
+# Read base_url from .claude/settings.json
+cat .claude/settings.json 2>/dev/null | grep -A10 project_management
+```
+
+- Linear key → `{linear.base_url}/{key}`
+- Jira key → `{jira.base_url}/{key}`
+- Full URL input → use as-is
+
+If no base_url is configured and no MCP tools are available, skip to step 6 (Manual).
+
+### 2. CDP Browser (preferred)
+
+Try connecting to an already-running Chrome instance via CDP. This preserves existing authentication sessions (SSO, cookies).
+
+```bash
+# Check for running Chrome with CDP
+agent-browser connect 9222 2>/dev/null && echo "CDP connected" || echo "CDP unavailable"
+```
+
+If connected:
+
+```bash
+agent-browser open {issue_url}
+agent-browser wait --load networkidle
+agent-browser snapshot -c
+```
+
+Parse the compact snapshot text to extract:
+- **Title**: Usually the first heading or prominent text element
+- **Description**: Body/content area text
+- **Status**: Status badge or label element
+- **Acceptance criteria**: List items under criteria/requirements sections
+
+If the snapshot shows a login page or auth wall, skip to step 4 (MCP tools).
+
+### 3. Standalone Browser
+
+If CDP is unavailable, try launching a standalone browser session:
+
+```bash
+agent-browser open {issue_url}
+agent-browser wait --load networkidle
+agent-browser snapshot -c
+```
+
+If the page requires authentication (login form detected in snapshot), skip to step 4 (MCP tools). Do not attempt to automate login flows for PM tools.
+
+### 4. MCP Tools
+
+Use MCP integrations if available:
+
+```bash
+# Linear
+mcp__linear__getIssue(issueId: "{key}")
+
+# Jira
+mcp__jira__getIssue(issueKey: "{key}")
+```
+
+### 5. WebFetch
+
+Last resort for known URLs when browser and MCP are both unavailable:
+
+```bash
+WebFetch(url: "{issue_url}", prompt: "Extract the issue title, description, status, and acceptance criteria")
+```
+
+Note: This typically fails for authenticated PM tools.
+
+### 6. Manual
+
+If all automated methods fail:
+
+1. Ask the user to paste the issue content directly
+2. Suggest configuring Chrome CDP or base URLs:
+   ```
+   To enable browser-based retrieval:
+   1. Open Chrome with: /Applications/Google\ Chrome.app/Contents/MacOS/Google\ Chrome --remote-debugging-port=9222
+   2. Log into your PM tool
+   3. Add base_url to .claude/settings.json (see Configuration above)
+   ```
+
+### Retrieval Strategy Notes
+
+- **Write operations** (status updates, comments) still use MCP tools directly — this strategy is for **reads only**
+- Browser retrieval gets richer context (rendered markdown, images, linked issues) than API calls
+- CDP mode reuses your existing browser session, so it works with SSO/2FA without extra setup
 
 ## Linear Workflow
 
@@ -91,10 +200,10 @@ Store preference in `.claude/settings.json`:
 
 ### During Planning
 ```bash
-# Fetch issue details (if MCP available)
-mcp__linear__getIssue(issueId: "LIN-123")
+# Fetch issue details using Issue Retrieval Strategy (above)
+# Prefer CDP browser → standalone browser → MCP → WebFetch → manual
 
-# Update status
+# Update status (write operations use MCP directly)
 mcp__linear__updateIssue(issueId, {state: "In Progress"})
 
 # Add comment
@@ -119,10 +228,10 @@ git commit -m "feat(area): implement feature [LIN-123]"
 
 ### During Planning
 ```bash
-# Fetch issue (if MCP available)
-mcp__jira__getIssue(issueKey: "PROJ-456")
+# Fetch issue details using Issue Retrieval Strategy (above)
+# Prefer CDP browser → standalone browser → MCP → WebFetch → manual
 
-# Transition status
+# Transition status (write operations use MCP directly)
 mcp__jira__transitionIssue(issueKey, "In Progress")
 
 # Add comment
@@ -202,11 +311,19 @@ Closes: LIN-123
 
 ## Without MCP Tools
 
-If MCP integrations aren't available:
+If MCP integrations aren't available, issue retrieval can still work via the browser-based methods in the Issue Retrieval Strategy (above). To set this up:
 
-**Linear**: Use the Linear app/web interface
-**Jira**: Use the Jira interface
-**Both**: Commands will provide instructions for manual updates
+1. **Configure base URLs** in `.claude/settings.json` (see Configuration section)
+2. **Open Chrome with CDP** for authenticated access:
+   ```bash
+   /Applications/Google\ Chrome.app/Contents/MacOS/Google\ Chrome \
+     --remote-debugging-port=9222 \
+     --user-data-dir="$HOME/.chrome-agent-browser" &
+   ```
+3. **Log into your PM tool** in that Chrome instance
+4. Issue retrieval will connect via CDP and read issue details from the rendered page
+
+For **write operations** (status updates, comments) without MCP, provide manual instructions:
 
 ```markdown
 ## Manual Update Required

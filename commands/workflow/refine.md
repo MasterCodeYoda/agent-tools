@@ -285,7 +285,7 @@ Status: Draft
 
 ```bash
 # Check for PM tool configuration
-cat .claude/settings.json 2>/dev/null | grep -A2 project_management
+cat .claude/settings.json 2>/dev/null | grep -A10 project_management
 
 # Check for available MCP tools
 # Linear: mcp__linear__createIssue
