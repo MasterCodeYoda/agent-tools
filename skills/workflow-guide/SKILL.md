@@ -57,6 +57,8 @@ While we plan **top-down** (user story → layers), we implement **bottom-up**:
 
 This order ensures each layer depends only on layers below it.
 
+TDD integrates naturally with bottom-up implementation: write tests for each layer as you build it upward. See @tdd for methodology.
+
 ## The Five Commands
 
 ### /workflow:refine
@@ -266,6 +268,7 @@ For detailed templates and patterns, reference these sections:
 
 ### Implementation Phase
 - `implementation/quality-checkpoints.md` - Per-layer quality gates
+- `@tdd` - Test-Driven Development methodology and test design guidance
 
 ### PM Integration
 - `planning/pm-integration.md` - Linear, Jira, and manual workflow guides
@@ -283,6 +286,7 @@ For detailed templates and patterns, reference these sections:
 | Session continuity | Session state as source of truth |
 | Knowledge compounding | Document solutions for future reference |
 | Quality built in | Tests and checks as you go |
+| Test-driven development | Red → Green → Refactor per behavior |
 | Ship complete work | Finish features before moving on |
 
 ## Remember
@@ -291,6 +295,7 @@ For detailed templates and patterns, reference these sections:
 - **Ship Early** - Deploy as soon as the slice works
 - **Refactor Continuously** - Clean up as patterns emerge
 - **Stay Vertical** - Resist building horizontal layers
+- **Test Behavior** - Verify what code does, not how it does it
 - **Compound Knowledge** - Each problem solved helps future work
 
 ## References

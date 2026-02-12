@@ -203,6 +203,7 @@ Generate `./planning/<project>/implementation-plan.md`:
 
 ## Testing Strategy
 
+- **Approach**: [TDD recommended — see @tdd for methodology]
 - **Unit Tests**: [Approach for domain/use case testing]
 - **Integration Tests**: [Approach for infrastructure testing]
 - **E2E Tests**: [Approach for complete flow testing]

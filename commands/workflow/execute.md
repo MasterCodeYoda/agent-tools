@@ -166,9 +166,9 @@ while (tasks remain):
   1. Mark task in_progress in TodoWrite
   2. Read relevant files from plan
   3. Look for existing patterns in codebase
-  4. Implement following conventions
-  5. Write tests for new functionality
-  6. Run tests after changes
+  4. Write failing test for next behavior (Red) — see @tdd
+  5. Implement minimal code to pass (Green)
+  6. Refactor if needed, run full tests
   7. Mark task completed in TodoWrite
   8. Update plan file ([ ] -> [x])
   9. Check for story/slice completion
@@ -219,6 +219,8 @@ Before marking a task complete:
 - [ ] No linting/type errors introduced
 - [ ] Code follows existing patterns
 - [ ] Changes are focused and atomic
+
+For test-driven development methodology, see @tdd.
 
 Run quality checks based on project type:
 
