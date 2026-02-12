@@ -1,12 +1,12 @@
 ---
-name: browser-use
+name: use-browser
 description: Browser automation using the agent-browser CLI tool. Use when the user needs to navigate websites, fill forms, take screenshots, scrape data, or test web applications via command-line browser automation.
 allowed-tools: Bash(agent-browser:*)
 ---
 
 # Browser Use
 
-This skill wraps the `agent-browser` CLI tool for browser automation. The skill name (`browser-use`) and the CLI
+This skill wraps the `agent-browser` CLI tool for browser automation. The skill name (`use-browser`) and the CLI
 command (`agent-browser`) are different — all shell commands use `agent-browser`.
 
 ## Installation
