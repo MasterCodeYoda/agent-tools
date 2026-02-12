@@ -3,6 +3,10 @@ allowed-tools: Bash(git add:*), Bash(git status:*), Bash(git commit:*)
 description: Create a git commit
 ---
 
+## CRITICAL: Git Command Rules
+
+**NEVER use `git -C <path>` in any git command.** The session is already active in the correct working directory. Always use plain `git` commands (e.g., `git status`, `git add`, `git commit`). This rule is absolute and has no exceptions. Violating this rule will produce incorrect results.
+
 ## User Input
 
 ```text

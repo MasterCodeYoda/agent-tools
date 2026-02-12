@@ -3,6 +3,9 @@ allowed-tools: Bash(git checkout --branch:*), Bash(git add:*), Bash(git status:*
 description: Commit, push, and open a PR
 ---
 
+## CRITICAL: Git Command Rules
+
+**NEVER use `git -C <path>` in any git command.** The session is already active in the correct working directory. Always use plain `git` commands (e.g., `git status`, `git add`, `git commit`, `git push`). This rule is absolute and has no exceptions. Violating this rule will produce incorrect results.
 
 ## Your task
 
