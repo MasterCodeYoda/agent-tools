@@ -15,6 +15,7 @@ This skill provides extended guidance for the `/workflow:*` command set. Command
 2. **Work spans multiple sessions** - Structure for continuity without loss of fidelity
 3. **Speed + quality + attention to detail wins** - Fast execution with high standards
 4. **Knowledge compounds** - Each solved problem makes future work easier
+5. **User approves before action** - Plans require explicit user approval before saving or executing
 
 ### Vertical Slicing
 
@@ -76,6 +77,9 @@ TDD integrates naturally with bottom-up implementation: write tests for each lay
 **Outputs**:
 - `./planning/<project>/implementation-plan.md` - How to build it
 - `./planning/<project>/session-state.md` - Continuity tracking
+
+**Approval gate**: Plans MUST be presented to the user for explicit approval before saving documents or starting
+execution. After approval, the user chooses: save the plan only, or save and proceed to execution.
 
 **When to use**: After requirements are clear (from `/workflow:refine` or existing documentation)
 
@@ -283,6 +287,7 @@ For detailed templates and patterns, reference these sections:
 | Vertical slicing | Build by story, not by layer |
 | Bottom-up implementation | Domain → Infrastructure → Application → Framework |
 | P1/P2/P3 prioritization | Must have → Should have → Nice to have |
+| User approval gates | Plans require explicit approval before saving or executing |
 | Session continuity | Session state as source of truth |
 | Knowledge compounding | Document solutions for future reference |
 | Quality built in | Tests and checks as you go |

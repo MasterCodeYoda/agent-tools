@@ -119,7 +119,10 @@ For task breakdown patterns, reference @workflow-guide (task breakdown patterns)
 
 ### Create Implementation Plan
 
-Generate `./planning/<project>/implementation-plan.md`:
+Prepare the implementation plan content below. **Do not write files to disk yet** — present the plan to the user
+for approval first (see §Plan Approval Gate).
+
+Target file: `./planning/<project>/implementation-plan.md`
 
 ```markdown
 # Implementation Plan: [Feature Title]
@@ -240,7 +243,10 @@ Generate `./planning/<project>/implementation-plan.md`:
 
 ### Initialize Session State
 
-Create `./planning/<project>/session-state.md`:
+Prepare the session state content below. **Do not write files to disk yet** — this is saved after user approval
+(see §Plan Approval Gate).
+
+Target file: `./planning/<project>/session-state.md`
 
 ```yaml
 ---
@@ -257,12 +263,11 @@ created: [timestamp]
 ---
 
 ## Status
-Planning complete. Ready to begin implementation.
+Planning complete. Awaiting user approval.
 
 ## Next Steps
-1. Review implementation plan
-2. Run `/workflow:execute ./planning/[project]/`
-3. Begin with first P1 task
+1. User reviews and approves plan
+2. Run `/workflow:execute ./planning/[project]/` when ready
 
 ## Session History
 [Empty - will be populated during execution]
@@ -272,9 +277,10 @@ Planning complete. Ready to begin implementation.
 
 For PM-specific workflows, reference @workflow-guide (PM integration)
 
-### Update Work Item (if applicable)
+### Update Work Item (after approval)
 
-Based on detected PM tool:
+**Do not update PM tools until the user approves the plan** (see §Plan Approval Gate). Once approved, update based
+on detected PM tool:
 
 **Linear**:
 
@@ -301,32 +307,94 @@ Update your tracking system:
 - Add link to: ./planning/[project]/
 ```
 
-## Post-Planning Options
+## Plan Approval Gate
 
-Present options to user:
+**CRITICAL**: When planning is complete, you MUST stop and present the plan to the user for approval. **NEVER begin
+execution, save planning documents, or update PM tools until the user explicitly approves the plan.** This is a hard
+gate — no exceptions.
+
+### Present Plan for Approval
+
+Show the plan summary and ask the user to approve:
+
+```markdown
+## Plan Ready for Review
+
+**Project**: [project-name]
+**Source**: [requirements.md path, issue ID, or description]
+
+### Summary
+
+[2-3 sentence overview of the approach]
+
+### Slices
+
+1. **[Slice 1 name]** - [brief description] ([N] tasks)
+2. **[Slice 2 name]** - [brief description] ([N] tasks)
+
+### Task Breakdown
+
+- **P1 (Must Have)**: [N] tasks
+- **P2 (Should Have)**: [N] tasks
+- **P3 (Nice to Have)**: [N] tasks
+
+### Key Technical Decisions
+
+- [Decision 1]: [brief rationale]
+- [Decision 2]: [brief rationale]
+
+**Will be saved to**: `./planning/[project]/implementation-plan.md`
+
+---
+
+**How would you like to proceed?**
+
+1. **Approve & Save** - Finalize planning documents (and update PM tool if applicable)
+2. **Approve & Execute** - Save plan, then begin implementation immediately
+3. **Revise** - Make changes to the plan before approving
+```
+
+**STOP HERE and wait for the user's response.** Do not take any further action until the user explicitly chooses an
+option. This includes:
+
+- Do NOT save planning documents to disk until approved
+- Do NOT update PM tools (Linear, Jira) until approved
+- Do NOT begin execution until explicitly requested
+- Do NOT interpret "looks good" or "LGTM" as an instruction to start execution — ask which option they want
+
+### On Approval: Save Plan
+
+When the user approves (option 1 or 2), finalize the planning artifacts:
+
+1. Write `./planning/[project]/implementation-plan.md`
+2. Write `./planning/[project]/session-state.md`
+3. Update PM tool if applicable (see §PM Tool Integration above)
+4. Present confirmation:
 
 ```markdown
 ## Planning Complete
-
-**Requirements**: `./planning/[project]/requirements.md` (input)
 
 **Created**:
 
 - `./planning/[project]/implementation-plan.md`
 - `./planning/[project]/session-state.md`
 
-**What's next?**
-
-1. **Start Implementation** - Run `/workflow:execute ./planning/[project]/`
-2. **Review Plan** - Open plan files for review
-3. **Refine Plan** - Make changes to implementation plan
-4. **Create Branch** - `git checkout -b feat/ISSUE-123` (or `fix/ISSUE-123` for bugs)
+[PM tool update summary if applicable]
 ```
+
+**If the user chose "Approve & Save" (option 1)** — stop here. The plan is saved and the user will decide when to
+start execution in their own time. Remind them:
+
+```markdown
+When you're ready to implement, run: `/workflow:execute ./planning/[project]/`
+```
+
+**If the user chose "Approve & Execute" (option 2)** — proceed to the Execution Handoff below.
 
 ## Execution Handoff
 
-**CRITICAL**: When the user approves the plan and wants to begin implementation immediately, you MUST follow the
-`/workflow:execute` protocol. This ensures proper session tracking, quality gates, and commit discipline.
+This section applies ONLY after the user has approved the plan AND explicitly requested execution (option 2 above,
+or a later request like "start implementation", "run /workflow:execute", "go ahead and build it").
 
 ### Handoff Protocol
 
@@ -407,7 +475,7 @@ Present options to user:
 
 ## Quality Checklist
 
-Before completing planning:
+Before presenting plan for approval:
 
 - [ ] Requirements are clear and testable
 - [ ] Acceptance criteria are specific
@@ -415,5 +483,5 @@ Before completing planning:
 - [ ] Implementation approach is documented
 - [ ] Tasks are broken down with priorities
 - [ ] Risks are identified
-- [ ] Session state is initialized
-- [ ] Ready to execute with `/workflow:execute`
+- [ ] Plan presented to user for approval
+- [ ] User has explicitly approved the plan
