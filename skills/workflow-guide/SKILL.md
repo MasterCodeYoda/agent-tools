@@ -60,7 +60,7 @@ This order ensures each layer depends only on layers below it.
 
 Testing integrates naturally with bottom-up implementation: write tests for each layer as you build it upward. See @testing for strategy selection.
 
-## The Eight Commands
+## The Ten Commands
 
 ### /workflow:refine
 **Purpose**: Discover and refine requirements through conversation
@@ -137,6 +137,28 @@ execution. After approval, the user chooses: save the plan only, or save and pro
 - Cross-references docs against code for staleness
 
 **When to use**: Onboarding to a codebase, after major refactoring, periodic health check
+
+### /workflow:audit-api
+**Purpose**: Audit API surface design — conventions, schema quality, security, and consistency
+
+**Key features**:
+- Three-tier analysis (spec linting, security, design quality)
+- Prioritized findings (P1/P2/P3)
+- Auto-detects API type (REST/GraphQL) and spec files
+- References OWASP API Security Top 10, Zalando/Microsoft guidelines
+
+**When to use**: Onboarding to a codebase, API review before public release, periodic health check
+
+### /workflow:audit-frontend
+**Purpose**: Audit frontend code for accessibility, performance, component architecture, and security
+
+**Key features**:
+- Three-tier analysis (static, build-dependent, heuristic)
+- Prioritized findings (P1/P2/P3)
+- Auto-detects framework, styling, state management, and build tools
+- Measures Core Web Vitals and WCAG 2.2 compliance
+
+**When to use**: Onboarding to a codebase, pre-release quality gate, periodic health check
 
 ### /workflow:compound
 **Purpose**: Capture knowledge from solved problems

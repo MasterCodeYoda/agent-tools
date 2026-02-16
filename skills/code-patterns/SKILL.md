@@ -116,6 +116,7 @@ For detailed language-specific patterns (loaded on request only):
 ## Commands
 
 - `/workflow:audit-code` — Audit production code against these patterns
+- `/workflow:audit-frontend` — Audit frontend code against TypeScript/React patterns
 
 ## Related Skills
 

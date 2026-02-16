@@ -52,7 +52,7 @@ Based on auto-detection, prompt user for scope confirmation:
 
 ### Tier 1 — Static Analysis (always runs)
 
-Spawn 3 parallel agents that read production code:
+Spawn 4 parallel agents that read production code:
 
 **pattern-compliance-analyst** — References @code-patterns (SKILL.md + language guides):
 - Naming conventions per language
@@ -78,6 +78,14 @@ Spawn 3 parallel agents that read production code:
 - Sensitive data exposure in logs
 - Context propagation across boundaries
 
+**data-access-pattern-checker** — References @clean-architecture (`references/layer-patterns.md#infrastructure`):
+- ORM/query builder usage patterns (raw SQL flagged unless justified)
+- Repository pattern compliance (queries in infrastructure layer, not in controllers/use cases)
+- Migration file hygiene (reversible migrations, no data-destructive operations without guards)
+- Connection management (pooling configured, connections released, no leaked connections)
+- Transaction boundary placement (transactions in application layer use cases, not scattered)
+- Index coverage for query patterns (queries on unindexed columns)
+
 ### Tier 2 — Dynamic Analysis (auto-detect: runs if tools found)
 
 Spawn 2 parallel agents:
@@ -93,16 +101,21 @@ Spawn 2 parallel agents:
 - Function length (flag > 50 lines), class size (flag > 300 lines)
 - Duplication detection
 - Module coupling metrics
+- Hot path identification (most-called functions via static call graph)
+- Bundle/binary size analysis (if web project: webpack-bundle-analyzer; if compiled: binary size)
+- Dependency weight analysis (heavy transitive dependencies)
 
 ### Tier 3 — Heuristic Analysis (AI judgment)
 
-Spawn 3 parallel agents:
+Spawn 4 parallel agents:
 
 **architecture-health-reviewer** — References @clean-architecture (`templates/architecture-review.md`):
 - Layer responsibility adherence across full codebase
 - Cross-cutting concern placement
 - Transaction boundary clarity
 - N+1 queries, resource leaks, missing connection pooling
+- Schema design quality (normalization issues, missing constraints, orphan tables)
+- Data access layer isolation (no SQL in controllers, no ORM entities in API responses)
 
 **production-readiness-scout** — References quality checkpoints (`skills/workflow-guide/implementation/quality-checkpoints.md`):
 - Security: input validation, SQL injection prevention, auth/authz, secrets management
@@ -115,6 +128,14 @@ Spawn 3 parallel agents:
 - Naming quality and consistency
 - Missing abstractions (repeated conditionals, hardcoded rules)
 - Testability assessment (hard-coded dependencies, missing seams)
+
+**performance-hotspot-detector** — AI-driven assessment:
+- Algorithm complexity (nested loops, quadratic patterns on collections)
+- Missing caching (repeated expensive computations, redundant API/DB calls)
+- Resource utilization patterns (unbounded collections, missing pagination at data layer)
+- Synchronous blocking in async contexts
+- Memory patterns (large object retention, missing cleanup/disposal)
+- Hot path optimization opportunities
 
 ## Output: Prioritized Report
 
@@ -140,6 +161,8 @@ Present findings using the same P1/P2/P3 structure as `/workflow:review`:
 | Structured logging | [compliant/partial/missing] | [ok/warning/critical] |
 | Cyclomatic complexity | [avg / max] | [ok/warning] |
 | Security issues | N | [ok/warning/critical] |
+| Data layer compliance | [pass/issues] | [ok/warning/critical] |
+| Performance hotspots | N | [ok/warning] |
 | Performance anti-patterns | N | [ok/warning] |
 
 ### Findings

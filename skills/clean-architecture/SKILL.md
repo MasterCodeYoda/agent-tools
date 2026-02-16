@@ -432,6 +432,7 @@ To add support for a new language:
 ## Commands
 
 - `/workflow:audit-code` — Audit production code for architectural compliance
+- `/workflow:audit-api` — Audit API surface for architectural compliance
 
 ## Summary
 
