@@ -173,3 +173,64 @@ function buildCart(itemCount = 1, itemPrice = 10):
 ```
 
 **Avoid** deeply nested or magical test fixtures that obscure what's being tested. A developer reading the test should understand the setup without jumping to multiple helper definitions.
+
+## Spec-First Testing
+
+When the contract is known upfront — from an API spec, a requirements document, or a well-defined interface — write tests directly from the specification before implementation.
+
+### When to Use
+
+- API endpoint with a defined request/response contract
+- Feature with explicit acceptance criteria
+- Library function with documented behavior
+- Migration where old behavior must be preserved exactly
+
+### How It Differs from TDD
+
+| | TDD | Spec-First |
+|---|-----|------------|
+| **Starting point** | Unclear interface | Known contract |
+| **Test discovery** | Incremental, one at a time | Batch from specification |
+| **Design role** | Tests drive the interface | Tests verify the interface |
+| **Refactoring** | Interface may evolve | Interface is stable |
+
+### Workflow
+
+```
+1. Read the specification (API doc, acceptance criteria, contract)
+2. Write ALL test cases from the spec (not incrementally)
+3. Run tests — all should fail (no implementation yet)
+4. Implement until all tests pass
+5. Add edge case tests discovered during implementation
+```
+
+### Example
+
+```
+// From API spec: POST /tasks returns 201 with task, 400 for invalid input
+
+test "POST /tasks with valid title returns 201 and task":
+  response = post("/tasks", { title: "Buy groceries" })
+  assert response.status == 201
+  assert response.body.title == "Buy groceries"
+  assert response.body.id is not empty
+
+test "POST /tasks with empty title returns 400":
+  response = post("/tasks", { title: "" })
+  assert response.status == 400
+  assert response.body.error contains "title"
+
+test "POST /tasks with missing body returns 400":
+  response = post("/tasks", {})
+  assert response.status == 400
+```
+
+### Guard Against Specification Drift
+
+When using spec-first testing, the specification is your source of truth. If the implementation needs to diverge from the spec:
+
+1. Update the spec first
+2. Update the tests to match
+3. Then update the implementation
+
+Never let the implementation silently diverge from the specification — that's how API contracts break.

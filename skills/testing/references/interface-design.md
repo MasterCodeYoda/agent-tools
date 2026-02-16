@@ -111,7 +111,7 @@ This follows the **Interface Segregation Principle**: no client should depend on
 
 ### Build Only What You Need
 
-In TDD, you only add methods when a test requires them. This naturally produces minimal interfaces:
+In test-driven workflows, you only add methods when a test requires them. This naturally produces minimal interfaces:
 
 ```
 // Cycle 1: "creating a task persists it"

@@ -1,6 +1,6 @@
 # Refactoring Under Tests
 
-How to improve code structure safely during the Refactor phase of TDD.
+How to improve code structure safely when tests protect behavior.
 
 ## When to Refactor
 

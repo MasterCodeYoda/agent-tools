@@ -166,7 +166,7 @@ while (tasks remain):
   1. Mark task in_progress in TodoWrite
   2. Read relevant files from plan
   3. Look for existing patterns in codebase
-  4. Write failing test for next behavior (Red) — see @tdd
+  4. Write tests for next behavior — see @testing for strategy
   5. Implement minimal code to pass (Green)
   6. Refactor if needed, run full tests
   7. Mark task completed in TodoWrite
@@ -220,7 +220,7 @@ Before marking a task complete:
 - [ ] Code follows existing patterns
 - [ ] Changes are focused and atomic
 
-For test-driven development methodology, see @tdd.
+For testing methodology and strategy selection, see @testing.
 
 Run quality checks based on project type:
 

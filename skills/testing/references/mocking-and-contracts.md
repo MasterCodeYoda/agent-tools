@@ -1,6 +1,6 @@
-# Mocking Strategy
+# Mocking Strategy and Contract Testing
 
-When and how to use test doubles, with a focus on mocking at system boundaries only.
+When and how to use test doubles, with a focus on mocking at system boundaries only. Plus contract testing for service boundaries.
 
 ## Core Principle: Mock at Boundaries
 
@@ -198,3 +198,93 @@ var service = new TaskService(new FakeTaskRepo(), new FixedClock(new DateTime(20
 **Prefer fakes** for repositories and services. They're reusable, don't couple tests to call sequences, and behave like real implementations.
 
 **Use mocks sparingly** — only when verifying that a side effect occurred (notification sent, event published). Over-mocking leads to brittle tests that break on refactoring.
+
+## Contract Testing
+
+When services communicate across boundaries (HTTP APIs, message queues, shared databases), contract testing ensures both sides agree on the interface shape.
+
+### The Problem
+
+```
+Service A (consumer) ──HTTP──→ Service B (producer)
+
+A's tests mock B's responses (stubs).
+B's tests don't know what A expects.
+B changes response format → A's tests still pass (stubs are stale) → production breaks.
+```
+
+### How Contract Testing Works
+
+```
+1. Consumer defines expected interactions (contract)
+   "When I send GET /users/123, I expect { id, name, email }"
+
+2. Contract is shared with producer
+   (via a broker, repo, or file)
+
+3. Producer verifies it can satisfy the contract
+   "Given this request, can I produce a matching response?"
+
+4. Both sides run independently
+   Consumer tests against the contract (not the real service)
+   Producer tests against the contract (not a specific consumer)
+```
+
+### When to Use Contract Testing
+
+- **Microservice boundaries** — APIs between services you own
+- **Third-party API wrappers** — Verify your assumptions about external APIs
+- **Event-driven systems** — Message producers and consumers
+- **Shared libraries** — Public interface contracts
+
+### When NOT to Use Contract Testing
+
+- **Internal module boundaries** — Use integration tests instead
+- **Simple CRUD APIs** — E2E tests are sufficient
+- **Prototype/throwaway code** — Not worth the setup overhead
+
+### Contract Testing Tools
+
+| Ecosystem | Tool | Notes |
+|-----------|------|-------|
+| Language-agnostic | [Pact](https://pact.io/) | Most mature; consumer-driven; broker available |
+| OpenAPI-based | [Schemathesis](https://schemathesis.readthedocs.io/) | Property-based testing against OpenAPI specs |
+| gRPC | [buf](https://buf.build/) | Schema-based contract enforcement |
+| GraphQL | Schema validation | Built-in type system acts as contract |
+
+### Consumer-Driven Contracts
+
+The most common pattern: the **consumer** defines what it needs, and the **producer** verifies it can deliver.
+
+```
+// Consumer test (Service A)
+test "user service returns user profile":
+  contract = Pact(consumer: "OrderService", provider: "UserService")
+  contract.given("user 123 exists")
+    .uponReceiving("a request for user 123")
+    .withRequest(method: "GET", path: "/users/123")
+    .willRespondWith(
+      status: 200,
+      body: { id: "123", name: like("string"), email: like("string") }
+    )
+  // Test runs against a mock that enforces the contract
+
+// Producer test (Service B)
+test "satisfies OrderService contract":
+  verifier = PactVerifier(provider: "UserService")
+  verifier.verifyPact(contractFile)
+  // Runs real provider against each contract interaction
+```
+
+### Relationship to Mocking
+
+Contract testing and mocking serve different purposes:
+
+| | Mocking | Contract Testing |
+|---|---------|-----------------|
+| **Scope** | Single test | Cross-service agreement |
+| **Verified by** | Consumer only | Both consumer and producer |
+| **Staleness risk** | High (stubs drift) | Low (contracts are verified) |
+| **When it breaks** | Never (stubs always match) | When the contract is violated |
+
+Contract tests don't replace mocks — they ensure your mocks stay accurate.

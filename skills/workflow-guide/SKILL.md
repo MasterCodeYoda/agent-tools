@@ -58,9 +58,9 @@ While we plan **top-down** (user story → layers), we implement **bottom-up**:
 
 This order ensures each layer depends only on layers below it.
 
-TDD integrates naturally with bottom-up implementation: write tests for each layer as you build it upward. See @tdd for methodology.
+Testing integrates naturally with bottom-up implementation: write tests for each layer as you build it upward. See @testing for strategy selection.
 
-## The Five Commands
+## The Six Commands
 
 ### /workflow:refine
 **Purpose**: Discover and refine requirements through conversation
@@ -104,6 +104,17 @@ execution. After approval, the user chooses: save the plan only, or save and pro
 - Uncommitted (`/workflow:review changes`)
 
 **When to use**: Before merging or deploying
+
+### /workflow:audit-tests
+**Purpose**: Audit existing test suites for quality, anti-patterns, and coverage gaps
+
+**Key features**:
+- Three-tier analysis (static, dynamic, heuristic)
+- Prioritized findings (P1/P2/P3)
+- Auto-detects test framework and quality tools
+- References @testing skill criteria
+
+**When to use**: Onboarding to a codebase, after AI-generated test push, periodic health check
 
 ### /workflow:compound
 **Purpose**: Capture knowledge from solved problems
@@ -272,7 +283,7 @@ For detailed templates and patterns, reference these sections:
 
 ### Implementation Phase
 - `implementation/quality-checkpoints.md` - Per-layer quality gates
-- `@tdd` - Test-Driven Development methodology and test design guidance
+- `@testing` - Testing strategy, TDD, property-based testing, contracts, and test quality
 
 ### PM Integration
 - `planning/pm-integration.md` - Linear, Jira, and manual workflow guides
@@ -291,7 +302,7 @@ For detailed templates and patterns, reference these sections:
 | Session continuity | Session state as source of truth |
 | Knowledge compounding | Document solutions for future reference |
 | Quality built in | Tests and checks as you go |
-| Test-driven development | Red → Green → Refactor per behavior |
+| Testing strategy | Select approach per situation, verify behavior |
 | Ship complete work | Finish features before moving on |
 
 ## Remember
