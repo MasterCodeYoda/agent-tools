@@ -60,7 +60,7 @@ This order ensures each layer depends only on layers below it.
 
 Testing integrates naturally with bottom-up implementation: write tests for each layer as you build it upward. See @testing for strategy selection.
 
-## The Six Commands
+## The Eight Commands
 
 ### /workflow:refine
 **Purpose**: Discover and refine requirements through conversation
@@ -115,6 +115,28 @@ execution. After approval, the user chooses: save the plan only, or save and pro
 - References @testing skill criteria
 
 **When to use**: Onboarding to a codebase, after AI-generated test push, periodic health check
+
+### /workflow:audit-code
+**Purpose**: Audit existing production code for quality, architecture, and production readiness
+
+**Key features**:
+- Three-tier analysis (static, dynamic, heuristic)
+- Prioritized findings (P1/P2/P3)
+- Auto-detects language, architecture style, and quality tools
+- References @code-patterns, @clean-architecture, @logging criteria
+
+**When to use**: Onboarding to a codebase, periodic health check, pre-release quality gate
+
+### /workflow:audit-docs
+**Purpose**: Audit documentation quality — presence, accuracy, completeness, and clarity
+
+**Key features**:
+- Three-tier analysis (presence, accuracy, quality)
+- Prioritized findings (P1/P2/P3)
+- Auto-detects documentation types and tooling
+- Cross-references docs against code for staleness
+
+**When to use**: Onboarding to a codebase, after major refactoring, periodic health check
 
 ### /workflow:compound
 **Purpose**: Capture knowledge from solved problems

@@ -90,6 +90,10 @@ During Incidents:
 - If you can't answer these within 5 minutes of querying, your logging strategy needs work
 - Post-incident: add the logs you wished you had
 
+## Commands
+
+- `/workflow:audit-code` — Audit production code for observability readiness
+
 ## References
 
 This skill is based on concepts from ["Logging sucks. And here's how to make it better.](https://loggingsucks.com/) by Boris Tane,

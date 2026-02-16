@@ -113,6 +113,10 @@ For detailed language-specific patterns (loaded on request only):
 - **TypeScript**: `languages/typescript.md` - TypeScript/React patterns and best practices
 - **C#**: `languages/csharp.md` - C#/.NET enterprise patterns
 
+## Commands
+
+- `/workflow:audit-code` — Audit production code against these patterns
+
 ## Related Skills
 
 - **clean-architecture**: For architectural patterns and layer organization

@@ -429,6 +429,10 @@ To add support for a new language:
 4. Optional: Add validators
 5. Update Task Manager example
 
+## Commands
+
+- `/workflow:audit-code` — Audit production code for architectural compliance
+
 ## Summary
 
 Clean Architecture enables:
