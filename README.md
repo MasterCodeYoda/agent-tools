@@ -1,29 +1,99 @@
 # Agent Tools
 
-This repository contains customizations for agentic coding tools that are shared across projects.
+Shared skills and commands for Claude Code (and Factory.ai) that bring consistent, opinionated workflows to every project. Clone once, symlink everywhere — every repo gets the same architecture guidance, workflow commands, and language patterns without copy-pasting.
 
-## Commands
+## Quick Start
 
-## Skills
+```bash
+git clone <repo-url> ~/Source/agent-tools   # or wherever you keep repos
+cd ~/Source/agent-tools
+./setup.sh
+```
 
-### Clean Architecture
+`setup.sh` creates symlinks so your tools can find these files:
 
-The `clean-architecture` skill defines language-agnostic project guidelines, processes, and workflow for developing
-projects.
+| Target | Skills | Commands |
+|--------|--------|----------|
+| `~/.claude/` | `skills/` | `commands/` (nested) |
+| `~/.factory/` | `skills/` | `factory-commands/` (flattened, because Factory.ai doesn't support folder namespacing) |
 
-### Spec
+Re-run `setup.sh` after pulling new changes — it's idempotent.
 
-The `spec` skill defines a language-agnostic workflow for planning and executing project work items, optionally using
-a project management tool like Linear, or Jira.
+## What's Included
 
-### C# Patterns
+### Skills — Reusable Knowledge Modules
 
-The `csharp-patterns` skill provides best practices, patterns, and idioms for C# language projects.
+Skills are context-aware reference material that Claude loads on demand via `@skill-name`.
 
-### Python Patterns
+| Skill | Purpose |
+|-------|---------|
+| **workflow-guide** | Core philosophy — vertical slicing, session continuity, P1/P2/P3 prioritization, and the 10-command workflow |
+| **clean-architecture** | Language-agnostic Clean Architecture with the Dependency Rule, layer patterns, and per-language guides (Python, TypeScript, C#, Rust) |
+| **code-patterns** | Language-specific best practices — type safety, error handling, testing idioms, and framework conventions |
+| **testing** | Strategy selection (TDD, spec-first, property-based, contract, characterization), Red-Green-Refactor, and AI-specific anti-patterns |
+| **logging** | Structured logging standards — required fields, context propagation, and level guidelines |
+| **12-factor-apps** | Twelve-Factor methodology for building deployment-ready services |
+| **use-browser** | Browser automation patterns using the agent-browser CLI |
 
-The `python-patterns` skill provides best practices, patterns, and idioms for Python language projects.
+### Commands — Executable Workflows
 
-### Typescript Patterns
+Commands are invoked with `/command-name` in Claude Code (or Factory.ai).
 
-The `typescript-patterns` skill provides best practices, patterns, and idioms for Typescript language projects.
+#### Workflow Commands
+
+| Command | Purpose |
+|---------|---------|
+| `/workflow:refine` | Discover and refine requirements through guided conversation |
+| `/workflow:plan` | Create implementation plans from requirements with approval gates |
+| `/workflow:execute` | Session-based work execution with progress tracking |
+| `/workflow:review` | Code review for PRs, git ranges, files, or uncommitted changes |
+| `/workflow:compound` | Capture knowledge from solved problems to compound effectiveness |
+| `/workflow:audit-tests` | Audit test suite quality, anti-patterns, and coverage gaps |
+| `/workflow:audit-code` | Audit production code against code-patterns, clean-architecture, and logging standards |
+| `/workflow:audit-docs` | Audit documentation for presence, accuracy, and completeness |
+| `/workflow:audit-api` | Audit API surface — REST conventions, schema quality, security |
+| `/workflow:audit-frontend` | Audit frontend code — accessibility, components, performance, state |
+
+#### Git Commands
+
+| Command | Purpose |
+|---------|---------|
+| `/git:commit` | Create a well-formed commit |
+| `/git:commit-push` | Commit and push |
+| `/git:commit-pr` | Commit, push, and open a PR |
+
+## Project Structure
+
+```
+agent-tools/
+├── skills/                          # Reusable knowledge modules (@skill-name)
+│   ├── workflow-guide/              # Core workflow philosophy + planning templates
+│   ├── clean-architecture/          # CA principles, language guides, examples
+│   ├── code-patterns/               # Language-specific patterns (Python, TS, C#, Rust)
+│   ├── testing/                     # Strategy selection + reference material
+│   ├── logging/                     # Structured logging standards
+│   ├── 12-factor-apps/              # Twelve-Factor methodology
+│   └── use-browser/                 # Browser automation
+├── commands/                        # Executable workflows (/command-name)
+│   ├── workflow/                    # 10 workflow commands
+│   └── git/                         # 3 git commands
+├── factory-commands/                # Auto-generated flattened commands for Factory.ai
+├── setup.sh                         # Symlink installer
+└── README.md
+```
+
+## Design Principles
+
+**Vertical Slicing** — Build complete features end-to-end, not layer by layer. Every plan breaks work into thin, deliverable slices.
+
+**Bottom-Up Implementation** — Domain first, then Infrastructure, Application, and finally Framework. Pure business logic before I/O.
+
+**Session Continuity** — State persists in `./planning/<project>/session-state.md` so work resumes across sessions without losing context.
+
+**Knowledge Compounding** — Solutions are captured and reused. `/workflow:compound` turns solved problems into team knowledge.
+
+**P1/P2/P3 Prioritization** — Every plan, review, and audit uses the same priority framework: P1 (must-have), P2 (should-have), P3 (nice-to-have).
+
+## Attribution
+
+Much of the content here draws from techniques, patterns, and guides shared freely by others in the community. I've adapted and integrated them into a cohesive workflow that fits the way I work. Where a skill is based on or inspired by someone else's work, the corresponding `SKILL.md` includes a reference to the original author.

@@ -6,21 +6,21 @@ This guide explains how to add support for a new programming language to the Cle
 
 ## Directory Structure
 
-Each language implementation should follow this structure:
+Each language implementation lives in its own directory under `languages/`:
 
 ```
 languages/
 └── {language}/
-    ├── guide.md           # Language-specific patterns and idioms
-    ├── examples.md        # Complete code examples
-    └── validators/        # (Optional) Validation scripts
+    ├── guide.md           # Required — language-specific patterns and idioms
+    ├── examples.md        # Optional — complete code examples
+    └── validators/        # Optional — validation scripts
         ├── validate_imports.{ext}
         └── validate_structure.{ext}
 ```
 
 ## Required Files
 
-### 1. guide.md
+### 1. guide.md (Required)
 
 The main guide should cover:
 
@@ -34,18 +34,18 @@ The main guide should cover:
 - **Tool Integration**: Linters, formatters, type checkers
 - **Common Pitfalls**: Language-specific issues to avoid
 
-### 2. examples.md
+### 2. examples.md (Optional)
 
-Provide at least one complete feature example showing:
+A complete feature example showing:
 
 - All four layers implemented
 - Proper dependency flow
 - Testing at each layer
 - Language idioms and best practices
 
-### 3. validators/ (Optional but Recommended)
+### 3. validators/ (Optional)
 
-Create validation scripts that check:
+Validation scripts that check:
 
 - **Import validation**: Dependencies flow inward
 - **Structure validation**: Files in appropriate layers
@@ -160,12 +160,12 @@ After adding a language, update these files:
 
 Currently supported languages:
 
-- **Python**: Full implementation with validators
-- **TypeScript**: Full implementation with NestJS, Next.js patterns
-- **C#**: Full implementation with ASP.NET Core patterns
-- **Rust**: Full implementation with Axum and Tauri patterns
-- **Go**: (Community contribution welcome)
-- **Java**: (Community contribution welcome)
+| Language | guide.md | examples.md | validators/ |
+|----------|----------|-------------|-------------|
+| **Python** | Yes | Yes | Yes |
+| **TypeScript** | Yes | — | — |
+| **C#** | Yes | — | — |
+| **Rust** | Yes | — | — |
 
 ## Guidelines for Language Implementations
 
@@ -214,70 +214,10 @@ validators/
 └── run_all.sh                # Run all validators
 ```
 
-## Contributing a New Language
+## Adding a New Language
 
-1. Fork the repository
-2. Create branch: `add-{language}-support`
-3. Follow this guide to add language
-4. Test thoroughly
-5. Submit pull request with:
-   - Language implementation
-   - Example code
-   - Validation scripts (if applicable)
-   - Updated documentation
+1. Create `languages/{language}/guide.md` following the template in Step 2 above
+2. Update `SKILL.md` to add the language to the supported list
+3. Optionally add `examples.md` and `validators/` (see Python for reference)
 
-## Questions?
-
-For questions about adding language support:
-- Review existing implementations (Python is most complete)
-- Check language-specific Clean Architecture resources
-- Ask in discussions/issues
-
-## Language-Specific Resources
-
-### General
-- "Clean Architecture" by Robert C. Martin (language-agnostic)
-- "Domain-Driven Design" by Eric Evans (language-agnostic)
-
-### Python
-- "Architecture Patterns with Python" by Percival & Gregory
-- "Clean Architectures in Python" by Leonardo Giordani
-
-### JavaScript/TypeScript
-- "Node.js Design Patterns" by Casciaro & Mammino
-- TypeScript documentation on interfaces and types
-
-### C#/.NET
-- "Dependency Injection in .NET" by Mark Seemann
-- Microsoft's Clean Architecture template
-
-### Java
-- "Clean Architecture with Spring Boot"
-- Java EE patterns and best practices
-
-### Go
-- "Clean Architecture in Go" articles
-- Go interfaces and struct embedding patterns
-
-### Rust
-- "Rust Design Patterns"
-- Trait-based architecture patterns
-
-## Template Files
-
-Use these as starting points:
-
-### Minimal Implementation
-
-1. Copy the structure from Python
-2. Adapt syntax to your language
-3. Follow language conventions
-4. Add language-specific patterns
-
-### Complete Implementation
-
-1. All files from minimal
-2. Add validators
-3. Add multiple examples
-4. Add troubleshooting section
-5. Add migration guide from other architectures
+The Python implementation is the most complete reference — start there when adding a new language.
