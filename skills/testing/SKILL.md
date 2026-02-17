@@ -68,6 +68,22 @@ A well-named test suite is the most accurate documentation of your system's beha
 "sets _validated flag to true"
 ```
 
+### Respect Static Guarantees
+
+Don't write tests for what the type system already guarantees, nor the linter.
+
+Type systems enforce nullability, type correctness, exhaustive matching, and required fields at compile time. Linters enforce style, unused variables, complexity, and import ordering. Writing runtime tests for these properties adds noise, slows suites, and creates false maintenance burden — all without catching a single real bug.
+
+Focus test energy on **behavior the compiler can't verify**:
+
+- Business rules and domain invariants
+- State transitions and temporal ordering
+- Integration correctness across system boundaries
+- Data integrity when crossing serialization/network/storage boundaries
+- Race conditions and concurrency behavior
+
+**The boundary test:** If removing your test and introducing the bug it guards against would cause a **compile error or lint failure**, the test is redundant. Delete it and spend that effort on a behavioral test instead.
+
 ### AI-Specific Discipline
 
 When generating tests, agents face unique failure modes that human developers don't. Guard against:
@@ -223,6 +239,46 @@ If you're mocking a class you own and that lives in the same system, you're prob
 ### Over-Testing Getters and Setters
 
 Simple property access doesn't need dedicated tests. If a getter returns a value set by the constructor, that's tested implicitly through behavior tests.
+
+### Duplicating Static Guarantees
+
+Tests that verify properties already enforced by the compiler or linter:
+
+```
+// Anti-pattern: testing that a function rejects the wrong type
+test "rejects non-string title":
+  result = createTask(title: 42)       // compiler already prevents this
+
+// Anti-pattern: testing that a required field exists
+test "task has an id after construction":
+  task = Task(title: "Buy groceries")
+  assert task.id is not null            // type system guarantees non-null id
+
+// Anti-pattern: testing exhaustive matching
+test "handles all status values":
+  for status in [Active, Archived, Deleted]:
+    formatStatus(status)                // compiler enforces exhaustive match
+
+// Anti-pattern: testing code formatting
+test "functions use camelCase naming":
+  // linter already enforces this
+```
+
+**Better: test the behavior around the same code:**
+
+```
+test "task id is unique across multiple creations":
+  task1 = createTask(title: "First")
+  task2 = createTask(title: "Second")
+  assert task1.id != task2.id           // uniqueness is a business rule, not a type guarantee
+
+test "archived tasks are excluded from active list":
+  task = createTask(title: "Buy groceries")
+  archive(task)
+  assert task not in listActiveTasks()  // state transition behavior the compiler can't verify
+```
+
+**Why agents do this:** When generating tests for high coverage, agents gravitate toward easy-to-write assertions that verify structural properties. These feel productive but test the toolchain, not the system.
 
 ### Testing Private Methods
 

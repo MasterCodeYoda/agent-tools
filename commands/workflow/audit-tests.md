@@ -62,6 +62,7 @@ Spawn 2 parallel agents that read test files:
 - Assertion strength scoring (level 0-5 per test, flag level 0-2)
 - Test naming quality (behavioral spec vs. method name)
 - Single-behavior-per-test compliance
+- Static guarantee duplication (tests that verify type correctness, nullability, exhaustive matching, or lint rules already enforced by the compiler/linter)
 - Arrange-Act-Assert structure clarity
 
 **mock-boundary-checker** — References @testing (`references/mocking-and-contracts.md`):
@@ -96,6 +97,7 @@ Spawn 2 parallel agents that read test files:
 - Flag missing edge cases (empty inputs, boundary values, error paths)
 - Assess refactoring resilience ("would renaming a private method break tests?")
 - Evaluate "Would this test catch a subtle bug introduced by someone else?"
+- Static guarantee waste ("are tests spending effort verifying properties the type system or linter already enforce?")
 - Suggest strategy improvements (e.g., "this parser would benefit from property-based testing")
 
 ## Output: Prioritized Report
@@ -127,7 +129,7 @@ Present findings using the same P1/P2/P3 structure as `/workflow:review`:
 [Assertion-free tests, tautological tests — these create false confidence]
 
 #### P2 — Important (Tests That Under-Test)
-[Weak assertions, boundary mocking violations, missing edge cases]
+[Weak assertions, static guarantee duplication, boundary mocking violations, missing edge cases]
 
 #### P3 — Suggestions (Tests That Could Be Better)
 [Naming improvements, strategy recommendations, structural suggestions]
