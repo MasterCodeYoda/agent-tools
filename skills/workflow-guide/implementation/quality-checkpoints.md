@@ -194,7 +194,7 @@ You may have batched commits if:
     Unit    (70%) - Domain, use cases
 ```
 
-For testing methodology and strategy selection, see @testing.
+For testing methodology and strategy selection, see @test-strategy.
 
 ### Coverage Floors and Quality Verification
 
@@ -207,7 +207,7 @@ Coverage is a **floor** (find untested code), not a goal. Use quality verificati
 | Infrastructure | 60% | Integration completeness — all repository paths exercised |
 | Framework | 50% | E2E happy path — critical user journeys covered |
 
-See @testing (`references/test-quality.md`) for mutation testing tools and the sabotage test technique.
+See @test-strategy (`references/test-quality.md`) for mutation testing tools and the sabotage test technique.
 
 ## Pre-Commit Checklist
 

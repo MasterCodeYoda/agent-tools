@@ -58,7 +58,7 @@ While we plan **top-down** (user story → layers), we implement **bottom-up**:
 
 This order ensures each layer depends only on layers below it.
 
-Testing integrates naturally with bottom-up implementation: write tests for each layer as you build it upward. See @testing for strategy selection.
+Testing integrates naturally with bottom-up implementation: write tests for each layer as you build it upward. See @test-strategy for strategy selection.
 
 ## The Ten Commands
 
@@ -112,7 +112,7 @@ execution. After approval, the user chooses: save the plan only, or save and pro
 - Three-tier analysis (static, dynamic, heuristic)
 - Prioritized findings (P1/P2/P3)
 - Auto-detects test framework and quality tools
-- References @testing skill criteria
+- References @test-strategy skill criteria
 
 **When to use**: Onboarding to a codebase, after AI-generated test push, periodic health check
 
@@ -327,7 +327,7 @@ For detailed templates and patterns, reference these sections:
 
 ### Implementation Phase
 - `implementation/quality-checkpoints.md` - Per-layer quality gates
-- `@testing` - Testing strategy, TDD, property-based testing, contracts, and test quality
+- `@test-strategy` - Testing strategy, TDD, property-based testing, contracts, and test quality
 
 ### PM Integration
 - `planning/pm-integration.md` - Linear, Jira, and manual workflow guides

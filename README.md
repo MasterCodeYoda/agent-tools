@@ -30,7 +30,7 @@ Skills are context-aware reference material that Claude loads on demand via `@sk
 | **workflow-guide** | Core philosophy — vertical slicing, session continuity, P1/P2/P3 prioritization, and the 10-command workflow |
 | **clean-architecture** | Language-agnostic Clean Architecture with the Dependency Rule, layer patterns, and per-language guides (Python, TypeScript, C#, Rust) |
 | **code-patterns** | Language-specific best practices — type safety, error handling, testing idioms, and framework conventions |
-| **testing** | Strategy selection (TDD, spec-first, property-based, contract, characterization), Red-Green-Refactor, and AI-specific anti-patterns |
+| **test-strategy** | Strategy selection (TDD, spec-first, property-based, contract, characterization), Red-Green-Refactor, and AI-specific anti-patterns |
 | **logging** | Structured logging standards — required fields, context propagation, and level guidelines |
 | **12-factor-apps** | Twelve-Factor methodology for building deployment-ready services |
 | **use-browser** | Browser automation patterns using the agent-browser CLI |
@@ -70,7 +70,7 @@ agent-tools/
 │   ├── workflow-guide/              # Core workflow philosophy + planning templates
 │   ├── clean-architecture/          # CA principles, language guides, examples
 │   ├── code-patterns/               # Language-specific patterns (Python, TS, C#, Rust)
-│   ├── testing/                     # Strategy selection + reference material
+│   ├── test-strategy/               # Strategy selection + reference material
 │   ├── logging/                     # Structured logging standards
 │   ├── 12-factor-apps/              # Twelve-Factor methodology
 │   └── use-browser/                 # Browser automation

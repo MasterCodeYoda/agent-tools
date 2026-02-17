@@ -1,5 +1,5 @@
 ---
-name: testing
+name: test-strategy
 description: Testing strategy for agents. Covers strategy selection (TDD, spec-first, property-based, contract, characterization), Red-Green-Refactor, tracer bullet testing, behavior-driven test design, mocking, property testing, and test quality verification. Language-agnostic with AI-specific anti-patterns.
 ---
 

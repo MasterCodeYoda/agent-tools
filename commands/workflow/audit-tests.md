@@ -1,12 +1,12 @@
 ---
 name: workflow:audit-tests
-description: Audit an existing test suite for quality, anti-patterns, and coverage gaps using the @testing skill framework
+description: Audit an existing test suite for quality, anti-patterns, and coverage gaps using the @test-strategy skill framework
 argument-hint: "[directory path, file glob, or 'all']"
 ---
 
 # Test Suite Audit
 
-Examine an existing test suite against @testing principles and produce prioritized, actionable findings.
+Examine an existing test suite against @test-strategy principles and produce prioritized, actionable findings.
 
 ## User Input
 
@@ -54,7 +54,7 @@ Based on auto-detection, prompt user for scope confirmation:
 
 Spawn 2 parallel agents that read test files:
 
-**assertion-analyst** — References @testing (`references/test-quality.md`, `references/test-design.md`):
+**assertion-analyst** — References @test-strategy (`references/test-quality.md`, `references/test-design.md`):
 - Assertion-free tests (no `assert`/`expect`/`should` statements)
 - Weak assertions (truthiness-only: `assert result`, `expect(x).toBeTruthy()`)
 - Computed expected values (`assert double(5) == 5 * 2` instead of `== 10`)
@@ -65,7 +65,7 @@ Spawn 2 parallel agents that read test files:
 - Static guarantee duplication (tests that verify type correctness, nullability, exhaustive matching, or lint rules already enforced by the compiler/linter)
 - Arrange-Act-Assert structure clarity
 
-**mock-boundary-checker** — References @testing (`references/mocking-and-contracts.md`):
+**mock-boundary-checker** — References @test-strategy (`references/mocking-and-contracts.md`):
 - Internal collaborator mocking (same-system classes mocked instead of using real)
 - Boundary identification (which mocks are at real boundaries vs. internal)
 - Mock-to-real ratio (flag files with > 50% mocked dependencies)
@@ -74,7 +74,7 @@ Spawn 2 parallel agents that read test files:
 
 ### Tier 2 — Dynamic Analysis (auto-detect: runs if tools found, suite is manageable)
 
-**coverage-analyst** — References @testing (`references/test-quality.md`):
+**coverage-analyst** — References @test-strategy (`references/test-quality.md`):
 - Run test suite with coverage
 - Measure against layer-appropriate floors:
   - Domain: 85%, Application: 75%, Infrastructure: 60%, Framework: 50%
@@ -91,7 +91,7 @@ Spawn 2 parallel agents that read test files:
 
 ### Tier 3 — Heuristic Analysis (AI judgment)
 
-**behavior-coverage-reviewer** — References @testing (SKILL.md philosophy + `references/test-design.md`):
+**behavior-coverage-reviewer** — References @test-strategy (SKILL.md philosophy + `references/test-design.md`):
 - Read test + production code side-by-side for the scoped area
 - Identify behaviors tested vs. behaviors present
 - Flag missing edge cases (empty inputs, boundary values, error paths)
@@ -167,6 +167,6 @@ During execution, if an audit was recently run, reference its findings for the a
 
 If audit reveals a recurring pattern worth documenting, offer compound.
 
-### With @testing
+### With @test-strategy
 
-All agent prompts reference specific sections of the @testing skill as their criteria source. This command is the active counterpart to the skill's passive guidance.
+All agent prompts reference specific sections of the @test-strategy skill as their criteria source. This command is the active counterpart to the skill's passive guidance.
