@@ -1,13 +1,16 @@
 {
   "permissions": {
     "allow": [
-      "Bash(wc:*)",
       "Bash(./setup.sh:*)",
       "Bash(git commit:*)",
       "Bash(git diff:*)",
       "Bash(git log:*)",
       "Bash(git push)",
-      "Bash(git status:*)"
+      "Bash(git rm:*)",
+      "Bash(git status:*)",
+      "Bash(ln:*)",
+      "Bash(wc:*)",
+      "mcp__chrome-devtools__take_snapshot"
     ],
     "deny": [],
     "ask": []

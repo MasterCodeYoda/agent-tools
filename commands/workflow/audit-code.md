@@ -26,6 +26,7 @@ Parse input to determine audit scope:
 | `all` or empty | Full codebase | Auto-detect project structure, audit everything (prompt if large) |
 | `--layer domain` | Architectural layer | Audit that layer (requires `@clean-architecture` context) |
 | `--recent 7d` | Recent changes | Audit files modified in last N days |
+| `--diff main` | Changed files | Audit files changed vs. specified branch |
 
 ## Auto-Detection Phase
 
@@ -165,6 +166,25 @@ Present findings using the same P1/P2/P3 structure as `/workflow:review`:
 | Performance hotspots | N | [ok/warning] |
 | Performance anti-patterns | N | [ok/warning] |
 
+### Health Score
+
+Calculate from findings:
+- Start at 100
+- Each P1: -12 points
+- Each P2: -4 points
+- Each P3: -1 point
+- Floor: 0
+
+| Score Range | Label |
+|-------------|-------|
+| 90-100 | Excellent |
+| 75-89 | Good |
+| 60-74 | Fair |
+| 40-59 | Needs Work |
+| 0-39 | Critical |
+
+**Score: [N]/100 — [Label]**
+
 ### Findings
 
 #### P1 — Critical (Architectural / Security Violations)
@@ -217,6 +237,14 @@ If P1 architectural issues are found, use refine to design a refactoring approac
 
 If audit reveals a recurring anti-pattern fix worth documenting, offer compound.
 
+### With /workflow:audit-repo
+
+audit-code examines production code quality; audit-repo examines repository infrastructure (CI/CD, branch protection, agent docs). They are complementary — repo infrastructure enables code quality enforcement.
+
 ### With @code-patterns, @clean-architecture, @logging
 
 All agent prompts reference specific sections of these skills as their criteria source. This command is the active counterpart to those skills' passive guidance.
+
+## References
+
+- [react-doctor](https://github.com/millionco/react-doctor) — Health scoring concept adapted from this React diagnostic CLI

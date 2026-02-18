@@ -160,6 +160,18 @@ execution. After approval, the user chooses: save the plan only, or save and pro
 
 **When to use**: Onboarding to a codebase, pre-release quality gate, periodic health check
 
+### /workflow:audit-repo
+**Purpose**: Audit repository readiness for autonomous AI agent coding
+
+**Key features**:
+- Three-tier analysis (static, dynamic, heuristic)
+- Prioritized findings (P1/P2/P3)
+- Code Factory 10-point alignment assessment
+- Checks CI/CD, review automation, risk management, agent docs, security posture
+- Visual report card with 0-100 readiness score and letter grade
+
+**When to use**: Onboarding to a codebase, setting up agent workflows, periodic infrastructure health check
+
 ### /workflow:compound
 **Purpose**: Capture knowledge from solved problems
 

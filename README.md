@@ -53,6 +53,7 @@ Commands are invoked with `/command-name` in Claude Code (or Factory.ai).
 | `/workflow:audit-docs` | Audit documentation for presence, accuracy, and completeness |
 | `/workflow:audit-api` | Audit API surface — REST conventions, schema quality, security |
 | `/workflow:audit-frontend` | Audit frontend code — accessibility, components, performance, state |
+| `/workflow:audit-repo` | Audit repository readiness for autonomous AI agent coding — CI/CD, review automation, security |
 
 #### Git Commands
 

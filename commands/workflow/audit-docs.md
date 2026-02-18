@@ -27,6 +27,8 @@ Parse input to determine audit scope:
 | `--type api` | API docs | Audit OpenAPI/Swagger/GraphQL schemas |
 | `--type planning` | Planning docs | Audit `./planning/*/` files |
 | `--type inline` | Code docs | Audit docstrings, JSDoc, XML comments |
+| `--recent 7d` | Recent changes | Audit files modified in last N days |
+| `--diff main` | Changed files | Audit files changed vs. specified branch |
 
 ## Auto-Detection Phase
 
@@ -128,6 +130,25 @@ Present findings using the same P1/P2/P3 structure as `/workflow:review`:
 | Stale examples | N | [ok/warning/critical] |
 | Code-doc alignment | [aligned/drift] | [ok/warning/critical] |
 
+### Health Score
+
+Calculate from findings:
+- Start at 100
+- Each P1: -12 points
+- Each P2: -4 points
+- Each P3: -1 point
+- Floor: 0
+
+| Score Range | Label |
+|-------------|-------|
+| 90-100 | Excellent |
+| 75-89 | Good |
+| 60-74 | Fair |
+| 40-59 | Needs Work |
+| 0-39 | Critical |
+
+**Score: [N]/100 — [Label]**
+
 ### Findings
 
 #### P1 — Critical (Docs That Mislead)
@@ -176,6 +197,14 @@ Validate compound solution output quality — ensure documented solutions are cl
 
 Validate requirements and plan structure against documentation standards.
 
+### With /workflow:audit-repo
+
+audit-docs evaluates documentation quality and accuracy; audit-repo checks that documentation infrastructure exists (README, CONTRIBUTING, ADRs, agent docs).
+
 ### With @clean-architecture
 
 Architecture review documentation standards inform what docs should exist and how they should be structured.
+
+## References
+
+- [react-doctor](https://github.com/millionco/react-doctor) — Health scoring concept adapted from this React diagnostic CLI

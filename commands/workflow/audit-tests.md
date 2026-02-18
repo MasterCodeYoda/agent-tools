@@ -25,6 +25,8 @@ Parse input to determine audit scope:
 | `*.test.ts` or `*_test.py` | File glob | Audit matching files |
 | `all` or empty | Full suite | Auto-detect test framework, audit everything (prompt if large) |
 | `--layer domain` | Architectural layer | Audit tests for that layer (requires `@clean-architecture` context) |
+| `--recent 7d` | Recent changes | Audit files modified in last N days |
+| `--diff main` | Changed files | Audit files changed vs. specified branch |
 
 ## Auto-Detection Phase
 
@@ -123,6 +125,25 @@ Present findings using the same P1/P2/P3 structure as `/workflow:review`:
 | Mutation score | X% | [if available] |
 | Mock boundary violations | N | [ok/warning] |
 
+### Health Score
+
+Calculate from findings:
+- Start at 100
+- Each P1: -12 points
+- Each P2: -4 points
+- Each P3: -1 point
+- Floor: 0
+
+| Score Range | Label |
+|-------------|-------|
+| 90-100 | Excellent |
+| 75-89 | Good |
+| 60-74 | Fair |
+| 40-59 | Needs Work |
+| 0-39 | Critical |
+
+**Score: [N]/100 — [Label]**
+
 ### Findings
 
 #### P1 — Critical (Tests That Don't Test)
@@ -167,6 +188,14 @@ During execution, if an audit was recently run, reference its findings for the a
 
 If audit reveals a recurring pattern worth documenting, offer compound.
 
+### With /workflow:audit-repo
+
+audit-tests evaluates test quality and coverage; audit-repo checks that testing infrastructure exists and is properly configured in CI.
+
 ### With @test-strategy
 
 All agent prompts reference specific sections of the @test-strategy skill as their criteria source. This command is the active counterpart to the skill's passive guidance.
+
+## References
+
+- [react-doctor](https://github.com/millionco/react-doctor) — Health scoring concept adapted from this React diagnostic CLI

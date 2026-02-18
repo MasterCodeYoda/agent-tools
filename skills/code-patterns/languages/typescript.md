@@ -1487,6 +1487,56 @@ function InteractiveChart({ data }: InteractiveChartProps) {
 
 ## State Management
 
+### Derived State vs. Reset State
+
+Two distinct patterns for handling data that depends on props. Choosing the wrong one causes subtle bugs.
+
+**Pattern 1: Derived State — Compute Inline**
+
+When a value can be calculated from props/state on every render, compute it directly. Don't store it in state.
+
+```typescript
+// WRONG — storing derived state
+function UserGreeting({ user }: { user: User }) {
+  const [fullName, setFullName] = useState(`${user.first} ${user.last}`);
+  useEffect(() => {
+    setFullName(`${user.first} ${user.last}`);
+  }, [user.first, user.last]);
+  return <h1>Hello, {fullName}</h1>;
+}
+
+// RIGHT — compute inline (or useMemo for expensive calculations)
+function UserGreeting({ user }: { user: User }) {
+  const fullName = `${user.first} ${user.last}`;
+  return <h1>Hello, {fullName}</h1>;
+}
+```
+
+**Pattern 2: Reset State — Use `key` Prop**
+
+When a component has internal state that should **reset** when a prop changes (e.g., switching between items), use the `key` prop to force a full remount.
+
+```typescript
+// WRONG — useEffect to reset state (race conditions, stale renders)
+function CommentEditor({ postId }: { postId: string }) {
+  const [draft, setDraft] = useState('');
+  useEffect(() => { setDraft(''); }, [postId]); // one render with stale draft
+  return <textarea value={draft} onChange={e => setDraft(e.target.value)} />;
+}
+
+// RIGHT — key prop forces clean remount
+function CommentPage({ postId }: { postId: string }) {
+  return <CommentEditor key={postId} postId={postId} />;
+}
+
+function CommentEditor({ postId }: { postId: string }) {
+  const [draft, setDraft] = useState(''); // fresh state per postId
+  return <textarea value={draft} onChange={e => setDraft(e.target.value)} />;
+}
+```
+
+**Decision Rule**: Can you compute it from current props/state? → Derive inline. Does internal state need to reset when a prop changes? → Use `key`.
+
 ### Zustand Store Pattern
 
 ```typescript
@@ -3104,3 +3154,7 @@ src/
 ```
 
 Remember: Prioritize type safety, performance, and maintainability. When in doubt, refer to the main AGENTS.md for project standards.
+
+## References
+
+- [react-doctor Issue #19](https://github.com/millionco/react-doctor/issues/19) — Derived state vs. reset state pattern distinction

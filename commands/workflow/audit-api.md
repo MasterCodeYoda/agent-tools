@@ -26,6 +26,8 @@ Parse input to determine audit scope:
 | `all` or empty | Full project | Auto-detect API type and specs |
 | `--type rest` | REST only | Focus on REST endpoints and OpenAPI |
 | `--type graphql` | GraphQL only | Focus on GraphQL schema and resolvers |
+| `--recent 7d` | Recent changes | Audit files modified in last N days |
+| `--diff main` | Changed files | Audit files changed vs. specified branch |
 
 ## Auto-Detection Phase
 
@@ -137,6 +139,25 @@ Present findings using the same P1/P2/P3 structure as `/workflow:review`:
 | Rate limiting | [present/missing] | [ok/warning/critical] |
 | Breaking changes | N risks | [ok/warning] |
 
+### Health Score
+
+Calculate from findings:
+- Start at 100
+- Each P1: -12 points
+- Each P2: -4 points
+- Each P3: -1 point
+- Floor: 0
+
+| Score Range | Label |
+|-------------|-------|
+| 90-100 | Excellent |
+| 75-89 | Good |
+| 60-74 | Fair |
+| 40-59 | Needs Work |
+| 0-39 | Critical |
+
+**Score: [N]/100 — [Label]**
+
 ### Findings
 
 #### P1 — Critical (Security / Missing Auth)
@@ -196,3 +217,7 @@ Framework layer patterns from `references/layer-patterns.md#frameworks` inform A
 ### With @code-patterns
 
 Language-specific API framework best practices (FastAPI, Express, ASP.NET, Axum) provide the implementation standards that audit-api checks against.
+
+## References
+
+- [react-doctor](https://github.com/millionco/react-doctor) — Health scoring concept adapted from this React diagnostic CLI

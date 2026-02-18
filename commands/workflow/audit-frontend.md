@@ -27,6 +27,8 @@ Parse input to determine audit scope:
 | `--focus a11y` | Accessibility | Accessibility-only audit |
 | `--focus perf` | Performance | Performance-only audit (CWV, bundles) |
 | `--focus security` | Security | Frontend security audit |
+| `--recent 7d` | Recent changes | Audit files modified in last N days |
+| `--diff main` | Changed files | Audit files changed vs. specified branch |
 
 ## Auto-Detection Phase
 
@@ -149,6 +151,25 @@ Present findings using the same P1/P2/P3 structure as `/workflow:review`:
 | Error boundary coverage | X/Y routes | [ok/warning/critical] |
 | Design token compliance | [consistent/drift] | [ok/warning] |
 
+### Health Score
+
+Calculate from findings:
+- Start at 100
+- Each P1: -12 points
+- Each P2: -4 points
+- Each P3: -1 point
+- Floor: 0
+
+| Score Range | Label |
+|-------------|-------|
+| 90-100 | Excellent |
+| 75-89 | Good |
+| 60-74 | Fair |
+| 40-59 | Needs Work |
+| 0-39 | Critical |
+
+**Score: [N]/100 — [Label]**
+
 ### Findings
 
 #### P1 — Critical (Accessibility / Security / Failing CWV)
@@ -204,3 +225,7 @@ TypeScript/React patterns from `languages/typescript.md` inform component standa
 ### With @clean-architecture
 
 Framework layer patterns ensure frontend code doesn't leak into domain/application layers. Frontend components should consume application-layer use cases, not implement business logic.
+
+## References
+
+- [react-doctor](https://github.com/millionco/react-doctor) — Health scoring concept adapted from this React diagnostic CLI
