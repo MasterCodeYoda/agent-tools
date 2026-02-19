@@ -12,10 +12,10 @@ cd ~/Source/agent-tools
 
 `setup.sh` creates symlinks so your tools can find these files:
 
-| Target | Skills | Commands | Hooks |
-|--------|--------|----------|-------|
-| `~/.claude/` | `skills/` | `commands/` (nested) | `hooks/` |
-| `~/.factory/` | `skills/` | `factory-commands/` (flattened, because Factory.ai doesn't support folder namespacing) | `hooks/` |
+| Target | Skills | Commands |
+|--------|--------|----------|
+| `~/.claude/` | `skills/` | `commands/` (nested) |
+| `~/.factory/` | `skills/` | `factory-commands/` (flattened, because Factory.ai doesn't support folder namespacing) |
 
 Re-run `setup.sh` after pulling new changes — it's idempotent.
 
@@ -64,14 +64,6 @@ Commands are invoked with `/command-name` in Claude Code (or Factory.ai).
 | `/git:commit-push` | Commit and push |
 | `/git:commit-pr` | Commit, push, and open a PR |
 
-### Hooks — Lifecycle Automation
-
-Hooks are shell scripts that run at specific points in the Claude Code lifecycle. They require manual registration in `~/.claude/settings.json`.
-
-| Hook | Purpose |
-|------|---------|
-| **taskmaster** | Stop hook — prevents premature stopping by scanning for incomplete tasks and errors, with loop protection |
-
 ## Project Structure
 
 ```
@@ -88,8 +80,6 @@ agent-tools/
 ├── commands/                        # Executable workflows (/command-name)
 │   ├── workflow/                    # 10 workflow commands
 │   └── git/                         # 3 git commands
-├── hooks/                           # Lifecycle hooks (require manual registration)
-│   └── taskmaster/                  # Stop hook — prevents premature stopping
 ├── factory-commands/                # Auto-generated flattened commands for Factory.ai
 ├── setup.sh                         # Symlink installer
 └── README.md

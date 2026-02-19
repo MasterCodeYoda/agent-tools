@@ -90,6 +90,7 @@ execution. After approval, the user chooses: save the plan only, or save and pro
 - Session state persistence
 - TodoWrite integration
 - Quality checkpoints
+- Completion verification before stopping
 - Compound prompts at boundaries
 
 **When to use**: Implementing planned work

@@ -245,6 +245,36 @@ Keep the plan file updated as you work:
 
 Update session-state.md after each significant milestone.
 
+## Completion Verification
+
+Before stopping or generating a handoff, run this self-check to catch unfinished work.
+
+### When to Run
+
+- All tasks appear done and you're about to generate a handoff
+- You believe the session's work is complete
+- You're about to stop working for any reason during active execution
+
+### When NOT to Run
+
+- User explicitly said "stop" or "that's enough"
+- Session was a simple question with no plan or tasks
+- Planning-only or review-only session (no implementation work)
+
+### Checklist
+
+1. **Re-read original requests** — Compare what was asked for against what was delivered. Any gaps?
+2. **Check task list** — Are all TodoWrite items marked complete? Any left in_progress?
+3. **Check plan checkboxes** — Are all targeted plan items checked off in the implementation plan?
+4. **Check for errors** — Did the last test run pass? Any linting or type errors outstanding?
+5. **Check for loose ends** — Any TODO comments you wrote during this session? Files half-edited? Commits not pushed when they should be?
+
+### After Verification
+
+- **If finishable work remains**: Do it now, then re-run this checklist.
+- **If genuinely done**: Proceed to session handoff.
+- **If blocked on something you can't resolve**: Document the blocker in session state and proceed to handoff.
+
 ## Session Boundaries
 
 ### Detecting Boundary Conditions
@@ -259,6 +289,10 @@ Check for session end when:
 ### Session Handoff Protocol
 
 When reaching a session boundary:
+
+#### 0. Completion Verification
+
+Run the Completion Verification checklist (above) before starting handoff. If finishable work remains, do it now.
 
 #### 1. Update Session State
 
@@ -442,6 +476,7 @@ Provide complete handoff for next session:
 
 ## Definition of Done (Per Session)
 
+- [ ] Completion Verification checklist passed
 - [ ] All targeted tasks complete or documented
 - [ ] Session state updated
 - [ ] Work committed

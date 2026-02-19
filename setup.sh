@@ -7,7 +7,6 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 SKILLS_SOURCE="${SCRIPT_DIR}/skills"
 COMMANDS_SOURCE="${SCRIPT_DIR}/commands"
 FACTORY_COMMANDS_SOURCE="${SCRIPT_DIR}/factory-commands"
-HOOKS_SOURCE="${SCRIPT_DIR}/hooks"
 
 # Define target directories
 CLAUDE_DIR="${HOME}/.claude"
@@ -123,9 +122,6 @@ fi
 echo "Source directories:"
 echo "  Skills:   $SKILLS_SOURCE"
 echo "  Commands: $COMMANDS_SOURCE"
-if [ -d "$HOOKS_SOURCE" ]; then
-    echo "  Hooks:    $HOOKS_SOURCE"
-fi
 echo
 
 # Create symlinks for ~/.claude
@@ -144,14 +140,6 @@ create_symlink "$SKILLS_SOURCE" "${FACTORY_DIR}/skills"
 create_symlink "$FACTORY_COMMANDS_SOURCE" "${FACTORY_DIR}/commands"
 echo
 
-# Create symlinks for hooks (optional — hooks dir may not exist)
-if [ -d "$HOOKS_SOURCE" ]; then
-    echo "Setting up hooks symlinks..."
-    create_symlink "$HOOKS_SOURCE" "${CLAUDE_DIR}/hooks"
-    create_symlink "$HOOKS_SOURCE" "${FACTORY_DIR}/hooks"
-    echo
-fi
-
 echo "========================================="
 echo -e "${GREEN}Setup complete!${NC}"
 echo "========================================="
@@ -161,9 +149,3 @@ echo "  ~/.claude/skills -> $SKILLS_SOURCE"
 echo "  ~/.claude/commands -> $COMMANDS_SOURCE"
 echo "  ~/.factory/skills -> $SKILLS_SOURCE"
 echo "  ~/.factory/commands -> $FACTORY_COMMANDS_SOURCE (flattened)"
-if [ -d "$HOOKS_SOURCE" ]; then
-    echo "  ~/.claude/hooks -> $HOOKS_SOURCE"
-    echo "  ~/.factory/hooks -> $HOOKS_SOURCE"
-    echo
-    echo -e "${YELLOW}Note:${NC} Hooks require manual registration in ~/.claude/settings.json"
-fi
