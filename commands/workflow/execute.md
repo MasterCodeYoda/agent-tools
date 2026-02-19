@@ -390,6 +390,12 @@ Provide complete handoff for next session:
 2. If complex, create TODO in session state
 3. Do not move to next task with failing tests
 
+### If Approach Diverges
+1. **Stop immediately** — do not push further down a failing path
+2. Document what diverged and why in session state
+3. Re-plan: run `/workflow:plan` with the new context
+4. Resume execution from the revised plan
+
 ### If Blocked
 1. Document blocker in session state
 2. Create task for resolution

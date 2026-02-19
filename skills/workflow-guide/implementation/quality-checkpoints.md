@@ -103,6 +103,7 @@ Verify each layer and complete vertical slice meets standards.
 - [ ] Linting passes
 - [ ] No new warnings
 - [ ] Code follows patterns
+- [ ] Behavioral diff against main confirms only expected changes (when relevant)
 
 ## Slice Completion Protocol
 
@@ -229,6 +230,7 @@ Before marking complete, ask:
 3. Are edge cases handled?
 4. Is the code maintainable?
 5. Does it follow team patterns?
+6. For non-trivial changes, is there a simpler, more elegant approach?
 
 ## When Quality Can't Be Met
 

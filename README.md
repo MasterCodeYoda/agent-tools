@@ -12,10 +12,10 @@ cd ~/Source/agent-tools
 
 `setup.sh` creates symlinks so your tools can find these files:
 
-| Target | Skills | Commands |
-|--------|--------|----------|
-| `~/.claude/` | `skills/` | `commands/` (nested) |
-| `~/.factory/` | `skills/` | `factory-commands/` (flattened, because Factory.ai doesn't support folder namespacing) |
+| Target | Skills | Commands | Hooks |
+|--------|--------|----------|-------|
+| `~/.claude/` | `skills/` | `commands/` (nested) | `hooks/` |
+| `~/.factory/` | `skills/` | `factory-commands/` (flattened, because Factory.ai doesn't support folder namespacing) | `hooks/` |
 
 Re-run `setup.sh` after pulling new changes — it's idempotent.
 
@@ -34,6 +34,7 @@ Skills are context-aware reference material that Claude loads on demand via `@sk
 | **logging** | Structured logging standards — required fields, context propagation, and level guidelines |
 | **12-factor-apps** | Twelve-Factor methodology for building deployment-ready services |
 | **use-browser** | Browser automation patterns using the agent-browser CLI |
+| **visual-design** | 73 visual design micro-patterns from [detail.design](https://detail.design) — motion, accessibility, typography, and interaction details |
 
 ### Commands — Executable Workflows
 
@@ -63,6 +64,14 @@ Commands are invoked with `/command-name` in Claude Code (or Factory.ai).
 | `/git:commit-push` | Commit and push |
 | `/git:commit-pr` | Commit, push, and open a PR |
 
+### Hooks — Lifecycle Automation
+
+Hooks are shell scripts that run at specific points in the Claude Code lifecycle. They require manual registration in `~/.claude/settings.json`.
+
+| Hook | Purpose |
+|------|---------|
+| **taskmaster** | Stop hook — prevents premature stopping by scanning for incomplete tasks and errors, with loop protection |
+
 ## Project Structure
 
 ```
@@ -74,10 +83,13 @@ agent-tools/
 │   ├── test-strategy/               # Strategy selection + reference material
 │   ├── logging/                     # Structured logging standards
 │   ├── 12-factor-apps/              # Twelve-Factor methodology
-│   └── use-browser/                 # Browser automation
+│   ├── use-browser/                 # Browser automation
+│   └── visual-design/              # 73 visual design micro-patterns (detail.design)
 ├── commands/                        # Executable workflows (/command-name)
 │   ├── workflow/                    # 10 workflow commands
 │   └── git/                         # 3 git commands
+├── hooks/                           # Lifecycle hooks (require manual registration)
+│   └── taskmaster/                  # Stop hook — prevents premature stopping
 ├── factory-commands/                # Auto-generated flattened commands for Factory.ai
 ├── setup.sh                         # Symlink installer
 └── README.md
