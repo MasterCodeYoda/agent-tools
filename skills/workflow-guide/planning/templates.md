@@ -125,6 +125,21 @@ For larger features composed of multiple stories:
 2. Story 2 - [Reason]
 3. Story 3 - [Reason]
 
+## Parallel Execution Potential
+
+Identify which stories can be worked on concurrently in separate worktrees.
+
+| Group | Stories | Dependencies | Notes |
+|-------|---------|--------------|-------|
+| A (sequential) | Story 1 | None | Must complete first — foundational |
+| B (parallel) | Story 2, Story 3 | Story 1 | Independent after Story 1; can run in separate worktrees |
+
+**Parallel execution prerequisites**:
+- All planning docs must be committed before creating worktrees
+- Stories in the same parallel group must not modify the same files
+- Each parallel session uses: `/workflow:execute --worktree ./planning/<project>/`
+- Merge one branch at a time, running full tests after each merge
+
 ## Success Metrics
 - [ ] Metric 1
 - [ ] Metric 2

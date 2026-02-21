@@ -1,7 +1,7 @@
 ---
 name: workflow:execute
 description: Session-based work execution with progress tracking and knowledge capture
-argument-hint: "[planning directory, plan file, 'continue', or session summary text]"
+argument-hint: "[--worktree] [planning directory, plan file, 'continue', or session summary text]"
 ---
 
 # Session-Based Work Execution
@@ -13,6 +13,28 @@ Execute work plans while maintaining session continuity and capturing knowledge.
 ```text
 $ARGUMENTS
 ```
+
+## Flag Extraction
+
+Before interpreting input, extract the `--worktree` flag if present:
+
+1. **Check for `--worktree`** in `$ARGUMENTS`
+2. If found, set `WORKTREE_MODE=true` and strip `--worktree` from `$ARGUMENTS` before passing to Input Interpretation
+3. If not found, set `WORKTREE_MODE=false`
+
+**Validation** (stop with error if any fail):
+
+- **`--worktree continue` is invalid**: Creating a new worktree for an existing session is nonsensical. Error:
+  ```
+  ERROR: --worktree cannot be used with 'continue'.
+  To resume work in an existing worktree, cd to the worktree directory and run:
+    /workflow:execute continue
+  ```
+- **Already inside a worktree**: If `git rev-parse --show-toplevel` differs from the main repo root (i.e., CWD is already a worktree), error:
+  ```
+  ERROR: Already inside a git worktree. Cannot nest worktrees.
+  Run /workflow:execute without --worktree from this worktree.
+  ```
 
 ## Input Interpretation
 
@@ -108,6 +130,53 @@ ls ./planning/*.md 2>/dev/null
 └── session-state.md
 ```
 
+### 1.5. Enter Worktree (if `WORKTREE_MODE=true`)
+
+If the `--worktree` flag was set during Flag Extraction, create an isolated worktree before loading session state.
+
+**Derive worktree name** from the input:
+- Planning directory `./planning/my-project/` → worktree name `my-project`
+- Issue key `LIN-123` → worktree name `lin-123`
+- Plan file `./planning/auth-feature.md` → worktree name `auth-feature`
+
+**Create worktree**:
+
+```
+EnterWorktree(name: "<worktree-name>")
+```
+
+This creates a worktree at `.claude/worktrees/<worktree-name>/` and switches CWD to it.
+
+**Rename branch** to match naming convention:
+
+The `EnterWorktree` tool auto-generates a branch name that doesn't follow the `<type>/<identifier>` convention. Rename it immediately:
+
+```bash
+# Determine the correct branch name using Branch Naming Convention from @workflow-guide
+# Example: feat/LIN-123 or feat/my-project
+git branch -m <type>/<identifier>
+```
+
+**Validate planning docs exist in worktree**:
+
+```bash
+# Planning docs must have been committed to appear in the worktree
+ls ./planning/ 2>/dev/null
+```
+
+If planning docs are missing, error with:
+```
+ERROR: Planning documents not found in worktree.
+Worktrees branch from HEAD, so planning docs must be committed before using --worktree.
+
+Fix: commit your planning docs first, then retry:
+  git add ./planning/<project>/
+  git commit -m "docs: add planning for <project>"
+  /workflow:execute --worktree ./planning/<project>/
+```
+
+**Record worktree state**: Set `WORKTREE_PATH` to the current working directory for later use in session state and handoff.
+
 ### 2. Load Session State
 
 **If session-state.md exists** (in subfolder or directly in ./planning/):
@@ -130,7 +199,9 @@ ls ./planning/*.md 2>/dev/null
 
 ### 2.5. Ensure Working Branch
 
-Before beginning work, verify the session is on the correct working branch.
+**If worktree was entered in step 1.5**: Skip branch creation — the branch was already created and renamed during worktree setup. Record the branch name in session state and proceed to step 3.
+
+**Otherwise**, verify the session is on the correct working branch:
 
 ```bash
 current=$(git branch --show-current)
@@ -331,6 +402,7 @@ progress:
   percent: [Z%]
 current_layer: [domain|infrastructure|application|framework]
 branch: <type>/<issue-key or description>  # Set during branch creation step
+worktree: <path>  # Only set when using --worktree; absolute path to worktree directory
 last_updated: [timestamp]
 ---
 
@@ -415,6 +487,7 @@ Provide complete handoff for next session:
 ### Current State
 
 - Branch: `feat/ISSUE-123` or `fix/ISSUE-123`
+- Worktree: `<path>` (if using --worktree, otherwise omit)
 - Tests: [passing/failing]
 - Progress: [X%]
 
@@ -435,6 +508,23 @@ Provide complete handoff for next session:
 /workflow:execute ./planning/[project]/
 # Or with this summary:
 /workflow:execute "[paste this summary for context]"
+```
+
+### Worktree Cleanup (if using --worktree)
+
+After merging your branch, clean up the worktree:
+
+```bash
+# From the main repo (not the worktree):
+git worktree remove .claude/worktrees/<worktree-name>
+# Or let Claude prompt for cleanup on session exit
+```
+
+**Merge workflow** (from main repo):
+```bash
+git checkout main
+git merge <branch-name>
+# Run full test suite after merge
 ```
 
 ```

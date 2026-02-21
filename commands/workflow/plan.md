@@ -393,6 +393,33 @@ When the user approves (option 1 or 2), finalize the planning artifacts:
 [PM tool update summary if applicable]
 ```
 
+6. **Parallel execution prompt** (only when the plan has 2+ independent slices/stories):
+
+```markdown
+### Parallel Execution Available
+
+This plan has [N] independent slices that can be executed in parallel using separate worktrees:
+
+| Group | Slices | Can Run In Parallel |
+|-------|--------|---------------------|
+| A | [Slice 1] | Sequential (foundational) |
+| B | [Slice 2, Slice 3] | Yes — after Group A |
+
+**To execute in parallel:**
+
+1. **Commit planning docs first** (required for worktrees):
+   ```bash
+   git add ./planning/[project]/ && git commit -m "docs: add planning for [project]"
+   ```
+2. **Start separate sessions**, each in its own terminal:
+   ```bash
+   /workflow:execute --worktree ./planning/[project]/
+   ```
+3. Each session will create its own worktree and branch automatically.
+
+**Note**: Only use parallel execution when slices are truly independent (don't modify the same files).
+```
+
 **If the user chose "Approve & Save" (option 1)** — stop here. The plan is saved and the user will decide when to
 start execution in their own time. Remind them:
 

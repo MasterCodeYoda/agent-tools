@@ -92,6 +92,7 @@ execution. After approval, the user chooses: save the plan only, or save and pro
 - Quality checkpoints
 - Completion verification before stopping
 - Compound prompts at boundaries
+- `--worktree` flag for parallel epic execution in isolated git worktrees
 
 **When to use**: Implementing planned work
 
@@ -236,6 +237,7 @@ progress:
   percent: [Z%]
 current_layer: [domain|infrastructure|application|framework]
 branch: <type>/<issue-key or description>
+worktree: <path>  # Only set when using --worktree; absolute path to worktree directory
 ---
 ## Current Focus
 [What's being worked on]
@@ -273,6 +275,56 @@ At session boundaries:
 2. Commit work with clear message
 3. Offer compound documentation
 4. Generate detailed handoff summary
+
+## Parallel Execution with Worktrees
+
+### When to Use
+
+- An epic has 2+ independent stories/slices that don't modify the same files
+- You want multiple Claude sessions to execute different slices simultaneously
+- The planning phase has identified parallel execution groups (see epic planning template)
+
+### When NOT to Use
+
+- Stories have sequential dependencies (Story 2 builds on Story 1's code)
+- Stories modify the same files (merge conflicts are likely)
+- The project is small enough that serial execution is fast enough
+- You're working on a single story or bug fix
+
+### Prerequisites
+
+1. **Planning docs must be committed** — worktrees branch from HEAD, so uncommitted `./planning/` files won't exist in the new worktree
+2. **Parallel groups identified** — the implementation plan should indicate which stories can run concurrently
+3. **No shared file modifications** — stories in the same parallel group must touch different files
+
+### Parallel Execution Workflow
+
+```
+1. Plan the epic:        /workflow:plan <epic>
+2. Commit planning docs: git add ./planning/ && git commit -m "docs: add planning for <epic>"
+3. Start parallel sessions (each in its own terminal):
+   Session A: /workflow:execute --worktree ./planning/<project>/   (picks slice A)
+   Session B: /workflow:execute --worktree ./planning/<project>/   (picks slice B)
+4. Each session works in its own worktree with its own branch
+5. Merge one branch at a time:
+   git checkout main
+   git merge feat/<slice-a-key>
+   # Run full test suite
+   git merge feat/<slice-b-key>
+   # Run full test suite again
+6. Clean up worktrees (prompted on session exit, or manually):
+   git worktree remove .claude/worktrees/<name>
+```
+
+### Branch Naming for Parallel Work
+
+Each worktree gets its own branch following the standard naming convention:
+- `<type>/<issue-key>` (e.g., `feat/LIN-101`, `feat/LIN-102`)
+- The `--worktree` flag auto-creates and renames the branch to match
+
+### Merge Strategy
+
+Merge branches **one at a time**, running the full test suite after each merge. This isolates merge conflicts to a single branch and makes failures easy to attribute.
 
 ## Common Pitfalls
 
