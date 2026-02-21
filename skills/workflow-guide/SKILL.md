@@ -249,17 +249,22 @@ branch: <type>/<issue-key or description>
 
 ### Branch Naming Convention
 
-Use a consistent `<type>/<identifier>` pattern for branch names:
+**Rule**: All working branches MUST follow the `<type>/<identifier>` pattern exactly.
 
 | Type | With Issue Key | Without Issue Key |
 |------|----------------|-------------------|
 | Bug fix | `fix/INK-123` | `fix/login-validation` |
 | Feature | `feat/INK-124` | `feat/user-dashboard` |
 
-**Guidelines**:
-- Prefer issue keys when available—they link branches to tracking systems
-- Use lowercase with hyphens for descriptions
-- Keep descriptions short (2-4 words)
+**Rules**:
+- When an issue key exists, use it as the ENTIRE identifier — do NOT append a description (e.g. `feat/INK-124`, never `feat/INK-124-user-dashboard` or `matt/INK-124-desc`)
+- Without an issue key, use a short lowercase-hyphenated description (2-4 words max)
+- No usernames, dates, or other prefixes in branch names
+
+**Anti-patterns** (never do these):
+- `matt/ink-123-some-description` — no username prefixes, no appended descriptions with issue keys
+- `feature/INK-123-implement-user-dashboard` — too long, wrong type prefix
+- `INK-123` — missing type prefix
 
 ### Handoff Protocol
 

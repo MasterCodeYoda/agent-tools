@@ -128,6 +128,28 @@ ls ./planning/*.md 2>/dev/null
 - List available projects
 - Ask user which to continue
 
+### 2.5. Ensure Working Branch
+
+Before beginning work, verify the session is on the correct working branch.
+
+```bash
+current=$(git branch --show-current)
+```
+
+**If session-state.md exists and has a `branch:` value**:
+- If already on that branch → continue
+- If on main/master → `git checkout -b <branch-from-session-state>`
+- If on a different feature branch → ask user which branch to use
+
+**If no session state** (direct execution):
+- If already on a non-main branch → use it, record in session state
+- If on main/master → create branch using Branch Naming Convention from @workflow-guide:
+  - With issue key: `<type>/<ISSUE-KEY>` (e.g. `feat/LIN-123`)
+  - Without issue key: `<type>/<short-description>` (e.g. `feat/user-dashboard`)
+- Record the branch name in session state
+
+**IMPORTANT**: Never begin implementation work on main/master. Always create or switch to a working branch first.
+
 ### 3. Context Review
 
 Display context to user:
@@ -308,7 +330,7 @@ progress:
   completed: [Y]
   percent: [Z%]
 current_layer: [domain|infrastructure|application|framework]
-branch: <type>/<issue-key or description>
+branch: <type>/<issue-key or description>  # Set during branch creation step
 last_updated: [timestamp]
 ---
 

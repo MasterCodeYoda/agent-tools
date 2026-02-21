@@ -366,10 +366,21 @@ option. This includes:
 
 When the user approves (option 1 or 2), finalize the planning artifacts:
 
-1. Write `./planning/[project]/implementation-plan.md`
-2. Write `./planning/[project]/session-state.md`
-3. Update PM tool if applicable (see §PM Tool Integration above)
-4. Present confirmation:
+1. **Create working branch** (if not already on one):
+   ```bash
+   # Check current branch
+   current=$(git branch --show-current)
+   # If on main/master, create and switch to working branch
+   if [ "$current" = "main" ] || [ "$current" = "master" ]; then
+     git checkout -b <type>/<issue-key or description>
+   fi
+   ```
+   Use the Branch Naming Convention from @workflow-guide. The branch name MUST match
+   what will be recorded in session-state.md.
+2. Write `./planning/[project]/implementation-plan.md`
+3. Write `./planning/[project]/session-state.md`
+4. Update PM tool if applicable (see §PM Tool Integration above)
+5. Present confirmation:
 
 ```markdown
 ## Planning Complete
