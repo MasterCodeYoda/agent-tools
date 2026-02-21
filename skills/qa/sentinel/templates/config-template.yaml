@@ -1,0 +1,63 @@
+# Sentinel Configuration
+# Copy this file to your project root as sentinel.config.yaml and fill in values.
+
+# Application under test
+app:
+  # Base URL of the running application (no trailing slash)
+  base_url: http://localhost:3000
+  # Human-readable application name (used in reports)
+  name: My Application
+
+# Authentication configuration
+auth:
+  # How to authenticate before running specs
+  # Options: credentials | token | cookie | none
+  strategy: credentials
+
+  # Login page URL (used with 'credentials' strategy)
+  login_url: /login
+
+  # Credentials for 'credentials' strategy
+  # IMPORTANT: Never put raw passwords here. Use env var references.
+  credentials:
+    username: qa-tester@example.com
+    # Environment variable name containing the password (NOT the password itself)
+    password_env: SENTINEL_QA_PASSWORD
+
+# Browser configuration
+browser:
+  # Run browser in headless mode (no visible window)
+  headless: true
+
+  # Viewport dimensions
+  viewport:
+    width: 1280
+    height: 720
+
+  # Default timeout for navigation and wait operations (milliseconds)
+  timeout: 30000
+
+# Evidence capture settings
+evidence:
+  # When to capture screenshots
+  # Options: on_failure | always | never
+  screenshots: on_failure
+
+  # When to capture performance traces
+  # Options: on_failure | always | never
+  traces: on_failure
+
+  # When to capture DOM snapshots
+  # Options: on_failure | always | never
+  dom_snapshots: on_failure
+
+# Directory paths (relative to this config file)
+paths:
+  # Where spec files live
+  specs_dir: ./specs
+
+  # Where run results are written
+  runs_dir: ./runs
+
+  # Where summary reports are generated
+  reports_dir: ./reports

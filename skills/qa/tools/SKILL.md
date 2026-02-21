@@ -21,7 +21,7 @@ The `video_frames.py` tool extracts frames from a video file at regular interval
 ### Invocation
 
 ```bash
-cd ~/Source/OMG/agent-tools/tools && uv sync && uv run video_frames.py <video_path>
+cd ~/Source/OMG/agent-tools/skills/qa/tools && uv sync && uv run video_frames.py <video_path>
 ```
 
 ### Options
@@ -36,17 +36,17 @@ cd ~/Source/OMG/agent-tools/tools && uv sync && uv run video_frames.py <video_pa
 
 Extract frames every 2 seconds (default):
 ```bash
-cd ~/Source/OMG/agent-tools/tools && uv sync && uv run video_frames.py /tmp/recording.webm
+cd ~/Source/OMG/agent-tools/skills/qa/tools && uv sync && uv run video_frames.py /tmp/recording.webm
 ```
 
 Extract frames every half-second for detailed inspection:
 ```bash
-cd ~/Source/OMG/agent-tools/tools && uv sync && uv run video_frames.py /tmp/recording.webm --interval 0.5
+cd ~/Source/OMG/agent-tools/skills/qa/tools && uv sync && uv run video_frames.py /tmp/recording.webm --interval 0.5
 ```
 
 Save as JPEG to a specific directory:
 ```bash
-cd ~/Source/OMG/agent-tools/tools && uv sync && uv run video_frames.py /tmp/recording.webm --output-dir /tmp/bug-123/ --format jpg
+cd ~/Source/OMG/agent-tools/skills/qa/tools && uv sync && uv run video_frames.py /tmp/recording.webm --output-dir /tmp/bug-123/ --format jpg
 ```
 
 ## Viewing Extracted Frames
