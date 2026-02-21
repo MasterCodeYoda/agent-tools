@@ -512,19 +512,35 @@ Provide complete handoff for next session:
 
 ### Worktree Cleanup (if using --worktree)
 
-After merging your branch, clean up the worktree:
+**CRITICAL**: Before ANY worktree removal, you MUST change the working directory to the main
+repository root. If the shell's CWD is inside the worktree when it is removed, ALL subsequent
+shell commands will fail with "no such file or directory" and the session cannot recover.
+
+**Safe cleanup sequence**:
 
 ```bash
-# From the main repo (not the worktree):
-git worktree remove .claude/worktrees/<worktree-name>
-# Or let Claude prompt for cleanup on session exit
-```
+# 1. FIRST: Navigate to the main repository root (BEFORE any removal)
+cd <main-repo-root>
 
-**Merge workflow** (from main repo):
-```bash
+# 2. Merge the worktree branch
 git checkout main
 git merge <branch-name>
-# Run full test suite after merge
+
+# 3. Run full test suite after merge
+<project-specific test command>
+
+# 4. ONLY AFTER cd'ing out: Remove the worktree
+git worktree remove .claude/worktrees/<worktree-name>
+
+# 5. Clean up stale worktree references
+git worktree prune
+```
+
+**Anti-pattern** (causes unrecoverable session failure):
+```bash
+# ❌ NEVER do this — CWD is still inside the worktree
+git worktree remove .claude/worktrees/<worktree-name>  # Shell dies here
+git checkout main  # This will never execute
 ```
 
 ```

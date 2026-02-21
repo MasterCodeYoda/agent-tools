@@ -312,8 +312,12 @@ At session boundaries:
    # Run full test suite
    git merge feat/<slice-b-key>
    # Run full test suite again
-6. Clean up worktrees (prompted on session exit, or manually):
+6. Clean up worktrees — CRITICAL: cd to main repo root FIRST:
+   cd <main-repo-root>        # MUST do this before removal
    git worktree remove .claude/worktrees/<name>
+   git worktree prune
+   # ❌ NEVER remove a worktree while your shell CWD is inside it
+   # — all subsequent commands will fail and the session cannot recover
 ```
 
 ### Branch Naming for Parallel Work
