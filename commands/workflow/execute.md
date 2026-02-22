@@ -35,6 +35,11 @@ Before interpreting input, extract the `--worktree` flag if present:
   ERROR: Already inside a git worktree. Cannot nest worktrees.
   Run /workflow:execute without --worktree from this worktree.
   ```
+- **Worktree already recorded in session-state**: If `--worktree` is passed AND `session-state.md` already has a `worktree:` field with a path, error:
+  ```
+  ERROR: A worktree is already recorded in session-state.md: <path>
+  Run /workflow:execute without --worktree — it will detect and enter the existing worktree automatically.
+  ```
 
 ## Input Interpretation
 
@@ -130,9 +135,22 @@ ls ./planning/*.md 2>/dev/null
 └── session-state.md
 ```
 
-### 1.5. Enter Worktree (if `WORKTREE_MODE=true`)
+### 1.25. Detect Existing Worktree (from session-state)
 
-If the `--worktree` flag was set during Flag Extraction, create an isolated worktree before loading session state.
+Before creating a new worktree, check if one already exists from a prior `/workflow:plan --worktree` run:
+
+1. **Read `session-state.md`** for a `worktree:` field
+2. If `worktree:` has a path, verify the worktree still exists:
+   ```bash
+   git worktree list  # Look for the recorded path
+   ```
+3. **If worktree exists and `WORKTREE_MODE=false`**: Inform the user that an existing worktree was detected. Change working directory to the worktree path (`cd <worktree-path>`). Skip step 1.5 — no new worktree needed.
+4. **If worktree exists and `WORKTREE_MODE=true`**: This is caught by flag validation (the "worktree already recorded" error in §Flag Extraction).
+5. **If worktree recorded but missing** (e.g., user manually deleted it): Warn the user that the recorded worktree was not found. Fall through to step 1.5 if `WORKTREE_MODE=true`, or continue without a worktree if `WORKTREE_MODE=false`.
+
+### 1.5. Enter Worktree (if `WORKTREE_MODE=true` and no existing worktree detected in step 1.25)
+
+If the `--worktree` flag was set during Flag Extraction and no existing worktree was found, create an isolated worktree before loading session state.
 
 **Derive worktree name** from the input:
 - Planning directory `./planning/my-project/` → worktree name `my-project`
@@ -146,6 +164,8 @@ EnterWorktree(name: "<worktree-name>")
 ```
 
 This creates a worktree at `.claude/worktrees/<worktree-name>/` and switches CWD to it.
+
+**EnterWorktree exit prompt**: When the session ends, Claude Code will ask "keep or remove this worktree?" — **always choose "keep"** in parallel workflows. Worktree removal is a user-initiated action after all sessions complete and branches are merged. See Worktree Safety Rules in @workflow-guide.
 
 **Rename branch** to match naming convention:
 
@@ -510,16 +530,23 @@ Provide complete handoff for next session:
 /workflow:execute "[paste this summary for context]"
 ```
 
-### Worktree Cleanup (if using --worktree)
+### Worktree Status (if using --worktree)
 
-**CRITICAL**: Before ANY worktree removal, you MUST change the working directory to the main
-repository root. If the shell's CWD is inside the worktree when it is removed, ALL subsequent
-shell commands will fail with "no such file or directory" and the session cannot recover.
+**DO NOT clean up worktrees during session handoff.** Another session may still be using its worktree. Cleanup is always a separate, user-initiated action after all parallel sessions complete.
 
-**Safe cleanup sequence**:
+Document the session's worktree for reference:
+
+```markdown
+**Worktree**: `<worktree-path>`
+**Branch**: `<branch-name>`
+```
+
+**EnterWorktree exit prompt**: When Claude Code asks "keep or remove this worktree?" on session exit, **always choose "keep"** in parallel workflows.
+
+**User-initiated merge and cleanup** (after ALL parallel sessions complete):
 
 ```bash
-# 1. FIRST: Navigate to the main repository root (BEFORE any removal)
+# 1. Navigate to the main repository root
 cd <main-repo-root>
 
 # 2. Merge the worktree branch
@@ -529,19 +556,18 @@ git merge <branch-name>
 # 3. Run full test suite after merge
 <project-specific test command>
 
-# 4. ONLY AFTER cd'ing out: Remove the worktree
-git worktree remove .claude/worktrees/<worktree-name>
+# 4. Verify no other worktrees are still active
+git worktree list
 
-# 5. Clean up stale worktree references
+# 5. Remove ONLY your own worktrees, ONLY after merging
+git worktree remove .claude/worktrees/<worktree-name>
 git worktree prune
 ```
 
-**Anti-pattern** (causes unrecoverable session failure):
-```bash
-# ❌ NEVER do this — CWD is still inside the worktree
-git worktree remove .claude/worktrees/<worktree-name>  # Shell dies here
-git checkout main  # This will never execute
-```
+**Safety rules**:
+- Never remove a worktree while your shell CWD is inside it — the shell will break irrecoverably
+- Only remove worktrees you created — never clean up another session's worktree
+- Always check `git worktree list` first to verify no sessions are still active
 
 ```
 

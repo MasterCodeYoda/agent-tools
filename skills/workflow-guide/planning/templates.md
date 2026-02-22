@@ -135,10 +135,15 @@ Identify which stories can be worked on concurrently in separate worktrees.
 | B (parallel) | Story 2, Story 3 | Story 1 | Independent after Story 1; can run in separate worktrees |
 
 **Parallel execution prerequisites**:
-- All planning docs must be committed before creating worktrees
+- Use `/workflow:plan --worktree` to create a worktree at planning time with docs committed, OR manually commit planning docs before running `/workflow:execute --worktree`
 - Stories in the same parallel group must not modify the same files
 - Each parallel session uses: `/workflow:execute --worktree ./planning/<project>/`
 - Merge one branch at a time, running full tests after each merge
+
+**Worktree safety**:
+- Sessions NEVER remove worktrees — cleanup is a separate, user-initiated action after all sessions complete
+- When Claude Code asks "keep or remove?" on session exit, always choose "keep" in parallel workflows
+- Only the user removes worktrees, after all branches are merged
 
 ## Success Metrics
 - [ ] Metric 1

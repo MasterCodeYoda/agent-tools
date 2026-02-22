@@ -78,6 +78,9 @@ Testing integrates naturally with bottom-up implementation: write tests for each
 - `./planning/<project>/implementation-plan.md` - How to build it
 - `./planning/<project>/session-state.md` - Continuity tracking
 
+**Flags**:
+- `--worktree` — On approval, create an isolated git worktree, save planning docs inside it, and commit them. This prepares the worktree for `/workflow:execute` to detect automatically (no `--worktree` flag needed on execute).
+
 **Approval gate**: Plans MUST be presented to the user for explicit approval before saving documents or starting
 execution. After approval, the user chooses: save the plan only, or save and proceed to execution.
 
@@ -92,7 +95,7 @@ execution. After approval, the user chooses: save the plan only, or save and pro
 - Quality checkpoints
 - Completion verification before stopping
 - Compound prompts at boundaries
-- `--worktree` flag for parallel epic execution in isolated git worktrees
+- `--worktree` flag for parallel epic execution in isolated git worktrees (also available on `/workflow:plan`)
 
 **When to use**: Implementing planned work
 
@@ -293,31 +296,30 @@ At session boundaries:
 
 ### Prerequisites
 
-1. **Planning docs must be committed** — worktrees branch from HEAD, so uncommitted `./planning/` files won't exist in the new worktree
+1. **Planning docs must be in the worktree** — either use `/workflow:plan --worktree` (which commits docs into the worktree automatically) or manually commit `./planning/` before running `/workflow:execute --worktree`
 2. **Parallel groups identified** — the implementation plan should indicate which stories can run concurrently
 3. **No shared file modifications** — stories in the same parallel group must touch different files
 
 ### Parallel Execution Workflow
 
 ```
-1. Plan the epic:        /workflow:plan <epic>
-2. Commit planning docs: git add ./planning/ && git commit -m "docs: add planning for <epic>"
-3. Start parallel sessions (each in its own terminal):
-   Session A: /workflow:execute --worktree ./planning/<project>/   (picks slice A)
-   Session B: /workflow:execute --worktree ./planning/<project>/   (picks slice B)
-4. Each session works in its own worktree with its own branch
-5. Merge one branch at a time:
+1. Plan the epic:  /workflow:plan --worktree <epic>
+                   (or /workflow:plan <epic>, then commit docs manually)
+2. Start parallel sessions (each in its own terminal):
+   Session A: /workflow:execute ./planning/<project>/   (detects existing worktree from plan)
+   Session B: /workflow:execute --worktree ./planning/<project>/   (creates new worktree)
+3. Each session works in its own worktree with its own branch
+4. Sessions complete — each handoff documents its worktree path and branch
+5. USER merges one branch at a time (after ALL sessions complete):
+   cd <main-repo-root>
    git checkout main
-   git merge feat/<slice-a-key>
-   # Run full test suite
-   git merge feat/<slice-b-key>
-   # Run full test suite again
-6. Clean up worktrees — CRITICAL: cd to main repo root FIRST:
-   cd <main-repo-root>        # MUST do this before removal
-   git worktree remove .claude/worktrees/<name>
+   git merge feat/<slice-a-key>    # Run full test suite
+   git merge feat/<slice-b-key>    # Run full test suite again
+6. USER cleans up worktrees (only after all merges succeed):
+   git worktree list               # Verify no sessions are still active
+   git worktree remove .claude/worktrees/<name-a>
+   git worktree remove .claude/worktrees/<name-b>
    git worktree prune
-   # ❌ NEVER remove a worktree while your shell CWD is inside it
-   # — all subsequent commands will fail and the session cannot recover
 ```
 
 ### Branch Naming for Parallel Work
@@ -329,6 +331,17 @@ Each worktree gets its own branch following the standard naming convention:
 ### Merge Strategy
 
 Merge branches **one at a time**, running the full test suite after each merge. This isolates merge conflicts to a single branch and makes failures easy to attribute.
+
+### Worktree Safety Rules
+
+These rules prevent data loss in multi-session parallel workflows:
+
+1. **Sessions never remove worktrees** — Handoff documents the worktree path but does NOT delete it. Cleanup is always a separate, user-initiated action.
+2. **Only remove worktrees you created** — Never clean up another session's worktree.
+3. **Check `git worktree list` before removal** — Verify no other worktrees are still active.
+4. **Never remove a worktree while CWD is inside it** — The shell will break irrecoverably.
+5. **EnterWorktree exit prompt** — When Claude Code asks "keep or remove?" on session exit, **always choose "keep"** in parallel workflows. Remove only manually after merging.
+6. **Session-state tracks ownership** — The `worktree:` field in `session-state.md` records which worktree belongs to each session.
 
 ## Common Pitfalls
 

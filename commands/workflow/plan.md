@@ -1,7 +1,7 @@
 ---
 name: workflow:plan
 description: Create implementation plans from requirements
-argument-hint: "[requirements.md path, work item ID (LIN-123, PROJ-456), or feature description]"
+argument-hint: "[--worktree] [requirements.md path, work item ID (LIN-123, PROJ-456), or feature description]"
 ---
 
 # Implementation Planning
@@ -16,6 +16,22 @@ requirements as input.
 ```text
 $ARGUMENTS
 ```
+
+## Flag Extraction
+
+Before interpreting input, extract the `--worktree` flag if present:
+
+1. **Check for `--worktree`** in `$ARGUMENTS`
+2. If found, set `WORKTREE_MODE=true` and strip `--worktree` from `$ARGUMENTS` before passing to Input Detection
+3. If not found, set `WORKTREE_MODE=false`
+
+**Validation** (stop with error if any fail):
+
+- **Already inside a worktree**: If `git rev-parse --show-toplevel` differs from the main repo root (i.e., CWD is already a worktree), error:
+  ```
+  ERROR: Already inside a git worktree. Cannot nest worktrees.
+  Run /workflow:plan without --worktree from this worktree.
+  ```
 
 **If input is empty**, check for existing requirements:
 
@@ -259,6 +275,7 @@ progress:
   percent: 0%
 current_layer: not_started
 branch: <type>/<issue-key or description>
+worktree: <path>  # Only set when using --worktree; absolute path to worktree directory
 created: [timestamp]
 ---
 
@@ -366,21 +383,59 @@ option. This includes:
 
 When the user approves (option 1 or 2), finalize the planning artifacts:
 
-1. **Create working branch** (if not already on one):
-   ```bash
-   # Check current branch
-   current=$(git branch --show-current)
-   # If on main/master, create and switch to working branch
-   if [ "$current" = "main" ] || [ "$current" = "master" ]; then
-     git checkout -b <type>/<issue-key or description>
-   fi
+#### Step 1: Enter Worktree (if `WORKTREE_MODE=true`)
+
+Create an isolated worktree before saving planning docs:
+
+1. **Derive worktree name** from the project name (e.g., `./planning/my-project/` → `my-project`)
+2. **Create worktree**:
    ```
-   Use the Branch Naming Convention from @workflow-guide. The branch name MUST match
-   what will be recorded in session-state.md.
-2. Write `./planning/[project]/implementation-plan.md`
-3. Write `./planning/[project]/session-state.md`
-4. Update PM tool if applicable (see §PM Tool Integration above)
-5. Present confirmation:
+   EnterWorktree(name: "<worktree-name>")
+   ```
+3. **Rename branch** to match naming convention:
+   ```bash
+   git branch -m <type>/<issue-key or description>
+   ```
+   Use the Branch Naming Convention from @workflow-guide.
+4. **Set `WORKTREE_PATH`** to the current working directory for use in session-state.md.
+
+**EnterWorktree exit prompt**: When Claude Code asks "keep or remove this worktree?" on session exit, **always choose "keep"** in parallel workflows. See Worktree Safety Rules in @workflow-guide.
+
+#### Step 2: Create Working Branch (if `WORKTREE_MODE=false`)
+
+If not using worktree mode, create a working branch:
+
+```bash
+# Check current branch
+current=$(git branch --show-current)
+# If on main/master, create and switch to working branch
+if [ "$current" = "main" ] || [ "$current" = "master" ]; then
+  git checkout -b <type>/<issue-key or description>
+fi
+```
+
+Use the Branch Naming Convention from @workflow-guide. The branch name MUST match
+what will be recorded in session-state.md.
+
+#### Step 3: Save Planning Documents
+
+1. Write `./planning/[project]/implementation-plan.md`
+2. Write `./planning/[project]/session-state.md` — include the `worktree:` field set to `WORKTREE_PATH` when in worktree mode; omit it otherwise.
+
+#### Step 4: Commit Planning Documents (if `WORKTREE_MODE=true`)
+
+Planning docs must be committed inside the worktree so they're available for execution:
+
+```bash
+git add ./planning/[project]/
+git commit -m "docs: add planning for [project]"
+```
+
+#### Step 5: Update PM Tool
+
+Update PM tool if applicable (see §PM Tool Integration above).
+
+#### Step 6: Present Confirmation
 
 ```markdown
 ## Planning Complete
@@ -390,10 +445,40 @@ When the user approves (option 1 or 2), finalize the planning artifacts:
 - `./planning/[project]/implementation-plan.md`
 - `./planning/[project]/session-state.md`
 
+**Branch**: `<type>/<issue-key or description>`
+**Worktree**: `<worktree-path>` (if using --worktree, otherwise omit)
+
 [PM tool update summary if applicable]
 ```
 
-6. **Parallel execution prompt** (only when the plan has 2+ independent slices/stories):
+#### Step 7: Parallel Execution Prompt
+
+Only when the plan has 2+ independent slices/stories:
+
+**If `WORKTREE_MODE=true`** (worktree already created and docs committed):
+
+```markdown
+### Parallel Execution Available
+
+This plan has [N] independent slices that can be executed in parallel using separate worktrees.
+
+Planning docs are already committed in this worktree. To start parallel execution:
+
+1. **In this terminal** (worktree already exists):
+   ```bash
+   /workflow:execute ./planning/[project]/
+   ```
+   Execute will detect the existing worktree from session-state.md — no `--worktree` flag needed.
+
+2. **In a new terminal** (for additional parallel sessions):
+   ```bash
+   /workflow:execute --worktree ./planning/[project]/
+   ```
+
+**Note**: Only use parallel execution when slices are truly independent (don't modify the same files).
+```
+
+**If `WORKTREE_MODE=false`** (no worktree):
 
 ```markdown
 ### Parallel Execution Available
@@ -417,14 +502,24 @@ This plan has [N] independent slices that can be executed in parallel using sepa
    ```
 3. Each session will create its own worktree and branch automatically.
 
+**Or** use `/workflow:plan --worktree` next time to automate worktree creation at planning time.
+
 **Note**: Only use parallel execution when slices are truly independent (don't modify the same files).
 ```
 
 **If the user chose "Approve & Save" (option 1)** — stop here. The plan is saved and the user will decide when to
 start execution in their own time. Remind them:
 
+**If worktree exists**:
+```markdown
+When you're ready to implement, run `/workflow:execute ./planning/[project]/` from this worktree.
+Execute will detect the worktree automatically — no `--worktree` flag needed.
+```
+
+**If no worktree**:
 ```markdown
 When you're ready to implement, run: `/workflow:execute ./planning/[project]/`
+To execute in an isolated worktree, use: `/workflow:execute --worktree ./planning/[project]/`
 ```
 
 **If the user chose "Approve & Execute" (option 2)** — proceed to the Execution Handoff below.
@@ -440,6 +535,7 @@ or a later request like "start implementation", "run /workflow:execute", "go ahe
    ```
    /workflow:execute ./planning/[project]/
    ```
+   If a worktree was created during planning, execute will detect it automatically from the `worktree:` field in session-state.md — no `--worktree` flag needed.
 
 2. **If continuing in the same conversation**, follow these steps from `/workflow:execute`:
 
