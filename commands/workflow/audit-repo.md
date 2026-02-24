@@ -82,8 +82,8 @@ Spawn 4 parallel agents that examine repository configuration:
 - `.gitignore` comprehensive for project type
 
 **agent-readiness-analyst**:
-- CLAUDE.md exists and contains actionable guidance
-- AGENTS.md or agent configuration documented
+- AGENTS.md exists and contains actionable guidance
+- CLAUDE.md symlink or agent configuration documented
 - README has quickstart, architecture overview, and development setup
 - Architecture documentation exists (diagrams, decision records)
 - ADR directory present with at least initial decisions
@@ -141,7 +141,7 @@ Assess each point: Met / Partially Met / Not Met / Not Applicable
 Evaluate "SHA discipline maturity" — are dependencies and actions pinned to immutable references?
 
 **agent-context-quality-reviewer**:
-- Can an agent onboard from CLAUDE.md alone? (complete, accurate, actionable)
+- Can an agent onboard from AGENTS.md alone? (complete, accurate, actionable)
 - Are there tribal knowledge gaps? (undocumented conventions, implicit standards)
 - Is the development workflow documented end-to-end? (setup → test → deploy)
 - Are code patterns documented or enforced? (linters, formatters, templates)

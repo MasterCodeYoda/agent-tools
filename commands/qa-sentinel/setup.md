@@ -336,9 +336,9 @@ Tailor the content to the project — use actual port numbers, actual directory 
 
 Reference `docs/systems/qa-testing-system.md` (if it exists) for architecture deep-dive, rather than duplicating it.
 
-## Phase 9: Update Project CLAUDE.md
+## Phase 9: Update Project AGENTS.md
 
-Read the project's `CLAUDE.md` file (in the project root). If it exists, append a Sentinel section. If it does not exist, create it with the Sentinel section.
+Read the project's `AGENTS.md` file (in the project root). If it exists, append a Sentinel section. If it does not exist, create it with the Sentinel section.
 
 Append the following section (do not duplicate if it already exists):
 
