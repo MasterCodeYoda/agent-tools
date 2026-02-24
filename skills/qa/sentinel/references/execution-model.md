@@ -1,101 +1,79 @@
 # Execution Model
 
-Sentinel executes specs by driving a real browser via Chrome DevTools MCP. Claude reads the spec, performs actions in the browser, evaluates outcomes, and records results. This is on-demand validation, not CI — a human decides when to run it.
+Sentinel does not execute tests. It authors NL specs (discover) and checks for drift (audit). Execution is handled entirely by the Playwright Test Agents pipeline.
 
-## Execution Flow
+## Pipeline
 
 ```
-1. Load config        — Read sentinel.config.yaml for base URL, auth, browser settings
-2. Resolve specs      — Parse spec files, build dependency graph, determine execution order
-3. Authenticate       — Log in or set auth state based on config
-4. For each spec (in dependency order):
-   a. Verify preconditions
-   b. For each scenario:
-      i.   Drive browser (navigate, click, fill, wait)
-      ii.  Capture evidence at assertion points
-      iii. Judge outcome against expected result
-      iv.  Record PASS, FAIL, or SKIP with notes
-   c. Write run file
-5. Generate summary   — Aggregate results, detect regressions
+NL specs (specs/*.md)
+        ↓
+    Planner
+        ↓
+   test plan
+        ↓
+   Generator
+        ↓
+ .spec.ts files (tests/*.spec.ts)
+        ↓
+npx playwright test
+        ↓
+  test results + HTML report (playwright-report/)
+        ↓
+    Healer (on failure)
+        ↓
+  fixed .spec.ts files
 ```
 
-## Dependency Resolution
+### Planner
 
-Specs declare dependencies via the `dependencies` frontmatter field. Sentinel resolves these into a topological execution order:
+Reads NL spec files and produces a structured test plan. The Planner consumes only the markdown body — Overview, Preconditions, Scenarios, Test Data. It ignores YAML frontmatter entirely (frontmatter is sentinel metadata, not test instructions).
 
-- Specs with no dependencies run first
-- A spec only runs after all its dependencies have passed
-- If a dependency fails, the dependent spec is skipped (status: SKIP, note: "dependency {ID} failed")
-- Circular dependencies are detected and reported as an error before execution begins
+The Planner outputs a test plan describing: what pages to navigate to, what actions to perform, what assertions to make, and what fixtures are needed.
 
-Within the same dependency tier, specs are ordered by priority: P1 before P2 before P3.
+### Generator
 
-## Browser Control via Chrome DevTools MCP
+Converts the Planner's test plan into `.spec.ts` files using Playwright's API. Generated files live in the configured test directory (default: `tests/`). Generated tests import shared fixtures from the seed spec referenced in the NL spec's `seed` frontmatter field.
 
-Sentinel uses Chrome DevTools MCP tools for all browser interaction. The key tools used:
+### npx playwright test
 
-| Action | MCP Tool |
-|--------|----------|
-| Navigate to URL | `navigate_page` |
-| Read page state | `take_snapshot` |
-| Click elements | `click` |
-| Fill form fields | `fill` or `fill_form` |
-| Press keys | `press_key` |
-| Wait for content | `wait_for` |
-| Capture screenshots | `take_screenshot` |
-| Emulate conditions | `emulate` (network throttling, viewport, etc.) |
+Standard Playwright test runner. Executes `.spec.ts` files against the running application. Playwright handles:
+- Test isolation and ordering
+- Screenshot capture (on failure by default)
+- Trace recording
+- Video capture
+- HTML report generation (`playwright-report/`)
 
-Claude reads the scenario description, determines the actions to perform, finds elements on the page using the accessibility snapshot, and executes them. There are no hardcoded selectors — Claude locates elements by their role, label, text content, or structural position, the same way a human tester would.
+All evidence capture is configured in `playwright.config.ts`, not in sentinel config.
 
-## Self-Healing
+### Healer
 
-Because Claude interprets the page through accessibility snapshots rather than CSS selectors, execution naturally adapts to UI changes:
+When tests fail due to selector changes or assertion drift, the Healer analyzes failures and fixes `.spec.ts` files. The Healer repairs test code — it does not update NL specs.
 
-- **Renamed buttons** — Claude finds "Complete Purchase" even if it was "Pay Now" in the last release, as long as the intent matches the scenario description
-- **Moved elements** — Layout changes don't break execution because Claude locates elements by semantics, not coordinates
-- **Added steps** — If a new confirmation dialog appears, Claude can navigate it if the scenario description covers the expected flow
+If the app's behavior has fundamentally changed (not just a selector rename), the NL spec itself needs updating. That is an audit concern, not a Healer concern.
 
-Self-healing has limits. Claude adapts to cosmetic and structural changes, but cannot compensate for:
-- Fundamental flow changes (e.g., checkout now requires a new mandatory step not described in the spec)
-- Missing functionality (e.g., the Pay button was removed entirely)
-- Backend changes that alter expected outcomes
+## Sentinel's Role
 
-When a scenario's expected result no longer matches reality due to intentional product changes, the spec should be updated — that's a spec maintenance task, not a self-healing scenario.
+- **Before execution**: `discover` authors NL specs that the Planner will consume
+- **After execution**: `audit` reads Playwright's output and compares it against NL spec expectations
+- **Not during execution**: Sentinel is not in the execution loop — it hands off to the Playwright pipeline and waits
 
-## LLM-as-Judge
+## Seed Spec
 
-After performing the actions in a scenario, Claude evaluates the outcome by comparing what it observes (page content, visual state, error messages) against the expected result stated in the spec.
+Each NL spec references a `seed` file in its frontmatter (e.g., `seed: tests/seed.spec.ts`). The seed contains project-specific fixtures:
 
-### Judgment Process
+- Bridge shim injection (for apps using IPC, e.g., Tauri)
+- Auth setup (login state, test user credentials)
+- Base URL configuration
+- Any shared `beforeAll` / `afterAll` hooks
 
-1. **Take a snapshot** of the current page state after completing the scenario actions
-2. **Compare** the observed state against the `→ expected result` in the scenario
-3. **Decide**: PASS if the expected result is present and correct, FAIL if it is not
-4. **Record notes** explaining the judgment, especially on failures
+Generated tests import from the seed, keeping project-specific setup out of the NL specs themselves. The `setup` command generates an initial seed file with placeholder fixtures.
 
-### What Claude Evaluates
+## On-Demand vs CI
 
-- **Text content** — Is the expected message, label, or value visible on the page?
-- **Page state** — Is the user on the expected page (URL, heading, page title)?
-- **Visual elements** — Are expected UI components present (buttons, forms, confirmations)?
-- **Absence of errors** — Are there unexpected error messages or broken states?
+The Playwright pipeline runs in both modes:
 
-### Confidence and Ambiguity
+- **On-demand**: Developer runs `npx playwright test` locally after the Generator produces `.spec.ts` files
+- **CI**: GitHub Actions or similar runs `npx playwright test` on every PR against generated test files checked into the repo
+- **Sentinel audit**: Can be run after either mode to compare NL spec expectations against Playwright's HTML report
 
-If the outcome is ambiguous — the expected result is partially present, or the page state is unclear — Claude should:
-1. Capture a screenshot as evidence
-2. Mark the scenario as FAIL with a note explaining the ambiguity
-3. Let the human reviewer make the final call
-
-Conservative judgment is preferred. A false FAIL that gets manually reviewed is better than a false PASS that masks a real bug.
-
-## On-Demand Execution
-
-Sentinel is designed for on-demand pre-release validation sessions, not automated CI:
-
-- A human decides when to run Sentinel (before a release, after a major change, during QA review)
-- Claude needs a running browser and access to the application under test
-- Execution speed depends on the application's response time and the number of scenarios
-- Results are written to local run files for review
-
-This is intentional. Browser-based QA with LLM judgment is too slow and resource-intensive for CI pipelines, but provides high-value validation that complements automated tests.
+Generated `.spec.ts` files should be committed to the repo. The Planner and Generator are run when NL specs change; the test runner executes committed test files on every CI run.

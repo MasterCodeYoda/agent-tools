@@ -1,13 +1,15 @@
 # Spec Format Reference
 
-Sentinel specs are structured markdown files that define what to test and what to expect. Each spec covers a single feature or functional area.
+NL specs are structured markdown files that define what to test and what to expect. Each spec covers a single feature or functional area. They are the contract between sentinel (authoring) and Playwright's Planner (test generation).
 
 ## File Location and Naming
 
 Specs live in the configured `specs_dir` (default: `./specs` relative to sentinel config).
 
-Naming convention: `{area}-{feature}.spec.md`
-Examples: `checkout-payment.spec.md`, `auth-login.spec.md`, `dashboard-widgets.spec.md`
+Naming convention: `{area}-{feature}.md`
+Examples: `checkout-payment.md`, `auth-login.md`, `dashboard-widgets.md`
+
+Note: No `.spec.md` suffix — that suffix is reserved for generated Playwright test files.
 
 ## YAML Frontmatter
 
@@ -15,13 +17,12 @@ Every spec file starts with YAML frontmatter:
 
 ```yaml
 ---
-id: PAY-CHECKOUT
-feature: Checkout Payment Flow
-area: payments
-priority: P1
-dependencies:
-  - AUTH-LOGIN
-  - CART-ADD
+id: WORKSPACE-CREATE
+area: workspace-management
+priority: P0
+persona: new-user
+tags: [data-loss-prevention, core-flow]
+seed: tests/seed.spec.ts
 ---
 ```
 
@@ -29,82 +30,90 @@ dependencies:
 
 | Field | Required | Description |
 |-------|----------|-------------|
-| `id` | Yes | Unique identifier. Uppercase, hyphenated. Used for cross-references and run tracking. |
-| `feature` | Yes | Human-readable feature name. |
-| `area` | Yes | Functional area for grouping and coverage rollup (e.g., `payments`, `auth`, `catalog`). |
-| `priority` | Yes | `P1` (critical path), `P2` (important), or `P3` (edge cases / nice-to-have). Determines execution order within a run. |
-| `dependencies` | No | List of spec `id` values that must pass before this spec runs. Sentinel resolves these into execution order. |
+| `id` | Yes | Unique identifier. Uppercase, hyphenated. Used for cross-references and audit tracking. |
+| `area` | Yes | Functional area for grouping and coverage rollup (e.g., `workspace-management`, `auth`, `editor`). |
+| `priority` | Yes | `P0` (data-loss-prevention), `P1` (core-flow), `P2` (advanced), or `P3` (edge-case). |
+| `persona` | Yes | Target user type: `new-user`, `power-user`, or `returning-user`. |
+| `tags` | No | Array of free-form tags for filtering and cross-referencing. |
+| `seed` | No | Path to the seed spec file (e.g., `tests/seed.spec.ts`). Generated tests import fixtures from the seed. |
+
+### Priority Definitions
+
+| Priority | Label | Meaning |
+|----------|-------|---------|
+| `P0` | data-loss-prevention | Scenarios where failure could cause permanent data loss. Run first, must pass. |
+| `P1` | core-flow | Critical user journeys required for basic product function. |
+| `P2` | advanced | Important but non-blocking features and secondary flows. |
+| `P3` | edge-case | Boundary conditions and unusual but valid situations. |
+
+### Persona Definitions
+
+| Persona | Meaning |
+|---------|---------|
+| `new-user` | First-time user with no prior knowledge of the app. |
+| `power-user` | Experienced user who knows the app well and uses advanced features. |
+| `returning-user` | User who has used the app before but may need to re-orient. |
+
+### What the Planner Sees
+
+The Planner agent ignores YAML frontmatter entirely. It consumes only the markdown body (Overview, Preconditions, Scenarios, Test Data). The frontmatter is sentinel metadata used for audit, coverage rollup, and filtering — not test generation.
 
 ## Spec Body Sections
 
-### Context
+### Overview
 
-Brief description of the feature under test and why it matters. Gives Claude enough background to understand the domain.
+Brief description of the feature under test and why it matters. Replaces "Context" from older formats. Gives the Planner enough background to understand domain intent.
 
 ```markdown
-## Context
+## Overview
 
-The checkout payment flow handles credit card processing for customer orders.
-Users reach this flow after adding items to their cart and clicking "Proceed to Checkout."
-This is the primary revenue path and must work reliably across supported card types.
+The workspace creation flow is the first action a new user takes in the app.
+A workspace is the top-level container for all pages and content.
+This flow must be reliable and clear — failure here blocks all other usage.
 ```
 
 ### Preconditions
 
-State that must be true before any scenario in this spec can run. Sentinel ensures these are met before execution begins.
+State that must be true before any scenario in this spec can run. The Planner uses these to set up test fixtures and before-hooks.
 
 ```markdown
 ## Preconditions
 
-- User is logged in with a valid account
-- At least one item exists in the shopping cart
-- Test payment gateway is configured in sandbox mode
+- Application is running and accessible at the base URL
+- No workspace exists (fresh state or reset)
+- User has not previously completed onboarding
 ```
 
 ### Scenarios
 
-The core of the spec. Scenarios are grouped into categories and written as checklist items with a specific format.
-
-#### Scenario Line Format
-
-```
-- [ ] `SCENARIO-ID` Description of the action or behavior → expected result
-```
-
-The format has four parts:
-- `- [ ]` — Checkbox (unchecked). Sentinel marks these `[x]` for pass or `[!]` for fail during execution.
-- `` `SCENARIO-ID` `` — Unique within this spec. Convention: `{SPEC-ID-PREFIX}-{NN}` (e.g., `PAY-01`, `PAY-02`).
-- **Description** — What the user does or what happens. Be specific about actions.
-- **Expected result** (after `→`) — What should be observable. Must be concrete and verifiable.
-
-#### Scenario Groups
-
-Organize scenarios under these standard headings:
+The core of the spec. Scenarios are numbered H3 sections. Each scenario has a title and a list of steps ending with a `**Expected:**` line.
 
 ```markdown
 ## Scenarios
 
-### Happy Path
+### 1. Create workspace with valid name
+- Navigate to the application
+- Enter workspace name "My First Workspace"
+- Click create
+- **Expected:** Workspace created, editor view with sidebar visible
 
-Core user flows that must always work.
+### 2. Attempt empty name
+- Leave name field empty, attempt submit
+- **Expected:** Validation error, form not submitted
 
-- [ ] `PAY-01` Enter valid Visa card (4111111111111111, future expiry, any CVV) and submit → payment succeeds, order confirmation page displays with order number
-- [ ] `PAY-02` Enter valid Mastercard and submit → payment succeeds, confirmation shown
-
-### Validation
-
-Input validation and error handling.
-
-- [ ] `PAY-03` Submit payment with empty card number → inline error "Card number is required" appears below the card field
-- [ ] `PAY-04` Enter expired card (any past date) and submit → error message "Card has expired" is displayed, form is not submitted
-
-### Edge Cases
-
-Boundary conditions and unusual but valid situations.
-
-- [ ] `PAY-05` Rapidly double-click the Pay button → only one payment is processed, no duplicate charges
-- [ ] `PAY-06` Navigate away during payment processing and return → payment status is resolved (success or clear error), no stuck spinner
+### 3. Name at maximum length
+- Enter a name at the character limit
+- Click create
+- **Expected:** Workspace created successfully with full name displayed
 ```
+
+#### Scenario Format Rules
+
+- Each scenario is a numbered H3 heading (`### 1. Title`)
+- Steps are a plain bullet list (no checkboxes, no IDs)
+- The last bullet must be `**Expected:** <observable outcome>`
+- Expected outcomes must be concrete and verifiable — not "it works"
+- No scenario IDs like `PAY-01` — numbered sections are the reference
 
 ### Test Data
 
@@ -115,11 +124,9 @@ Specific data values needed for scenarios. Keeps test data close to the scenario
 
 | Label | Value | Notes |
 |-------|-------|-------|
-| Valid Visa | 4111111111111111 | Standard Stripe/Braintree test number |
-| Valid Mastercard | 5555555555554444 | Standard test number |
-| Expired date | 01/2020 | Any past month/year |
-| Valid CVV | 123 | Any 3-digit number for test cards |
-| Test user | qa-buyer@example.com | Pre-seeded account with items in cart |
+| Default name | My First Workspace | Standard input for happy path |
+| Max length name | (64 characters) | At character limit |
+| Invalid chars | My/Workspace | Slash is not permitted |
 ```
 
 ### Notes
@@ -129,106 +136,104 @@ Optional section for anything that doesn't fit elsewhere — known issues, envir
 ```markdown
 ## Notes
 
-- Payment gateway must be in sandbox/test mode. Live credentials will process real charges.
-- The double-click guard (PAY-05) was added after incident INC-2024-087.
-- Related specs: CART-ADD (dependency), ORDER-HISTORY (downstream).
+- Workspace name validation is client-side only in the current release.
+- Related specs: `workspace-management-rename.md`, `workspace-management-delete.md`.
 ```
 
 ## Complete Example (Good)
 
 ```markdown
 ---
-id: PAY-CHECKOUT
-feature: Checkout Payment Flow
-area: payments
-priority: P1
-dependencies:
-  - AUTH-LOGIN
-  - CART-ADD
+id: WORKSPACE-CREATE
+area: workspace-management
+priority: P0
+persona: new-user
+tags: [data-loss-prevention, core-flow]
+seed: tests/seed.spec.ts
 ---
 
-## Context
+# Workspace Creation
 
-The checkout payment flow handles credit card processing for customer orders.
-Users reach this flow after adding items to their cart and clicking "Proceed to Checkout."
-This is the primary revenue path and must work reliably across supported card types.
+## Overview
+
+The workspace creation flow is the first action a new user takes in the app.
+A workspace is the top-level container for all pages and content.
+This flow must be reliable and clear — failure here blocks all other usage.
 
 ## Preconditions
 
-- User is logged in with a valid account (qa-buyer@example.com)
-- At least one item exists in the shopping cart
-- Payment gateway is in sandbox mode
+- Application is running and accessible at the base URL
+- No workspace exists (fresh state or reset)
+- User has not previously completed onboarding
 
 ## Scenarios
 
-### Happy Path
+### 1. Create workspace with valid name
+- Navigate to the application
+- Enter workspace name "My First Workspace"
+- Click create
+- **Expected:** Workspace created, editor view with sidebar visible
 
-- [ ] `PAY-01` Enter valid Visa (4111111111111111, exp 12/2028, CVV 123) and click "Pay Now" → order confirmation page loads with order number starting with "ORD-"
-- [ ] `PAY-02` Enter valid Mastercard (5555555555554444, exp 12/2028, CVV 456) and click "Pay Now" → payment succeeds, confirmation page shows correct order total
+### 2. Attempt empty name
+- Leave name field empty, attempt submit
+- **Expected:** Validation error shown, form not submitted
 
-### Validation
-
-- [ ] `PAY-03` Leave card number empty and click "Pay Now" → inline error "Card number is required" appears, payment is not submitted
-- [ ] `PAY-04` Enter card with past expiration (01/2020) and click "Pay Now" → error "Card has expired" is shown, form remains on payment page
-- [ ] `PAY-05` Enter card number with only 8 digits and click "Pay Now" → inline error "Invalid card number" appears
-
-### Edge Cases
-
-- [ ] `PAY-06` Double-click "Pay Now" rapidly with valid card details → only one charge is created, confirmation page shows single order
-- [ ] `PAY-07` Fill in valid card, disconnect network, click "Pay Now" → error message about connection failure, no partial charge
+### 3. Name with special characters
+- Enter workspace name "Work/Space"
+- Attempt to submit
+- **Expected:** Validation error, slash character rejected
 
 ## Test Data
 
 | Label | Value | Notes |
 |-------|-------|-------|
-| Valid Visa | 4111111111111111 | Stripe test card |
-| Valid Mastercard | 5555555555554444 | Stripe test card |
-| Test user | qa-buyer@example.com | Password in QA_BUYER_PASS env var |
+| Default name | My First Workspace | Standard happy path input |
+| Invalid chars | Work/Space | Slash is not permitted |
 
 ## Notes
 
-- All test card numbers are Stripe sandbox numbers. They will not work against live payment endpoints.
-- PAY-07 requires network condition emulation via Chrome DevTools.
+- Workspace name validation is client-side only in the current release.
+- Related specs: `workspace-management-rename.md`.
 ```
 
 ## Bad Example (Common Mistakes)
 
 ```markdown
 ---
-id: payment
-feature: Payment
-area: payments
+id: workspace
+feature: Workspace
+area: workspaces
 priority: high
+dependencies:
+  - AUTH-LOGIN
 ---
 
 ## Scenarios
 
-- [ ] Test payment works
+- [ ] `WS-01` Test workspace creation works → it works
 - [ ] Check validation
 - [ ] Try edge cases
-- [ ] Make sure errors show up
 ```
 
 **What's wrong:**
 
 | Problem | Why it matters |
 |---------|----------------|
-| `id` is lowercase, non-standard | Breaks cross-referencing and run file matching |
-| `priority` uses "high" instead of P1/P2/P3 | Not machine-parseable, inconsistent with other specs |
-| No scenario IDs | Cannot track individual scenario results across runs |
-| No expected results (missing `→`) | Claude cannot judge pass/fail without knowing what to expect |
-| Vague descriptions ("test payment works") | Not actionable — what card? what flow? what does "works" mean? |
-| Missing Context, Preconditions, Test Data | Claude has to guess the setup, leading to flaky or incorrect execution |
-| No scenario grouping | Hard to prioritize and report on categories of coverage |
+| `priority` uses "high" instead of P0/P1/P2/P3 | Not machine-parseable, inconsistent with coverage model |
+| `feature` and `dependencies` fields | These fields are not part of the NL spec format |
+| Checkbox markers `[ ]` and scenario IDs `WS-01` | New format uses numbered H3 headings, not checkboxes or IDs |
+| `→ it works` as expected result | Not observable or verifiable — what exactly should be visible? |
+| Vague scenario descriptions | Not actionable for the Planner — what name? what flow? |
+| Missing Overview, Preconditions, Test Data | Planner lacks context for fixture setup |
 
-## What Makes a Good Spec
+## What Makes a Good NL Spec
 
-1. **Specific expected results** — Every scenario states exactly what should be observable after the action. "Payment succeeds" is vague; "order confirmation page loads with order number starting with ORD-" is testable.
+1. **Concrete expected results** — Every scenario ends with `**Expected:**` describing exactly what should be observable. "Workspace created" is vague; "editor view with sidebar visible" is testable.
 
-2. **Concrete actions** — Scenarios describe exactly what to do: which button to click, what value to enter, which page to navigate to. Claude should not have to guess the interaction steps.
+2. **Specific steps** — Scenarios describe exactly what to do: which button to click, what value to enter, which page to navigate to. The Planner should not have to guess interaction steps.
 
-3. **Clear preconditions** — State required before testing begins is documented, including test accounts, data setup, and environment configuration.
+3. **Clear preconditions** — Required state before testing begins is documented, including test accounts, data setup, and environment configuration.
 
-4. **Unique, trackable IDs** — Every spec and scenario has an ID that survives across runs, enabling regression tracking over time.
+4. **Appropriate scope** — One spec per feature. If a spec has more than ~12 scenarios, consider splitting it into sub-features.
 
-5. **Appropriate scope** — One spec per feature. If a spec has more than ~15 scenarios, consider splitting it into sub-features.
+5. **Planner-friendly language** — Write in plain imperative English. The Planner reads the markdown body and generates test code; ambiguous phrasing produces ambiguous tests.

@@ -1,180 +1,226 @@
 import * as fs from "node:fs";
-import matter from "gray-matter";
+import * as path from "node:path";
 import type {
-  RunFile,
-  RunFrontmatter,
-  ScenarioResult,
-  Spec,
-  SpecCoverage,
-  AreaCoverage,
-  Regression,
-  ResolvedPaths,
+  NlSpec,
+  NlSpecCoverage,
+  AuditAreaCoverage,
+  AuditResult,
+  OrphanedTest,
 } from "./types.js";
-import { getLatestRunDirectory, getPreviousRunDirectory, findRunFiles } from "./evidence.js";
 
 /**
- * Parse a single .run.md file.
+ * Find all .spec.ts files in the tests directory.
  */
-export function parseRunFile(filePath: string): RunFile {
-  const raw = fs.readFileSync(filePath, "utf-8");
-  const { data, content } = matter(raw);
+export function findTestFiles(testsDir: string): string[] {
+  if (!fs.existsSync(testsDir)) {
+    return [];
+  }
+  return fs
+    .readdirSync(testsDir)
+    .filter((f) => f.endsWith(".spec.ts"))
+    .map((f) => path.join(testsDir, f))
+    .sort();
+}
 
-  const frontmatter = data as RunFrontmatter;
-  const results: ScenarioResult[] = [];
+/**
+ * Extract test names from a .spec.ts file.
+ * Looks for test('...') and test.describe('...') patterns.
+ */
+export function extractTestNames(testFile: string): string[] {
+  const content = fs.readFileSync(testFile, "utf-8");
+  const names: string[] = [];
 
-  // Parse the markdown table for scenario results
-  const lines = content.split("\n");
-  for (const line of lines) {
-    // Match table row: | SCENARIO-ID | STATUS | DURATION | NOTES |
-    const match = line.match(/^\|\s*([A-Z][\w-]+(?:-\d+)?)\s*\|\s*(PASS|FAIL|SKIP)\s*\|\s*([^|]*)\s*\|\s*([^|]*)\s*\|$/);
-    if (match) {
-      results.push({
-        scenarioId: match[1].trim(),
-        status: match[2].trim() as ScenarioResult["status"],
-        duration: match[3].trim(),
-        notes: match[4].trim(),
-      });
-    }
+  // Match test('name', ...) and test.describe('name', ...)
+  const pattern = /test(?:\.describe)?\s*\(\s*['"`]([^'"`]+)['"`]/g;
+  let match;
+  while ((match = pattern.exec(content)) !== null) {
+    names.push(match[1]);
   }
 
-  return { frontmatter, filePath, results };
+  return names;
 }
 
 /**
- * Parse all run files in a run directory.
+ * Match an NL spec to its corresponding test file by naming convention.
+ * workspace-create.md → workspace-create.spec.ts
  */
-export function parseRunDirectory(runDir: string): RunFile[] {
-  return findRunFiles(runDir).map(parseRunFile);
+export function findMatchingTestFile(spec: NlSpec, testFiles: string[]): string | null {
+  const specBaseName = path.basename(spec.filePath, ".md");
+  return testFiles.find((tf) => {
+    const testBaseName = path.basename(tf, ".spec.ts");
+    return testBaseName === specBaseName;
+  }) || null;
 }
 
 /**
- * Compute coverage for a single spec based on its most recent run file.
+ * Compute coverage for a single NL spec against test files.
  */
-export function computeSpecCoverage(spec: Spec, runFiles: RunFile[]): SpecCoverage {
-  const runFile = runFiles.find((r) => r.frontmatter.spec === spec.frontmatter.id);
+export function computeNlSpecCoverage(spec: NlSpec, testFiles: string[]): NlSpecCoverage {
+  const matchedFile = findMatchingTestFile(spec, testFiles);
 
-  if (!runFile) {
+  if (!matchedFile) {
     return {
       specId: spec.frontmatter.id,
       area: spec.frontmatter.area,
-      passed: 0,
-      failed: 0,
-      skipped: 0,
-      total: spec.scenarios.length,
+      totalScenarios: spec.scenarios.length,
+      coveredScenarios: 0,
+      uncoveredScenarios: spec.scenarios.length,
       coverage: 0,
-      neverTested: true,
+      matchedTests: [],
     };
   }
 
-  const passed = runFile.frontmatter.passed;
-  const failed = runFile.frontmatter.failed;
-  const skipped = runFile.frontmatter.skipped;
-  const total = passed + failed + skipped;
+  const testNames = extractTestNames(matchedFile);
+  let covered = 0;
+
+  for (const scenario of spec.scenarios) {
+    // Check if any test name contains the scenario title (case-insensitive)
+    const titleLower = scenario.title.toLowerCase();
+    const isMatched = testNames.some((tn) => tn.toLowerCase().includes(titleLower));
+    if (isMatched) {
+      covered++;
+    }
+  }
 
   return {
     specId: spec.frontmatter.id,
     area: spec.frontmatter.area,
-    passed,
-    failed,
-    skipped,
-    total: total || spec.scenarios.length,
-    coverage: total > 0 ? passed / total : 0,
-    neverTested: false,
+    totalScenarios: spec.scenarios.length,
+    coveredScenarios: covered,
+    uncoveredScenarios: spec.scenarios.length - covered,
+    coverage: spec.scenarios.length > 0 ? covered / spec.scenarios.length : 0,
+    matchedTests: [matchedFile],
   };
 }
 
 /**
- * Compute coverage grouped by area.
+ * Find orphaned tests — .spec.ts files with no corresponding NL spec.
  */
-export function computeAreaCoverage(specs: Spec[], runFiles: RunFile[]): AreaCoverage[] {
-  const specCoverages = specs.map((s) => computeSpecCoverage(s, runFiles));
+export function findOrphanedTests(specs: NlSpec[], testFiles: string[]): OrphanedTest[] {
+  const specBaseNames = new Set(specs.map((s) => path.basename(s.filePath, ".md")));
 
-  const areaMap = new Map<string, SpecCoverage[]>();
+  return testFiles
+    .filter((tf) => {
+      const testBaseName = path.basename(tf, ".spec.ts");
+      return !specBaseNames.has(testBaseName);
+    })
+    .map((tf) => ({
+      testFile: tf,
+      testNames: extractTestNames(tf),
+    }));
+}
+
+/**
+ * Compute full audit coverage: NL specs vs test files.
+ */
+export function computeAuditCoverage(
+  specs: NlSpec[],
+  testFiles: string[],
+  filterArea?: string,
+): AuditResult {
+  const filteredSpecs = filterArea
+    ? specs.filter((s) => s.frontmatter.area === filterArea)
+    : specs;
+
+  const specCoverages = filteredSpecs.map((s) => computeNlSpecCoverage(s, testFiles));
+
+  // Group by area
+  const areaMap = new Map<string, NlSpecCoverage[]>();
   for (const sc of specCoverages) {
     const existing = areaMap.get(sc.area) || [];
     existing.push(sc);
     areaMap.set(sc.area, existing);
   }
 
-  const areas: AreaCoverage[] = [];
+  const areas: AuditAreaCoverage[] = [];
   for (const [area, specCovers] of areaMap) {
-    const passed = specCovers.reduce((sum, s) => sum + s.passed, 0);
-    const failed = specCovers.reduce((sum, s) => sum + s.failed, 0);
-    const skipped = specCovers.reduce((sum, s) => sum + s.skipped, 0);
-    const total = passed + failed + skipped;
+    const totalScenarios = specCovers.reduce((sum, s) => sum + s.totalScenarios, 0);
+    const coveredScenarios = specCovers.reduce((sum, s) => sum + s.coveredScenarios, 0);
 
     areas.push({
       area,
-      passed,
-      failed,
-      skipped,
-      total,
-      coverage: total > 0 ? passed / total : 0,
+      totalScenarios,
+      coveredScenarios,
+      coverage: totalScenarios > 0 ? coveredScenarios / totalScenarios : 0,
       specs: specCovers,
     });
   }
 
-  return areas.sort((a, b) => a.area.localeCompare(b.area));
-}
+  areas.sort((a, b) => a.area.localeCompare(b.area));
 
-/**
- * Compute overall coverage across all specs.
- */
-export function computeOverallCoverage(areas: AreaCoverage[]): { passed: number; failed: number; skipped: number; total: number; coverage: number } {
-  const passed = areas.reduce((sum, a) => sum + a.passed, 0);
-  const failed = areas.reduce((sum, a) => sum + a.failed, 0);
-  const skipped = areas.reduce((sum, a) => sum + a.skipped, 0);
-  const total = passed + failed + skipped;
+  const orphanedTests = findOrphanedTests(filteredSpecs, testFiles);
+
+  const totalScenarios = areas.reduce((sum, a) => sum + a.totalScenarios, 0);
+  const coveredScenarios = areas.reduce((sum, a) => sum + a.coveredScenarios, 0);
+
+  const recommendations: string[] = [];
+
+  // Uncovered specs
+  const uncovered = specCoverages.filter((s) => s.coverage === 0);
+  if (uncovered.length > 0) {
+    recommendations.push(
+      `${uncovered.length} spec(s) have no generated tests. Run Playwright Generator for: ${uncovered.map((s) => s.specId).join(", ")}`,
+    );
+  }
+
+  // Partial coverage
+  const partial = specCoverages.filter((s) => s.coverage > 0 && s.coverage < 1);
+  if (partial.length > 0) {
+    recommendations.push(
+      `${partial.length} spec(s) have partial test coverage. Review and regenerate: ${partial.map((s) => s.specId).join(", ")}`,
+    );
+  }
+
+  // Orphaned tests
+  if (orphanedTests.length > 0) {
+    recommendations.push(
+      `${orphanedTests.length} test file(s) have no corresponding NL spec. Write specs or delete: ${orphanedTests.map((t) => path.basename(t.testFile)).join(", ")}`,
+    );
+  }
 
   return {
-    passed,
-    failed,
-    skipped,
-    total,
-    coverage: total > 0 ? passed / total : 0,
+    areas,
+    orphanedTests,
+    overallCoverage: totalScenarios > 0 ? coveredScenarios / totalScenarios : 0,
+    recommendations,
   };
 }
 
 /**
- * Detect regressions by comparing the two most recent runs.
+ * Print a formatted audit report to stdout.
  */
-export function detectRegressions(paths: ResolvedPaths): Regression[] {
-  const latestDir = getLatestRunDirectory(paths);
-  const previousDir = getPreviousRunDirectory(paths);
+export function printAuditReport(result: AuditResult, appName: string): void {
+  console.log(`Sentinel Audit: ${appName}`);
+  console.log(`${"─".repeat(50)}`);
+  console.log(`Overall coverage: ${pct(result.overallCoverage)}`);
+  console.log(``);
 
-  if (!latestDir || !previousDir) {
-    return [];
+  for (const area of result.areas) {
+    console.log(`  ${area.area}`);
+    console.log(`    Coverage: ${pct(area.coverage)}  (${area.coveredScenarios}/${area.totalScenarios} scenarios)`);
+    for (const spec of area.specs) {
+      const bar = spec.matchedTests.length > 0 ? `[${pct(spec.coverage)}]` : "[no test file]";
+      console.log(`      ${spec.specId.padEnd(30)} ${bar}`);
+    }
+    console.log(``);
   }
 
-  const latestRuns = parseRunDirectory(latestDir);
-  const previousRuns = parseRunDirectory(previousDir);
-
-  const regressions: Regression[] = [];
-
-  for (const current of latestRuns) {
-    const previous = previousRuns.find((r) => r.frontmatter.spec === current.frontmatter.spec);
-    if (!previous) continue;
-
-    // Build lookup of previous results
-    const previousResults = new Map<string, ScenarioResult>();
-    for (const r of previous.results) {
-      previousResults.set(r.scenarioId, r);
+  if (result.orphanedTests.length > 0) {
+    console.log(`Orphaned tests (no NL spec):`);
+    for (const ot of result.orphanedTests) {
+      console.log(`  ${ot.testFile}`);
     }
-
-    // Check for PASS -> FAIL transitions
-    for (const result of current.results) {
-      const prev = previousResults.get(result.scenarioId);
-      if (prev && prev.status === "PASS" && result.status === "FAIL") {
-        regressions.push({
-          specId: current.frontmatter.spec,
-          scenarioId: result.scenarioId,
-          previousStatus: "PASS",
-          currentStatus: "FAIL",
-          notes: result.notes,
-        });
-      }
-    }
+    console.log(``);
   }
 
-  return regressions;
+  if (result.recommendations.length > 0) {
+    console.log(`Recommendations:`);
+    for (const rec of result.recommendations) {
+      console.log(`  - ${rec}`);
+    }
+  }
+}
+
+function pct(n: number): string {
+  return `${Math.round(n * 100)}%`;
 }

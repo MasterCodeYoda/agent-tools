@@ -3,11 +3,9 @@
 import { Command } from "commander";
 import * as fs from "node:fs";
 import * as path from "node:path";
-import { findConfigFile, loadAndResolve } from "./config.js";
-import { parseAllSpecs, validateAllSpecs, validateSpecFile, findSpecFiles } from "./specs.js";
-import { createRunDirectory, listRunDirectories, cleanupOldRuns, getLatestRunDirectory } from "./evidence.js";
-import { parseRunDirectory, computeAreaCoverage, computeOverallCoverage } from "./coverage.js";
-import { generateReport, writeReport } from "./report.js";
+import { loadAndResolve } from "./config.js";
+import { parseAllSpecs, validateAllSpecs, validateSpecFile, parseAllNlSpecs, validateNlSpec, parseNlSpec } from "./specs.js";
+import { findTestFiles, computeAuditCoverage, printAuditReport } from "./coverage.js";
 
 const program = new Command();
 
@@ -25,8 +23,7 @@ program
     const baseDir = path.join(process.cwd(), "tests", "qa-sentinel");
     const dirs = [
       path.join(baseDir, "specs"),
-      path.join(baseDir, "runs"),
-      path.join(baseDir, "reports", "history"),
+      path.join(baseDir, "tests"),
     ];
 
     for (const dir of dirs) {
@@ -62,15 +59,12 @@ browser:
     height: 720
   timeout: 30000
 
-evidence:
-  screenshots: on_failure
-  traces: on_failure
-  dom_snapshots: on_failure
+playwright:
+  config_path: ./playwright.config.ts
 
-paths:
-  specs_dir: ./specs
-  runs_dir: ./runs
-  reports_dir: ./reports
+specs:
+  nl_dir: ./specs
+  tests_dir: ./tests
 `;
         fs.writeFileSync(configDest, minimalConfig, "utf-8");
         console.log(`  Created: ${path.relative(process.cwd(), configDest)}`);
@@ -79,27 +73,10 @@ paths:
       console.log(`  Exists:  ${path.relative(process.cwd(), configDest)} (skipped)`);
     }
 
-    // Create .gitignore
-    const gitignorePath = path.join(baseDir, ".gitignore");
-    if (!fs.existsSync(gitignorePath)) {
-      const gitignoreContent = `# Sentinel QA
-# Keep specs and reports in version control
-# Exclude run data (evidence screenshots, traces, etc.)
-runs/*/evidence/
-runs/*/results/
-
-# Keep directory structure
-!runs/.gitkeep
-!runs/*/.gitkeep
-`;
-      fs.writeFileSync(gitignorePath, gitignoreContent, "utf-8");
-      console.log(`  Created: ${path.relative(process.cwd(), gitignorePath)}`);
-    }
-
     // Create .gitkeep files so empty dirs are tracked
     const gitkeeps = [
       path.join(baseDir, "specs", ".gitkeep"),
-      path.join(baseDir, "runs", ".gitkeep"),
+      path.join(baseDir, "tests", ".gitkeep"),
     ];
     for (const gk of gitkeeps) {
       if (!fs.existsSync(gk)) {
@@ -117,30 +94,57 @@ program
   .command("validate")
   .description("Validate spec files for correctness")
   .argument("[path]", "Path to a specific spec file (validates all if omitted)")
-  .action((specPath?: string) => {
+  .option("--nl", "Validate NL spec files instead of legacy .spec.md files")
+  .action((specPath?: string, opts?: { nl?: boolean }) => {
     const { paths } = loadAndResolve();
 
-    if (specPath) {
-      const absPath = path.resolve(specPath);
-      if (!fs.existsSync(absPath)) {
-        console.error(`Error: File not found: ${absPath}`);
-        process.exit(1);
+    if (opts?.nl) {
+      // NL spec validation
+      if (specPath) {
+        const absPath = path.resolve(specPath);
+        if (!fs.existsSync(absPath)) {
+          console.error(`Error: File not found: ${absPath}`);
+          process.exit(1);
+        }
+        const spec = parseNlSpec(absPath);
+        const errors = validateNlSpec(spec);
+        printValidationResults([spec.frontmatter.id || absPath], errors);
+      } else {
+        const nlSpecs = parseAllNlSpecs(paths.nlSpecsDir);
+        if (nlSpecs.length === 0) {
+          console.log("No NL spec files found in " + paths.nlSpecsDir);
+          return;
+        }
+        const allErrors = nlSpecs.flatMap((s) => validateNlSpec(s));
+        printValidationResults(
+          nlSpecs.map((s) => s.frontmatter.id || s.filePath),
+          allErrors,
+        );
       }
-      // Gather all spec IDs for dependency validation
-      const allSpecs = parseAllSpecs(paths.specsDir);
-      const allSpecIds = new Set(allSpecs.map((s) => s.frontmatter.id));
-      const { spec, errors } = validateSpecFile(absPath, allSpecIds);
-      printValidationResults([spec.frontmatter.id || absPath], errors);
     } else {
-      const { specs, errors } = validateAllSpecs(paths.specsDir);
-      if (specs.length === 0) {
-        console.log("No spec files found in " + paths.specsDir);
-        return;
+      // Legacy .spec.md validation
+      if (specPath) {
+        const absPath = path.resolve(specPath);
+        if (!fs.existsSync(absPath)) {
+          console.error(`Error: File not found: ${absPath}`);
+          process.exit(1);
+        }
+        // Gather all spec IDs for dependency validation
+        const allSpecs = parseAllSpecs(paths.nlSpecsDir);
+        const allSpecIds = new Set(allSpecs.map((s) => s.frontmatter.id));
+        const { spec, errors } = validateSpecFile(absPath, allSpecIds);
+        printValidationResults([spec.frontmatter.id || absPath], errors);
+      } else {
+        const { specs, errors } = validateAllSpecs(paths.nlSpecsDir);
+        if (specs.length === 0) {
+          console.log("No spec files found in " + paths.nlSpecsDir);
+          return;
+        }
+        printValidationResults(
+          specs.map((s) => s.frontmatter.id || s.filePath),
+          errors,
+        );
       }
-      printValidationResults(
-        specs.map((s) => s.frontmatter.id || s.filePath),
-        errors,
-      );
     }
   });
 
@@ -169,91 +173,67 @@ function printValidationResults(specIds: string[], errors: import("./types.js").
 
 program
   .command("status")
-  .description("Show coverage status summary")
+  .description("Show NL spec inventory and test coverage summary")
   .action(() => {
     const { config, paths } = loadAndResolve();
-    const specs = parseAllSpecs(paths.specsDir);
+    const nlSpecs = parseAllNlSpecs(paths.nlSpecsDir);
 
-    if (specs.length === 0) {
-      console.log("No specs found. Create spec files in " + paths.specsDir);
+    if (nlSpecs.length === 0) {
+      console.log("No NL specs found. Create spec files in " + paths.nlSpecsDir);
       return;
     }
 
-    const latestDir = getLatestRunDirectory(paths);
-    const runFiles = latestDir ? parseRunDirectory(latestDir) : [];
-    const areas = computeAreaCoverage(specs, runFiles);
-    const overall = computeOverallCoverage(areas);
-
-    const totalScenarios = specs.reduce((sum, s) => sum + s.scenarios.length, 0);
+    const testFiles = findTestFiles(paths.testsDir);
+    const totalScenarios = nlSpecs.reduce((sum, s) => sum + s.scenarios.length, 0);
+    const specsWithTests = nlSpecs.filter((s) => {
+      const base = path.basename(s.filePath, ".md");
+      return testFiles.some((tf) => path.basename(tf, ".spec.ts") === base);
+    });
 
     console.log(`Sentinel Status: ${config.app.name}`);
     console.log(`${"─".repeat(50)}`);
-    console.log(`Specs: ${specs.length}  |  Scenarios: ${totalScenarios}`);
+    console.log(`NL Specs: ${nlSpecs.length}  |  Scenarios: ${totalScenarios}`);
+    console.log(`Test files: ${testFiles.length}  |  Specs with tests: ${specsWithTests.length}/${nlSpecs.length}`);
+    console.log(``);
 
-    if (latestDir) {
-      console.log(`Latest run: ${path.basename(latestDir)}`);
-      console.log(``);
-      console.log(`Overall: ${pct(overall.coverage)}  (${overall.passed} pass / ${overall.failed} fail / ${overall.skipped} skip)`);
-      console.log(``);
+    // Group by area
+    const areaMap = new Map<string, typeof nlSpecs>();
+    for (const spec of nlSpecs) {
+      const area = spec.frontmatter.area || "Unknown";
+      const existing = areaMap.get(area) || [];
+      existing.push(spec);
+      areaMap.set(area, existing);
+    }
 
-      for (const area of areas) {
-        const neverTested = area.specs.filter((s) => s.neverTested).length;
-        const nt = neverTested > 0 ? ` (${neverTested} never tested)` : "";
-        console.log(`  ${area.area.padEnd(20)} ${pct(area.coverage).padStart(4)}  ${area.passed}/${area.total}${nt}`);
-      }
-    } else {
-      console.log(`\nNo runs found. Run specs to generate coverage data.`);
+    for (const [area, specs] of [...areaMap.entries()].sort()) {
+      const areaScenarios = specs.reduce((sum, s) => sum + s.scenarios.length, 0);
+      const areaWithTests = specs.filter((s) => {
+        const base = path.basename(s.filePath, ".md");
+        return testFiles.some((tf) => path.basename(tf, ".spec.ts") === base);
+      }).length;
+      console.log(`  ${area.padEnd(20)} ${areaWithTests}/${specs.length} specs  (${areaScenarios} scenarios)`);
     }
   });
 
-function pct(n: number): string {
-  return `${Math.round(n * 100)}%`;
-}
-
-// ── sentinel evidence collect ──────────────────────────────────────────
+// ── sentinel audit ─────────────────────────────────────────────────────
 
 program
-  .command("evidence")
-  .description("Evidence management")
-  .command("collect")
-  .description("Create a new run directory for evidence collection")
-  .option("--keep <n>", "Number of old runs to keep", "10")
+  .command("audit")
+  .description("Audit coverage: NL specs vs generated .spec.ts tests")
+  .option("--area <name>", "Filter to a specific area")
   .action((opts) => {
-    const { paths } = loadAndResolve();
-    const runDir = createRunDirectory(paths);
-    const keep = parseInt(opts.keep, 10);
-
-    if (keep > 0) {
-      const removed = cleanupOldRuns(paths, keep + 1); // +1 for the one we just created
-      if (removed.length > 0) {
-        console.error(`Cleaned up ${removed.length} old run(s)`);
-      }
-    }
-
-    // Output just the path — easy for scripts/commands to capture
-    console.log(runDir);
-  });
-
-// ── sentinel report generate ───────────────────────────────────────────
-
-program
-  .command("report")
-  .description("Report generation")
-  .command("generate")
-  .description("Generate a coverage report from the latest run")
-  .action(() => {
     const { config, paths } = loadAndResolve();
-    const specs = parseAllSpecs(paths.specsDir);
+    const nlSpecs = parseAllNlSpecs(paths.nlSpecsDir);
 
-    if (specs.length === 0) {
-      console.error("No specs found. Create spec files in " + paths.specsDir);
-      process.exit(1);
+    if (nlSpecs.length === 0) {
+      console.log("No NL specs found in " + paths.nlSpecsDir);
+      return;
     }
 
-    const reportContent = generateReport(specs, paths, { appName: config.app.name });
-    const reportPath = writeReport(reportContent, paths);
+    const testFiles = findTestFiles(paths.testsDir);
+    const result = computeAuditCoverage(nlSpecs, testFiles, opts.area);
 
-    console.log(`Report written to ${path.relative(process.cwd(), reportPath)}`);
+    printAuditReport(result, config.app.name);
   });
 
 program.parse();

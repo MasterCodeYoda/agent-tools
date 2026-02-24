@@ -1,54 +1,68 @@
 ---
 name: qa-sentinel
-description: Spec-driven QA testing — structured markdown specs ARE the tests, executed by Claude via Chrome DevTools MCP browser control
+description: Thin authoring and auditing layer over Playwright Test Agents — Claude writes NL specs, Playwright generates and runs tests
 ---
 
-# Sentinel: Spec-Driven QA Testing
+# Sentinel: NL Spec Authoring & Audit Layer
 
-Sentinel is a QA harness where structured markdown specs are the tests. There is no intermediate test code layer — Claude reads the specs, drives a browser via Chrome DevTools MCP, judges outcomes against expected results, and records evidence. Designed for on-demand pre-release validation, not CI.
+Sentinel is a thin layer over Playwright Test Agents. Claude authors structured Natural Language (NL) specs describing what to test. Playwright's Planner and Generator agents convert those specs into `.spec.ts` test files, and `npx playwright test` executes them deterministically. Sentinel's role is authoring (discover) and maintenance (audit) — not execution.
+
+## Pipeline
+
+```
+discover (Claude)  →  Planner (Playwright)  →  Generator (Playwright)  →  npx playwright test  →  audit (Claude)
+   ↓                      ↓                       ↓                          ↓                       ↓
+ NL specs             test plan              .spec.ts files           test results + report     drift detection
+ (specs/*.md)                                (tests/*.spec.ts)       (playwright-report/)      (audit report)
+```
+
+### What Sentinel Does
+- **Discover**: Author NL specs by scanning the app, importing docs, or guided conversation
+- **Audit**: Detect drift between NL specs, generated tests, and actual app behavior
+
+### What Playwright Test Agents Do
+- **Planner**: Read NL specs and produce a test plan
+- **Generator**: Convert the test plan into `.spec.ts` files
+- **Healer**: Fix broken selectors/assertions in `.spec.ts` files when tests fail
+- **Executor**: `npx playwright test` runs the generated tests
+
+### What Sentinel Does NOT Do
+- Execute tests (Playwright does this)
+- Manage evidence/screenshots (Playwright captures via `playwright.config.ts`)
+- Generate reports (Playwright HTML reporter handles this)
+- Fix broken selectors (Healer does this)
 
 ## When to Use
 
-- Pre-release validation of a web application
-- Regression testing after significant UI or feature changes
-- UAT (user acceptance testing) driven by structured scenarios
-- Validating that critical user flows still work as expected
-- Building a coverage baseline for a new or untested area of the app
-
-## Core Concept: Specs Are the Tests
-
-Traditional test automation requires writing test code (Selenium scripts, Playwright tests, Cypress specs). Sentinel eliminates that layer entirely:
-
-1. **You write specs** — structured markdown files describing features, scenarios, and expected results
-2. **Claude executes them** — reading each scenario, driving the browser, and judging whether the outcome matches
-3. **Results are recorded** — pass/fail per scenario with evidence (screenshots, DOM snapshots)
-
-No test code to maintain. No selectors to keep in sync. Claude adapts to UI changes the same way a human tester would — by understanding intent, not matching brittle selectors.
+- **Before** generating tests: Run `discover` to create NL specs for your features
+- **After** test runs: Run `audit` to check for drift between specs, tests, and app behavior
+- **Setup**: Run `setup` to initialize the project structure and configuration
 
 ## Command Set
 
-Sentinel operates through four commands, typically run in sequence:
-
 ### `qa-sentinel:setup`
-Initialize Sentinel in a project. Creates the directory structure, config file, and a sample spec.
+Initialize Sentinel in a project. Creates directory structure, config file, Playwright config, and seed test file.
 
 ### `qa-sentinel:discover`
-Scan the specs directory, parse all spec files, build the dependency graph, and report coverage status. Shows which specs exist, which have been run, and which have never been tested.
+Author NL specs by scanning the app, importing existing docs, or guided interactive conversation. Outputs structured markdown NL specs ready for Playwright's Planner.
 
-### `qa-sentinel:run`
-Execute specs against the running application. Resolves dependency order, drives the browser through each scenario, captures evidence, and writes run files with results.
+### `qa-sentinel:audit`
+Detect drift between NL specs, generated `.spec.ts` tests, and app behavior. Reports uncovered specs, orphaned tests, and behavioral regressions.
 
-### `qa-sentinel:report`
-Generate a coverage and regression report from run data. Shows pass/fail rates by area, flags regressions (scenarios that previously passed but now fail), and identifies never-tested specs.
+## NL Spec Format
+
+NL specs are the contract between sentinel (authoring) and Playwright (execution). They use YAML frontmatter for sentinel metadata and structured markdown that the Planner consumes.
+
+See `references/spec-format.md` for the full format specification.
 
 ## References
 
-- `references/spec-format.md` — Spec file structure, frontmatter fields, scenario format, examples
-- `references/coverage-model.md` — Coverage tracking, run files, regression detection
-- `references/execution-model.md` — How browser execution works, dependency resolution, self-healing
-- `references/evidence-guide.md` — Screenshot and evidence capture conventions
+- `references/spec-format.md` — NL spec format: frontmatter fields, scenario structure, examples
+- `references/execution-model.md` — Playwright pipeline: Planner → Generator → test → Healer
+- `references/coverage-model.md` — Audit coverage model: NL specs vs generated tests
+- `references/evidence-guide.md` — Evidence capture: Playwright-native screenshots, traces, video
 
 ## Templates
 
-- `templates/spec-template.md` — Blank spec with all sections and placeholder guidance
-- `templates/config-template.yaml` — Configuration file with all options documented
+- `templates/spec-template.md` — Blank NL spec with all sections and guidance comments
+- `templates/config-template.yaml` — Configuration file with Playwright and spec directory settings

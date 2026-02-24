@@ -1,58 +1,67 @@
 ---
-id: AREA-FEATURE        # Unique identifier, uppercase with hyphens (e.g., AUTH-LOGIN, PAY-CHECKOUT)
-feature: Feature Name   # Human-readable name of the feature under test
-area: area-name         # Functional area for coverage grouping (e.g., auth, payments, catalog)
-priority: P2            # P1 = critical path, P2 = important, P3 = edge cases
-dependencies:           # Spec IDs that must pass before this spec runs (remove if none)
-  - OTHER-SPEC-ID
+# ── Sentinel NL Spec ─────────────────────────────────────────────────
+# id:       Unique uppercase identifier (e.g., WORKSPACE-CREATE)
+# area:     Functional area for grouping (e.g., workspace-management)
+# priority: P0 (data-loss) | P1 (core) | P2 (advanced) | P3 (edge)
+# persona:  new-user | power-user | returning-user
+# tags:     Classification tags (e.g., [data-loss-prevention, core-flow])
+# seed:     Path to seed spec file (e.g., tests/seed.spec.ts)
+# ──────────────────────────────────────────────────────────────────────
+id: FEATURE-NAME
+area: area-name
+priority: P1
+persona: new-user
+tags: [tag1, tag2]
+seed: tests/seed.spec.ts
 ---
 
-## Context
+# Feature Name
 
-<!-- Brief description of the feature and why it matters.
-     Give enough background for Claude to understand the domain context. -->
+## Overview
+
+<!-- Why this feature matters. Domain context that helps the Planner understand
+     the significance and scope of what's being tested. -->
 
 ## Preconditions
 
-<!-- State that must be true before any scenario can run.
-     Include: required user accounts, data setup, environment config. -->
+<!-- Required state before any scenario can run. Be specific about accounts,
+     data, and environment. -->
 
-- User is logged in as [test account]
-- [Required data or state exists]
-- [Environment/config requirement]
+- Application is running and accessible
+- User is logged in with appropriate permissions
 
 ## Scenarios
 
-### Happy Path
+<!-- Numbered scenarios with step-by-step actions and expected outcomes.
+     The Planner reads these to generate .spec.ts test files.
+     Each scenario should be independently executable. -->
 
-<!-- Core user flows that must always work. These are your P1 scenarios. -->
+### 1. [Happy path scenario title]
 
-- [ ] `ID-01` [User action with specific inputs] → [exact expected outcome]
-- [ ] `ID-02` [Another core flow action] → [expected result]
+- [Action step 1]
+- [Action step 2]
+- **Expected:** [Observable, verifiable outcome]
 
-### Validation
+### 2. [Validation scenario title]
 
-<!-- Input validation and error handling. Verify the app rejects bad input correctly. -->
+- [Action that triggers validation]
+- **Expected:** [Error message or validation behavior]
 
-- [ ] `ID-03` [Submit with invalid/missing input] → [specific error message and location]
-- [ ] `ID-04` [Another validation case] → [expected error behavior]
+### 3. [Edge case scenario title]
 
-### Edge Cases
-
-<!-- Boundary conditions, race conditions, unusual but valid situations. -->
-
-- [ ] `ID-05` [Edge case action] → [expected behavior]
+- [Unusual but valid action]
+- **Expected:** [Correct handling of edge case]
 
 ## Test Data
 
-<!-- Specific values needed for scenarios. Keep data close to the tests that use it.
-     Never put real credentials here — use env var references. -->
+<!-- Specific values needed for scenarios. Keep test data close to the
+     scenarios that use it. -->
 
 | Label | Value | Notes |
 |-------|-------|-------|
-| Test user | user@example.com | Password in TEST_USER_PASS env var |
-| [Data label] | [Value] | [Notes] |
+| [Data label] | [Value] | [Context or source] |
 
 ## Notes
 
-<!-- Optional: known issues, environment constraints, related specs, history. -->
+<!-- Optional: Known issues, environment constraints, related specs,
+     or anything that doesn't fit elsewhere. -->

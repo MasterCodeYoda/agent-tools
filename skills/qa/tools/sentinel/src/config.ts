@@ -4,20 +4,25 @@ import { parse as parseYaml } from "yaml";
 import type { SentinelConfig, ResolvedPaths } from "./types.js";
 
 const CONFIG_FILENAME = "sentinel.config.yaml";
-const CONFIG_RELATIVE_DIR = "tests/qa-sentinel";
 
 /**
- * Walk up from startDir looking for tests/qa-sentinel/sentinel.config.yaml.
- * Returns the absolute path to the config file, or null if not found.
+ * Walk up from startDir looking for sentinel.config.yaml in the project root
+ * or tests/qa-sentinel/. Returns the absolute path to the config file, or null if not found.
  */
 export function findConfigFile(startDir: string = process.cwd()): string | null {
   let dir = path.resolve(startDir);
   const root = path.parse(dir).root;
 
   while (true) {
-    const candidate = path.join(dir, CONFIG_RELATIVE_DIR, CONFIG_FILENAME);
-    if (fs.existsSync(candidate)) {
-      return candidate;
+    // Check project root first
+    const rootCandidate = path.join(dir, CONFIG_FILENAME);
+    if (fs.existsSync(rootCandidate)) {
+      return rootCandidate;
+    }
+    // Fall back to tests/qa-sentinel/
+    const legacyCandidate = path.join(dir, "tests", "qa-sentinel", CONFIG_FILENAME);
+    if (fs.existsSync(legacyCandidate)) {
+      return legacyCandidate;
     }
     const parent = path.dirname(dir);
     if (parent === dir || dir === root) {
@@ -35,15 +40,15 @@ export function loadConfig(configPath: string): SentinelConfig {
   const parsed = parseYaml(raw) as SentinelConfig;
 
   // Validate required top-level keys
-  const requiredKeys = ["app", "paths"] as const;
+  const requiredKeys = ["app", "specs"] as const;
   for (const key of requiredKeys) {
     if (!parsed[key]) {
       throw new Error(`Missing required config section: "${key}" in ${configPath}`);
     }
   }
 
-  if (!parsed.paths.specs_dir || !parsed.paths.runs_dir || !parsed.paths.reports_dir) {
-    throw new Error(`Missing required path in config: specs_dir, runs_dir, and reports_dir are all required`);
+  if (!parsed.specs.nl_dir || !parsed.specs.tests_dir) {
+    throw new Error(`Missing required path in config: specs.nl_dir and specs.tests_dir are both required`);
   }
 
   return parsed;
@@ -56,9 +61,8 @@ export function resolvePaths(config: SentinelConfig, configPath: string): Resolv
   const configDir = path.dirname(configPath);
   return {
     configDir,
-    specsDir: path.resolve(configDir, config.paths.specs_dir),
-    runsDir: path.resolve(configDir, config.paths.runs_dir),
-    reportsDir: path.resolve(configDir, config.paths.reports_dir),
+    nlSpecsDir: path.resolve(configDir, config.specs.nl_dir),
+    testsDir: path.resolve(configDir, config.specs.tests_dir),
   };
 }
 
@@ -70,7 +74,7 @@ export function loadAndResolve(startDir?: string): { config: SentinelConfig; pat
   if (!configPath) {
     throw new Error(
       `Could not find ${CONFIG_FILENAME}. Run "sentinel init" to set up a project, ` +
-      `or ensure tests/qa-sentinel/${CONFIG_FILENAME} exists in the current directory or an ancestor.`
+      `or ensure ${CONFIG_FILENAME} exists in the project root or tests/qa-sentinel/.`
     );
   }
   const config = loadConfig(configPath);

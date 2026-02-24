@@ -1,10 +1,20 @@
 import * as fs from "node:fs";
 import * as path from "node:path";
 import matter from "gray-matter";
-import type { Spec, SpecFrontmatter, Scenario, ValidationError } from "./types.js";
+import type {
+  Spec,
+  SpecFrontmatter,
+  Scenario,
+  ValidationError,
+  NlSpec,
+  NlSpecFrontmatter,
+  NlScenario,
+} from "./types.js";
 
 const VALID_PRIORITIES = ["P1", "P2", "P3"];
 const SCENARIO_REGEX = /^- \[([ x!\-])\] `([^`]+)`\s+(.+)$/;
+
+// ── Legacy .spec.md parser ──────────────────────────────────────────────
 
 /**
  * Find all .spec.md files in a directory (non-recursive).
@@ -226,4 +236,163 @@ export function validateSpecFile(filePath: string, allSpecIds: Set<string>): { s
   const spec = parseSpec(filePath);
   const errors = validateSpec(spec, allSpecIds);
   return { spec, errors };
+}
+
+// ── NL spec parser ─────────────────────────────────────────────────────
+
+const VALID_NL_PRIORITIES = ["P0", "P1", "P2", "P3"];
+const VALID_PERSONAS = ["new-user", "power-user", "returning-user"];
+
+/**
+ * Find all NL spec files (.md, excluding .spec.md) in a directory.
+ */
+export function findNlSpecFiles(nlSpecsDir: string): string[] {
+  if (!fs.existsSync(nlSpecsDir)) {
+    return [];
+  }
+  return fs
+    .readdirSync(nlSpecsDir)
+    .filter((f) => f.endsWith(".md") && !f.endsWith(".spec.md") && !f.startsWith("_"))
+    .map((f) => path.join(nlSpecsDir, f))
+    .sort();
+}
+
+/**
+ * Parse a single NL spec file.
+ */
+export function parseNlSpec(filePath: string): NlSpec {
+  const raw = fs.readFileSync(filePath, "utf-8");
+  const { data, content } = matter(raw);
+  const frontmatter = data as NlSpecFrontmatter;
+
+  const lines = content.split("\n");
+  let overview = "";
+  let preconditions: string[] = [];
+  let scenarios: NlScenario[] = [];
+  let testData = "";
+  let notes = "";
+
+  let currentSection = "";
+  let sectionLines: string[] = [];
+  let currentScenario: NlScenario | null = null;
+
+  const flushSection = () => {
+    const text = sectionLines.join("\n").trim();
+    switch (currentSection) {
+      case "overview":
+        overview = text;
+        break;
+      case "preconditions":
+        preconditions = text
+          .split("\n")
+          .filter((l) => l.startsWith("- "))
+          .map((l) => l.slice(2).trim());
+        break;
+      case "test data":
+        testData = text;
+        break;
+      case "notes":
+        notes = text;
+        break;
+    }
+    sectionLines = [];
+  };
+
+  const flushScenario = () => {
+    if (currentScenario) {
+      scenarios.push(currentScenario);
+      currentScenario = null;
+    }
+  };
+
+  for (const line of lines) {
+    // H2 section headers
+    const h2Match = line.match(/^## (.+)$/);
+    if (h2Match) {
+      flushScenario();
+      flushSection();
+      currentSection = h2Match[1].trim().toLowerCase();
+      continue;
+    }
+
+    // H3 within scenarios = numbered scenario
+    if (currentSection === "scenarios") {
+      const h3Match = line.match(/^### (\d+)\.\s+(.+)$/);
+      if (h3Match) {
+        flushScenario();
+        currentScenario = {
+          number: parseInt(h3Match[1], 10),
+          title: h3Match[2].trim(),
+          steps: [],
+          expected: "",
+        };
+        continue;
+      }
+
+      if (currentScenario) {
+        // Expected line
+        const expectedMatch = line.match(/^-\s+\*\*Expected:\*\*\s*(.+)$/);
+        if (expectedMatch) {
+          currentScenario.expected = expectedMatch[1].trim();
+          continue;
+        }
+        // Step line
+        const stepMatch = line.match(/^-\s+(.+)$/);
+        if (stepMatch) {
+          currentScenario.steps.push(stepMatch[1].trim());
+          continue;
+        }
+      }
+    }
+
+    sectionLines.push(line);
+  }
+
+  flushScenario();
+  flushSection();
+
+  return { frontmatter, filePath, overview, preconditions, scenarios, testData, notes };
+}
+
+/**
+ * Parse all NL specs in a directory.
+ */
+export function parseAllNlSpecs(nlSpecsDir: string): NlSpec[] {
+  return findNlSpecFiles(nlSpecsDir).map(parseNlSpec);
+}
+
+/**
+ * Validate a single NL spec and return any errors.
+ */
+export function validateNlSpec(spec: NlSpec): ValidationError[] {
+  const errors: ValidationError[] = [];
+  const file = spec.filePath;
+  const fm = spec.frontmatter;
+
+  if (!fm.id) {
+    errors.push({ file, message: "Missing required frontmatter field: id", severity: "error" });
+  }
+  if (!fm.area) {
+    errors.push({ file, message: "Missing required frontmatter field: area", severity: "error" });
+  }
+  if (!fm.priority) {
+    errors.push({ file, message: "Missing required frontmatter field: priority", severity: "error" });
+  } else if (!VALID_NL_PRIORITIES.includes(fm.priority)) {
+    errors.push({ file, message: `Invalid priority "${fm.priority}". Must be one of: ${VALID_NL_PRIORITIES.join(", ")}`, severity: "error" });
+  }
+  if (!fm.persona) {
+    errors.push({ file, message: "Missing required frontmatter field: persona", severity: "warning" });
+  } else if (!VALID_PERSONAS.includes(fm.persona)) {
+    errors.push({ file, message: `Invalid persona "${fm.persona}". Must be one of: ${VALID_PERSONAS.join(", ")}`, severity: "warning" });
+  }
+  if (spec.scenarios.length === 0) {
+    errors.push({ file, message: "No scenarios found in NL spec", severity: "warning" });
+  }
+  for (const scenario of spec.scenarios) {
+    if (!scenario.expected) {
+      errors.push({ file, message: `Scenario ${scenario.number} ("${scenario.title}") has no **Expected:** line`, severity: "warning" });
+    }
+  }
+
+  return errors;
 }

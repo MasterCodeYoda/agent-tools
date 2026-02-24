@@ -1,4 +1,5 @@
 // Spec frontmatter fields
+/** @deprecated Use NlSpecFrontmatter for new NL spec format */
 export interface SpecFrontmatter {
   id: string;
   feature: string;
@@ -8,6 +9,7 @@ export interface SpecFrontmatter {
 }
 
 // A single scenario parsed from a spec file
+/** @deprecated Use NlScenario for new NL spec format */
 export interface Scenario {
   id: string;
   description: string;
@@ -17,6 +19,7 @@ export interface Scenario {
 }
 
 // A fully parsed spec file
+/** @deprecated Use NlSpec for new NL spec format */
 export interface Spec {
   frontmatter: SpecFrontmatter;
   filePath: string;
@@ -35,61 +38,67 @@ export interface ValidationError {
   severity: "error" | "warning";
 }
 
-// Run file frontmatter
-export interface RunFrontmatter {
-  spec: string;
-  run_date: string;
-  duration: string;
-  passed: number;
-  failed: number;
-  skipped: number;
+// NL Spec frontmatter fields (new format)
+export interface NlSpecFrontmatter {
+  id: string;
+  area: string;
+  priority: "P0" | "P1" | "P2" | "P3";
+  persona: "new-user" | "power-user" | "returning-user";
+  tags: string[];
+  seed: string;
 }
 
-// A single scenario result from a run file
-export interface ScenarioResult {
-  scenarioId: string;
-  status: "PASS" | "FAIL" | "SKIP";
-  duration: string;
-  notes: string;
+// A single scenario from an NL spec (numbered, not ID-based)
+export interface NlScenario {
+  number: number;
+  title: string;
+  steps: string[];
+  expected: string;
 }
 
-// A fully parsed run file
-export interface RunFile {
-  frontmatter: RunFrontmatter;
+// A fully parsed NL spec file
+export interface NlSpec {
+  frontmatter: NlSpecFrontmatter;
   filePath: string;
-  results: ScenarioResult[];
-}
-
-// Coverage stats for a single spec
-export interface SpecCoverage {
-  specId: string;
-  area: string;
-  passed: number;
-  failed: number;
-  skipped: number;
-  total: number;
-  coverage: number; // 0-1
-  neverTested: boolean;
-}
-
-// Coverage stats for an area
-export interface AreaCoverage {
-  area: string;
-  passed: number;
-  failed: number;
-  skipped: number;
-  total: number;
-  coverage: number; // 0-1
-  specs: SpecCoverage[];
-}
-
-// A regression: a scenario that went from PASS to FAIL
-export interface Regression {
-  specId: string;
-  scenarioId: string;
-  previousStatus: "PASS";
-  currentStatus: "FAIL";
+  overview: string;
+  preconditions: string[];
+  scenarios: NlScenario[];
+  testData: string;
   notes: string;
+}
+
+// Audit coverage for a single NL spec
+export interface NlSpecCoverage {
+  specId: string;
+  area: string;
+  totalScenarios: number;
+  coveredScenarios: number;
+  uncoveredScenarios: number;
+  coverage: number; // 0-1
+  matchedTests: string[]; // test file paths
+}
+
+// Audit area coverage
+export interface AuditAreaCoverage {
+  area: string;
+  totalScenarios: number;
+  coveredScenarios: number;
+  coverage: number; // 0-1
+  specs: NlSpecCoverage[];
+}
+
+// An orphaned test (exists in .spec.ts but no NL spec)
+export interface OrphanedTest {
+  testFile: string;
+  testNames: string[];
+}
+
+// Audit result
+export interface AuditResult {
+  areas: AuditAreaCoverage[];
+  orphanedTests: OrphanedTest[];
+  overallCoverage: number;
+  recommendations: string[];
 }
 
 // Sentinel configuration file
@@ -114,22 +123,23 @@ export interface SentinelConfig {
     };
     timeout: number;
   };
-  evidence: {
-    screenshots: "on_failure" | "always" | "never";
-    traces: "on_failure" | "always" | "never";
-    dom_snapshots: "on_failure" | "always" | "never";
+  bridge?: {
+    shim_path: string;
+    port: number;
+    partitions?: Record<string, number>;
   };
-  paths: {
-    specs_dir: string;
-    runs_dir: string;
-    reports_dir: string;
+  playwright: {
+    config_path: string;
+  };
+  specs: {
+    nl_dir: string;
+    tests_dir: string;
   };
 }
 
 // Resolved paths (absolute) computed from config
 export interface ResolvedPaths {
   configDir: string;
-  specsDir: string;
-  runsDir: string;
-  reportsDir: string;
+  nlSpecsDir: string;
+  testsDir: string;
 }
