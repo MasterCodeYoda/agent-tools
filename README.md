@@ -63,6 +63,8 @@ Commands are invoked with `/command-name` in Claude Code (or Factory.ai).
 | `/git:commit` | Create a well-formed commit |
 | `/git:commit-push` | Commit and push |
 | `/git:commit-pr` | Commit, push, and open a PR |
+| `/git:worktree-create` | Create a git worktree and enter it for immediate work |
+| `/git:worktree-delete` | Delete a git worktree with merge safety checks |
 
 ## Project Structure
 
@@ -79,7 +81,7 @@ agent-tools/
 │   └── visual-design/              # 73 visual design micro-patterns (detail.design)
 ├── commands/                        # Executable workflows (/command-name)
 │   ├── workflow/                    # 10 workflow commands
-│   └── git/                         # 3 git commands
+│   └── git/                         # 5 git commands
 ├── factory-commands/                # Auto-generated flattened commands for Factory.ai
 ├── setup.sh                         # Symlink installer
 └── README.md
