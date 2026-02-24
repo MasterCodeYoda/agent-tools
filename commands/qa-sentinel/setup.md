@@ -316,7 +316,27 @@ blob-report/
 # Keep NL specs and generated tests in version control
 ```
 
-## Phase 8: Update Project CLAUDE.md
+## Phase 8: Generate README.md
+
+Write a `README.md` in the Sentinel project root as a practical quick-reference for developers. This file should cover:
+
+1. **Quick Start** — Commands to start infrastructure, run tests, view reports, stop infrastructure
+2. **How It Works** — Brief diagram: Playwright → Vite → bridge shim → HTTP bridge → SQLite
+3. **Test Partitions** — Table of partition names, bridge ports, test file globs, and workspace paths (if bridge partitions were configured in Phase 3e)
+4. **Directory Structure** — Tree showing `specs/`, `tests/`, `seed.spec.ts`, config files
+5. **Test Fixtures** — Describe each fixture from `seed.spec.ts` with a usage example
+6. **Running Specific Tests** — Commands for single file, single test, single partition, headed, debug
+7. **Test Statuses** — Explain `test(...)`, `test.fixme(...)`, `test.skip(...)`, `test.describe.serial(...)`
+8. **NL Spec Format** — Brief description with a frontmatter example, point to `specs/` for full examples
+9. **Common Workflows** — Adding a new test, investigating a failure, converting a fixme
+10. **Troubleshooting** — Common issues: overlay blocking, infrastructure port conflicts, stale bridge state
+11. **Sentinel Skills** — Table of `/qa-sentinel:setup`, `/qa-sentinel:discover`, `/qa-sentinel:audit`
+
+Tailor the content to the project — use actual port numbers, actual directory paths, and actual fixture names from the generated config. If bridge partitions were not configured, omit the partitions table and simplify to a single bridge instance.
+
+Reference `docs/systems/qa-testing-system.md` (if it exists) for architecture deep-dive, rather than duplicating it.
+
+## Phase 9: Update Project CLAUDE.md
 
 Read the project's `CLAUDE.md` file (in the project root). If it exists, append a Sentinel section. If it does not exist, create it with the Sentinel section.
 
@@ -346,7 +366,7 @@ npx playwright show-report       # View HTML report
 ```
 ```
 
-## Phase 9: Completion
+## Phase 10: Completion
 
 Display a summary:
 
@@ -366,6 +386,7 @@ tests/          <- generated .spec.ts files
   seed.spec.ts  <- fixture setup
 playwright.config.ts
 sentinel.config.yaml
+README.md       <- quick-reference guide
 .gitignore
 
 ### What's Next?
