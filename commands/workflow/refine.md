@@ -164,6 +164,22 @@ Ask:
 - "If we could only ship one thing, what would it be?"
 - "What can we explicitly defer to a future iteration?"
 
+## Phase 4.5: Leverage Check
+
+Before finalizing requirements, pause and assess:
+
+**Ask yourself**: Is there one addition, removal, or reframing of the requirements that would disproportionately increase the value delivered relative to effort?
+
+If yes, present it to the user:
+
+- **What**: The proposed change
+- **Why**: How it increases value disproportionately
+- **Trade-off**: What it costs (scope, complexity, time)
+
+Ask: "Before we finalize, I noticed a potential high-leverage opportunity: [description]. Would you like to incorporate this, or keep the current scope?"
+
+If nothing surfaces, proceed without comment — this step should add signal, not noise.
+
 ## Phase 5: Success Criteria
 
 ### Define Measurable Outcomes

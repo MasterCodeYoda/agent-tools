@@ -324,6 +324,23 @@ Update your tracking system:
 - Add link to: ./planning/[project]/
 ```
 
+## Leverage Check
+
+Before presenting the plan for approval, review the slices and task breakdown holistically:
+
+**Ask yourself**: Is there one reordering, simplification, or addition that would significantly increase value or reduce risk?
+
+If a high-leverage insight surfaces:
+
+1. Incorporate it into the plan
+2. Add a **Key Insight** callout in the plan summary presented to the user:
+   ```markdown
+   ### Key Insight
+   [Description of the high-leverage change and why it matters]
+   ```
+
+If nothing surfaces, proceed without comment — this step should add signal, not noise.
+
 ## Plan Approval Gate
 
 **CRITICAL**: When planning is complete, you MUST stop and present the plan to the user for approval. **NEVER begin
