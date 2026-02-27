@@ -405,16 +405,21 @@ When the user approves (option 1 or 2), finalize the planning artifacts:
 Create an isolated worktree before saving planning docs:
 
 1. **Derive worktree name** from the project name (e.g., `./planning/my-project/` → `my-project`)
-2. **Create worktree**:
+2. **Capture `REPO_ROOT`** before entering the worktree (once inside, `git rev-parse --show-toplevel` returns the worktree root):
+   ```bash
+   REPO_ROOT=$(git rev-parse --show-toplevel)
+   ```
+3. **Create worktree**:
    ```
    EnterWorktree(name: "<worktree-name>")
    ```
-3. **Rename branch** to match naming convention:
+4. **Rename branch** to match naming convention:
    ```bash
    git branch -m <type>/<issue-key or description>
    ```
    Use the Branch Naming Convention from @workflow-guide.
-4. **Set `WORKTREE_PATH`** to the current working directory for use in session-state.md.
+5. **Establish dependencies** — follow @workflow-guide (dependency establishment) to restore `node_modules/` and/or Python deps. `REPO_ROOT` is already captured; CWD is inside the worktree. Warn on failure, never block.
+6. **Set `WORKTREE_PATH`** to the current working directory for use in session-state.md.
 
 **EnterWorktree exit prompt**: When Claude Code asks "keep or remove this worktree?" on session exit, **always choose "keep"** in parallel workflows. See Worktree Safety Rules in @workflow-guide.
 

@@ -414,6 +414,7 @@ For detailed templates and patterns, reference these sections:
 
 ### Implementation Phase
 - `implementation/quality-checkpoints.md` - Per-layer quality gates
+- `implementation/dependency-establishment.md` - Worktree dependency cache restoration
 - `@test-strategy` - Testing strategy, TDD, property-based testing, contracts, and test quality
 
 ### PM Integration

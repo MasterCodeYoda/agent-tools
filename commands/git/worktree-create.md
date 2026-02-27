@@ -1,5 +1,5 @@
 ---
-allowed-tools: Bash(git worktree:*), Bash(git branch:*), Bash(git rev-parse:*), Bash(git log:*), Bash(git status:*), Bash(ls:*), Bash(pwd:*), Bash(cd:*)
+allowed-tools: Bash(git worktree:*), Bash(git branch:*), Bash(git rev-parse:*), Bash(git log:*), Bash(git status:*), Bash(ls:*), Bash(pwd:*), Bash(cd:*), Bash(cp:*), Bash(pnpm:*), Bash(npm:*), Bash(bun:*), Bash(yarn:*), Bash(uv:*), Bash(poetry:*), Bash(pipenv:*), Bash(pip:*)
 description: Create a git worktree and enter it for immediate work
 argument-hint: "[name] [from <ref>] [--type feat|fix|chore] [--branch <name>]"
 ---
@@ -78,6 +78,16 @@ cd <REPO_ROOT>/.claude/worktrees/<name>
 This is the same pattern used by `workflow/execute.md` for entering existing worktrees. It switches the Bash working directory for subsequent commands without disrupting other sessions.
 
 **Do NOT use `EnterWorktree()`** — that tool creates a new worktree from HEAD and cannot target a specific base ref or enter an existing worktree.
+
+## Phase 3 — Establish Dependencies
+
+Restore project dependencies so the worktree is ready to work immediately. Follow the procedure in @workflow-guide (dependency establishment):
+
+1. **Detect tooling** from lock files in the worktree root (Node.js and Python ecosystems)
+2. **Copy dependency caches** from `$REPO_ROOT` (Node.js only, non-pnpm — uses COW clones where available)
+3. **Run sync command** for each detected ecosystem
+
+`REPO_ROOT` was already captured in Phase 1.1. Dependency establishment must never block worktree entry — warn on failure and continue.
 
 ## Output
 

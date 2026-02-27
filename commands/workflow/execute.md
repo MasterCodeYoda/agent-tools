@@ -144,7 +144,7 @@ Before creating a new worktree, check if one already exists from a prior `/workf
    ```bash
    git worktree list  # Look for the recorded path
    ```
-3. **If worktree exists and `WORKTREE_MODE=false`**: Inform the user that an existing worktree was detected. Change working directory to the worktree path (`cd <worktree-path>`). Skip step 1.5 — no new worktree needed.
+3. **If worktree exists and `WORKTREE_MODE=false`**: Inform the user that an existing worktree was detected. Capture `REPO_ROOT` before leaving the source repo (`REPO_ROOT=$(git rev-parse --show-toplevel)`), then change working directory to the worktree path (`cd <worktree-path>`). **Establish dependencies if missing** — if `node_modules/` or the expected venv directory does not already exist, follow @workflow-guide (dependency establishment) to restore them. Skip step 1.5 — no new worktree needed.
 4. **If worktree exists and `WORKTREE_MODE=true`**: This is caught by flag validation (the "worktree already recorded" error in §Flag Extraction).
 5. **If worktree recorded but missing** (e.g., user manually deleted it): Warn the user that the recorded worktree was not found. Fall through to step 1.5 if `WORKTREE_MODE=true`, or continue without a worktree if `WORKTREE_MODE=false`.
 
@@ -156,6 +156,12 @@ If the `--worktree` flag was set during Flag Extraction and no existing worktree
 - Planning directory `./planning/my-project/` → worktree name `my-project`
 - Issue key `LIN-123` → worktree name `lin-123`
 - Plan file `./planning/auth-feature.md` → worktree name `auth-feature`
+
+**Capture `REPO_ROOT`** before entering the worktree (once inside, `git rev-parse --show-toplevel` returns the worktree root):
+
+```bash
+REPO_ROOT=$(git rev-parse --show-toplevel)
+```
 
 **Create worktree**:
 
@@ -176,6 +182,8 @@ The `EnterWorktree` tool auto-generates a branch name that doesn't follow the `<
 # Example: feat/LIN-123 or feat/my-project
 git branch -m <type>/<identifier>
 ```
+
+**Establish dependencies** — follow @workflow-guide (dependency establishment) to restore `node_modules/` and/or Python deps. `REPO_ROOT` was captured above; CWD is inside the worktree. Warn on failure, never block.
 
 **Validate planning docs exist in worktree**:
 
