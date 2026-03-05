@@ -52,6 +52,13 @@ Based on auto-detection, determine audit scope:
 - **Monorepo** (multiple CI configs): Run Tier 1 on all; prompt before Tier 2/3
 - **Org-wide** (multiple repos): Require explicit scoping
 
+## Agent Reasoning Standards
+
+All audit agents must follow these reasoning principles:
+
+- **Cite evidence.** Every finding must reference specific file paths and line numbers. No finding without a concrete citation.
+- **Check the opposite hypothesis.** Before reporting a P1 or P2 finding, briefly consider: "Could this be intentional?" Look for alternative configurations, monorepo conventions, or documented decisions that might justify the setup. If found, downgrade or retract.
+
 ## Three-Tier Analysis
 
 ### Tier 1 — Static Analysis (always runs)

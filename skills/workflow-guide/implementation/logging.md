@@ -1,7 +1,4 @@
----
-name: Logging Best Practices
-description: Use this skill to guide implementation of logs necessary in production-ready systems.
----
+# Logging Best Practices
 
 When helping with logging, observability, or debugging strategies, follow these principles:
 
@@ -89,10 +86,6 @@ During Incidents:
 - Your logs should answer: Who was affected? What failed? When? Why?
 - If you can't answer these within 5 minutes of querying, your logging strategy needs work
 - Post-incident: add the logs you wished you had
-
-## Commands
-
-- `/workflow:audit-code` — Audit production code for observability readiness
 
 ## References
 

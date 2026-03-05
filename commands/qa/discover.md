@@ -1,5 +1,5 @@
 ---
-name: qa-sentinel:discover
+name: qa:discover
 description: Discover and author NL test specifications through app scanning, doc import, or guided conversation
 argument-hint: "[--scan | --import <path> | <area-name> for interactive discovery]"
 ---
@@ -27,7 +27,7 @@ Parse input to determine discovery mode:
 
 ## Load Configuration
 
-Read `sentinel.config.yaml` and extract `app.base_url`, `specs.nl_dir`, and `auth` settings. If no config exists, tell the user to run `qa-sentinel:setup` first and stop.
+Read `sentinel.config.yaml` and extract `app.base_url`, `specs.nl_dir`, and `auth` settings. If no config exists, tell the user to run `qa:setup` first and stop.
 
 ---
 
@@ -128,8 +128,8 @@ Priority breakdown:
 
 Next steps:
   Run interactive discovery for each area to create NL specs:
-    /qa-sentinel:discover auth
-    /qa-sentinel:discover dashboard
+    /qa:discover auth
+    /qa:discover dashboard
     ...
 
   Start with P0 and P1 features for maximum coverage impact.
@@ -175,7 +175,7 @@ For each distinct feature found, generate a spec file:
 8. Write numbered H3 scenarios with step-by-step actions and **Expected:** lines
 9. Extract test data into the Test Data table
 
-Use the template from @qa-sentinel `templates/spec-template.md` as the structural basis.
+Use the template from @qa `templates/spec-template.md` as the structural basis.
 
 ### Step 4: Write Spec Files
 
@@ -215,7 +215,7 @@ NL specs generated in specs/. Next steps:
 2. Run Playwright Planner — the Planner reads your NL specs and creates a test plan
 3. Run Playwright Generator — converts the plan into .spec.ts files in tests/
 4. Run tests — `npx playwright test` to execute
-5. Audit drift — `/qa-sentinel:audit` to keep specs and tests aligned
+5. Audit drift — `/qa:audit` to keep specs and tests aligned
 ```
 
 ---
@@ -268,7 +268,7 @@ From the user's answers, create a structured NL spec file:
 6. Populate the Test Data table
 7. Add Notes if the user mentioned known issues or constraints
 
-Follow the template from @qa-sentinel `templates/spec-template.md` exactly.
+Follow the template from @qa `templates/spec-template.md` exactly.
 
 ### Step 4: Write Spec File
 

@@ -50,6 +50,13 @@ Based on auto-detection, prompt user for scope confirmation:
 - **Medium** (20-100 doc files): Run Tier 1 on all; prompt before Tier 2/3
 - **Large** (100+ doc files): Require explicit scoping or run Tier 1 sampling
 
+## Agent Reasoning Standards
+
+All audit agents must follow these reasoning principles:
+
+- **Cite evidence.** Every finding must reference specific file paths and locations. No finding without a concrete citation.
+- **Check the opposite hypothesis.** Before reporting a P1 or P2 finding, briefly consider: "Could this be intentional?" Look for documentation conventions, auto-generated doc tooling, or explicit decisions to document elsewhere. If found, downgrade or retract.
+
 ## Three-Tier Analysis
 
 ### Tier 1 — Presence & Structure (always runs)

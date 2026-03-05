@@ -1,12 +1,12 @@
 ---
 name: workflow:audit-code
-description: Audit existing production code quality against @code-patterns, @clean-architecture, and @logging standards
+description: Audit existing production code quality against @code-patterns and @clean-architecture standards
 argument-hint: "[directory path, file glob, or 'all']"
 ---
 
 # Production Code Audit
 
-Examine existing production code against @code-patterns, @clean-architecture, and @logging principles and produce prioritized, actionable findings.
+Examine existing production code against @code-patterns and @clean-architecture principles and produce prioritized, actionable findings.
 
 ## User Input
 
@@ -49,6 +49,14 @@ Based on auto-detection, prompt user for scope confirmation:
 - **Medium** (50-500 files): Run Tier 1 on all; prompt before Tier 2/3
 - **Large** (500+ files): Require explicit scoping or run Tier 1 sampling
 
+## Agent Reasoning Standards
+
+All audit agents must follow these reasoning principles:
+
+- **Cite evidence.** Every finding must reference specific `file:line` locations. No finding without a concrete code citation.
+- **Check the opposite hypothesis.** Before reporting a P1 or P2 finding, briefly consider: "Could this actually be correct?" Look for guards, framework behavior, or design intent that might justify the pattern. If found, downgrade or retract.
+- **Trace function calls.** When a finding involves a function or method, follow it to its actual definition. Don't assume behavior from names — check for overrides, wrappers, and framework interception.
+
 ## Three-Tier Analysis
 
 ### Tier 1 — Static Analysis (always runs)
@@ -72,7 +80,7 @@ Spawn 4 parallel agents that read production code:
 - Entity/Value Object distinction
 - Aggregate boundary enforcement
 
-**observability-readiness-analyst** — References @logging (SKILL.md):
+**observability-readiness-analyst** — References @workflow-guide (`implementation/logging.md`):
 - Structured logging compliance (JSON, not string interpolation)
 - Required field presence (timestamp, level, event, request_id/trace_id)
 - Correct log level usage
@@ -241,7 +249,7 @@ If audit reveals a recurring anti-pattern fix worth documenting, offer compound.
 
 audit-code examines production code quality; audit-repo examines repository infrastructure (CI/CD, branch protection, agent docs). They are complementary — repo infrastructure enables code quality enforcement.
 
-### With @code-patterns, @clean-architecture, @logging
+### With @code-patterns, @clean-architecture
 
 All agent prompts reference specific sections of these skills as their criteria source. This command is the active counterpart to those skills' passive guidance.
 

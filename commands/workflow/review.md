@@ -341,6 +341,15 @@ If reviewing during execute session, findings can inform session notes.
 
 ## Quality Principles
 
+### Reasoning Rigor
+
+Every review finding must be grounded in evidence, not intuition:
+
+- **Cite evidence for every claim.** Reference specific `file:line` locations. If you can't point to a concrete location, you haven't verified the claim.
+- **Trace, don't assume.** When a finding involves a function call, follow it to its actual definition. A function named `validate()` might be shadowed, overridden, or intercepted by a framework.
+- **Check the opposite hypothesis.** Before flagging a P1 or P2 finding, ask: "What if this code is actually correct?" Look for evidence that would refute your finding (guards elsewhere, framework behavior, test coverage). If you find it, downgrade or retract.
+- **Distinguish crash sites from root causes.** A bug manifesting at line 200 may originate at line 50. Trace back to where the incorrect behavior begins, not where it surfaces.
+
 ### Focus on Impact
 - P1 issues are blockers
 - P2 issues improve quality

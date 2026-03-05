@@ -5,22 +5,68 @@ description: QA skills for testing workflows — visual inspection tools and NL 
 
 # QA Skills
 
-Umbrella skill for quality assurance workflows. Routes to specialized sub-skills based on context.
+Quality assurance workflows: NL spec-driven e2e testing with Playwright Test Agents, and visual inspection tools.
 
-## Sub-Skills
+## Sentinel: NL Spec Authoring & Audit
 
-### @qa-tools — Visual Inspection Tools
+Sentinel is a thin layer over Playwright Test Agents. Claude authors structured Natural Language (NL) specs describing what to test. Playwright's Planner and Generator agents convert those specs into `.spec.ts` test files, and `npx playwright test` executes them deterministically. Sentinel's role is authoring (discover) and maintenance (audit) — not execution.
+
+### Pipeline
+
+```
+discover (Claude)  →  Planner (Playwright)  →  Generator (Playwright)  →  npx playwright test  →  audit (Claude)
+   ↓                      ↓                       ↓                          ↓                       ↓
+ NL specs             test plan              .spec.ts files           test results + report     drift detection
+ (specs/*.md)                                (tests/*.spec.ts)       (playwright-report/)      (audit report)
+```
+
+### What Sentinel Does
+- **Discover**: Author NL specs by scanning the app, importing docs, or guided conversation
+- **Audit**: Detect drift between NL specs, generated tests, and actual app behavior
+
+### What Playwright Test Agents Do
+- **Planner**: Read NL specs and produce a test plan
+- **Generator**: Convert the test plan into `.spec.ts` files
+- **Healer**: Fix broken selectors/assertions in `.spec.ts` files when tests fail
+- **Executor**: `npx playwright test` runs the generated tests
+
+### What Sentinel Does NOT Do
+- Execute tests (Playwright does this)
+- Manage evidence/screenshots (Playwright captures via `playwright.config.ts`)
+- Generate reports (Playwright HTML reporter handles this)
+- Fix broken selectors (Healer does this)
+
+### NL Spec Format
+
+NL specs are the contract between Sentinel (authoring) and Playwright (execution). They use YAML frontmatter for metadata and structured markdown that the Planner consumes.
+
+See `references/spec-format.md` for the full format specification.
+
+**Important**: Commit NL specs to version control. The audit workflow compares specs against generated tests — if specs aren't retained, audit cannot detect drift.
+
+## Visual Inspection Tools
+
 Tools for inspecting visual artifacts during QA workflows: video frame extraction, screenshot analysis, and visual regression documentation.
 
 **Use when**: You need to analyze screen recordings, extract frames from videos, or build visual evidence for bug reports.
 
-### @qa-sentinel — NL Spec Authoring & Audit
-Methodology and tooling for authoring Natural Language test specifications and auditing test coverage. Claude writes structured NL specs; Playwright Test Agents generate and execute `.spec.ts` tests deterministically.
+See `tools/SKILL.md` for tool documentation.
 
-**Use when**: You need to author test specifications, set up Playwright Test Agents integration, or audit drift between specs, tests, and app behavior.
+## Command Set
 
-## Routing
+### `/qa:setup`
+Initialize Sentinel in a project. Creates directory structure, config file, Playwright config, and seed test file.
 
-- If the task involves **video frames, screenshots, or visual artifacts** → use `@qa-tools`
-- If the task involves **test specs, NL spec authoring, audit, coverage tracking, or Playwright Test Agents** → use `@qa-sentinel`
-- If unsure, describe your QA need and this skill will route you
+### `/qa:discover`
+Author NL specs by scanning the app, importing existing docs, or guided interactive conversation. Outputs structured markdown NL specs ready for Playwright's Planner.
+
+### `/qa:audit`
+Detect drift between NL specs, generated `.spec.ts` tests, and app behavior. Reports uncovered specs, orphaned tests, and behavioral regressions.
+
+## References
+
+- `references/spec-format.md` — NL spec format: frontmatter fields, scenario structure, examples
+
+## Templates
+
+- `templates/spec-template.md` — Blank NL spec with all sections and guidance comments

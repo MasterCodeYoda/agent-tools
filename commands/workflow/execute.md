@@ -582,9 +582,12 @@ git worktree prune
 ## Error Recovery
 
 ### If Tests Fail
-1. Fix immediately before proceeding
-2. If complex, create TODO in session state
-3. Do not move to next task with failing tests
+
+1. **Distinguish the crash site from the root cause.** The line where the assertion fails or the exception is thrown is often not where the bug lives. Trace backwards through the call chain to find where the incorrect behavior originates.
+2. **Trace, don't assume.** Follow each function call to its actual definition — don't guess behavior from names. Check for shadowed functions, framework overrides, and default parameter values.
+3. **Check the opposite hypothesis.** Before concluding you've found the bug, ask: "What if this code is correct and the issue is elsewhere?" Look for evidence that would refute your theory. If you find it, your diagnosis is wrong.
+4. Fix immediately before proceeding. If the root cause is complex and outside your current scope, document the bug location and evidence chain in session state.
+5. Do not move to next task with failing tests.
 
 ### If Approach Diverges
 1. **Stop immediately** — do not push further down a failing path

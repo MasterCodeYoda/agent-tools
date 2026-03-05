@@ -50,6 +50,13 @@ Based on auto-detection, prompt user for scope confirmation:
 - **Medium suite** (20-100 test files): Run Tier 1 on all; prompt before Tier 2/3
 - **Large suite** (100+ test files): Require explicit scoping or run Tier 1 sampling with recommendations
 
+## Agent Reasoning Standards
+
+All audit agents must follow these reasoning principles:
+
+- **Cite evidence.** Every finding must reference specific `file:line` locations. No finding without a concrete code citation.
+- **Check the opposite hypothesis.** Before reporting a P1 or P2 finding, briefly consider: "Could this actually be correct?" Look for test helpers, shared fixtures, or framework behavior that might justify the pattern. If found, downgrade or retract.
+
 ## Three-Tier Analysis
 
 ### Tier 1 — Static Analysis (always runs)

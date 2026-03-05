@@ -1,5 +1,5 @@
 ---
-name: qa-sentinel:audit
+name: qa:audit
 description: Detect drift between NL specs, generated tests, and app behavior
 argument-hint: "[--live | --area <name> | --fix]"
 ---
@@ -25,7 +25,7 @@ $ARGUMENTS
 
 ## Load Configuration
 
-Read `sentinel.config.yaml` and extract `specs.nl_dir` (`specs/`) and `specs.tests_dir` (`tests/`). If no config exists, tell the user to run `qa-sentinel:setup` first and stop.
+Read `sentinel.config.yaml` and extract `specs.nl_dir` (`specs/`) and `specs.tests_dir` (`tests/`). If no config exists, tell the user to run `qa:setup` first and stop.
 
 ---
 
@@ -218,6 +218,6 @@ End with a reminder:
 
 ```
 Run `npx playwright test` to execute tests.
-Run `/qa-sentinel:discover` to author new NL specs.
-Run `/qa-sentinel:audit --live` to get fresh behavioral drift data.
+Run `/qa:discover` to author new NL specs.
+Run `/qa:audit --live` to get fresh behavioral drift data.
 ```

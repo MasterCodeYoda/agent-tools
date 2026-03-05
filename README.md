@@ -31,10 +31,9 @@ Skills are context-aware reference material that Claude loads on demand via `@sk
 | **clean-architecture** | Language-agnostic Clean Architecture with the Dependency Rule, layer patterns, and per-language guides (Python, TypeScript, C#, Rust) |
 | **code-patterns** | Language-specific best practices — type safety, error handling, testing idioms, and framework conventions |
 | **test-strategy** | Strategy selection (TDD, spec-first, property-based, contract, characterization), Red-Green-Refactor, and AI-specific anti-patterns |
-| **logging** | Structured logging standards — required fields, context propagation, and level guidelines |
-| **12-factor-apps** | Twelve-Factor methodology for building deployment-ready services |
 | **use-browser** | Browser automation patterns using the agent-browser CLI |
 | **visual-design** | 73 visual design micro-patterns from [detail.design](https://detail.design) — motion, accessibility, typography, and interaction details |
+| **qa** | QA workflows — visual inspection tools and NL spec authoring for Playwright Test Agents |
 
 ### Commands — Executable Workflows
 
@@ -56,6 +55,14 @@ Commands are invoked with `/command-name` in Claude Code (or Factory.ai).
 | `/workflow:audit-frontend` | Audit frontend code — accessibility, components, performance, state |
 | `/workflow:audit-repo` | Audit repository readiness for autonomous AI agent coding — CI/CD, review automation, security |
 
+#### QA Commands
+
+| Command | Purpose |
+|---------|---------|
+| `/qa:setup` | Initialize NL spec-driven QA testing with Playwright Test Agents |
+| `/qa:discover` | Scan app, import docs, or guided conversation to author NL test specs |
+| `/qa:audit` | Detect drift between NL specs, generated tests, and app behavior |
+
 #### Git Commands
 
 | Command | Purpose |
@@ -75,12 +82,12 @@ agent-tools/
 │   ├── clean-architecture/          # CA principles, language guides, examples
 │   ├── code-patterns/               # Language-specific patterns (Python, TS, C#, Rust)
 │   ├── test-strategy/               # Strategy selection + reference material
-│   ├── logging/                     # Structured logging standards
-│   ├── 12-factor-apps/              # Twelve-Factor methodology
 │   ├── use-browser/                 # Browser automation
-│   └── visual-design/              # 73 visual design micro-patterns (detail.design)
+│   ├── visual-design/              # 73 visual design micro-patterns (detail.design)
+│   └── qa/                          # QA workflows — NL spec authoring for Playwright Test Agents + visual inspection tools
 ├── commands/                        # Executable workflows (/command-name)
 │   ├── workflow/                    # 10 workflow commands
+│   ├── qa/                          # 3 QA commands (setup, discover, audit)
 │   └── git/                         # 5 git commands
 ├── factory-commands/                # Auto-generated flattened commands for Factory.ai
 ├── setup.sh                         # Symlink installer

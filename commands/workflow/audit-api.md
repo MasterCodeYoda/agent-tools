@@ -50,6 +50,14 @@ Based on auto-detection, prompt user for scope confirmation:
 - **Medium** (20-100 endpoints): Tier 1 on all; prompt before Tier 2/3
 - **Large** (100+ endpoints): Require explicit scoping or Tier 1 sampling
 
+## Agent Reasoning Standards
+
+All audit agents must follow these reasoning principles:
+
+- **Cite evidence.** Every finding must reference specific `file:line` locations or spec paths. No finding without a concrete citation.
+- **Check the opposite hypothesis.** Before reporting a P1 or P2 finding, briefly consider: "Could this be intentional?" Look for documented conventions, framework defaults, or versioning strategy that might justify the pattern. If found, downgrade or retract.
+- **Trace endpoint behavior.** When a finding involves a handler or resolver, follow it to its actual implementation. Don't assume behavior from route names or schema types alone.
+
 ## Three-Tier Analysis
 
 ### Tier 1 — Spec & Convention Analysis (always runs)

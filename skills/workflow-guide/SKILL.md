@@ -128,7 +128,7 @@ execution. After approval, the user chooses: save the plan only, or save and pro
 - Three-tier analysis (static, dynamic, heuristic)
 - Prioritized findings (P1/P2/P3)
 - Auto-detects language, architecture style, and quality tools
-- References @code-patterns, @clean-architecture, @logging criteria
+- References @code-patterns, @clean-architecture, and logging criteria (`implementation/logging.md`)
 
 **When to use**: Onboarding to a codebase, periodic health check, pre-release quality gate
 
@@ -416,6 +416,7 @@ For detailed templates and patterns, reference these sections:
 - `implementation/quality-checkpoints.md` - Per-layer quality gates
 - `implementation/dependency-establishment.md` - Worktree dependency cache restoration
 - `@test-strategy` - Testing strategy, TDD, property-based testing, contracts, and test quality
+- `implementation/logging.md` - Structured logging standards, required fields, context propagation
 
 ### PM Integration
 - `planning/pm-integration.md` - Linear, Jira, and manual workflow guides
