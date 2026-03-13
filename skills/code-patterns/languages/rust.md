@@ -1428,6 +1428,45 @@ async fn test_create_task_endpoint() {
 }
 ```
 
+### Test File Organization
+
+Rust projects should use the **sibling `tests.rs` submodule pattern** for test code that exceeds trivial size:
+
+**Pattern:**
+
+```rust
+// In source file (production code only):
+#[cfg(test)]
+mod tests;
+
+// In sibling tests.rs:
+use super::*;
+// test functions, helpers, fixtures
+```
+
+**File layout:**
+
+- `foo.rs` → tests in `foo/tests.rs`
+- `foo/mod.rs` → tests in sibling `foo/tests.rs`
+- `main.rs`/`lib.rs` → tests in sibling `tests.rs` (same directory)
+
+**Thresholds (guidelines, not hard rules):**
+
+| Signal | Action |
+|--------|--------|
+| Total file > ~300 LOC | Extract to sibling `tests.rs` |
+| Test LOC > production LOC | Extract to sibling `tests.rs` |
+| File 200-300 LOC, complex tests | Use judgment — likely extract |
+| File < 200 LOC, simple tests | Inline `mod tests { }` acceptable |
+| Shared test helpers, substantial | Extract to `test_helpers.rs` |
+
+**Why this pattern:**
+
+- Production files stay focused and navigable
+- `use super::*` preserves access to private items — no visibility changes needed
+- Aligns with patterns used by Tokio, Axum, and other major Rust projects
+- Editors/IDEs handle submodule files natively
+
 ---
 
 ## Serde Patterns

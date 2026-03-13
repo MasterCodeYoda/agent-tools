@@ -364,6 +364,10 @@ These principles are especially important for AI agents, who tend to pattern-mat
 - `references/property-testing.md` — Property-based testing patterns, tools, and when to use
 - `references/test-quality.md` — Mutation testing, assertion quality, the coverage trap
 
+### Language-Specific Test Organization
+
+**Rust:** For source files exceeding ~300 LOC (or where test LOC exceeds production LOC), extract tests into a sibling `tests.rs` submodule rather than inlining them. Declare `#[cfg(test)] mod tests;` in the source file and use `use super::*;` in `tests.rs` to retain private item access. See `@code-patterns` → Rust → **Test File Organization** for full thresholds and file layout rules.
+
 ## Commands
 
 - `/workflow:audit-tests` — Audit an existing test suite against these principles
