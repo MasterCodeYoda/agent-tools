@@ -6,7 +6,7 @@ argument-hint: "['.', directory path, or '--focus positioning|messaging|gtm|deve
 
 # Product & Market Audit
 
-Examine product artifacts — landing pages, README, docs, configs, onboarding flows, pricing pages, metadata — for value proposition clarity, messaging consistency, positioning strength, go-to-market readiness, and trust signals. Produce prioritized, actionable findings.
+Examine product artifacts for value proposition clarity, messaging consistency, positioning strength, go-to-market readiness, and trust signals. Produce prioritized, actionable findings.
 
 ## User Input
 
@@ -46,6 +46,15 @@ Before analysis, detect the project's product surface:
 10. Detect developer experience artifacts (SDK, API reference, playground, sample apps)
 ```
 
+## Product Context Adaptation
+
+Based on detected signals, adjust audit emphasis:
+
+- **Open-source / no commercial intent**: Skip GTM readiness and investor readiness agents. Weight value proposition, developer experience, and messaging consistency higher.
+- **B2B enterprise**: De-emphasize self-serve evaluation path. Assess whether sales-enablement artifacts exist (case studies, ROI calculators, integration guides).
+- **B2C consumer**: Weight trust signals and onboarding UX higher. Assess social proof and community signals.
+- **Internal tool / platform**: Skip competitive positioning. Focus on internal adoption friction and documentation completeness.
+
 ## Scope Gate
 
 Based on auto-detection, determine audit scope:
@@ -77,6 +86,8 @@ Spawn 3 parallel agents that read product-facing artifacts:
 - Are benefits stated (outcomes) vs. only features listed (capabilities)?
 - Does metadata (package.json description, meta tags, Open Graph) align with the stated value prop?
 - Is the project name memorable, searchable, and unambiguous?
+- Does the README include a visual demo (screenshot, GIF, or video link) showing the product in action?
+- Is there a one-liner install or usage command visible above the fold?
 
 **messaging-consistency-auditor**:
 - Cross-reference messaging across all text surfaces: README, landing page, docs, package metadata, CLI help text, error messages, onboarding copy
@@ -85,22 +96,27 @@ Spawn 3 parallel agents that read product-facing artifacts:
 - Check tone consistency (formal vs. casual, technical vs. accessible)
 - Verify terminology consistency (same concepts use same words everywhere)
 - Check that feature lists across surfaces are synchronized (no orphaned claims)
+- Check CLI `--help` output (if CLI tool) for consistency with README description
+- Check GitHub/registry metadata (repository description, topics, package.json keywords) for alignment with README positioning
 
 **product-completeness-scanner**:
 - Does the product appear production-ready or prototype? (versioning, changelog, stability indicators)
+- Is there a CHANGELOG with recent entries indicating active maintenance?
 - Are there "coming soon" or placeholder features visible to prospects?
 - Is error handling user-friendly or does it leak internals?
 - Do configuration defaults suggest production use or development hacks?
 - Are there trust signals present? (security policy, compliance mentions, SLA, uptime, social proof)
 - Is the license clearly stated and appropriate for the audience?
 - Does the project have operational maturity indicators? (monitoring, logging, health checks)
+- Is there a clear contribution path (CONTRIBUTING.md) appropriate for the product's audience?
 
 ### Tier 2 — Deep Artifact Analysis (runs if sufficient artifacts detected)
 
 Spawn 3 parallel agents:
 
 **developer-experience-auditor** (runs if developer-facing product detected):
-- Trace the zero-to-value path: install → configure → first success — how many steps?
+- For API design correctness (REST conventions, schema completeness, security), defer to `/workflow:audit-api`. This agent focuses on the *onboarding and adoption path*, not API design quality.
+- Trace the zero-to-value path: install → configure → first success — how many steps? (Flag if > 5 steps)
 - Is the quickstart copy-pasteable and does it produce a visible result?
 - Are prerequisites stated upfront (runtime versions, dependencies, accounts)?
 - Is API reference complete and does it include examples for each endpoint/method?
@@ -111,12 +127,13 @@ Spawn 3 parallel agents:
 
 **competitive-positioning-analyst**:
 - Are there explicit comparison docs or "vs." pages? Are claims specific and verifiable?
-- Does the architecture reveal defensible moats? (unique data, network effects, integration depth)
+- Do product artifacts *claim* defensible advantages (unique data, network effects, integration depth)? Are these claims specific and credible based on visible technical choices?
 - Are migration guides available from competitors?
 - Does the feature set suggest a clear category or is positioning ambiguous?
 - Is there a "Why [Product Name]?" narrative that goes beyond feature comparison?
 - Do technical choices create lock-in or switching costs (positive moat indicators)?
 - Is the product positioned as a category creator, fast follower, or niche specialist?
+- Are there ecosystem recognition signals (awesome-list inclusion, framework endorsements, badges)?
 
 **gtm-readiness-auditor**:
 - Is pricing visible, clear, and structured for the target audience?
@@ -126,27 +143,28 @@ Spawn 3 parallel agents:
 - Are there conversion touchpoints (newsletter, waitlist, demo request, community)?
 - Is there a clear upgrade/expansion path visible?
 - Does the product have distribution channel signals (marketplace listings, integrations, partnerships)?
-- Are analytics/tracking configured for understanding user behavior?
+- Is analytics instrumentation present in the codebase (tracking snippets, event definitions, analytics SDKs)?
 
 ### Tier 3 — Strategic Synthesis (AI judgment)
 
 Spawn 2 parallel agents:
 
 **pmf-signal-assessor**:
+- Note: These frameworks are applied as proxy indicators from artifact signals only — they are not substitutes for user research and financial analysis.
 - Synthesize Tier 1 and Tier 2 findings into an overall product-market fit signal assessment
-- Apply the Sean Ellis "very disappointed" test heuristic: based on artifacts, would users be very disappointed if this product disappeared?
-- Evaluate the Gibson Biddle DHM model from artifacts: Delight (is the UX compelling?), Hard-to-copy (are there moat signals?), Margin-enhancing (does the pricing model scale?)
+- Apply the Sean Ellis "very disappointed" test heuristic: based on artifact signals (depth of problem articulation, specificity of solution, signs of active usage), estimate whether users would be very disappointed if this product disappeared
+- Evaluate the Gibson Biddle DHM model from artifacts: Delight (is the UX compelling?), Hard-to-copy (are there moat signals?), Margin-enhancing signals (pricing model scalability, self-serve vs. sales-assisted)
 - Apply the Strategyzer Value Proposition Canvas: are Jobs, Pains, and Gains clearly addressed?
 - Identify the strongest PMF signal and the weakest signal with specific evidence
 - Assess: is this product in search, early traction, or scaling phase?
 
 **investor-buyer-readiness-evaluator**:
-- Technical due diligence lens: what would an acquirer or investor flag?
+- Technical due diligence lens: what would an acquirer or investor flag from readable artifacts?
 - Is the product differentiation defensible against well-resourced competitors?
 - Does the documentation quality suggest a mature or early-stage organization?
-- Are there signals of technical debt that would concern a buyer? (outdated deps, prototype code in production paths)
+- For technical debt signals that would concern a buyer, reference `/workflow:audit-code` findings rather than duplicating analysis here
 - Is the product story coherent from README to architecture to deployment?
-- Would a competitor's engineer understand and respect this codebase in a due diligence review?
+- Is the codebase organized with clear separation of concerns, consistent patterns, and documentation that would enable a new engineer to navigate it independently?
 - Overall narrative: is there a clear, compelling story from problem → solution → traction → scale?
 
 ## Output: Prioritized Report
@@ -169,16 +187,16 @@ Present findings using the following structure:
 
 ### Category Scores
 
-| Category | Weight | Score | Grade | Bar |
-|----------|--------|-------|-------|-----|
-| Value Proposition Clarity | 20% | [N]/100 | [A-F] | [████████░░] |
-| Messaging Consistency | 15% | [N]/100 | [A-F] | [██████░░░░] |
-| Positioning & Differentiation | 15% | [N]/100 | [A-F] | [████████░░] |
-| Product Completeness | 15% | [N]/100 | [A-F] | [██████████] |
-| Go-to-Market Readiness | 10% | [N]/100 | [A-F] | [████████░░] |
-| ICP & Audience Definition | 10% | [N]/100 | [A-F] | [████░░░░░░] |
-| Developer Experience | 10% | [N]/100 | [A-F] | [██████░░░░] |
-| Trust & Credibility | 5% | [N]/100 | [A-F] | [████░░░░░░] |
+| Category | Score | Grade | Bar |
+|----------|-------|-------|-----|
+| Value Proposition Clarity (20%) | [N]/100 | [A-F] | [████████░░] |
+| Messaging Consistency (15%) | [N]/100 | [A-F] | [██████░░░░] |
+| Positioning & Differentiation (15%) | [N]/100 | [A-F] | [████████░░] |
+| Product Completeness (15%) | [N]/100 | [A-F] | [██████████] |
+| Go-to-Market Readiness (10%) | [N]/100 | [A-F] | [████████░░] |
+| ICP & Audience Definition (10%) | [N]/100 | [A-F] | [████░░░░░░] |
+| Developer Experience (10%) | [N]/100 | [A-F] | [██████░░░░] |
+| Trust & Credibility (5%) | [N]/100 | [A-F] | [████░░░░░░] |
 
 ### Health Score
 
@@ -243,6 +261,18 @@ Calculate from findings:
 | [second action] | High | < 2 hours | [category] |
 | [third action] | Medium | < 4 hours | [category] |
 
+### Benchmark Comparison
+
+| Dimension | This Product | Typical OSS | Funded Startup | Market Leader |
+|-----------|-------------|-------------|----------------|---------------|
+| Value Proposition | [score] | 30-50 | 60-75 | 85+ |
+| Messaging | [score] | 20-40 | 55-70 | 80+ |
+| Positioning | [score] | 15-35 | 50-70 | 85+ |
+| Product Completeness | [score] | 30-50 | 60-75 | 90+ |
+| GTM Readiness | [score] | 10-25 | 50-70 | 85+ |
+| Developer Experience | [score] | 25-45 | 55-70 | 85+ |
+| Trust Signals | [score] | 15-30 | 45-65 | 85+ |
+
 ### Positive Observations
 [Strong product elements, effective positioning, clear audience targeting, compelling trust signals]
 
@@ -271,10 +301,10 @@ Weighted sum across categories using the weights in the Category Scores table.
 | Grade | Score Range | Label |
 |-------|-------------|-------|
 | A | 90-100 | Market-Ready |
-| B | 80-89 | Strong Foundation |
-| C | 70-79 | Needs Positioning Work |
-| D | 60-69 | Significant Gaps |
-| F | 0-59 | Critical |
+| B | 75-89 | Strong Foundation |
+| C | 60-74 | Needs Positioning Work |
+| D | 40-59 | Significant Gaps |
+| F | 0-39 | Critical |
 
 ## Actionable Next Steps
 
@@ -332,4 +362,5 @@ Product audit insights about positioning, messaging, and competitive stance are 
 - [Sean Ellis PMF Test](https://www.startup-marketing.com/the-startup-pyramid/) — "How would you feel if you could no longer use this product?" — the "very disappointed" benchmark
 - [Gibson Biddle DHM Model](https://gibsonbiddle.medium.com/intro-to-product-strategy-60bdf72b17e3) — Delight customers, in Hard-to-copy, Margin-enhancing ways
 - [Strategyzer Value Proposition Canvas](https://www.strategyzer.com/library/the-value-proposition-canvas) — Jobs-to-be-done, Pains, and Gains mapping
+- [Crossing the Chasm](https://www.harpercollins.com/products/crossing-the-chasm-3rd-edition-geoffrey-a-moore) — Geoffrey Moore's technology adoption lifecycle and chasm-crossing strategies
 - [react-doctor](https://github.com/millionco/react-doctor) — Health scoring concept adapted from this React diagnostic CLI
