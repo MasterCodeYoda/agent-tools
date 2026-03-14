@@ -90,13 +90,29 @@ Spawn 2 parallel agents that read test files:
 - Identify uncovered paths (not just percentages — which functions/branches)
 - Flag coverage without verification (high coverage + weak assertions)
 
-**mutation-scout** — Conditional on tooling:
-- **If mutation tool detected**: Run on changed/targeted files, report mutation score
-- **If no mutation tool**: Perform AI-driven sabotage test:
-  1. Identify 3-5 critical code paths in production code
-  2. For each: describe a specific mutation (change `>` to `>=`, remove null check, etc.)
-  3. Assess whether existing tests would catch it
-  4. Report which mutations would survive
+**mutation-scout** — References @test-strategy (`references/mutation-testing.md`, `references/test-quality.md`):
+
+**If mutation tool detected** (mutmut, Stryker, cargo-mutants, Stryker.NET):
+1. Run incrementally on changed/targeted files only (not full codebase)
+2. Parse results to identify surviving mutants
+3. For each survivor:
+   - Classify: equivalent mutant (no observable behavior change) vs. real gap
+   - If real gap: identify the untested behavior and suggest a specific test
+4. Identify redundant tests (P3): tests that kill no unique mutants — they are either redundant with other tests, assertion-free, or testing compiler-enforced properties. Flag as candidates for deletion or rewriting with stronger assertions.
+5. Report mutation score with layer-appropriate interpretation:
+   - Domain 80%+: Excellent | 60-79%: Gaps exist (P2) | <60%: Significant issues (P1)
+   - Application 70%+: Good | 50-69%: Gaps exist (P2) | <50%: Flag for review
+   - Infrastructure: skip (integration tests cover differently)
+   - Framework: skip, unless non-trivial validation/parsing logic exists — run targeted mutations on those files
+
+**If no mutation tool detected**:
+1. Perform AI-driven sabotage test on 3-5 critical code paths:
+   - Identify the most important business logic in scope
+   - For each: describe a specific mutation (boundary change, removed guard, negated condition, altered return value)
+   - Trace existing tests to assess whether they would catch it (cite specific test files and assertions)
+   - Report which mutations would survive with confidence level
+2. Recommend the appropriate mutation testing tool for the detected language (see @test-strategy `references/mutation-testing.md`)
+3. Provide the one-line setup command
 
 ### Tier 3 — Heuristic Analysis (AI judgment)
 
@@ -129,7 +145,7 @@ Present findings using the same P1/P2/P3 structure as `/workflow:review`:
 | Assertion-free tests | N | [ok/warning/critical] |
 | Weak assertions (level 0-2) | N | [ok/warning] |
 | Coverage (domain) | X% | [above/below 85% floor] |
-| Mutation score | X% | [if available] |
+| Mutation score | X% | [if available: domain 80%+/app 70%+/framework validation if applicable] |
 | Mock boundary violations | N | [ok/warning] |
 
 ### Health Score

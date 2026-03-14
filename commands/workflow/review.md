@@ -133,11 +133,12 @@ Run in parallel:
 - Pattern consistency
 - Coupling/cohesion
 
-**test-reviewer**:
-- Test coverage
-- Test quality
-- Edge cases
-- Regression risk
+**test-reviewer** — References @test-strategy:
+- Test coverage for changed code
+- Test quality and assertion strength (see `references/test-quality.md`)
+- Edge cases for changed logic
+- Regression risk assessment
+- If mutation tool available: flag domain logic changes lacking mutation testing coverage
 
 ### Deep Review (8 agents)
 

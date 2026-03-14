@@ -201,14 +201,14 @@ For testing methodology and strategy selection, see @test-strategy.
 
 Coverage is a **floor** (find untested code), not a goal. Use quality verification to ensure tests actually catch bugs.
 
-| Layer | Coverage Floor | Quality Verification |
-|-------|---------------|---------------------|
-| Domain | 85% | Mutation testing — verify tests catch injected faults |
-| Application | 75% | Sabotage test — manually break logic, confirm tests fail |
-| Infrastructure | 60% | Integration completeness — all repository paths exercised |
-| Framework | 50% | E2E happy path — critical user journeys covered |
+| Layer | Coverage Floor | Quality Verification | Mutation Target |
+|-------|---------------|---------------------|-----------------|
+| Domain | 85% | Mutation testing — verify tests catch injected faults | 80%+ mutation score |
+| Application | 75% | Sabotage test — manually break logic, confirm tests fail | 70%+ (P2 if 50-69%) |
+| Infrastructure | 60% | Integration completeness — all repository paths exercised | N/A |
+| Framework | 50% | E2E happy path — critical user journeys covered | Targeted on validation logic only |
 
-See @test-strategy (`references/test-quality.md`) for mutation testing tools and the sabotage test technique.
+See @test-strategy (`references/test-quality.md`, `references/mutation-testing.md`) for mutation testing tools, configuration, and the sabotage test technique.
 
 ## Pre-Commit Checklist
 

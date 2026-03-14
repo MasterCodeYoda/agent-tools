@@ -91,6 +91,7 @@ When generating tests, agents face unique failure modes that human developers do
 - **Tautological tests** — Tests that restate the implementation as assertions. If you wrote the code and the test in the same session, verify the test would catch a real bug.
 - **Assertion-free tests** — Tests that execute code but never assert anything meaningful. Every test must assert on an observable outcome.
 - **Context leakage** — Tests that pass because they share mutable state with other tests. Each test must be independently runnable.
+- **Untested mutations** — After writing tests, run mutation testing (or manual sabotage) on domain logic to verify tests catch real bugs, not just exercise code paths. See `references/mutation-testing.md`.
 
 See `references/test-quality.md` for a complete quality verification framework.
 
@@ -363,6 +364,7 @@ These principles are especially important for AI agents, who tend to pattern-mat
 - `references/refactoring.md` — Refactoring safely under test coverage
 - `references/property-testing.md` — Property-based testing patterns, tools, and when to use
 - `references/test-quality.md` — Mutation testing, assertion quality, the coverage trap
+- `references/mutation-testing.md` — Tool configuration, incremental strategies, agent-driven survivor analysis
 
 ### Language-Specific Test Organization
 

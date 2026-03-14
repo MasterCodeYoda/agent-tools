@@ -77,6 +77,8 @@ Mutation score = killed / total mutants
 
 Don't run on the entire codebase every time — target the code you changed.
 
+For tool configuration, incremental strategies, and agent-driven survivor analysis, see `references/mutation-testing.md`.
+
 ## Assertion Quality Analysis
 
 Not all assertions are equal. Stronger assertions catch more bugs.

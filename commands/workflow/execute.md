@@ -340,6 +340,7 @@ Before marking a task complete:
 - [ ] No linting/type errors introduced
 - [ ] Code follows existing patterns
 - [ ] Changes are focused and atomic
+- [ ] Mutation testing passed on domain logic (if tool available — run incrementally on changed files only)
 
 For testing methodology and strategy selection, see @test-strategy.
 
@@ -636,6 +637,7 @@ git worktree prune
 - [ ] Plan checkbox updated
 - [ ] Session state reflects progress
 - [ ] No introduced regressions
+- [ ] Mutation survivors analyzed (domain logic only, if mutation tool available)
 - [ ] Committed (if completing a story/slice)
 - [ ] PM tool updated (story marked Done)
 
