@@ -1,87 +1,141 @@
 ---
 name: use-browser
-description: Browser automation using the agent-browser CLI tool. Use when the user needs to navigate websites, fill forms, take screenshots, scrape data, or test web applications via command-line browser automation.
+description: Browser automation using Chrome DevTools MCP and the agent-browser CLI. Use when the user needs to navigate websites, fill forms, take screenshots, scrape data, or test web applications.
 allowed-tools: Bash(agent-browser:*)
 ---
 
 # Browser Use
 
-This skill wraps the `agent-browser` CLI tool for browser automation. The skill name (`use-browser`) and the CLI
-command (`agent-browser`) are different — all shell commands use `agent-browser`.
+This skill provides browser automation through two complementary tools:
+- **Chrome DevTools MCP** (preferred) — tools prefixed `mcp__chrome-devtools__*` that operate on the user's running Chrome
+- **agent-browser CLI** — standalone headless browser for recording, CI, cloud providers, and when MCP is unavailable
 
-## Installation
+## Tool Selection
 
-To test if the agent-browser CLI is available:
-```bash
-agent-browser --version
-```
+| Use Chrome DevTools MCP when | Use agent-browser CLI when |
+|------------------------------|---------------------------|
+| Navigation, snapshots, screenshots | Video recording (`record start/stop`) |
+| JavaScript evaluation | Session management (`--session`, `--profile`) |
+| Click, fill, form interaction | Cloud providers (`-p browserbase`, etc.) |
+| Lighthouse audits, perf profiling | State save/load (`auth save/login`) |
+| Network/console inspection | PDF export |
+| User's normal Chrome with existing auth | `--annotate` labeled screenshots |
+| Waiting for conditions | CI/testing or headless-only environments |
+| Emulation and device simulation | Diff comparisons (`diff snapshot/screenshot`) |
 
-To install agent-browser:
-```bash
-npm install -g agent-browser
-agent-browser install  # Download Chromium
-```
+**Default to MCP tools.** They work with the user's running Chrome, reuse existing cookies/auth, and require no extra browser process.
 
-## Operating Mode Priority
+## Connection Setup
 
-1. **Try CDP first**: Check if Chrome is running with remote debugging:
-   ```bash
-   agent-browser connect 9222 2>/dev/null && echo "CDP connected" || echo "CDP unavailable, use standalone"
-   ```
-   - If connection succeeds → use CDP mode for all operations
-   - Benefits: accurate DOM traversal, persistent session state, existing cookies/credentials, better performance
-2. **Fall back to standalone**: If CDP is unavailable (Chrome not running, port not open)
-   - Use `agent-browser open <url>` for headless/headed Playwright
+### autoConnect (primary)
 
-## Primary Mode: Chrome CDP Connection
+The Chrome DevTools MCP server uses `--autoConnect` to connect to the user's running Chrome automatically. One-time setup:
 
-CDP (Chrome DevTools Protocol) connects agent-browser to a running Chrome instance on port 9222. This provides the most reliable browser automation — accurate DOM traversal, persistent session state, access to existing cookies and credentials, and better overall performance.
+1. Open Chrome and navigate to `chrome://inspect#remote-debugging`
+2. Enable remote debugging
 
-### Setup
+MCP tools then work automatically — no port management, no dedicated profile.
 
-1. **Start Chrome with remote debugging** (run once, keeps running):
-   ```bash
-   /Applications/Google\ Chrome.app/Contents/MacOS/Google\ Chrome \
-     --remote-debugging-port=9222 \
-     --user-data-dir="$HOME/.chrome-agent-browser" &
-   ```
+### Port-based CDP (fallback)
 
-2. **Log into sites** in this Chrome window as needed (Sentry, GitHub, etc.)
-
-3. **Connect agent-browser to CDP**:
-   ```bash
-   agent-browser connect 9222
-   ```
-
-4. **Use all commands normally** — they now operate against the real browser context:
-   ```bash
-   agent-browser open https://sentry.io/issues/123
-   agent-browser snapshot -i
-   agent-browser click @e1
-   ```
-
-Note: Don't use `close` with CDP mode — it would close your persistent browser.
-
-## Fallback: Standalone Mode
-
-When CDP is unavailable (Chrome not running or port not open), use standalone mode. This launches an isolated Playwright-managed browser:
+For sandboxed or Docker environments where autoConnect isn't available:
 
 ```bash
-agent-browser open <url>        # Navigate to page
-agent-browser snapshot -i       # Get interactive elements with refs
-agent-browser click @e1         # Click element by ref
-agent-browser fill @e2 "text"   # Fill input by ref
-agent-browser close             # Close browser
+/Applications/Google\ Chrome.app/Contents/MacOS/Google\ Chrome \
+  --remote-debugging-port=9222 &
 ```
 
-## Core workflow
+Then configure MCP with `--browser-url=http://127.0.0.1:9222`.
+
+### Standalone (agent-browser only)
+
+When no Chrome instance is available:
+
+```bash
+agent-browser open <url>
+```
+
+Launches an isolated headless browser managed by agent-browser.
+
+## Chrome DevTools MCP Reference
+
+All tools are prefixed `mcp__chrome-devtools__`. Use these as your primary browser automation interface.
+
+### Navigation
+| Tool | Purpose |
+|------|---------|
+| `navigate_page(url)` | Navigate to URL |
+| `new_page(url)` | Open new tab |
+| `close_page` | Close current tab |
+| `list_pages` | List all open tabs |
+| `select_page(index)` | Switch to tab by index |
+
+### Inspection
+| Tool | Purpose |
+|------|---------|
+| `take_snapshot` | Full accessibility tree (like `snapshot -i`) |
+| `take_screenshot` | Screenshot of current page |
+| `take_memory_snapshot` | Heap snapshot for memory analysis |
+
+### Interaction
+| Tool | Purpose |
+|------|---------|
+| `click(selector)` | Click element |
+| `fill(selector, value)` | Fill input field |
+| `fill_form(fields)` | Fill multiple form fields at once |
+| `type_text(text)` | Type text character by character |
+| `press_key(key)` | Press keyboard key |
+| `hover(selector)` | Hover over element |
+| `drag(source, target)` | Drag and drop |
+| `upload_file(selector, paths)` | Upload files to input |
+
+### JavaScript
+| Tool | Purpose |
+|------|---------|
+| `evaluate_script(expression)` | Run JavaScript in page context |
+
+### Dialogs
+| Tool | Purpose |
+|------|---------|
+| `handle_dialog(accept, text)` | Accept/dismiss browser dialogs |
+
+### Waiting
+| Tool | Purpose |
+|------|---------|
+| `wait_for(selector, options)` | Wait for element, text, or condition |
+
+### Emulation
+| Tool | Purpose |
+|------|---------|
+| `emulate(device)` | Emulate device (viewport, user agent) |
+| `resize_page(width, height)` | Set viewport dimensions |
+
+### Analysis
+| Tool | Purpose |
+|------|---------|
+| `lighthouse_audit(categories)` | Run Lighthouse performance/a11y/SEO audit |
+| `performance_start_trace` | Begin performance trace recording |
+| `performance_stop_trace` | End trace and get results |
+| `performance_analyze_insight` | Analyze recorded trace data |
+
+### Debugging
+| Tool | Purpose |
+|------|---------|
+| `list_console_messages` | View all console output |
+| `get_console_message(id)` | Get specific console message |
+| `list_network_requests` | View all network activity |
+| `get_network_request(id)` | Get specific request details |
+
+## agent-browser CLI Reference
+
+v0.20.0 — Rust rewrite. Install: `brew install agent-browser && agent-browser install`
+
+### Core workflow
 
 1. Navigate: `agent-browser open <url>`
 2. Snapshot: `agent-browser snapshot -i` (returns elements with refs like `@e1`, `@e2`)
 3. Interact using refs from the snapshot
 4. Re-snapshot after navigation or significant DOM changes
-
-## Commands
 
 ### Navigation
 ```bash
@@ -110,8 +164,6 @@ agent-browser fill @e2 "text"     # Clear and type
 agent-browser type @e2 "text"     # Type without clearing
 agent-browser press Enter         # Press key
 agent-browser press Control+a     # Key combination
-agent-browser keydown Shift       # Hold key down
-agent-browser keyup Shift         # Release key
 agent-browser hover @e1           # Hover
 agent-browser check @e1           # Check checkbox
 agent-browser uncheck @e1         # Uncheck checkbox
@@ -120,6 +172,7 @@ agent-browser scroll down 500     # Scroll page
 agent-browser scrollintoview @e1  # Scroll element into view
 agent-browser drag @e1 @e2        # Drag and drop
 agent-browser upload @e1 file.pdf # Upload files
+agent-browser download @e1 ./out  # Download file by clicking element
 ```
 
 ### Get information
@@ -132,6 +185,8 @@ agent-browser get title           # Get page title
 agent-browser get url             # Get current URL
 agent-browser get count ".item"   # Count matching elements
 agent-browser get box @e1         # Get bounding box
+agent-browser get styles @e1      # Get computed styles
+agent-browser get cdp-url         # Get Chrome DevTools Protocol URL
 ```
 
 ### Check state
@@ -146,17 +201,23 @@ agent-browser is checked @e1      # Check if checked
 agent-browser screenshot          # Screenshot to stdout
 agent-browser screenshot path.png # Save to file
 agent-browser screenshot --full   # Full page
+agent-browser screenshot --annotate  # Labeled screenshot with numbered elements and legend
 agent-browser pdf output.pdf      # Save as PDF
 ```
 
 ### Video recording
 ```bash
-agent-browser record start ./demo.webm    # Start recording (uses current URL + state)
+agent-browser record start ./demo.webm    # Start recording
 agent-browser click @e1                   # Perform actions
 agent-browser record stop                 # Stop and save video
-agent-browser record restart ./take2.webm # Stop current + start new recording
 ```
-Recording creates a fresh context but preserves cookies/storage from your session. If no URL is provided, it automatically returns to your current page. For smooth demos, explore first, then start recording.
+
+### Diff comparisons
+```bash
+agent-browser diff snapshot              # Compare current vs last snapshot
+agent-browser diff screenshot --baseline # Compare current vs baseline image
+agent-browser diff url <u1> <u2>         # Compare two pages
+```
 
 ### Wait
 ```bash
@@ -174,6 +235,12 @@ agent-browser mouse move 100 200      # Move mouse
 agent-browser mouse down left         # Press button
 agent-browser mouse up left           # Release button
 agent-browser mouse wheel 100         # Scroll wheel
+```
+
+### Keyboard (no selector)
+```bash
+agent-browser keyboard type "text"         # Type with real keystrokes
+agent-browser keyboard inserttext "text"   # Insert text without key events
 ```
 
 ### Semantic locators (alternative to refs)
@@ -217,25 +284,56 @@ agent-browser network requests                 # View tracked requests
 agent-browser network requests --filter api    # Filter requests
 ```
 
-### Tabs & Windows
+### Tabs
 ```bash
 agent-browser tab                 # List tabs
 agent-browser tab new [url]       # New tab
 agent-browser tab 2               # Switch to tab
 agent-browser tab close           # Close tab
-agent-browser window new          # New window
 ```
 
-### Frames
+### Authentication & Profiles
 ```bash
-agent-browser frame "#iframe"     # Switch to iframe
-agent-browser frame main          # Back to main frame
+agent-browser --profile ~/.myapp open <url>      # Persistent session profile
+agent-browser --session-name myapp open <url>     # Auto-save/restore state by name
+agent-browser --auto-connect open <url>           # Reuse running Chrome's auth
+agent-browser auth save mysite --url https://example.com --username user  # Save credentials
+agent-browser auth login mysite                   # Login with saved credentials
+agent-browser auth list                           # List saved auth profiles
+agent-browser auth delete mysite                  # Delete auth profile
 ```
 
-### Dialogs
+### Inspect & Clipboard
 ```bash
-agent-browser dialog accept [text]  # Accept dialog
-agent-browser dialog dismiss        # Dismiss dialog
+agent-browser inspect                    # Open Chrome DevTools for active page
+agent-browser clipboard read             # Read clipboard contents
+agent-browser clipboard write "text"     # Write to clipboard
+```
+
+### Cloud Providers
+```bash
+agent-browser -p browserbase open <url>  # Use Browserbase
+agent-browser -p browserless open <url>  # Use Browserless
+agent-browser -p ios open <url>          # iOS Simulator (requires Xcode + Appium)
+```
+
+### Sessions (parallel browsers)
+```bash
+agent-browser --session test1 open site-a.com
+agent-browser --session test2 open site-b.com
+agent-browser session list
+```
+
+### Debugging
+```bash
+agent-browser open example.com --headed   # Show browser window
+agent-browser console                     # View console messages
+agent-browser errors                      # View page errors
+agent-browser highlight @e1               # Highlight element
+agent-browser trace start                 # Start recording trace
+agent-browser trace stop trace.zip        # Stop and save trace
+agent-browser profiler start              # Start DevTools profiler
+agent-browser profiler stop profile.json  # Stop and save profile
 ```
 
 ### JavaScript
@@ -243,71 +341,55 @@ agent-browser dialog dismiss        # Dismiss dialog
 agent-browser eval "document.title"   # Run JavaScript
 ```
 
-## Example: CDP-first workflow
-
-```bash
-# Always try CDP first
-agent-browser connect 9222 2>/dev/null
-# If connected, proceed with full browser context:
-agent-browser open https://example.com/form
-agent-browser snapshot -i
-# Output shows: textbox "Email" [ref=e1], textbox "Password" [ref=e2], button "Submit" [ref=e3]
-
-agent-browser fill @e1 "user@example.com"
-agent-browser fill @e2 "password123"
-agent-browser click @e3
-agent-browser wait --load networkidle
-agent-browser snapshot -i  # Check result
-```
-
-## Example: Authentication with saved state (standalone)
-
-```bash
-# When CDP isn't available, save/load state in standalone mode:
-agent-browser open https://app.example.com/login
-agent-browser snapshot -i
-agent-browser fill @e1 "username"
-agent-browser fill @e2 "password"
-agent-browser click @e3
-agent-browser wait --url "**/dashboard"
-agent-browser state save auth.json
-
-# Later sessions: load saved state
-agent-browser state load auth.json
-agent-browser open https://app.example.com/dashboard
-```
-
-## Sessions (parallel browsers)
-
-```bash
-agent-browser --session test1 open site-a.com
-agent-browser --session test2 open site-b.com
-agent-browser session list
-```
-
-## JSON output (for parsing)
-
-Add `--json` for machine-readable output:
+### JSON output (for parsing)
 ```bash
 agent-browser snapshot -i --json
 agent-browser get text @e1 --json
 ```
 
-## Debugging
+## Examples
+
+### MCP-first workflow (preferred)
+
+```
+# Navigate and inspect
+mcp__chrome-devtools__navigate_page(url: "https://example.com/form")
+mcp__chrome-devtools__wait_for(selector: "form")
+mcp__chrome-devtools__take_snapshot
+
+# Interact with form
+mcp__chrome-devtools__fill(selector: "[name=email]", value: "user@example.com")
+mcp__chrome-devtools__fill(selector: "[name=password]", value: "password123")
+mcp__chrome-devtools__click(selector: "button[type=submit]")
+mcp__chrome-devtools__wait_for(text: "Welcome")
+mcp__chrome-devtools__take_snapshot  # Verify result
+```
+
+### agent-browser for video recording
 
 ```bash
-agent-browser open example.com --headed   # Show browser window
-agent-browser console                     # View console messages
-agent-browser console --clear             # Clear console
-agent-browser errors                      # View page errors
-agent-browser errors --clear              # Clear errors
-agent-browser highlight @e1               # Highlight element
-agent-browser record start ./debug.webm   # Record from current page
-agent-browser record stop                 # Save recording
-agent-browser trace start                 # Start recording trace
-agent-browser trace stop trace.zip        # Stop and save trace
-agent-browser connect 9222                # Connect to Chrome via CDP (see above)
+# Explore first, then record a clean demo
+agent-browser open https://example.com/demo
+agent-browser snapshot -i
+# ... explore and plan steps ...
+
+agent-browser record start ./demo.webm
+agent-browser open https://example.com/demo
+agent-browser fill @e1 "user@example.com"
+agent-browser click @e3
+agent-browser wait --load networkidle
+agent-browser record stop
+```
+
+### agent-browser standalone (no Chrome)
+
+```bash
+agent-browser open https://example.com
+agent-browser snapshot -i
+agent-browser click @e1
+agent-browser screenshot --annotate result.png
 ```
 
 ## References
-[Agent Browser documentation (https://agent-browser.dev/)]
+- [Agent Browser documentation](https://agent-browser.dev/)
+- Chrome DevTools MCP: `npx chrome-devtools-mcp@latest --autoConnect`

@@ -114,24 +114,17 @@ cat .claude/settings.json 2>/dev/null | grep -A10 project_management
 
 If no base_url is configured and no MCP tools are available, skip to step 6 (Manual).
 
-### 2. CDP Browser (preferred)
+### 2. Chrome DevTools MCP (preferred)
 
-Try connecting to an already-running Chrome instance via CDP. This preserves existing authentication sessions (SSO, cookies).
+Use the Chrome DevTools MCP tools to navigate to the issue page. These connect to the user's running Chrome via autoConnect, preserving existing authentication sessions (SSO, cookies).
 
-```bash
-# Check for running Chrome with CDP
-agent-browser connect 9222 2>/dev/null && echo "CDP connected" || echo "CDP unavailable"
+```
+mcp__chrome-devtools__navigate_page(url: "{issue_url}")
+mcp__chrome-devtools__wait_for(text: "issue title or key indicator")
+mcp__chrome-devtools__take_snapshot
 ```
 
-If connected:
-
-```bash
-agent-browser open {issue_url}
-agent-browser wait --load networkidle
-agent-browser snapshot -c
-```
-
-Parse the compact snapshot text to extract:
+Parse the snapshot to extract:
 - **Title**: Usually the first heading or prominent text element
 - **Description**: Body/content area text
 - **Status**: Status badge or label element
@@ -139,9 +132,9 @@ Parse the compact snapshot text to extract:
 
 If the snapshot shows a login page or auth wall, skip to step 4 (MCP tools).
 
-### 3. Standalone Browser
+### 3. Standalone Browser (fallback)
 
-If CDP is unavailable, try launching a standalone browser session:
+If Chrome DevTools MCP is unavailable, try launching a standalone agent-browser session:
 
 ```bash
 agent-browser open {issue_url}
@@ -178,12 +171,13 @@ Note: This typically fails for authenticated PM tools.
 If all automated methods fail:
 
 1. Ask the user to paste the issue content directly
-2. Suggest configuring Chrome CDP or base URLs:
+2. Suggest enabling browser-based retrieval:
    ```
    To enable browser-based retrieval:
-   1. Open Chrome with: /Applications/Google\ Chrome.app/Contents/MacOS/Google\ Chrome --remote-debugging-port=9222
-   2. Log into your PM tool
+   1. In Chrome, navigate to chrome://inspect#remote-debugging and enable it
+   2. Log into your PM tool in Chrome
    3. Add base_url to .claude/settings.json (see Configuration above)
+   Chrome DevTools MCP will auto-discover your running Chrome.
    ```
 
 ### Retrieval Strategy Notes
@@ -314,14 +308,16 @@ Closes: LIN-123
 If MCP integrations aren't available, issue retrieval can still work via the browser-based methods in the Issue Retrieval Strategy (above). To set this up:
 
 1. **Configure base URLs** in `.claude/settings.json` (see Configuration section)
-2. **Open Chrome with CDP** for authenticated access:
+2. **Enable remote debugging** in Chrome:
+   - Navigate to `chrome://inspect#remote-debugging` and enable it (one-time setup)
+   - Chrome DevTools MCP autoConnect will discover your running Chrome automatically
+3. **Fallback — port-based CDP** for sandboxed/Docker environments:
    ```bash
    /Applications/Google\ Chrome.app/Contents/MacOS/Google\ Chrome \
-     --remote-debugging-port=9222 \
-     --user-data-dir="$HOME/.chrome-agent-browser" &
+     --remote-debugging-port=9222 &
    ```
-3. **Log into your PM tool** in that Chrome instance
-4. Issue retrieval will connect via CDP and read issue details from the rendered page
+4. **Log into your PM tool** in Chrome
+5. Issue retrieval will use Chrome DevTools MCP or agent-browser to read issue details from the rendered page
 
 For **write operations** (status updates, comments) without MCP, provide manual instructions:
 
