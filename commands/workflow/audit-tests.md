@@ -86,7 +86,10 @@ Spawn 2 parallel agents that read test files:
 **coverage-analyst** — References @test-strategy (`references/test-quality.md`):
 - Run test suite with coverage
 - Measure against layer-appropriate floors:
-  - Domain: 85%, Application: 75%, Infrastructure: 60%, Framework: 50%
+  - Domain: 85%, Application: 75%, Framework: 50%
+  - Infrastructure (internal — sqlite, import, agent-core, task-runner, json, image): 60% floor
+  - Infrastructure (external — supabase, onnx, llm, cloud providers): No floor; report coverage but do not penalize.
+    These are better tested via integration/E2E tests, not unit tests.
 - Identify uncovered paths (not just percentages — which functions/branches)
 - Flag coverage without verification (high coverage + weak assertions)
 
@@ -102,7 +105,8 @@ Spawn 2 parallel agents that read test files:
 5. Report mutation score with layer-appropriate interpretation:
    - Domain 80%+: Excellent | 60-79%: Gaps exist (P2) | <60%: Significant issues (P1)
    - Application 70%+: Good | 50-69%: Gaps exist (P2) | <50%: Flag for review
-   - Infrastructure: skip (integration tests cover differently)
+   - Infrastructure (internal): 60%+ Good | 40-59%: Gaps (P2) | <40%: Flag for review
+   - Infrastructure (external): skip entirely — mutation testing external service wrappers has near-zero value
    - Framework: skip, unless non-trivial validation/parsing logic exists — run targeted mutations on those files
 
 **If no mutation tool detected**:
@@ -150,12 +154,29 @@ Present findings using the same P1/P2/P3 structure as `/workflow:review`:
 
 ### Health Score
 
-Calculate from findings:
-- Start at 100
-- Each P1: -12 points
-- Each P2: -4 points
+Calculate per-layer scores, then weight by test viability:
+
+**Per-layer scoring** (start at 100, apply finding penalties):
+- Each P1: -15 points
+- Each P2: -5 points
 - Each P3: -1 point
 - Floor: 0
+
+**Layer weights** (reflect testing viability and value):
+
+| Layer | Weight | Rationale |
+|-------|--------|-----------|
+| Domain | 0.35 | Pure logic, highest test value, most testable |
+| Application | 0.30 | Use cases with mocked boundaries, high value |
+| Commands | 0.10 | Validation/transport, moderate value |
+| Infrastructure (internal) | 0.15 | SQLite, local I/O — testable with fixtures |
+| Infrastructure (external) | 0.05 | Network services (Supabase, ONNX, LLM) — low unit-test viability |
+| Framework | 0.05 | Tauri glue — low unit-test viability, E2E covers |
+
+**Composite score** = Σ(layer_score × layer_weight)
+
+Infrastructure split: classify crates as "internal" (sqlite, import, agent-core, task-runner, json, image)
+vs "external" (supabase, onnx, llm) based on whether they wrap network services.
 
 | Score Range | Label |
 |-------------|-------|
