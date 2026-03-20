@@ -184,34 +184,14 @@ execution. After approval, the user chooses: save the plan only, or save and pro
 
 **When to use**: After solving non-trivial problems
 
-## Priority System
+## Task Planning
 
-### P1 - Must Have
-Essential for feature completion. Without these, it doesn't work.
+All tasks in an implementation plan are required. If a task is derived from acceptance criteria or is necessary for the feature to work, it belongs in the flat task list and must be completed before the work is considered done.
 
-- Core domain logic
-- Primary use case
-- Essential persistence
-- Main user interface
-- Critical path tests
+There are no priority tiers. Acceptance criteria are binary — met or not met.
 
-### P2 - Should Have
-Improves quality but not strictly necessary for initial deployment.
-
-- Comprehensive validation
-- Detailed error messages
-- Performance optimizations
-- Extended test coverage
-- Logging and monitoring
-
-### P3 - Nice to Have
-Can be deferred to future iterations.
-
-- Advanced UI features
-- Analytics integration
-- Detailed documentation
-- Performance metrics
-- Extended customization
+### Out of Scope
+Items genuinely not required by acceptance criteria but worth noting for future iterations belong in an "Out of Scope" section. This section is for ideas and enhancements, not for deferring planned work.
 
 ## Session Continuity
 
@@ -410,7 +390,7 @@ For detailed templates and patterns, reference these sections:
 
 ### Planning Phase
 - `planning/templates.md` - Vertical slice, quick, epic, spike, bug fix templates
-- `planning/task-breakdown.md` - P1/P2/P3 breakdown patterns and estimation
+- `planning/task-breakdown.md` - Task breakdown patterns and estimation
 
 ### Implementation Phase
 - `implementation/quality-checkpoints.md` - Per-layer quality gates
@@ -430,7 +410,7 @@ For detailed templates and patterns, reference these sections:
 |-----------|-------------|
 | Vertical slicing | Build by story, not by layer |
 | Bottom-up implementation | Domain → Infrastructure → Application → Framework |
-| P1/P2/P3 prioritization | Must have → Should have → Nice to have |
+| Required vs. Out of Scope | All planned tasks required; future ideas in Out of Scope |
 | User approval gates | Plans require explicit approval before saving or executing |
 | Session continuity | Session state as source of truth |
 | Knowledge compounding | Document solutions for future reference |

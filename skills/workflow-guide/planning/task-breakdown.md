@@ -1,67 +1,22 @@
 # Task Breakdown Patterns
 
-Break down vertical slices into manageable tasks using P1/P2/P3 prioritization.
+Break down vertical slices into a flat list of required tasks organized by layer. All tasks derived from acceptance criteria are required — there are no optional tiers.
 
-## Priority Classification
+## Task Classification
 
-### P1 - Must Have (Core Functionality)
+Every task in the plan must be one of:
 
-Essential for story completion. Without these, the feature doesn't work.
+1. **Required** — Derived from acceptance criteria or necessary for the feature to work. These go in the task list.
+2. **Out of Scope** — Genuinely future work not covered by acceptance criteria. These go in the Out of Scope section.
 
-**Characteristics:**
-- Required for basic functionality
-- Blocks user from completing goal
-- No workaround exists
-- Part of acceptance criteria
-
-**Examples:**
-- Core domain logic
-- Primary use case
-- Essential data persistence
-- Main user interface
-- Critical path tests
-
-### P2 - Should Have (Quality & Polish)
-
-Improves the feature but not strictly necessary for initial deployment.
-
-**Characteristics:**
-- Enhances user experience
-- Improves maintainability
-- Adds robustness
-- Nice for production readiness
-
-**Examples:**
-- Comprehensive validation
-- Detailed error messages
-- Performance optimizations
-- Extended test coverage
-- Logging and monitoring
-
-### P3 - Nice to Have (Enhancements)
-
-Adds value but can be deferred to future iterations.
-
-**Characteristics:**
-- Convenience features
-- Advanced functionality
-- Aesthetic improvements
-- Future-proofing
-
-**Examples:**
-- Advanced UI features
-- Analytics integration
-- Detailed documentation
-- Performance metrics
-- Extended customization
+There is no middle ground. If a task maps to an acceptance criterion, it is required regardless of whether it feels like "polish" or "enhancement."
 
 ## Task Breakdown Template
 
 ```markdown
 ## Tasks for [Story ID]: [Story Title]
 
-### P1 - Must Have
-Core tasks that must be completed:
+All tasks are required for completion.
 
 #### Domain Layer
 - [ ] Create [Entity] with fields: [list fields]
@@ -77,28 +32,19 @@ Core tasks that must be completed:
 
 #### Framework Layer
 - [ ] Create [endpoint/UI component]
-- [ ] Implement basic input validation
+- [ ] Implement input validation
 
 #### Testing
 - [ ] Unit test for core business logic
 - [ ] Integration test for persistence
 - [ ] E2E test for happy path
 
-### P2 - Should Have
-Quality improvements:
+### Out of Scope
 
-- [ ] Comprehensive input validation
-- [ ] Enhanced error handling
-- [ ] Additional test coverage (80%+)
-- [ ] Structured logging
+Items not required by acceptance criteria but worth noting for future iterations:
 
-### P3 - Nice to Have
-Future enhancements:
-
-- [ ] Loading states
-- [ ] Caching layer
-- [ ] Documentation
-- [ ] Analytics
+- [Item 1] - [why it's deferred]
+- [Item 2] - [why it's deferred]
 ```
 
 ## Estimation Guidelines
@@ -117,20 +63,9 @@ Future enhancements:
 
 ### Story Size Guidelines
 
-**Small Story**
-- 3-5 P1 tasks
-- 2-3 P2 tasks
-- 1-2 P3 tasks
-
-**Medium Story**
-- 5-8 P1 tasks
-- 3-5 P2 tasks
-- 2-3 P3 tasks
-
-**Large Story**
-- 8-12 P1 tasks
-- 5-8 P2 tasks
-- 3-5 P3 tasks
+**Small Story**: 5-8 required tasks
+**Medium Story**: 8-13 required tasks
+**Large Story**: 13-20 required tasks
 
 **Too Large?**
 - Consider splitting into multiple stories
@@ -222,9 +157,9 @@ Start high-level, elaborate as you learn:
 
 Before starting implementation:
 
-- [ ] All P1 tasks identified?
+- [ ] All acceptance criteria covered by at least one task?
 - [ ] Dependencies marked?
 - [ ] Parallel work opportunities identified?
 - [ ] Each task is atomic and testable?
-- [ ] P2/P3 tasks can truly be deferred?
-- [ ] Tasks align with acceptance criteria?
+- [ ] Out of Scope items are genuinely not in acceptance criteria?
+- [ ] No required work hiding in Out of Scope?

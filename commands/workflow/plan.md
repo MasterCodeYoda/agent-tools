@@ -191,21 +191,20 @@ Target file: `./planning/<project>/implementation-plan.md`
 
 ## Task Breakdown
 
-### P1 - Must Have (Required for completion)
+All tasks below are required for completion. Every task maps to an acceptance criterion or is necessary for the feature to work correctly. There are no optional tiers — if it's in this list, it must be done before the work is considered complete.
 
 - [ ] [Task 1] - [brief description]
 - [ ] [Task 2] - [brief description]
 - [ ] [Task 3] - [brief description]
+- [ ] [Task 4] - [brief description]
+- [ ] [Task 5] - [brief description]
 
-### P2 - Should Have (Quality improvements)
+### Out of Scope
 
-- [ ] [Task 1] - [brief description]
-- [ ] [Task 2] - [brief description]
+Items not required by acceptance criteria but worth noting for future iterations:
 
-### P3 - Nice to Have (Future enhancements)
-
-- [ ] [Task 1] - [brief description]
-- [ ] [Task 2] - [brief description]
+- [Item 1] - [why it's deferred]
+- [Item 2] - [why it's deferred]
 
 ## Technical Decisions
 
@@ -251,7 +250,8 @@ Target file: `./planning/<project>/implementation-plan.md`
 ### Per Feature (Epic)
 
 - [ ] All slices complete (using above checklist per slice)
-- [ ] All P1 tasks complete
+- [ ] All tasks complete — no deferred items
+- [ ] All acceptance criteria verified against the plan before closing
 - [ ] Code reviewed
 - [ ] Documentation updated
 - [ ] Deployed to staging
@@ -368,9 +368,8 @@ Show the plan summary and ask the user to approve:
 
 ### Task Breakdown
 
-- **P1 (Must Have)**: [N] tasks
-- **P2 (Should Have)**: [N] tasks
-- **P3 (Nice to Have)**: [N] tasks
+- **Required**: [N] tasks (all derived from acceptance criteria)
+- **Out of Scope**: [N] items noted for future iterations
 
 ### Key Technical Decisions
 
@@ -567,7 +566,7 @@ or a later request like "start implementation", "run /workflow:execute", "go ahe
       **Project**: [project-name]
       **Session**: #1 of work
       **Progress**: 0/[Y] tasks (0% complete)
-      **Current Focus**: [first P1 task]
+      **Current Focus**: [first task]
       ```
 
    b. **Initialize TodoWrite** with tasks from implementation-plan.md
@@ -618,9 +617,8 @@ or a later request like "start implementation", "run /workflow:execute", "go ahe
 
 ### Realistic Scope
 
-- P1 tasks are must-haves
-- P2 tasks improve quality
-- P3 tasks can be deferred
+- All planned tasks are required — acceptance criteria are binary
+- Genuinely future work goes in Out of Scope, not in the task list
 - Don't over-plan; elaborate as you learn
 
 ### Enable Execution

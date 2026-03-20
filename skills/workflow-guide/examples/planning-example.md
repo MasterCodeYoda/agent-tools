@@ -92,7 +92,8 @@ Build a complete vertical slice for email/password registration with confirmatio
 
 ## Task Breakdown
 
-### P1 - Must Have
+All tasks are required for completion.
+
 - [ ] Create User entity with email validation
 - [ ] Create Password value object with complexity rules
 - [ ] Implement UserRepository.create() and findByEmail()
@@ -100,21 +101,21 @@ Build a complete vertical slice for email/password registration with confirmatio
 - [ ] Create POST /register endpoint
 - [ ] Add basic email service (stub for now)
 - [ ] Write database migration
-- [ ] Unit tests for domain logic
-- [ ] Integration test for registration flow
-
-### P2 - Should Have
-- [ ] Real email service integration (SendGrid/SES)
 - [ ] Rate limiting implementation
 - [ ] Security headers
 - [ ] Comprehensive error messages
+- [ ] Unit tests for domain logic
+- [ ] Integration test for registration flow
 - [ ] Extended test coverage (80%+)
 
-### P3 - Nice to Have
-- [ ] Password strength indicator
-- [ ] Welcome email template
-- [ ] Registration analytics
-- [ ] A/B testing setup
+### Out of Scope
+
+Items not in acceptance criteria, noted for future iterations:
+
+- Password strength indicator UI — UX enhancement, not in current AC
+- Welcome email template — requires design review, tracked separately
+- Registration analytics — depends on analytics platform selection
+- A/B testing setup — future growth initiative
 
 ## Technical Decisions
 
@@ -155,7 +156,8 @@ NOT building yet:
 4. Framework (API endpoint) - User interface
 
 ## Definition of Done
-- [ ] All P1 tasks complete
+- [ ] All tasks complete — no deferred items
+- [ ] All acceptance criteria verified against the plan before closing
 - [ ] Tests passing (unit, integration, E2E)
 - [ ] Code reviewed
 - [ ] Security review completed
@@ -204,7 +206,7 @@ To begin implementing:
 The execute command will:
 1. Load session state
 2. Display progress (0/9 tasks)
-3. Start with first P1 task (Create User entity)
+3. Start with first task (Create User entity)
 4. Track progress in TodoWrite
 5. Update session state as work completes
 
@@ -212,6 +214,6 @@ The execute command will:
 
 1. **Separate requirements from implementation** - Different audiences care about each
 2. **Vertical slice breakdown** - Clear view of all layers needed
-3. **P1/P2/P3 prioritization** - What's essential vs. nice-to-have
+3. **Required vs. Out of Scope** - All planned tasks are required; future ideas go in Out of Scope
 4. **YAGNI decisions explicit** - Document what we're NOT building
 5. **Session state ready** - Enables multi-session continuity

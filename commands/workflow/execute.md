@@ -267,11 +267,9 @@ Display context to user:
 
 Using the implementation plan and session state:
 
-1. Identify next P1 task (must-have)
-2. If all P1 complete, move to P2 tasks
-3. If all P2 complete, move to P3 tasks
-4. Consider user input for task steering
-5. Evaluate task steps to identify parallel execution opportunties, and use sub-agents where feasible
+1. Identify next incomplete task from the plan
+2. Consider user input for task steering
+3. Evaluate task steps to identify parallel execution opportunities, and use sub-agents where feasible
 
 Ask user to confirm task selection if unclear.
 
@@ -358,7 +356,7 @@ Run quality checks based on project type:
 Keep the plan file updated as you work:
 
 ```markdown
-### P1 Tasks
+## Task Breakdown
 
 - [x] Create domain entity  <- completed
 - [ ] Implement use case    <- next
@@ -403,7 +401,7 @@ Before stopping or generating a handoff, run this self-check to catch unfinished
 
 Check for session end when:
 
-- Major task group completed (all P1s)
+- All tasks in current slice complete
 - Significant milestone reached
 - User indicates session ending
 - Context becoming stale
@@ -645,6 +643,7 @@ git worktree prune
 
 - [ ] Completion Verification checklist passed
 - [ ] All targeted tasks complete or documented
+- [ ] All acceptance criteria verified against the plan before closing
 - [ ] Session state updated
 - [ ] Work committed
 - [ ] Compound prompt offered
