@@ -1,0 +1,60 @@
+# Output quality criteria for /workflow:plan.
+# Unlike detection scenarios, these define what the OUTPUT must contain
+# (or must not contain) rather than what planted issues to detect.
+
+scenario_type: output-quality
+
+# The plan command receives the requirements in code/requirements.md
+# and should produce an implementation plan. These criteria evaluate
+# the quality of that plan.
+
+output_criteria:
+  must_contain:
+    - id: OQ-01
+      check: "Plan organizes work as vertical slices — each slice delivers a complete, testable feature from domain through framework layer"
+      type: structural
+      skill_pattern: "workflow-guide/SKILL.md — Vertical Slicing"
+      severity: P1
+
+    - id: OQ-02
+      check: "Each task has binary acceptance criteria — clear done/not-done conditions, not vague descriptions"
+      type: presence
+      skill_pattern: "workflow-guide/SKILL.md — All tasks required (binary acceptance criteria)"
+      severity: P1
+
+    - id: OQ-03
+      check: "Plan specifies a testing strategy per slice — which test approach (TDD, spec-first, property-based) and why"
+      type: presence
+      skill_pattern: "test-strategy/SKILL.md — Strategy Selection table"
+      severity: P2
+
+    - id: OQ-04
+      check: "Plan follows bottom-up implementation order within each slice — domain → infrastructure → application → framework"
+      type: structural
+      skill_pattern: "workflow-guide/SKILL.md — Bottom-up Implementation"
+      severity: P2
+
+    - id: OQ-05
+      check: "Plan includes a session state initialization with branch naming convention"
+      type: presence
+      skill_pattern: "workflow-guide/SKILL.md — Session State Schema"
+      severity: P2
+
+    - id: OQ-06
+      check: "Plan identifies genuinely future work in an Out of Scope section rather than deferring required tasks"
+      type: presence
+      skill_pattern: "workflow-guide/SKILL.md — genuinely future work in Out of Scope"
+      severity: P3
+
+  must_not_contain:
+    - id: OQ-07
+      check: "Plan must NOT organize as horizontal layers — all models first, then all services, then all controllers"
+      type: anti-pattern
+      skill_pattern: "workflow-guide/SKILL.md — Vertical Slicing: Stay vertical (resist horizontal layers)"
+      severity: P1
+
+    - id: OQ-08
+      check: "Plan must NOT have vague tasks like 'implement backend' or 'add tests' without specific scope"
+      type: anti-pattern
+      skill_pattern: "workflow-guide/SKILL.md — binary acceptance criteria"
+      severity: P2

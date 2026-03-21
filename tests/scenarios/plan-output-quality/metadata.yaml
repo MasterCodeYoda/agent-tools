@@ -1,0 +1,12 @@
+name: plan-output-quality
+description: >
+  A requirements document for a feature. Tests whether workflow:plan
+  produces an implementation plan that follows vertical slicing,
+  includes binary acceptance criteria, specifies testing strategy,
+  and avoids horizontal layer decomposition.
+skill: workflow-guide
+command: workflow:plan
+agents_tested: []
+language: python
+scenario_type: output-quality
+output_criteria_count: 8

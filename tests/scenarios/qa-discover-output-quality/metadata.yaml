@@ -1,0 +1,12 @@
+name: qa-discover-output-quality
+description: >
+  A small web app codebase. Tests whether qa:discover produces
+  NL specs that are behavioral (not implementation-coupled),
+  cover critical user flows, follow the NL spec format, and
+  prioritize by user impact.
+skill: qa
+command: qa:discover
+agents_tested: []
+language: typescript
+scenario_type: output-quality
+output_criteria_count: 8

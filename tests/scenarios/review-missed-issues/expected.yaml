@@ -1,0 +1,89 @@
+# Expected findings when running /workflow:review against this diff scenario.
+# The scenario simulates a changeset (new file additions) that a standard
+# depth review should flag.
+
+findings:
+  - id: RMI-01
+    severity: P1
+    type: sql-injection
+    file: code/diff/user_search.py
+    description: >
+      User input interpolated directly into SQL query string.
+      Classic SQL injection vulnerability — attacker can exfiltrate
+      or modify database contents.
+    skill_pattern: "workflow:review — security-sentinel: Injection vulnerabilities"
+    agent: security-sentinel
+
+  - id: RMI-02
+    severity: P1
+    type: hardcoded-secret
+    file: code/diff/config.py
+    description: >
+      API key hardcoded as a string literal in source code. Will be
+      committed to version control and visible in git history.
+    skill_pattern: "workflow:review — security-sentinel: Sensitive data handling"
+    agent: security-sentinel
+
+  - id: RMI-03
+    severity: P2
+    type: n-plus-one-query
+    file: code/diff/report_generator.py
+    description: >
+      Loop issues one database query per user to fetch orders.
+      With 1000 users this produces 1001 queries instead of 2.
+      Classic N+1 query pattern.
+    skill_pattern: "workflow:review — performance-oracle: N+1 queries"
+    agent: performance-oracle
+
+  - id: RMI-04
+    severity: P2
+    type: resource-leak
+    file: code/diff/report_generator.py
+    description: >
+      File opened without context manager (with statement). If an
+      exception occurs between open() and close(), the file handle
+      leaks.
+    skill_pattern: "workflow:review — performance-oracle: Resource leaks"
+    agent: performance-oracle
+
+  - id: RMI-05
+    severity: P2
+    type: layer-violation
+    file: code/diff/user_search.py
+    description: >
+      Database query executed directly in the route handler
+      (framework layer). Queries belong in infrastructure layer
+      via repository pattern.
+    skill_pattern: "workflow:review — architecture-strategist: Layer violations"
+    agent: architecture-strategist
+
+  - id: RMI-06
+    severity: P2
+    type: missing-test-for-change
+    file: code/diff/report_generator.py
+    description: >
+      New report generation logic added with no corresponding test
+      file. Changed logic should have test coverage.
+    skill_pattern: "workflow:review — test-reviewer: Test coverage for changed code"
+    agent: test-reviewer
+
+  - id: RMI-07
+    severity: P2
+    type: bare-except
+    file: code/diff/report_generator.py
+    description: >
+      Bare except clause catches all exceptions including
+      KeyboardInterrupt and SystemExit. Should catch specific
+      exception types.
+    skill_pattern: "code-patterns/SKILL.md — Error Handling Philosophy"
+    agent: code-quality-reviewer
+
+  - id: RMI-08
+    severity: P3
+    type: debug-code-left-in
+    file: code/diff/user_search.py
+    description: >
+      print() debug statements left in production code. Should use
+      structured logging or be removed before merge.
+    skill_pattern: "workflow:review — code-quality-reviewer: Obvious bugs or issues"
+    agent: code-quality-reviewer

@@ -447,6 +447,10 @@ Each scenario in `tests/scenarios/<name>/` contains:
 - `agents_tested`: Which specific agents within the command
 - `planted_issues`: Count of planted issues (for quick reference)
 
+### Detection Scenarios (scenario_type: detection)
+
+For audit and review commands — planted issues in code, measured by detection rate.
+
 **expected.yaml** fields per finding:
 - `id`: Unique identifier (e.g., DRV-01)
 - `severity`: Expected P1/P2/P3
@@ -455,6 +459,27 @@ Each scenario in `tests/scenarios/<name>/` contains:
 - `description`: What the audit should detect
 - `skill_pattern`: Which specific skill section defines this as an issue
 - `agent`: Which command agent should catch it
+
+### Output Quality Scenarios (scenario_type: output-quality)
+
+For generative commands (plan, discover, position) — input provided, output evaluated against structural and content criteria.
+
+**expected.yaml** fields:
+- `scenario_type`: `output-quality`
+- `output_criteria.must_contain[]`: Criteria the output MUST satisfy
+- `output_criteria.must_not_contain[]`: Anti-patterns the output MUST NOT exhibit
+
+Each criterion has:
+- `id`: Unique identifier (e.g., OQ-01)
+- `check`: Human-readable description of what to verify
+- `type`: `structural` (organization), `presence` (required element), `coverage` (topic covered), `format` (follows spec), `quality` (subjective standard), or `anti-pattern` (must not appear)
+- `skill_pattern`: Which skill section defines this criterion
+- `severity`: P1/P2/P3
+
+**Effectiveness measurement for output-quality scenarios:**
+- Criteria satisfaction rate: `(satisfied criteria) / (total criteria)`
+- Each criterion is binary: satisfied or not
+- Anti-pattern criteria: satisfied means the pattern is ABSENT
 
 ### Effectiveness Measurement
 
@@ -514,8 +539,10 @@ When creating new evolve scenarios:
 
 ### Current Scenarios
 
-| Scenario | Skill | Domain/Command | Planted Issues |
-|----------|-------|----------------|----------------|
+**Detection scenarios** (planted issues, measured by detection rate):
+
+| Scenario | Skill | Domain/Command | Issues |
+|----------|-------|----------------|--------|
 | `dependency-rule-violations` | clean-architecture | audit (code) | 6 |
 | `weak-test-suite` | test-strategy | audit (tests) | 7 |
 | `code-pattern-violations` | code-patterns | audit (code) | 8 |
@@ -525,6 +552,14 @@ When creating new evolve scenarios:
 | `visual-design-violations` | visual-design | audit (frontend) | 8 |
 | `qa-coverage-violations` | qa | audit (qa) | 7 |
 | `product-positioning-violations` | product | product:audit | 8 |
+| `review-missed-issues` | code-patterns | workflow:review | 8 |
+
+**Output quality scenarios** (input provided, output evaluated against criteria):
+
+| Scenario | Skill | Command | Criteria |
+|----------|-------|---------|----------|
+| `plan-output-quality` | workflow-guide | workflow:plan | 8 |
+| `qa-discover-output-quality` | qa | qa:discover | 8 |
 
 ## Compound Learning (Phase 3)
 

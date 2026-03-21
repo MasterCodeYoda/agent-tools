@@ -1,0 +1,58 @@
+# Output quality criteria for /qa:discover.
+# Evaluates whether discovered NL specs meet quality standards.
+
+scenario_type: output-quality
+
+# qa:discover scans the app codebase in code/ and should produce
+# NL test specs. These criteria evaluate spec quality.
+
+output_criteria:
+  must_contain:
+    - id: OQ-01
+      check: "Specs cover the authentication flow (login page exists in the app)"
+      type: coverage
+      skill_pattern: "skills/audit/domains/qa.md — Tier 1: Authentication flows"
+      severity: P1
+
+    - id: OQ-02
+      check: "Specs cover the core CRUD flow for products (product list and detail pages exist)"
+      type: coverage
+      skill_pattern: "skills/audit/domains/qa.md — Tier 1: Core CRUD operations"
+      severity: P1
+
+    - id: OQ-03
+      check: "Specs cover the checkout/cart flow (cart and checkout pages exist)"
+      type: coverage
+      skill_pattern: "skills/audit/domains/qa.md — Tier 1: Payment/checkout flows"
+      severity: P1
+
+    - id: OQ-04
+      check: "Specs use behavioral language — user actions and visible outcomes, not CSS selectors or internal state"
+      type: quality
+      skill_pattern: "skills/audit/domains/qa.md — Tier 1: behavioral vs implementation-coupled"
+      severity: P2
+
+    - id: OQ-05
+      check: "Each spec has YAML frontmatter with title and priority fields"
+      type: format
+      skill_pattern: "qa/SKILL.md — NL Spec Format: YAML frontmatter"
+      severity: P2
+
+    - id: OQ-06
+      check: "Specs include both happy path and error scenarios for critical flows"
+      type: coverage
+      skill_pattern: "skills/audit/domains/qa.md — Tier 1: Error/edge case flows"
+      severity: P2
+
+  must_not_contain:
+    - id: OQ-07
+      check: "Specs must NOT reference CSS selectors, data-testid attributes, or DOM structure as primary identifiers"
+      type: anti-pattern
+      skill_pattern: "skills/audit/domains/qa.md — Tier 1: implementation-coupled"
+      severity: P2
+
+    - id: OQ-08
+      check: "Specs must NOT describe internal application state (Redux store, component state) — only user-visible behavior"
+      type: anti-pattern
+      skill_pattern: "qa/SKILL.md — NL specs describe what to test (behavior)"
+      severity: P2

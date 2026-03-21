@@ -1,0 +1,17 @@
+name: review-missed-issues
+description: >
+  A code diff with planted issues across security, performance,
+  architecture, and test quality. Tests whether workflow:review's
+  agents detect issues in changesets at standard depth when guided
+  by @code-patterns, @clean-architecture, and @test-strategy skills.
+skill: code-patterns
+command: workflow:review
+agents_tested:
+  - code-quality-reviewer
+  - security-sentinel
+  - performance-oracle
+  - architecture-strategist
+  - test-reviewer
+language: python
+planted_issues: 8
+scenario_type: detection
