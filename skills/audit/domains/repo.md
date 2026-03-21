@@ -1,12 +1,8 @@
----
-name: workflow:audit-repo
-description: Audit repository readiness for autonomous AI agent coding — CI/CD, review automation, risk management, agent docs, security posture
-argument-hint: "['.', directory path, or '--focus ci|security|agent|factory']"
----
+# Repo Infrastructure Domain
 
-# Repository Readiness Audit
+Agents and criteria for auditing repository readiness — CI/CD, review automation, agent documentation, dependency management, and security posture.
 
-Examine repository infrastructure for CI/CD health, review automation, risk management, agent documentation, dependency management, security posture, and incident memory. Produce prioritized, actionable findings.
+Consumed by `/workflow:audit` orchestrator. Use `--focus repo` for this domain only.
 
 ## User Input
 

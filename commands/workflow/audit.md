@@ -90,88 +90,19 @@ All agents across all domains must follow:
 
 ## Domain Agent Teams
 
-### Code Quality Domain
+Each domain's agents, skill references, tiered analysis, and check criteria are defined in the @audit skill under `domains/`. The orchestrator reads these definitions to know what to dispatch.
 
-References: @code-patterns, @clean-architecture
+| Domain | Definition | Agents | Skill References |
+|--------|-----------|--------|-----------------|
+| Code Quality | `@audit/domains/code.md` | 4 | @code-patterns, @clean-architecture |
+| Test Quality | `@audit/domains/tests.md` | 2 | @test-strategy |
+| API Design | `@audit/domains/api.md` | 3-5 | @clean-architecture, @code-patterns |
+| Frontend Quality | `@audit/domains/frontend.md` | 3-5 | @code-patterns, @visual-design |
+| Documentation | `@audit/domains/docs.md` | 2-4 | @workflow-guide |
+| Repo Infrastructure | `@audit/domains/repo.md` | 3-6 | @code-patterns, @clean-architecture, @test-strategy |
+| QA Coverage | `@audit/domains/qa.md` | 3 | @qa, @test-strategy |
 
-Agents (from `audit-code.md`):
-- **pattern-compliance-analyst**: Naming, type safety, error handling, idioms
-- **dependency-direction-checker**: Layer boundaries, dependency rule, SOLID
-- **observability-readiness-analyst**: Structured logging, required fields
-- **data-access-pattern-checker**: Repository patterns, queries, transactions
-
-### Test Quality Domain
-
-References: @test-strategy
-
-Agents (from `audit-tests.md`):
-- **assertion-analyst**: Assertion-free tests, weak assertions, tautological patterns
-- **mock-boundary-checker**: Internal collaborator mocking, boundary identification
-
-### API Design Domain
-
-References: @clean-architecture, @code-patterns
-
-Agents (from `audit-api.md`):
-- **api-convention-checker**: Resource naming, HTTP semantics, error format, pagination
-- **api-security-analyst**: OWASP API Top 10, auth, rate limiting, input validation
-- **api-contract-completeness-checker**: Schema validation, breaking changes
-
-### Frontend Quality Domain
-
-References: @code-patterns, @visual-design
-
-Agents (from `audit-frontend.md`):
-- **accessibility-scanner**: WCAG 2.2, color contrast, form labels, keyboard nav
-- **component-architecture-reviewer**: God components, prop drilling, composition
-- **state-and-data-flow-reviewer**: State duplication, re-render patterns, context stacking
-
-### Documentation Domain
-
-References: @workflow-guide
-
-Agents (from `audit-docs.md`):
-- **structure-validator**: Missing docs, broken links, heading hierarchy, empty stubs
-- **inline-doc-checker**: Public API doc coverage, parameter documentation
-- **code-doc-alignment-checker**: Stale examples, parameter mismatches, dead links
-
-### Repo Infrastructure Domain
-
-Agents (from `audit-repo.md`):
-- **ci-pipeline-analyst**: CI workflows, gate ordering, status checks
-- **repo-config-analyst**: Branch protection, CODEOWNERS, PR templates
-- **agent-readiness-analyst**: AGENTS.md, CLAUDE.md, onboarding docs
-
-### QA Coverage Domain (NEW)
-
-References: @qa, @test-strategy
-
-This domain fills the gap — no prior standalone audit covered E2E/NL test scenario quality.
-
-**qa-spec-coverage-analyst**:
-- Check for NL test spec directory (sentinel/, specs/, e2e-specs/)
-- Count NL specs vs. critical user flows visible in the codebase
-- Flag key user journeys with no corresponding NL spec:
-  - Authentication flows (login, register, password reset)
-  - Core CRUD operations for primary entities
-  - Payment/checkout flows (if applicable)
-  - Onboarding/setup flows
-- Assess spec quality: Are specs behavioral (user-centric) or implementation-coupled?
-- Check for spec staleness: do specs reference UI elements/flows that no longer exist?
-
-**qa-test-generation-analyst**:
-- Check for generated Playwright test files corresponding to NL specs
-- Flag specs with no generated tests (the spec exists but was never run through the Planner/Generator)
-- Flag generated tests that appear stale (generated test references selectors/routes that no longer exist)
-- Check Playwright configuration: is it set up and functional?
-- Assess test isolation: do generated tests have proper setup/teardown?
-
-**qa-drift-detector**:
-- Cross-reference NL specs against current app routes/components
-- Flag behavioral drift: spec describes flow X, but app now works differently
-- Flag coverage gaps: new features added to app with no corresponding spec
-- Flag orphaned specs: specs for features that were removed
-- Check last spec update dates vs. last app code changes in same area
+For each active domain: read its domain definition file, spawn the agents defined there at the appropriate depth tier, collect findings tagged with the domain name.
 
 ## Orchestration
 
@@ -299,9 +230,9 @@ When audit reveals recurring patterns worth documenting, offer compound. Cross-d
 
 Audit findings inform planning — P1 items become candidates for the next planning cycle.
 
-### With focused audit commands
+### With @audit skill (domain definitions)
 
-The individual `audit-code.md`, `audit-tests.md`, etc. serve as domain definitions. They define the agents, their skill references, and their check criteria. The unified audit orchestrates them; `--focus` routes to them for domain-specific depth.
+Domain definitions live in `skills/audit/domains/`. Each file defines the agents, skill references, and check criteria for one domain. The orchestrator reads them; `--focus <domain>` routes to the specific domain definition for focused depth.
 
 ### With /evolve
 
@@ -310,4 +241,4 @@ Evolve ensures the skills that back audit agents are complete and consistent. Wh
 ## References
 
 - [react-doctor](https://github.com/millionco/react-doctor) — Health scoring concept
-- Individual domain commands: `audit-code.md`, `audit-tests.md`, `audit-api.md`, `audit-frontend.md`, `audit-docs.md`, `audit-repo.md`
+- Domain definitions: `skills/audit/domains/{code,tests,api,frontend,docs,repo,qa}.md`

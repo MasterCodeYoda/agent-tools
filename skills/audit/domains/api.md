@@ -1,12 +1,8 @@
----
-name: workflow:audit-api
-description: Audit API surface design — REST conventions, OpenAPI/GraphQL schema quality, security, and consistency
-argument-hint: "[directory path, spec file, or 'all']"
----
+# API Design Domain
 
-# API Surface Audit
+Agents and criteria for auditing API surface design — REST conventions, OpenAPI/GraphQL schema quality, security, and consistency.
 
-Examine API design quality — conventions, spec completeness, security, and consistency — and produce prioritized, actionable findings.
+Consumed by `/workflow:audit` orchestrator. Use `--focus api` for this domain only.
 
 ## User Input
 

@@ -1,12 +1,8 @@
----
-name: workflow:audit-tests
-description: Audit an existing test suite for quality, anti-patterns, and coverage gaps using the @test-strategy skill framework
-argument-hint: "[directory path, file glob, or 'all']"
----
+# Test Quality Domain
 
-# Test Suite Audit
+Agents and criteria for auditing test suites against @test-strategy principles.
 
-Examine an existing test suite against @test-strategy principles and produce prioritized, actionable findings.
+Consumed by `/workflow:audit` orchestrator. Use `--focus tests` for this domain only.
 
 ## User Input
 

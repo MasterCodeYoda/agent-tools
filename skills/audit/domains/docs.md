@@ -1,12 +1,8 @@
----
-name: workflow:audit-docs
-description: Audit documentation quality — READMEs, inline docs, API docs, planning docs, architecture docs
-argument-hint: "[directory path, file glob, or 'all']"
----
+# Documentation Domain
 
-# Documentation Audit
+Agents and criteria for auditing documentation quality — READMEs, inline docs, API docs, planning docs, architecture docs.
 
-Examine existing documentation for presence, accuracy, completeness, and clarity. Produce prioritized, actionable findings.
+Consumed by `/workflow:audit` orchestrator. Use `--focus docs` for this domain only.
 
 ## User Input
 

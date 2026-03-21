@@ -1,12 +1,8 @@
----
-name: workflow:audit-code
-description: Audit existing production code quality against @code-patterns and @clean-architecture standards
-argument-hint: "[directory path, file glob, or 'all']"
----
+# Code Quality Domain
 
-# Production Code Audit
+Agents and criteria for auditing production code against @code-patterns and @clean-architecture principles.
 
-Examine existing production code against @code-patterns and @clean-architecture principles and produce prioritized, actionable findings.
+Consumed by `/workflow:audit` orchestrator. Use `--focus code` for this domain only.
 
 ## User Input
 

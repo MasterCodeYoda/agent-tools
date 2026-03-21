@@ -1,12 +1,8 @@
----
-name: workflow:audit-frontend
-description: Audit frontend code for accessibility, component architecture, performance, state management, and security
-argument-hint: "[directory path, component glob, or 'all']"
----
+# Frontend Quality Domain
 
-# Frontend Audit
+Agents and criteria for auditing frontend code — accessibility, component architecture, performance, state management, and security.
 
-Examine frontend code for accessibility, component architecture, performance, state management, and security — and produce prioritized, actionable findings.
+Consumed by `/workflow:audit` orchestrator. Use `--focus frontend` for this domain only.
 
 ## User Input
 
