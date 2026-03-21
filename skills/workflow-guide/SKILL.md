@@ -52,11 +52,11 @@ Build features end-to-end, not layer-by-layer.
 While we plan **top-down** (user story → layers), we implement **bottom-up**:
 
 1. **Domain Layer First** - Pure business logic, no dependencies
-2. **Infrastructure Layer** - Data access, external services
-3. **Application Layer** - Use cases, orchestration
+2. **Application Layer** - Use cases, orchestration (depends on domain abstractions)
+3. **Infrastructure Layer** - Data access, external services (implements application interfaces)
 4. **Framework Layer** - API endpoints, UI
 
-This order ensures each layer depends only on layers below it.
+This order follows the dependency rule: each layer depends only on layers inside it. Infrastructure implements the interfaces that Application defines.
 
 Testing integrates naturally with bottom-up implementation: write tests for each layer as you build it upward. See @test-strategy for strategy selection.
 
@@ -110,72 +110,27 @@ execution. After approval, the user chooses: save the plan only, or save and pro
 
 **When to use**: Before merging or deploying
 
-### /workflow:audit-tests
-**Purpose**: Audit existing test suites for quality, anti-patterns, and coverage gaps
+### /workflow:audit
+**Purpose**: Unified project audit — auto-detects project shape, dispatches domain-specific agent teams, deduplicates findings across domains
+
+**Domains** (activated based on project auto-detection):
+- Code quality (@code-patterns, @clean-architecture)
+- Test quality (@test-strategy)
+- API design (@clean-architecture)
+- Frontend quality (@code-patterns, @visual-design)
+- Documentation (@workflow-guide)
+- Repo infrastructure
+- QA coverage (@qa)
 
 **Key features**:
-- Three-tier analysis (static, dynamic, heuristic)
-- Prioritized findings (P1/P2/P3)
-- Auto-detects test framework and quality tools
-- References @test-strategy skill criteria
-
-**When to use**: Onboarding to a codebase, after AI-generated test push, periodic health check
-
-### /workflow:audit-code
-**Purpose**: Audit existing production code for quality, architecture, and production readiness
-
-**Key features**:
-- Three-tier analysis (static, dynamic, heuristic)
-- Prioritized findings (P1/P2/P3)
-- Auto-detects language, architecture style, and quality tools
-- References @code-patterns, @clean-architecture, and logging criteria (`implementation/logging.md`)
+- Single entry point for comprehensive assessment
+- Cross-domain deduplication (same root cause → one finding)
+- Project-type-aware weighting (backend vs frontend vs full-stack)
+- Depth control (`--depth quick|standard|deep`)
+- Focus mode (`--focus code,tests`) for domain-specific depth
+- Unified health score with per-domain breakdown
 
 **When to use**: Onboarding to a codebase, periodic health check, pre-release quality gate
-
-### /workflow:audit-docs
-**Purpose**: Audit documentation quality — presence, accuracy, completeness, and clarity
-
-**Key features**:
-- Three-tier analysis (presence, accuracy, quality)
-- Prioritized findings (P1/P2/P3)
-- Auto-detects documentation types and tooling
-- Cross-references docs against code for staleness
-
-**When to use**: Onboarding to a codebase, after major refactoring, periodic health check
-
-### /workflow:audit-api
-**Purpose**: Audit API surface design — conventions, schema quality, security, and consistency
-
-**Key features**:
-- Three-tier analysis (spec linting, security, design quality)
-- Prioritized findings (P1/P2/P3)
-- Auto-detects API type (REST/GraphQL) and spec files
-- References OWASP API Security Top 10, Zalando/Microsoft guidelines
-
-**When to use**: Onboarding to a codebase, API review before public release, periodic health check
-
-### /workflow:audit-frontend
-**Purpose**: Audit frontend code for accessibility, performance, component architecture, and security
-
-**Key features**:
-- Three-tier analysis (static, build-dependent, heuristic)
-- Prioritized findings (P1/P2/P3)
-- Auto-detects framework, styling, state management, and build tools
-- Measures Core Web Vitals and WCAG 2.2 compliance
-
-**When to use**: Onboarding to a codebase, pre-release quality gate, periodic health check
-
-### /workflow:audit-repo
-**Purpose**: Audit repository readiness for autonomous AI agent coding
-
-**Key features**:
-- Three-tier analysis (static, dynamic, heuristic)
-- Prioritized findings (P1/P2/P3)
-- Code Factory 10-point alignment assessment
-- Checks CI/CD, review automation, risk management, agent docs, security posture
-- Visual report card with 0-100 readiness score and letter grade
-
-**When to use**: Onboarding to a codebase, setting up agent workflows, periodic infrastructure health check
 
 ### /workflow:compound
 **Purpose**: Capture knowledge from solved problems
@@ -404,12 +359,19 @@ For detailed templates and patterns, reference these sections:
 ### Examples
 - `examples/planning-example.md` - Complete planning walkthrough
 
+## Related Skills
+
+- **clean-architecture**: Architectural patterns that workflow commands implement via vertical slicing
+- **code-patterns**: Language-specific implementation patterns used during `/workflow:execute`
+- **test-strategy**: Testing methodology integrated into execution and review workflows
+- **audit**: Unified audit consumes workflow-guide for documentation domain criteria
+
 ## Key Principles Summary
 
 | Principle | Application |
 |-----------|-------------|
 | Vertical slicing | Build by story, not by layer |
-| Bottom-up implementation | Domain → Infrastructure → Application → Framework |
+| Bottom-up implementation | Domain → Application → Infrastructure → Framework |
 | Required vs. Out of Scope | All planned tasks required; future ideas in Out of Scope |
 | User approval gates | Plans require explicit approval before saving or executing |
 | Session continuity | Session state as source of truth |

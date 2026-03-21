@@ -181,7 +181,7 @@ After presenting the report, offer:
 
 1. **Fix critical findings** — Address P1 items (misleading docs cause real damage)
 2. **Create follow-up tasks** — Track P2/P3 improvements
-3. **Re-audit after fixes** — Run `/workflow:audit-docs [same scope]` to verify
+3. **Re-audit after fixes** — Run `/workflow:audit --focus docs [same scope]` to verify
 4. **Install doc tooling** — [if not configured: recommend tools for project]
 5. **Save report** — Export findings to `./planning/docs-audit-report.md`
 ```
@@ -200,7 +200,7 @@ Validate compound solution output quality — ensure documented solutions are cl
 
 Validate requirements and plan structure against documentation standards.
 
-### With /workflow:audit-repo
+### With /workflow:audit --focus repo
 
 audit-docs evaluates documentation quality and accuracy; audit-repo checks that documentation infrastructure exists (README, CONTRIBUTING, ADRs, agent docs).
 

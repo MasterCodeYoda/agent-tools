@@ -31,7 +31,7 @@ Solution/
 │   │   └── Application.csproj
 │   ├── Infrastructure/         # Infrastructure Layer
 │   │   └── Infrastructure.csproj
-│   └── WebApi/                 # Presentation Layer
+│   └── WebApi/                 # Frameworks Layer
 │       └── WebApi.csproj
 ├── tests/
 │   ├── Domain.Tests/

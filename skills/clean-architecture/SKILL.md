@@ -376,12 +376,12 @@ Essential reading for deep understanding:
 
 ### Layer-Specific Testing
 
-- **Domain**: Pure unit tests, no mocks needed
-- **Application**: Mock repositories and gateways
-- **Infrastructure**: Integration tests with real resources
+- **Domain**: Pure unit tests, no mocks needed — business logic is isolated by design
+- **Application**: Test use case orchestration — see @test-strategy for mocking boundary guidance
+- **Infrastructure**: Integration tests with real resources (test containers, test databases)
 - **Frameworks**: E2E tests for critical paths
 
-See: `references/testing-strategies.md`
+For testing strategy selection and mocking philosophy, @test-strategy is authoritative.
 
 ## When NOT to Use Clean Architecture
 
@@ -431,8 +431,14 @@ To add support for a new language:
 
 ## Commands
 
-- `/workflow:audit-code` — Audit production code for architectural compliance
-- `/workflow:audit-api` — Audit API surface for architectural compliance
+- `/workflow:audit` — Audit production code and API surface for architectural compliance (code and api domains)
+- `/workflow:review` — Code review references these patterns for dependency direction and layer compliance
+
+## Related Skills
+
+- **code-patterns**: Language-specific implementation of these architectural patterns
+- **test-strategy**: Testing strategy selection by architectural layer
+- **workflow-guide**: Vertical slicing and implementation ordering
 
 ## Summary
 

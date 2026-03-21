@@ -648,3 +648,21 @@ git worktree prune
 - [ ] Work committed
 - [ ] Compound prompt offered
 - [ ] Handoff summary provided
+
+## Integration Points
+
+### With /workflow:plan
+
+Execute loads `implementation-plan.md` and `session-state.md` produced by plan. Worktree mode coordinates: plan creates the worktree, execute enters it.
+
+### With /workflow:compound
+
+At session boundaries, execute offers compound for knowledge capture. Solved problems during execution are prime compound candidates.
+
+### With @test-strategy
+
+Execute's implementation loop uses test-strategy for strategy selection per task (TDD for unclear interfaces, spec-first for known contracts, etc.).
+
+### With PM tools
+
+Execute updates work item status as slices complete. References session-state for issue keys.

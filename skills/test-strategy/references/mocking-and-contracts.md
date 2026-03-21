@@ -1,27 +1,36 @@
 # Mocking Strategy and Contract Testing
 
-When and how to use test doubles, with a focus on mocking at system boundaries only. Plus contract testing for service boundaries.
+When and how to use test doubles, with a focus on mocking at architectural port boundaries. Plus contract testing for service boundaries.
 
-## Core Principle: Mock at Boundaries
+## Core Principle: Mock at Port Boundaries
 
-Mock the things you **don't own and can't control**. Use real implementations for everything else.
+Mock at **architectural boundaries (ports)** — the interfaces that separate layers. Use real implementations for everything within a layer.
 
 ```
-┌─────────────────────────────────────────┐
-│            Your System                  │
-│                                         │
-│  Domain ──── Application ──── Framework │
-│     │              │              │     │
-│     └── real ──────┘── real ──────┘     │
-│                                         │
-└────────────┬──────────────┬─────────────┘
-             │              │
-         MOCK HERE      MOCK HERE
-             │              │
-        ┌────┴────┐   ┌────┴────┐
-        │ Database│   │ Ext API │
-        └─────────┘   └─────────┘
+┌──────────────────────────────────────────────┐
+│              Your System                     │
+│                                              │
+│  Domain ──real── Application ──real── Framework │
+│                    │    │                     │
+│              MOCK HERE  │                    │
+│              (ports)    │                    │
+│                ↓        ↓                    │
+│         ┌──────────┐  ┌──────────┐           │
+│         │ Repo IF  │  │Gateway IF│           │
+│         └────┬─────┘  └────┬─────┘           │
+│              │              │                │
+│     Infrastructure (real in integration tests)│
+└──────────────┬──────────────┬────────────────┘
+               │              │
+          ALSO MOCK       ALWAYS MOCK
+          (integration)   (unmanaged)
+               │              │
+          ┌────┴────┐   ┌────┴────┐
+          │ Database│   │ Ext API │
+          └─────────┘   └─────────┘
 ```
+
+**Port interfaces** (repository, gateway, event publisher) are architectural boundaries you own but intentionally isolate. Mock them in use case tests. Use fakes (in-memory implementations) over mocking frameworks when practical.
 
 ## What to Mock
 
@@ -37,9 +46,9 @@ test "sends welcome email after signup":
   assert emailService.send was called with recipient: newUser.email
 ```
 
-### Databases and Persistence
+### Repository Ports (Databases and Persistence)
 
-In unit tests, mock the repository interface. In integration tests, use a real database.
+In use case tests, mock the repository port interface — it's an architectural boundary. Use fakes (in-memory implementations) for speed and simplicity. In infrastructure integration tests, use a real database to validate the adapter fulfills the port contract.
 
 ```
 // Unit test: mock the repository

@@ -191,6 +191,15 @@ For each identified gap, read the corresponding reference file for:
 ### 4. Implement and Verify
 Apply patterns starting with P1, verify each against its audit checklist, and move to the next priority level.
 
+## Commands
+
+- `/workflow:audit` — Frontend domain references visual-design patterns for design polish assessment
+
+## Related Skills
+
+- **code-patterns**: TypeScript/React component patterns complement visual design patterns
+- **audit**: Frontend audit domain (`domains/frontend.md`) checks accessibility and UX completeness
+
 ## Attribution
 
 All patterns curated from [detail.design](https://detail.design) by **Rene Wang** (@renedotwang). Individual reference files include source credits for the original designers, developers, and products that inspired each pattern.

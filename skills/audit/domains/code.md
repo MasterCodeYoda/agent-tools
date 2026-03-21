@@ -17,7 +17,7 @@ Parse input to determine audit scope:
 | Input Pattern | Scope | Action |
 |---|---|---|
 | `./src/` or `./lib/` | Directory | Audit all production code in directory |
-| `./tests/` or `./test/` | Test directory | Redirect to `/workflow:audit-tests` |
+| `./tests/` or `./test/` | Test directory | Redirect to `/workflow:audit --focus tests` |
 | `*.py` or `*.ts` | File glob | Audit matching files |
 | `all` or empty | Full codebase | Auto-detect project structure, audit everything (prompt if large) |
 | `--layer domain` | Architectural layer | Audit that layer (requires `@clean-architecture` context) |
@@ -218,7 +218,7 @@ After presenting the report, offer:
 
 1. **Fix critical findings** — Address P1 items (architectural and security violations)
 2. **Create follow-up tasks** — Track P2/P3 improvements
-3. **Re-audit after fixes** — Run `/workflow:audit-code [same scope]` to verify
+3. **Re-audit after fixes** — Run `/workflow:audit --focus code [same scope]` to verify
 4. **Install quality tools** — [if static analysis not configured: recommend tools for language]
 5. **Save report** — Export findings to `./planning/code-audit-report.md`
 ```
@@ -241,7 +241,7 @@ If P1 architectural issues are found, use refine to design a refactoring approac
 
 If audit reveals a recurring anti-pattern fix worth documenting, offer compound.
 
-### With /workflow:audit-repo
+### With /workflow:audit --focus repo
 
 audit-code examines production code quality; audit-repo examines repository infrastructure (CI/CD, branch protection, agent docs). They are complementary — repo infrastructure enables code quality enforcement.
 

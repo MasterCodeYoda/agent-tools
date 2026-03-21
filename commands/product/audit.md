@@ -147,7 +147,7 @@ Spawn 3 parallel agents that read product-facing artifacts + research context:
 Spawn 3 parallel agents:
 
 **developer-experience-auditor** (runs if developer-facing product detected):
-- For API design correctness (REST conventions, schema completeness, security), defer to `/workflow:audit-api`. This agent focuses on the *onboarding and adoption path*, not API design quality.
+- For API design correctness (REST conventions, schema completeness, security), defer to `/workflow:audit --focus api`. This agent focuses on the *onboarding and adoption path*, not API design quality.
 - Trace the zero-to-value path: install → configure → first success — how many steps? (Flag if > 5 steps)
 - Is the quickstart copy-pasteable and does it produce a visible result?
 - Are prerequisites stated upfront (runtime versions, dependencies, accounts)?
@@ -194,7 +194,7 @@ Spawn 2 parallel agents:
 - Technical due diligence lens: what would an acquirer or investor flag from readable artifacts?
 - Is the product differentiation defensible against well-resourced competitors?
 - Does the documentation quality suggest a mature or early-stage organization?
-- For technical debt signals that would concern a buyer, reference `/workflow:audit-code` findings rather than duplicating analysis here
+- For technical debt signals that would concern a buyer, reference `/workflow:audit --focus code` findings rather than duplicating analysis here
 - Is the product story coherent from README to architecture to deployment?
 - Is the codebase organized with clear separation of concerns, consistent patterns, and documentation that would enable a new engineer to navigate it independently?
 - Overall narrative: is there a clear, compelling story from problem → solution → traction → scale?
@@ -349,34 +349,34 @@ After presenting the report, offer:
 2. **Implement quick wins** — Low-effort, high-impact improvements from the Quick Wins table
 3. **Sharpen positioning** — Use April Dunford's positioning framework to clarify competitive context
 4. **Validate with prospects** — Use findings to structure prospect interviews around weak signals
-5. **Re-audit after fixes** — Run `/workflow:audit-product` to verify progress
+5. **Re-audit after fixes** — Run `/product:audit` to verify progress
 6. **Save report** — Export findings to `./planning/product-audit-report.md`
-7. **Run complementary audits** — `/workflow:audit-docs` for documentation depth, `/workflow:audit-frontend` for UX quality
+7. **Run complementary audits** — `/workflow:audit --focus docs` for documentation depth, `/workflow:audit --focus frontend` for UX quality
 ```
 
 ## Integration Points
 
-### With /workflow:audit-docs
+### With /workflow:audit --focus docs
 
 audit-product evaluates whether documentation tells a compelling product story; audit-docs evaluates documentation completeness and accuracy. A product with excellent docs but weak positioning still loses prospects.
 
-### With /workflow:audit-frontend
+### With /workflow:audit --focus frontend
 
 audit-product examines product messaging and positioning in the UI; audit-frontend examines component architecture, accessibility, and performance. Both contribute to the user's overall impression.
 
-### With /workflow:audit-repo
+### With /workflow:audit --focus repo
 
 audit-product assesses product maturity signals; audit-repo assesses engineering infrastructure maturity. Investor/buyer readiness depends on both.
 
-### With /workflow:audit-api
+### With /workflow:audit --focus api
 
 audit-product examines developer experience and time-to-value; audit-api evaluates API design quality. For developer-facing products, API quality is a core product differentiator.
 
-### With /workflow:audit-code
+### With /workflow:audit --focus code
 
 audit-product examines defensibility and moat signals in architecture; audit-code examines code quality. Technical debt found in audit-code may surface as product completeness concerns in audit-product.
 
-### With /workflow:audit-tests
+### With /workflow:audit --focus tests
 
 audit-product examines production readiness and trust signals; audit-tests evaluates test coverage and quality. Strong test coverage is a trust signal for enterprise adoption.
 

@@ -28,8 +28,20 @@ Not every situation calls for the same testing approach. Select based on what yo
 | Contract is well-known upfront | **Spec-First Testing** | Write tests from the specification, then implement to satisfy them |
 | Data transformations / parsers | **Property-Based Testing** | Generates edge cases humans miss; verifies invariants across input space |
 | Service boundaries / APIs | **Contract Testing** | Ensures producer and consumer agree on the interface shape |
-| Legacy code without tests | **Characterization Testing** | Captures existing behavior before making changes |
+| Legacy code, original authors gone | **Characterization Testing** | Intent unknown — capture what it does as proxy before making changes |
+| AI-generated code, not fully reviewed | **Characterization → Specification** | Intent unverified — capture what it does, then validate against intended behavior |
+| Refactoring code with known intent | **Specification Testing** | Intent known — encode what it *should* do, not what it currently does. Catches bugs too. |
 | Straightforward CRUD | **Example-Based Tests** | Simple input/output cases are sufficient; don't over-engineer |
+
+### Characterization vs. Specification: The Intent Decision
+
+The choice between characterization and specification testing depends on **whether intent is verified**, not on code age:
+
+- **Specification tests** encode what the code *should* do. Use when you or your team wrote the code with known, reviewable intent. These catch bugs in current code — characterization tests would enshrine them.
+- **Characterization tests** encode what the code *currently does*. Use when intent is unknown or unverified — true legacy code, or AI-generated code that was accepted without full review.
+- **AI-generated code is a special case**: an agent that wrote a function last week is not meaningfully different from a developer who left the company last year, from the perspective of "do we know *why* it does what it does?" Characterization testing surfaces "what did the AI actually build?" which is the prerequisite to "is that what we wanted?"
+
+**Emergent interactions** warrant targeted characterization even in known-intent code. When decomposing a monolith, individual responsibilities may be well-understood, but their interactions (transaction boundaries, commit ordering, shared mutable state accumulation, error propagation paths) are often emergent rather than designed. Test these interaction seams with characterization before refactoring.
 
 ### Combining Strategies
 
@@ -39,6 +51,11 @@ Most features use more than one strategy. A typical vertical slice might use:
 - **Contract tests** for the external API boundary
 - **Property-based tests** for a data transformation within the domain
 - **Example-based tests** for the framework layer (API endpoint, controller)
+
+A pre-refactoring test investment should prioritize:
+1. **Specification tests** for each planned component's behavior (written against the monolith, validated after extraction)
+2. **Transaction boundary tests** that verify commit ordering and partial-failure behavior — the area where intent may not be fully designed
+3. **Skip broad characterization** of complex functions — they're too complex to meaningfully characterize as a unit if you understand the intent
 
 ## Philosophy
 
@@ -50,9 +67,15 @@ Good tests describe **what** the system does through its public interfaces. They
 - Assert on observable outcomes (return values, state changes, side effects), not internal state
 - Write tests that survive refactoring — if you rename a private helper, no test should break
 
-### Integration-Style Tests Over Unit Mocking
+### Mock at Architectural Boundaries (Ports)
 
-Prefer tests that exercise real collaborators working together. Mock only at **system boundaries** — external APIs, databases, clocks, filesystems. When your test mocks an internal collaborator, it's testing the wiring, not the behavior.
+Prefer tests that exercise real collaborators working together within a layer. Mock at **port boundaries** — the interfaces that separate architectural layers:
+
+- **Port interfaces** (repository, gateway, event publisher): Mock these in use case tests. They are architectural boundaries by design. Prefer fakes (in-memory implementations) over mocking frameworks.
+- **Unmanaged external services** (third-party APIs, message buses, SMTP): Always mock. These are both ports and external systems.
+- **Never mock** internal collaborators within the same layer, domain objects, value objects, or implementation details behind a port.
+
+The principle is *mock at the port, not at the class*. When your test mocks an internal collaborator that has no port interface, it's testing wiring, not behavior.
 
 ### Tests Are Documentation
 
@@ -91,6 +114,7 @@ When generating tests, agents face unique failure modes that human developers do
 - **Tautological tests** — Tests that restate the implementation as assertions. If you wrote the code and the test in the same session, verify the test would catch a real bug.
 - **Assertion-free tests** — Tests that execute code but never assert anything meaningful. Every test must assert on an observable outcome.
 - **Context leakage** — Tests that pass because they share mutable state with other tests. Each test must be independently runnable.
+- **Unverified intent** — AI-generated code has the same intent gap as legacy code. An agent that wrote a function last week is not meaningfully different from a developer who left the company — you may not know *why* it does what it does. When working with AI-generated code that wasn't fully reviewed, apply characterization testing first to surface "what did the AI actually build?", then specification testing to verify "is that what we wanted?".
 - **Untested mutations** — After writing tests, run mutation testing (or manual sabotage) on domain logic to verify tests catch real bugs, not just exercise code paths. See `references/mutation-testing.md`.
 
 See `references/test-quality.md` for a complete quality verification framework.
@@ -372,7 +396,14 @@ These principles are especially important for AI agents, who tend to pattern-mat
 
 ## Commands
 
-- `/workflow:audit-tests` — Audit an existing test suite against these principles
+- `/workflow:audit` — Audit test suite quality against these principles (tests domain)
+- `/workflow:review` — Code review references these patterns for test quality assessment
+
+## Related Skills
+
+- **code-patterns**: Language-specific testing tools and frameworks
+- **clean-architecture**: Layer-specific testing strategies
+- **qa**: E2E test specification authoring. **E2E boundary**: test-strategy owns testing philosophy, assertion design, and strategy selection at all levels including E2E; qa owns the NL spec authoring pipeline and Playwright integration. test-strategy defines *how* to write good test assertions; qa defines *what* E2E flows to cover and manages the spec-to-test pipeline.
 
 ## Credits
 

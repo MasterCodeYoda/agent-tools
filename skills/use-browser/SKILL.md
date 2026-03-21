@@ -412,6 +412,11 @@ agent-browser click @e1
 agent-browser screenshot --annotate result.png
 ```
 
+## Related Skills
+
+- **qa**: QA workflows use browser automation for app scanning and visual inspection
+- **product**: Product commands use browser for competitor research and screenshot comparison
+
 ## References
 - [Agent Browser documentation](https://agent-browser.dev/) — [Changelog](https://agent-browser.dev/changelog)
 - [Chrome DevTools MCP](https://github.com/ChromeDevTools/chrome-devtools-mcp) — `npx chrome-devtools-mcp@latest --autoConnect`
