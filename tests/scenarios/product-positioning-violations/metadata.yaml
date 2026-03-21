@@ -1,0 +1,15 @@
+name: product-positioning-violations
+description: >
+  Product marketing artifacts with planted positioning, messaging,
+  and completeness violations. Tests whether product:audit's
+  value-proposition-analyst, messaging-consistency-auditor, and
+  product-completeness-scanner agents detect clarity, consistency,
+  and credibility issues when guided by @product skill.
+skill: product
+command: product:audit
+agents_tested:
+  - value-proposition-analyst
+  - messaging-consistency-auditor
+  - product-completeness-scanner
+language: markdown
+planted_issues: 8

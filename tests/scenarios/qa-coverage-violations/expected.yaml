@@ -1,0 +1,78 @@
+# Expected findings when running /workflow:audit --focus qa against this scenario.
+
+findings:
+  - id: QCV-01
+    severity: P1
+    type: critical-flow-no-spec
+    file: code/src/pages/checkout.tsx
+    description: >
+      Checkout/payment flow exists in the app but has no
+      corresponding NL spec. This is a critical user journey
+      that must be covered.
+    skill_pattern: "audit/domains/qa.md — Tier 1: Payment/checkout flows"
+    agent: qa-spec-coverage-analyst
+
+  - id: QCV-02
+    severity: P2
+    type: orphaned-spec
+    file: code/sentinel/specs/user-preferences.md
+    description: >
+      NL spec exists for "User Preferences" page but the
+      preferences feature was removed — no matching route or
+      component exists in the app.
+    skill_pattern: "audit/domains/qa.md — Tier 3: Flag orphaned specs"
+    agent: qa-drift-detector
+
+  - id: QCV-03
+    severity: P2
+    type: spec-implementation-coupled
+    file: code/sentinel/specs/login.md
+    description: >
+      Login spec references CSS selectors (#email-input,
+      .submit-btn) instead of behavioral descriptions. Specs
+      should describe user actions, not implementation details.
+    skill_pattern: "audit/domains/qa.md — Tier 1: behavioral vs implementation-coupled"
+    agent: qa-spec-coverage-analyst
+
+  - id: QCV-04
+    severity: P2
+    type: spec-no-generated-test
+    file: code/sentinel/specs/dashboard.md
+    description: >
+      Dashboard NL spec exists but no corresponding generated
+      .spec.ts test file in the tests directory. Spec was never
+      run through the Planner/Generator.
+    skill_pattern: "audit/domains/qa.md — Tier 2: specs with no generated tests"
+    agent: qa-test-generation-analyst
+
+  - id: QCV-05
+    severity: P2
+    type: stale-generated-test
+    file: code/tests/login.spec.ts
+    description: >
+      Generated test references selector [data-testid="login-form"]
+      but the app's login page now uses [data-testid="auth-form"]
+      after a refactor. Test will fail with selector not found.
+    skill_pattern: "audit/domains/qa.md — Tier 2: stale generated tests"
+    agent: qa-test-generation-analyst
+
+  - id: QCV-06
+    severity: P2
+    type: behavioral-drift
+    file: code/sentinel/specs/registration.md
+    description: >
+      Registration spec describes a 2-step flow (email → password)
+      but the app now has a 3-step flow (email → password → verify
+      email). Spec is missing the verification step.
+    skill_pattern: "audit/domains/qa.md — Tier 3: Changed form fields, new required inputs"
+    agent: qa-drift-detector
+
+  - id: QCV-07
+    severity: P2
+    type: new-feature-no-spec
+    file: code/src/pages/settings.tsx
+    description: >
+      Settings page was recently added to the app but has no
+      corresponding NL spec. New feature with no test coverage.
+    skill_pattern: "audit/domains/qa.md — Tier 3: New routes with no spec"
+    agent: qa-drift-detector

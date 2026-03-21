@@ -1,0 +1,90 @@
+# Expected findings when running /workflow:audit --focus frontend against this scenario.
+
+findings:
+  - id: VDV-01
+    severity: P1
+    type: touch-target-too-small
+    file: code/components/IconNav.tsx
+    description: >
+      Navigation icon buttons are 24x24px with no padding extension.
+      Below the 44px minimum touch target for mobile. Users will
+      misfire taps on adjacent icons.
+    skill_pattern: "visual-design/SKILL.md — Accessibility: Do all touch targets meet the 44px minimum?"
+    agent: accessibility-scanner
+
+  - id: VDV-02
+    severity: P1
+    type: no-reduced-motion-respect
+    file: code/components/HeroCarousel.tsx
+    description: >
+      Carousel auto-plays with CSS animation and no
+      prefers-reduced-motion media query. Users with vestibular
+      disorders cannot stop the motion.
+    skill_pattern: "visual-design/SKILL.md — Accessibility: Is prefers-reduced-motion respected?"
+    agent: accessibility-scanner
+
+  - id: VDV-03
+    severity: P1
+    type: non-descriptive-link-text
+    file: code/components/ArticleCard.tsx
+    description: >
+      Link text is "click here" and "read more" with no context.
+      Screen readers announce these identically for every card —
+      users cannot distinguish links.
+    skill_pattern: "visual-design/SKILL.md — Accessibility: Do links have descriptive text?"
+    agent: accessibility-scanner
+
+  - id: VDV-04
+    severity: P2
+    type: non-interruptible-animation
+    file: code/components/Modal.tsx
+    description: >
+      Modal close waits for 400ms CSS transition to complete before
+      unmounting. User cannot interact with content behind the modal
+      during the animation. Close events should fire immediately.
+    skill_pattern: "visual-design/references/motion/interruptible-animation.md"
+    agent: ux-completeness-reviewer
+
+  - id: VDV-05
+    severity: P2
+    type: layout-shift-on-load
+    file: code/components/ArticleCard.tsx
+    description: >
+      Image has no explicit dimensions. When image loads, content
+      below shifts abruptly. Should reserve space or animate
+      smoothly.
+    skill_pattern: "visual-design/references/motion/prevent-layout-shift.md"
+    agent: ux-completeness-reviewer
+
+  - id: VDV-06
+    severity: P2
+    type: wrong-border-radius-nesting
+    file: code/components/Modal.tsx
+    description: >
+      Modal container has border-radius 16px, inner card also has
+      border-radius 16px. Nested elements should use concentric
+      values (outer radius - padding gap).
+    skill_pattern: "visual-design/references/design/outer-and-inner-border-radius.md"
+    agent: ux-completeness-reviewer
+
+  - id: VDV-07
+    severity: P2
+    type: state-not-in-url
+    file: code/components/FilterBar.tsx
+    description: >
+      Filter selections stored only in component state. Refreshing
+      the page loses filters. Sharing a URL doesn't share the
+      filtered view. State should persist in URL params.
+    skill_pattern: "visual-design/references/design/keep-state-in-url.md"
+    agent: ux-completeness-reviewer
+
+  - id: VDV-08
+    severity: P2
+    type: pointer-cursor-on-buttons
+    file: code/components/FilterBar.tsx
+    description: >
+      Action buttons use cursor:pointer. Per platform conventions,
+      pointer cursor indicates navigation (links), not actions
+      (buttons). Default cursor is correct for buttons.
+    skill_pattern: "visual-design/references/design/no-pointer-cursor.md"
+    agent: ux-completeness-reviewer

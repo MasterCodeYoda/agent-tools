@@ -1,0 +1,16 @@
+name: qa-coverage-violations
+description: >
+  App with NL specs, generated Playwright tests, and planted coverage
+  gaps, drift, and quality issues. Tests whether audit-qa's
+  qa-spec-coverage-analyst, qa-test-generation-analyst, and
+  qa-drift-detector agents identify missing, stale, and drifted
+  specs when guided by @qa skill.
+skill: qa
+command: workflow:audit
+domain: qa
+agents_tested:
+  - qa-spec-coverage-analyst
+  - qa-test-generation-analyst
+  - qa-drift-detector
+language: typescript
+planted_issues: 7

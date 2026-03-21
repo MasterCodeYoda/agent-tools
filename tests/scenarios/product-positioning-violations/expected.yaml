@@ -1,0 +1,90 @@
+# Expected findings when running /product:audit against this scenario.
+
+findings:
+  - id: PPV-01
+    severity: P1
+    type: vague-value-proposition
+    file: code/README.md
+    description: >
+      Value proposition is "Fast, simple, powerful API framework."
+      Three generic adjectives, no specific pain point, no audience
+      named. Prospect cannot distinguish this from 50 other frameworks.
+    skill_pattern: "product/SKILL.md — Copy Patterns: Specificity over superlatives"
+    agent: value-proposition-analyst
+
+  - id: PPV-02
+    severity: P2
+    type: audience-inconsistency
+    file: code/README.md, code/site/index.html
+    description: >
+      README says "built for developers" but landing page says
+      "built for teams." Different audience on different surfaces
+      confuses prospects about who the product is for.
+    skill_pattern: "product/SKILL.md — Cross-Surface Consistency"
+    agent: messaging-consistency-auditor
+
+  - id: PPV-03
+    severity: P2
+    type: tagline-mismatch
+    file: code/README.md, code/site/index.html, code/package.json
+    description: >
+      Three different taglines across surfaces — README: "The modern
+      API framework", landing page: "APIs made easy", package.json:
+      "Lightweight API toolkit." No consistent identity.
+    skill_pattern: "product/SKILL.md — Cross-Surface Consistency: Terminology consistency"
+    agent: messaging-consistency-auditor
+
+  - id: PPV-04
+    severity: P2
+    type: unsubstantiated-claim
+    file: code/site/index.html
+    description: >
+      Landing page claims "2x faster than Express" with no benchmark,
+      link, or methodology. Unverifiable performance claims damage
+      credibility with technical audiences.
+    skill_pattern: "product/SKILL.md — Copy Patterns: Show, don't claim"
+    agent: value-proposition-analyst
+
+  - id: PPV-05
+    severity: P2
+    type: coming-soon-visible
+    file: code/site/index.html
+    description: >
+      Pricing section prominently displays "Pro Plan — Coming Soon!"
+      Visible "coming soon" features signal the product isn't ready
+      for production use.
+    skill_pattern: "product/SKILL.md — product-completeness-scanner checks"
+    agent: product-completeness-scanner
+
+  - id: PPV-06
+    severity: P2
+    type: no-install-above-fold
+    file: code/README.md
+    description: >
+      README has 40 lines of description before the first install
+      command. Install/usage should be visible above the fold to
+      minimize time-to-value.
+    skill_pattern: "product/SKILL.md — DX: Time-to-Value Path"
+    agent: value-proposition-analyst
+
+  - id: PPV-07
+    severity: P2
+    type: stale-changelog
+    file: code/CHANGELOG.md
+    description: >
+      CHANGELOG last entry is from 6 months ago despite README
+      claiming "actively maintained." Contradicts maintenance claims
+      and signals abandonment risk.
+    skill_pattern: "product/SKILL.md — product-completeness-scanner: CHANGELOG with recent entries"
+    agent: product-completeness-scanner
+
+  - id: PPV-08
+    severity: P2
+    type: broken-link-in-marketing
+    file: code/README.md
+    description: >
+      Link to "full documentation" points to docs.example.com/api
+      which does not exist. Broken links in primary marketing surface
+      erode trust immediately.
+    skill_pattern: "product/SKILL.md — product-completeness-scanner checks"
+    agent: product-completeness-scanner

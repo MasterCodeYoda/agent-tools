@@ -1,0 +1,12 @@
+{
+  "name": "apilot",
+  "version": "0.3.1",
+  "description": "Lightweight API toolkit",
+  "main": "dist/index.js",
+  "keywords": ["api", "framework", "rest", "http"],
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/example/apilot"
+  }
+}

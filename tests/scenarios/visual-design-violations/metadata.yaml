@@ -1,0 +1,15 @@
+name: visual-design-violations
+description: >
+  React/TypeScript frontend with planted visual design violations.
+  Tests whether audit-frontend's accessibility-scanner and
+  ux-completeness-reviewer agents detect motion, accessibility,
+  design polish, and typography issues when guided by
+  @visual-design skill.
+skill: visual-design
+command: workflow:audit
+domain: frontend
+agents_tested:
+  - accessibility-scanner
+  - ux-completeness-reviewer
+language: typescript
+planted_issues: 8

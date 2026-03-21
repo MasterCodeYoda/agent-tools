@@ -514,14 +514,17 @@ When creating new evolve scenarios:
 
 ### Current Scenarios
 
-| Scenario | Skill | Command | Planted Issues |
-|----------|-------|---------|----------------|
-| `dependency-rule-violations` | clean-architecture | audit-code | 6 |
-| `weak-test-suite` | test-strategy | audit-tests | 7 |
-| `code-pattern-violations` | code-patterns | audit-code | 8 |
-| `api-design-violations` | clean-architecture | audit-api | 8 |
-| `frontend-quality-violations` | code-patterns | audit-frontend | 8 |
-| `documentation-quality-violations` | workflow-guide | audit-docs | 7 |
+| Scenario | Skill | Domain/Command | Planted Issues |
+|----------|-------|----------------|----------------|
+| `dependency-rule-violations` | clean-architecture | audit (code) | 6 |
+| `weak-test-suite` | test-strategy | audit (tests) | 7 |
+| `code-pattern-violations` | code-patterns | audit (code) | 8 |
+| `api-design-violations` | clean-architecture | audit (api) | 8 |
+| `frontend-quality-violations` | code-patterns | audit (frontend) | 8 |
+| `documentation-quality-violations` | workflow-guide | audit (docs) | 7 |
+| `visual-design-violations` | visual-design | audit (frontend) | 8 |
+| `qa-coverage-violations` | qa | audit (qa) | 7 |
+| `product-positioning-violations` | product | product:audit | 8 |
 
 ## Compound Learning (Phase 3)
 
