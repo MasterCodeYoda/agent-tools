@@ -1,0 +1,85 @@
+# Expected findings when running /workflow:audit-api against this scenario.
+
+findings:
+  - id: ADV-01
+    severity: P1
+    type: missing-authentication
+    file: code/routes/admin.py
+    description: >
+      Admin endpoint /admin/deleteUser has no authentication or
+      authorization check. Any caller can delete users.
+    skill_pattern: "OWASP API Security Top 10 — Function-level authorization"
+    agent: api-security-analyst
+
+  - id: ADV-02
+    severity: P2
+    type: verb-in-resource-name
+    file: code/routes/users.py
+    description: >
+      Endpoint uses /getUsers and /createUser instead of
+      resource-oriented GET /users and POST /users.
+      Verbs in URIs violate REST resource naming conventions.
+    skill_pattern: "audit-api — api-convention-checker: Resource naming (plural nouns)"
+    agent: api-convention-checker
+
+  - id: ADV-03
+    severity: P2
+    type: inconsistent-error-format
+    file: code/routes/users.py
+    description: >
+      Some endpoints return {"error": "message"}, others return
+      {"detail": "message"}, and one returns plain strings.
+      No RFC 9457 Problem Details compliance.
+    skill_pattern: "audit-api — api-convention-checker: Error response format (RFC 9457)"
+    agent: api-convention-checker
+
+  - id: ADV-04
+    severity: P2
+    type: missing-pagination
+    file: code/routes/users.py
+    description: >
+      GET /getUsers returns all users with no pagination.
+      List endpoints must support pagination.
+    skill_pattern: "audit-api — api-convention-checker: Pagination on all list endpoints"
+    agent: api-convention-checker
+
+  - id: ADV-05
+    severity: P1
+    type: no-input-validation
+    file: code/routes/users.py
+    description: >
+      POST /createUser accepts raw dict body with no schema
+      validation. Arbitrary fields pass through unchecked.
+    skill_pattern: "OWASP API Security Top 10 — Input validation"
+    agent: api-security-analyst
+
+  - id: ADV-06
+    severity: P2
+    type: wrong-status-code
+    file: code/routes/users.py
+    description: >
+      POST /createUser returns 200 on success instead of 201 Created.
+      DELETE returns 200 instead of 204 No Content.
+    skill_pattern: "audit-api — api-convention-checker: HTTP status code correctness"
+    agent: api-convention-checker
+
+  - id: ADV-07
+    severity: P1
+    type: bola-vulnerability
+    file: code/routes/users.py
+    description: >
+      GET /users/{id} does not verify the authenticated user has
+      permission to access the requested user. Any authenticated
+      user can access any other user's data.
+    skill_pattern: "OWASP API Security Top 10 — Object-level authorization (BOLA)"
+    agent: api-security-analyst
+
+  - id: ADV-08
+    severity: P2
+    type: no-rate-limiting
+    file: code/routes/users.py
+    description: >
+      No rate limiting on any endpoint. Login endpoint is
+      particularly vulnerable to brute-force attacks.
+    skill_pattern: "OWASP API Security Top 10 — Resource consumption limits"
+    agent: api-security-analyst

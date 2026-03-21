@@ -1,0 +1,12 @@
+name: code-pattern-violations
+description: >
+  Python codebase with planted coding pattern violations.
+  Tests whether audit-code's pattern-compliance-analyst agent
+  detects type safety, error handling, naming, and idiom issues
+  when guided by @code-patterns skill.
+skill: code-patterns
+command: workflow:audit-code
+agents_tested:
+  - pattern-compliance-analyst
+language: python
+planted_issues: 8

@@ -1,0 +1,77 @@
+# Expected findings when running /workflow:audit-docs against this scenario.
+
+findings:
+  - id: DQV-01
+    severity: P1
+    type: stale-code-example
+    file: code/docs/README.md
+    description: >
+      Quickstart code example references create_app() function that
+      was renamed to initialize_app() in the source code. Following
+      the docs produces an ImportError.
+    skill_pattern: "audit-docs — code-doc-alignment-checker: Stale examples"
+    agent: code-doc-alignment-checker
+
+  - id: DQV-02
+    severity: P2
+    type: broken-internal-link
+    file: code/docs/README.md
+    description: >
+      Link to docs/architecture.md is broken — file does not exist.
+      Dead internal link misleads readers.
+    skill_pattern: "audit-docs — structure-validator: Broken internal links"
+    agent: structure-validator
+
+  - id: DQV-03
+    severity: P2
+    type: missing-parameter-docs
+    file: code/src/service.py
+    description: >
+      Public function process_order() has a docstring but documents
+      only 2 of 4 parameters. Missing: priority and callback.
+    skill_pattern: "audit-docs — inline-doc-checker: Parameter documentation completeness"
+    agent: inline-doc-checker
+
+  - id: DQV-04
+    severity: P2
+    type: empty-stub-file
+    file: code/docs/CONTRIBUTING.md
+    description: >
+      CONTRIBUTING.md exists but contains only a heading with no
+      content. Empty stub creates false impression that contribution
+      guidelines exist.
+    skill_pattern: "audit-docs — structure-validator: Empty or stub files"
+    agent: structure-validator
+
+  - id: DQV-05
+    severity: P2
+    type: parameter-mismatch
+    file: code/src/service.py
+    description: >
+      Docstring for calculate_shipping() documents a 'weight'
+      parameter that doesn't exist in the function signature.
+      Actual parameter is 'dimensions'.
+    skill_pattern: "audit-docs — code-doc-alignment-checker: Parameter mismatch"
+    agent: code-doc-alignment-checker
+
+  - id: DQV-06
+    severity: P3
+    type: missing-error-documentation
+    file: code/src/service.py
+    description: >
+      process_order() raises ValueError and ConnectionError but
+      neither is documented in the docstring. Callers cannot
+      anticipate failure modes.
+    skill_pattern: "audit-docs — inline-doc-checker: Exception documentation"
+    agent: inline-doc-checker
+
+  - id: DQV-07
+    severity: P3
+    type: jargon-without-explanation
+    file: code/docs/README.md
+    description: >
+      References "CQRS pattern" and "event sourcing" without
+      explanation or links. New developers cannot understand the
+      architecture section.
+    skill_pattern: "audit-docs — clarity-analyst: Jargon without explanation"
+    agent: clarity-analyst

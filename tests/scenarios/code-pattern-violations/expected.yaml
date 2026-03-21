@@ -1,0 +1,84 @@
+# Expected findings when running /workflow:audit-code against this scenario.
+
+findings:
+  - id: CPV-01
+    severity: P2
+    type: missing-type-hints
+    file: code/services/user_service.py
+    description: >
+      Functions lack type annotations. calculate_discount has no
+      parameter or return types. Violates "Always use type hints."
+    skill_pattern: "code-patterns/languages/python.md — Type Hints"
+    agent: pattern-compliance-analyst
+
+  - id: CPV-02
+    severity: P2
+    type: any-type-usage
+    file: code/services/user_service.py
+    description: >
+      Uses Dict[str, Any] for user data instead of a typed model.
+      Violates "Avoid any/dynamic/untyped patterns."
+    skill_pattern: "code-patterns/SKILL.md — Universal Principles: Type Safety"
+    agent: pattern-compliance-analyst
+
+  - id: CPV-03
+    severity: P2
+    type: exception-for-expected-failure
+    file: code/services/user_service.py
+    description: >
+      Uses try/except ValueError for expected validation failures
+      instead of Result/Either pattern. Exceptions should be reserved
+      for truly exceptional circumstances.
+    skill_pattern: "code-patterns/SKILL.md — Universal Principles: Error Handling Philosophy"
+    agent: pattern-compliance-analyst
+
+  - id: CPV-04
+    severity: P3
+    type: naming-violation
+    file: code/services/user_service.py
+    description: >
+      Function named 'proc' — abbreviation that violates
+      "Use clear, intention-revealing names" and "Avoid abbreviations."
+    skill_pattern: "code-patterns/SKILL.md — Universal Principles: Naming Conventions"
+    agent: pattern-compliance-analyst
+
+  - id: CPV-05
+    severity: P2
+    type: mutable-shared-state
+    file: code/services/user_service.py
+    description: >
+      Module-level mutable list (_cache) shared across calls.
+      Classic mutable shared state anti-pattern.
+    skill_pattern: "code-patterns/languages/python.md — Anti-patterns"
+    agent: pattern-compliance-analyst
+
+  - id: CPV-06
+    severity: P2
+    type: string-typing
+    file: code/models/user.py
+    description: >
+      Uses raw strings for email and user_id instead of domain
+      value objects. Primitive obsession / string typing.
+    skill_pattern: "code-patterns/SKILL.md — Universal Principles: Type Safety"
+    agent: pattern-compliance-analyst
+
+  - id: CPV-07
+    severity: P2
+    type: god-object
+    file: code/services/user_service.py
+    description: >
+      UserService handles user CRUD, email sending, discount
+      calculation, and caching. Violates single responsibility —
+      classic god object.
+    skill_pattern: "code-patterns/languages/python.md — Anti-patterns"
+    agent: pattern-compliance-analyst
+
+  - id: CPV-08
+    severity: P3
+    type: import-organization
+    file: code/services/user_service.py
+    description: >
+      Imports are not organized into standard library / third-party /
+      local groups. Mixed ordering violates import organization rules.
+    skill_pattern: "code-patterns/languages/python.md — Import Organization"
+    agent: pattern-compliance-analyst

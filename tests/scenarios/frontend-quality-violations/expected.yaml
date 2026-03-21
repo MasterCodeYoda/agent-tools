@@ -1,0 +1,85 @@
+# Expected findings when running /workflow:audit-frontend against this scenario.
+
+findings:
+  - id: FQV-01
+    severity: P1
+    type: missing-alt-text
+    file: code/components/ProductCard.tsx
+    description: >
+      Product image has no alt text. Screen readers cannot describe
+      the image. WCAG 2.2 Level A failure.
+    skill_pattern: "audit-frontend — accessibility-scanner: Missing alt text"
+    agent: accessibility-scanner
+
+  - id: FQV-02
+    severity: P1
+    type: missing-form-labels
+    file: code/components/SearchBar.tsx
+    description: >
+      Search input has placeholder but no associated <label> element
+      or aria-label. Placeholder is not an accessible label substitute.
+    skill_pattern: "audit-frontend — accessibility-scanner: Missing form labels"
+    agent: accessibility-scanner
+
+  - id: FQV-03
+    severity: P2
+    type: god-component
+    file: code/pages/Dashboard.tsx
+    description: >
+      Dashboard component is 280+ lines with inline data fetching,
+      state management, event handlers, and rendering all in one file.
+      Exceeds 200-line component flag threshold.
+    skill_pattern: "audit-frontend — component-architecture-reviewer: God components, component size"
+    agent: component-architecture-reviewer
+
+  - id: FQV-04
+    severity: P2
+    type: prop-drilling
+    file: code/pages/Dashboard.tsx
+    description: >
+      User object passed through 4 levels of components
+      (Dashboard → UserSection → UserCard → UserAvatar).
+      Exceeds 3-level prop drilling threshold.
+    skill_pattern: "audit-frontend — component-architecture-reviewer: Prop drilling (>3 levels)"
+    agent: component-architecture-reviewer
+
+  - id: FQV-05
+    severity: P2
+    type: missing-error-boundary
+    file: code/pages/Dashboard.tsx
+    description: >
+      Page component has no error boundary. Unhandled render errors
+      will crash the entire application.
+    skill_pattern: "audit-frontend — ux-completeness-reviewer: Error boundary coverage"
+    agent: ux-completeness-reviewer
+
+  - id: FQV-06
+    severity: P2
+    type: missing-loading-state
+    file: code/pages/Dashboard.tsx
+    description: >
+      Data fetch has no loading state — component renders empty
+      content while data is loading, causing layout shift.
+    skill_pattern: "audit-frontend — ux-completeness-reviewer: Loading state coverage"
+    agent: ux-completeness-reviewer
+
+  - id: FQV-07
+    severity: P2
+    type: color-contrast-failure
+    file: code/components/ProductCard.tsx
+    description: >
+      Light gray (#aaa) text on white (#fff) background fails
+      WCAG 2.2 AA contrast ratio (2.32:1, requires 4.5:1).
+    skill_pattern: "audit-frontend — accessibility-scanner: Color contrast"
+    agent: accessibility-scanner
+
+  - id: FQV-08
+    severity: P2
+    type: state-duplication
+    file: code/pages/Dashboard.tsx
+    description: >
+      User data fetched and stored in local useState, but also
+      exists in a global Zustand store. Derived state computed
+      from both sources creates sync bugs.
+    skill_pattern: "audit-frontend — state-and-data-flow-reviewer: State duplication"
+    agent: state-and-data-flow-reviewer

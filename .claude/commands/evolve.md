@@ -516,6 +516,10 @@ When creating new evolve scenarios:
 |----------|-------|---------|----------------|
 | `dependency-rule-violations` | clean-architecture | audit-code | 6 |
 | `weak-test-suite` | test-strategy | audit-tests | 7 |
+| `code-pattern-violations` | code-patterns | audit-code | 8 |
+| `api-design-violations` | clean-architecture | audit-api | 8 |
+| `frontend-quality-violations` | code-patterns | audit-frontend | 8 |
+| `documentation-quality-violations` | workflow-guide | audit-docs | 7 |
 
 ## Compound Learning (Phase 3)
 

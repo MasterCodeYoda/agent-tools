@@ -1,0 +1,16 @@
+name: frontend-quality-violations
+description: >
+  React/TypeScript frontend with planted quality violations.
+  Tests whether audit-frontend's accessibility-scanner,
+  component-architecture-reviewer, and state-and-data-flow-reviewer
+  agents detect a11y, architecture, and UX issues when guided by
+  @code-patterns and @visual-design skills.
+skill: code-patterns
+command: workflow:audit-frontend
+agents_tested:
+  - accessibility-scanner
+  - component-architecture-reviewer
+  - state-and-data-flow-reviewer
+  - ux-completeness-reviewer
+language: typescript
+planted_issues: 8

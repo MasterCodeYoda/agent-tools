@@ -1,0 +1,16 @@
+name: documentation-quality-violations
+description: >
+  Project documentation with planted quality violations.
+  Tests whether audit-docs's structure-validator, inline-doc-checker,
+  code-doc-alignment-checker, and clarity-analyst agents detect
+  presence, accuracy, and clarity issues when guided by
+  @workflow-guide skill.
+skill: workflow-guide
+command: workflow:audit-docs
+agents_tested:
+  - structure-validator
+  - inline-doc-checker
+  - code-doc-alignment-checker
+  - clarity-analyst
+language: python
+planted_issues: 7

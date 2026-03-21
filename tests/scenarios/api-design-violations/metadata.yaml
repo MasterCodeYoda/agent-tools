@@ -1,0 +1,15 @@
+name: api-design-violations
+description: >
+  REST API with planted design violations.
+  Tests whether audit-api's convention-checker, security-analyst,
+  and design-reviewer agents detect naming, auth, consistency,
+  and design quality issues when guided by @clean-architecture
+  and @code-patterns skills.
+skill: clean-architecture
+command: workflow:audit-api
+agents_tested:
+  - api-convention-checker
+  - api-security-analyst
+  - api-design-reviewer
+language: python
+planted_issues: 8
