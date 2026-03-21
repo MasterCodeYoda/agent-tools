@@ -63,6 +63,12 @@ Author NL specs by scanning the app, importing existing docs, or guided interact
 ### `/qa:audit`
 Detect drift between NL specs, generated `.spec.ts` tests, and app behavior. Reports uncovered specs, orphaned tests, and behavioral regressions.
 
+## Related Skills
+
+- **test-strategy**: Testing methodology and strategy selection — qa handles E2E spec authoring, test-strategy handles testing philosophy and unit/integration approaches
+- **use-browser**: Browser automation tools used by qa:discover for app scanning
+- **audit**: QA coverage domain (`domains/qa.md`) audits spec completeness and drift
+
 ## References
 
 - `references/spec-format.md` — NL spec format: frontmatter fields, scenario structure, examples

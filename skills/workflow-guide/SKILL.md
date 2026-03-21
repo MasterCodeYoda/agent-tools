@@ -359,6 +359,13 @@ For detailed templates and patterns, reference these sections:
 ### Examples
 - `examples/planning-example.md` - Complete planning walkthrough
 
+## Related Skills
+
+- **clean-architecture**: Architectural patterns that workflow commands implement via vertical slicing
+- **code-patterns**: Language-specific implementation patterns used during `/workflow:execute`
+- **test-strategy**: Testing methodology integrated into execution and review workflows
+- **audit**: Unified audit consumes workflow-guide for documentation domain criteria
+
 ## Key Principles Summary
 
 | Principle | Application |
