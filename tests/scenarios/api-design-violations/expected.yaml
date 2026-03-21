@@ -8,7 +8,7 @@ findings:
     description: >
       Admin endpoint /admin/deleteUser has no authentication or
       authorization check. Any caller can delete users.
-    skill_pattern: "OWASP API Security Top 10 — Function-level authorization"
+    skill_pattern: "skills/audit/domains/api.md — api-security-analyst: Function-level authorization"
     agent: api-security-analyst
 
   - id: ADV-02
@@ -50,7 +50,7 @@ findings:
     description: >
       POST /createUser accepts raw dict body with no schema
       validation. Arbitrary fields pass through unchecked.
-    skill_pattern: "OWASP API Security Top 10 — Input validation"
+    skill_pattern: "skills/audit/domains/api.md — api-security-analyst: Input validation"
     agent: api-security-analyst
 
   - id: ADV-06
@@ -71,7 +71,7 @@ findings:
       GET /users/{id} does not verify the authenticated user has
       permission to access the requested user. Any authenticated
       user can access any other user's data.
-    skill_pattern: "OWASP API Security Top 10 — Object-level authorization (BOLA)"
+    skill_pattern: "skills/audit/domains/api.md — api-security-analyst: Object-level authorization (BOLA)"
     agent: api-security-analyst
 
   - id: ADV-08
@@ -81,5 +81,5 @@ findings:
     description: >
       No rate limiting on any endpoint. Login endpoint is
       particularly vulnerable to brute-force attacks.
-    skill_pattern: "OWASP API Security Top 10 — Resource consumption limits"
+    skill_pattern: "skills/audit/domains/api.md — api-security-analyst: Resource consumption limits"
     agent: api-security-analyst

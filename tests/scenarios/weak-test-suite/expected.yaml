@@ -33,7 +33,7 @@ findings:
       Expected value is computed using the same logic as production code
       (a + b). If the implementation is wrong, the test is wrong too.
       Expected values must be literal constants.
-    skill_pattern: "test-strategy/references/test-quality.md — Tautological patterns"
+    skill_pattern: "test-strategy/SKILL.md — Tautological Tests (AI-Specific); test-strategy/references/test-quality.md — Quick Audit: tests that assert the same thing the implementation computes"
     agent: assertion-analyst
 
   - id: WTS-04
@@ -44,7 +44,7 @@ findings:
     description: >
       Expected value uses production function to compute expected.
       assert subtract(10, 3) == 10 - 3 should be == 7.
-    skill_pattern: "test-strategy/references/test-quality.md — Computed expected values"
+    skill_pattern: "test-strategy/references/test-quality.md — Quick Audit: tests where the expected value is computed, not literal"
     agent: assertion-analyst
 
   - id: WTS-05
@@ -80,5 +80,5 @@ findings:
       Tests that Calculator has an 'add' attribute. This is already
       enforced by the type system / import system — if add() didn't
       exist, calling code wouldn't compile/run.
-    skill_pattern: "test-strategy/references/test-quality.md — Static guarantee duplication"
+    skill_pattern: "test-strategy/SKILL.md — Duplicating Static Guarantees; Respect Static Guarantees"
     agent: assertion-analyst
