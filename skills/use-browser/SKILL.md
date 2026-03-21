@@ -53,13 +53,17 @@ When no Chrome instance is available:
 
 ```bash
 agent-browser open <url>
+agent-browser open <url> --ignore-https-errors   # Accept self-signed certs
+agent-browser open <url> --idle-timeout 5m        # Auto-shutdown after inactivity
 ```
 
-Launches an isolated headless browser managed by agent-browser.
+Launches an isolated headless browser managed by agent-browser. Also supports Brave Browser auto-discovery alongside Chrome/Chromium.
 
 ## Chrome DevTools MCP Reference
 
 All tools are prefixed `mcp__chrome-devtools__`. Use these as your primary browser automation interface.
+
+**Server flags:** `--slim` (minimal 3-tool mode for token savings), `--isolated` (temporary profile with auto-cleanup), `--headless`, `--performance-crux` (CrUX field data in perf traces, on by default). Supports `pageId` routing for parallel multi-agent workflows on separate tabs.
 
 ### Navigation
 | Tool | Purpose |
@@ -102,7 +106,7 @@ All tools are prefixed `mcp__chrome-devtools__`. Use these as your primary brows
 ### Waiting
 | Tool | Purpose |
 |------|---------|
-| `wait_for(selector, options)` | Wait for element, text, or condition |
+| `wait_for(selector, options)` | Wait for element, text (supports any-match text arrays), or condition |
 
 ### Emulation
 | Tool | Purpose |
@@ -128,7 +132,7 @@ All tools are prefixed `mcp__chrome-devtools__`. Use these as your primary brows
 
 ## agent-browser CLI Reference
 
-v0.20.0 — Rust rewrite. Install: `brew install agent-browser && agent-browser install`
+v0.21.4 — Rust rewrite. Install: `brew install agent-browser && agent-browser install`
 
 ### Core workflow
 
@@ -148,11 +152,12 @@ agent-browser close           # Close browser
 
 ### Snapshot (page analysis)
 ```bash
-agent-browser snapshot            # Full accessibility tree
+agent-browser snapshot            # Full accessibility tree (traverses iframes)
 agent-browser snapshot -i         # Interactive elements only (recommended)
 agent-browser snapshot -c         # Compact output
 agent-browser snapshot -d 3       # Limit depth to 3
 agent-browser snapshot -s "#main" # Scope to CSS selector
+agent-browser snapshot --selector "#main"  # Scope to element subtree
 ```
 
 ### Interactions (use @refs from snapshot)
@@ -266,7 +271,7 @@ agent-browser set media dark              # Emulate color scheme
 ### Cookies & Storage
 ```bash
 agent-browser cookies                     # Get all cookies
-agent-browser cookies set name value      # Set cookie
+agent-browser cookies set name value      # Set cookie (supports --url, --domain, --path, --httpOnly, --secure, --sameSite, --expires)
 agent-browser cookies clear               # Clear cookies
 agent-browser storage local               # Get all localStorage
 agent-browser storage local key           # Get specific key
@@ -314,6 +319,7 @@ agent-browser clipboard write "text"     # Write to clipboard
 ```bash
 agent-browser -p browserbase open <url>  # Use Browserbase
 agent-browser -p browserless open <url>  # Use Browserless
+agent-browser -p kernel open <url>       # Use Kernel (stealth mode, persistent profiles)
 agent-browser -p ios open <url>          # iOS Simulator (requires Xcode + Appium)
 ```
 
@@ -322,6 +328,17 @@ agent-browser -p ios open <url>          # iOS Simulator (requires Xcode + Appiu
 agent-browser --session test1 open site-a.com
 agent-browser --session test2 open site-b.com
 agent-browser session list
+```
+
+### Batch execution
+```bash
+echo '[["open","https://a.com"],["screenshot","a.png"]]' | agent-browser batch --bail --json
+```
+
+### Network capture (HAR)
+```bash
+agent-browser network har start                # Begin HAR recording
+agent-browser network har stop ./trace.har     # Stop and export HAR 1.2
 ```
 
 ### Debugging
@@ -334,6 +351,11 @@ agent-browser trace start                 # Start recording trace
 agent-browser trace stop trace.zip        # Stop and save trace
 agent-browser profiler start              # Start DevTools profiler
 agent-browser profiler stop profile.json  # Stop and save profile
+```
+
+### Self-update
+```bash
+agent-browser upgrade                    # Auto-detects install method (npm/brew/cargo)
 ```
 
 ### JavaScript
@@ -391,5 +413,5 @@ agent-browser screenshot --annotate result.png
 ```
 
 ## References
-- [Agent Browser documentation](https://agent-browser.dev/)
-- Chrome DevTools MCP: `npx chrome-devtools-mcp@latest --autoConnect`
+- [Agent Browser documentation](https://agent-browser.dev/) — [Changelog](https://agent-browser.dev/changelog)
+- [Chrome DevTools MCP](https://github.com/ChromeDevTools/chrome-devtools-mcp) — `npx chrome-devtools-mcp@latest --autoConnect`
