@@ -67,6 +67,7 @@ Spawn 2 parallel agents that read frontend code:
 - Accessibility lint rules (jsx-a11y or framework equivalent)
 - Security lint rules (no unsanitized raw HTML injection)
 - Browser compatibility lint (eslint-plugin-compat against browserslist)
+- useEffect anti-pattern lint (eslint-plugin-react-you-might-not-need-an-effect)
 - Stylelint violations (if CSS/SCSS present)
 
 **dependency-and-bundle-analyst**:
@@ -117,6 +118,12 @@ Spawn 3 parallel agents:
 - Context provider stacking (flag > 5 nested providers)
 - Derived state stored instead of computed
 - Global state overuse (auth/theme/locale are global; form state is local)
+- useEffect anti-patterns (ref: @code-patterns `languages/typescript.md`, "5 useEffect Anti-Patterns"):
+  - Data fetching in useEffect without a data library (P2 — race conditions, no caching)
+  - useEffect containing only setState derived from props/state (P2 — compute inline)
+  - useEffect responding to user events instead of event handlers (P2 — extra render cycle)
+  - Chained useEffect hooks updating each other's state (P2 — cascade bugs)
+  - Missing cleanup in effects with subscriptions/timers/observers (P1 — memory leaks)
 
 **ux-completeness-reviewer** — References @code-patterns (`languages/typescript.md`, error handling) and @visual-design (design token and polish patterns):
 - Error boundary coverage (every route/feature boundary wrapped)

@@ -964,53 +964,70 @@ UserProfile.displayName = 'UserProfile';
 
 ### Custom Hooks
 
+**Data fetching** — Prefer TanStack Query (or SWR, RTK Query) over manual `useEffect` fetching. These libraries handle caching, deduplication, race conditions, background refetching, and loading/error states declaratively.
+
 ```typescript
-// hooks/useApi.ts
-import { useState, useEffect, useCallback } from 'react';
+// hooks/useUser.ts — TanStack Query (preferred)
+import { useQuery } from '@tanstack/react-query';
 
-interface UseApiState<T> {
-  data: T | null;
-  isLoading: boolean;
-  error: Error | null;
-}
-
-interface UseApiOptions {
-  immediate?: boolean;
-  onSuccess?: <T>(data: T) => void;
-  onError?: (error: Error) => void;
-}
-
-export function useApi<T>(
-  fetcher: () => Promise<T>,
-  options: UseApiOptions = {}
-): UseApiState<T> & { refetch: () => Promise<void> } {
-  const [state, setState] = useState<UseApiState<T>>({
-    data: null,
-    isLoading: options.immediate ?? true,
-    error: null,
+export function useUser(userId: string) {
+  return useQuery({
+    queryKey: ['user', userId],
+    queryFn: () => api.getUser(userId),
+    staleTime: 5 * 60 * 1000,
   });
+}
 
-  const execute = useCallback(async () => {
-    setState(prev => ({ ...prev, isLoading: true, error: null }));
+// Usage: const { data: user, isLoading, error } = useUser(id);
+```
 
-    try {
-      const data = await fetcher();
-      setState({ data, isLoading: false, error: null });
-      options.onSuccess?.(data);
-    } catch (error) {
-      const errorObj = error instanceof Error ? error : new Error(String(error));
-      setState({ data: null, isLoading: false, error: errorObj });
-      options.onError?.(errorObj);
-    }
-  }, [fetcher, options.onSuccess, options.onError]);
+**External system synchronization** — The legitimate use case for `useEffect`. Always extract into a named custom hook, include cleanup, and never make the callback `async` directly.
+
+```typescript
+// hooks/useOnlineStatus.ts — external browser API (legitimate useEffect)
+import { useSyncExternalStore } from 'react';
+
+export function useOnlineStatus() {
+  return useSyncExternalStore(
+    (callback) => {
+      window.addEventListener('online', callback);
+      window.addEventListener('offline', callback);
+      return () => {
+        window.removeEventListener('online', callback);
+        window.removeEventListener('offline', callback);
+      };
+    },
+    () => navigator.onLine,
+    () => true, // server snapshot
+  );
+}
+
+// hooks/useEventListener.ts — DOM event subscription (legitimate useEffect)
+export function useEventListener<K extends keyof WindowEventMap>(
+  event: K,
+  handler: (e: WindowEventMap[K]) => void,
+  element: EventTarget = window,
+) {
+  const savedHandler = useRef(handler);
+  savedHandler.current = handler;
 
   useEffect(() => {
-    if (options.immediate ?? true) {
-      execute();
-    }
-  }, [execute, options.immediate]);
+    const listener = (e: Event) => savedHandler.current(e as WindowEventMap[K]);
+    element.addEventListener(event, listener);
+    return () => element.removeEventListener(event, listener);
+  }, [event, element]);
+}
 
-  return { ...state, refetch: execute };
+// hooks/useWebSocket.ts — external connection (legitimate useEffect)
+export function useWebSocket(url: string, onMessage: (data: unknown) => void) {
+  const savedOnMessage = useRef(onMessage);
+  savedOnMessage.current = onMessage;
+
+  useEffect(() => {
+    const ws = new WebSocket(url);
+    ws.onmessage = (e) => savedOnMessage.current(JSON.parse(e.data));
+    return () => ws.close();
+  }, [url]);
 }
 ```
 
@@ -1487,16 +1504,23 @@ function InteractiveChart({ data }: InteractiveChartProps) {
 
 ## State Management
 
-### Derived State vs. Reset State
+### useEffect — Decision Framework
 
-Two distinct patterns for handling data that depends on props. Choosing the wrong one causes subtle bugs.
+Effects are an escape hatch for synchronizing with **external systems** (WebSocket, browser API, third-party DOM widget, subscription). If code only touches React state/props/rendering, the effect is eliminable. Ref: [You Might Not Need an Effect](https://react.dev/learn/you-might-not-need-an-effect).
 
-**Pattern 1: Derived State — Compute Inline**
+**Audit every `useEffect`** — ask these three questions:
+1. Does this sync an *external* system (not React state/props)?
+2. Is this triggered by the component *being displayed* (not by a user action)?
+3. Could this be handled in render, an event handler, `useMemo`, `key` prop, or a data library?
 
-When a value can be calculated from props/state on every render, compute it directly. Don't store it in state.
+If "no" to #1 or #2, or "yes" to #3 → refactor. Use `eslint-plugin-react-you-might-not-need-an-effect` to auto-detect.
+
+### The 5 useEffect Anti-Patterns
+
+**A. Deriving/transforming data** — compute inline instead of syncing state.
 
 ```typescript
-// WRONG — storing derived state
+// WRONG — extra render cycle, unnecessary state
 function UserGreeting({ user }: { user: User }) {
   const [fullName, setFullName] = useState(`${user.first} ${user.last}`);
   useEffect(() => {
@@ -1505,26 +1529,63 @@ function UserGreeting({ user }: { user: User }) {
   return <h1>Hello, {fullName}</h1>;
 }
 
-// RIGHT — compute inline (or useMemo for expensive calculations)
+// RIGHT — compute inline (useMemo for expensive calculations)
 function UserGreeting({ user }: { user: User }) {
   const fullName = `${user.first} ${user.last}`;
   return <h1>Hello, {fullName}</h1>;
 }
 ```
 
-**Pattern 2: Reset State — Use `key` Prop**
-
-When a component has internal state that should **reset** when a prop changes (e.g., switching between items), use the `key` prop to force a full remount.
+**B. Data fetching** — use TanStack Query / SWR / RTK Query instead of manual effects (see Custom Hooks above).
 
 ```typescript
-// WRONG — useEffect to reset state (race conditions, stale renders)
+// WRONG — race conditions, no caching, manual loading/error state
+useEffect(() => {
+  fetchUser(id).then(setUser);
+}, [id]);
+
+// RIGHT — TanStack Query handles races, caching, dedup, refetch
+const { data: user } = useQuery({
+  queryKey: ['user', id],
+  queryFn: () => fetchUser(id),
+});
+```
+
+In Next.js: prefer Server Components or Server Actions. In React 19+: `use(promise)` + Suspense.
+
+**C. Responding to user events** — put logic in the event handler, not an effect.
+
+```typescript
+// WRONG — effect reacts to state change caused by the click
+function ProductPage({ product }: { product: Product }) {
+  const [isInCart, setIsInCart] = useState(false);
+  useEffect(() => {
+    if (isInCart) showToast('Added to cart!');
+  }, [isInCart]);
+  return <button onClick={() => setIsInCart(true)}>Add</button>;
+}
+
+// RIGHT — toast in the handler, single render, full event context
+function ProductPage({ product }: { product: Product }) {
+  const handleAddToCart = () => {
+    addToCart(product);
+    showToast('Added to cart!');
+  };
+  return <button onClick={handleAddToCart}>Add</button>;
+}
+```
+
+**D. Resetting state when a prop changes** — use `key` prop to force a clean remount.
+
+```typescript
+// WRONG — one render with stale draft before effect runs
 function CommentEditor({ postId }: { postId: string }) {
   const [draft, setDraft] = useState('');
-  useEffect(() => { setDraft(''); }, [postId]); // one render with stale draft
+  useEffect(() => { setDraft(''); }, [postId]);
   return <textarea value={draft} onChange={e => setDraft(e.target.value)} />;
 }
 
-// RIGHT — key prop forces clean remount
+// RIGHT — key prop forces clean remount with fresh state
 function CommentPage({ postId }: { postId: string }) {
   return <CommentEditor key={postId} postId={postId} />;
 }
@@ -1535,7 +1596,75 @@ function CommentEditor({ postId }: { postId: string }) {
 }
 ```
 
-**Decision Rule**: Can you compute it from current props/state? → Derive inline. Does internal state need to reset when a prop changes? → Use `key`.
+**E. Chaining effects / syncing state between effects** — lift state, use reducers, or compute in event handlers.
+
+```typescript
+// WRONG — cascading effects updating each other
+function ShippingForm({ country }: { country: string }) {
+  const [cities, setCities] = useState<string[]>([]);
+  const [city, setCity] = useState('');
+  const [zipCodes, setZipCodes] = useState<string[]>([]);
+
+  useEffect(() => { fetchCities(country).then(setCities); }, [country]);
+  useEffect(() => { setCity(cities[0] ?? ''); }, [cities]);
+  useEffect(() => { fetchZipCodes(city).then(setZipCodes); }, [city]);
+
+  // ...
+}
+
+// RIGHT — compute in event handler or use a single effect with cleanup
+function ShippingForm({ country }: { country: string }) {
+  const [city, setCity] = useState('');
+  const cities = useQuery({ queryKey: ['cities', country], queryFn: () => fetchCities(country) });
+  const zipCodes = useQuery({
+    queryKey: ['zips', city],
+    queryFn: () => fetchZipCodes(city),
+    enabled: !!city,
+  });
+
+  // Reset city when country changes via key prop on parent, or:
+  const handleCountryChange = (newCountry: string) => {
+    setCity(''); // reset dependent state in the handler
+    navigate(`?country=${newCountry}`);
+  };
+
+  // ...
+}
+```
+
+**Decision Rule**: Can you compute it from current props/state? → Derive inline. Does internal state need to reset when a prop changes? → Use `key`. Is it a user action? → Event handler. Is it data fetching? → Data library. Is it syncing an external system? → `useEffect` in a custom hook.
+
+### Legitimate useEffect — Best Practices
+
+When you *do* need an effect (external system sync only):
+
+- **Extract into a custom hook** with a descriptive name (`useWebSocket`, `useOnlineStatus`)
+- **Always return cleanup** — subscriptions, timers, observers must be torn down
+- **Never make the callback `async`** — use an inner async function + `AbortController`:
+
+```typescript
+useEffect(() => {
+  const controller = new AbortController();
+  async function sync() {
+    const data = await fetchExternal({ signal: controller.signal });
+    if (!controller.signal.aborted) updateExternalSystem(data);
+  }
+  sync();
+  return () => controller.abort();
+}, [dependency]);
+```
+
+- **React 19+ `useEffectEvent`** — extract non-reactive callbacks to avoid stale closures without adding values to deps:
+
+```typescript
+const onVisit = useEffectEvent((url: string) => {
+  logVisit(url, shoppingCart.length); // always reads latest shoppingCart
+});
+
+useEffect(() => {
+  onVisit(currentUrl);
+}, [currentUrl]); // shoppingCart not in deps
+```
 
 ### Zustand Store Pattern
 
