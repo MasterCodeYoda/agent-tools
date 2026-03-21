@@ -1,4 +1,5 @@
 ---
+name: git:worktree-create
 allowed-tools: Bash(git worktree:*), Bash(git branch:*), Bash(git rev-parse:*), Bash(git log:*), Bash(git status:*), Bash(ls:*), Bash(pwd:*), Bash(cd:*), Bash(cp:*), Bash(pnpm:*), Bash(npm:*), Bash(bun:*), Bash(yarn:*), Bash(uv:*), Bash(poetry:*), Bash(pipenv:*), Bash(pip:*)
 description: Create a git worktree and enter it for immediate work
 argument-hint: "[name] [from <ref>] [--type feat|fix|chore] [--branch <name>]"

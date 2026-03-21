@@ -1,4 +1,5 @@
 ---
+name: git:worktree-delete
 allowed-tools: Bash(git worktree:*), Bash(git branch:*), Bash(git rev-parse:*), Bash(git log:*), Bash(git merge-base:*), Bash(ls:*), Bash(pwd:*)
 description: Delete a git worktree with merge safety checks
 argument-hint: "<name-or-path> [--force] [--keep-branch]"
