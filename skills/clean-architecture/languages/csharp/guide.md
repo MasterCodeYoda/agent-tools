@@ -614,7 +614,7 @@ src/
 │   └── Services/
 │       └── EmailNotificationService.cs
 │
-└── WebApi/  // or Presentation
+└── WebApi/  // Frameworks Layer
     ├── Controllers/
     │   └── TasksController.cs
     ├── Filters/

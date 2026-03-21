@@ -379,7 +379,7 @@ These principles are especially important for AI agents, who tend to pattern-mat
 
 - **code-patterns**: Language-specific testing tools and frameworks
 - **clean-architecture**: Layer-specific testing strategies
-- **qa**: E2E test specification authoring (NL specs for Playwright)
+- **qa**: E2E test specification authoring. **E2E boundary**: test-strategy owns testing philosophy, assertion design, and strategy selection at all levels including E2E; qa owns the NL spec authoring pipeline and Playwright integration. test-strategy defines *how* to write good test assertions; qa defines *what* E2E flows to cover and manages the spec-to-test pipeline.
 
 ## Credits
 

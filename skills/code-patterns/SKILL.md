@@ -87,11 +87,13 @@ These principles apply across all languages:
 - Reserve exceptions for truly exceptional circumstances
 - Always handle errors at appropriate boundaries
 
-### Testing Pyramid
-- **Domain/Unit Tests**: Fast, pure logic tests with no external dependencies
-- **Application Tests**: Mock external dependencies, test use case orchestration
-- **Infrastructure Tests**: Test with real dependencies (test containers)
-- **Integration/E2E Tests**: Full stack tests for critical paths
+### Testing by Layer
+- **Domain**: Fast, pure logic tests with no external dependencies
+- **Application**: Test use case orchestration (see @test-strategy for mocking guidance)
+- **Infrastructure**: Integration tests with real resources (test containers)
+- **Frameworks**: E2E tests for critical paths
+
+For strategy selection (TDD vs spec-first vs property-based), see @test-strategy — the authoritative skill for testing methodology.
 
 ### Code Organization
 - Organize by feature/domain, not by technical layer

@@ -164,10 +164,9 @@ Calculate per-layer scores, then weight by test viability:
 |-------|--------|-----------|
 | Domain | 0.35 | Pure logic, highest test value, most testable |
 | Application | 0.30 | Use cases with mocked boundaries, high value |
-| Commands | 0.10 | Validation/transport, moderate value |
+| Frameworks | 0.15 | Controllers, CLI handlers, Tauri glue — validation/transport, moderate-to-low unit-test viability |
 | Infrastructure (internal) | 0.15 | SQLite, local I/O — testable with fixtures |
 | Infrastructure (external) | 0.05 | Network services (Supabase, ONNX, LLM) — low unit-test viability |
-| Framework | 0.05 | Tauri glue — low unit-test viability, E2E covers |
 
 **Composite score** = Σ(layer_score × layer_weight)
 

@@ -65,7 +65,7 @@ Detect drift between NL specs, generated `.spec.ts` tests, and app behavior. Rep
 
 ## Related Skills
 
-- **test-strategy**: Testing methodology and strategy selection — qa handles E2E spec authoring, test-strategy handles testing philosophy and unit/integration approaches
+- **test-strategy**: Testing methodology and strategy selection. **E2E boundary**: qa owns NL spec authoring and Playwright pipeline for E2E tests; test-strategy owns testing philosophy, strategy selection, and unit/integration test design. When deciding *what* E2E scenarios to write, consult qa. When deciding *how* to design test assertions and structure, consult test-strategy.
 - **use-browser**: Browser automation tools used by qa:discover for app scanning
 - **audit**: QA coverage domain (`domains/qa.md`) audits spec completeness and drift
 
