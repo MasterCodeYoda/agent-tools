@@ -52,11 +52,11 @@ Build features end-to-end, not layer-by-layer.
 While we plan **top-down** (user story → layers), we implement **bottom-up**:
 
 1. **Domain Layer First** - Pure business logic, no dependencies
-2. **Infrastructure Layer** - Data access, external services
-3. **Application Layer** - Use cases, orchestration
+2. **Application Layer** - Use cases, orchestration (depends on domain abstractions)
+3. **Infrastructure Layer** - Data access, external services (implements application interfaces)
 4. **Framework Layer** - API endpoints, UI
 
-This order ensures each layer depends only on layers below it.
+This order follows the dependency rule: each layer depends only on layers inside it. Infrastructure implements the interfaces that Application defines.
 
 Testing integrates naturally with bottom-up implementation: write tests for each layer as you build it upward. See @test-strategy for strategy selection.
 
@@ -409,7 +409,7 @@ For detailed templates and patterns, reference these sections:
 | Principle | Application |
 |-----------|-------------|
 | Vertical slicing | Build by story, not by layer |
-| Bottom-up implementation | Domain → Infrastructure → Application → Framework |
+| Bottom-up implementation | Domain → Application → Infrastructure → Framework |
 | Required vs. Out of Scope | All planned tasks required; future ideas in Out of Scope |
 | User approval gates | Plans require explicit approval before saving or executing |
 | Session continuity | Session state as source of truth |
