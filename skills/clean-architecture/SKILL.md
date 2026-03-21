@@ -431,8 +431,14 @@ To add support for a new language:
 
 ## Commands
 
-- `/workflow:audit-code` — Audit production code for architectural compliance
-- `/workflow:audit-api` — Audit API surface for architectural compliance
+- `/workflow:audit` — Audit production code and API surface for architectural compliance (code and api domains)
+- `/workflow:review` — Code review references these patterns for dependency direction and layer compliance
+
+## Related Skills
+
+- **code-patterns**: Language-specific implementation of these architectural patterns
+- **test-strategy**: Testing strategy selection by architectural layer
+- **workflow-guide**: Vertical slicing and implementation ordering
 
 ## Summary
 
