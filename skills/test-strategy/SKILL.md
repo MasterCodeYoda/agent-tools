@@ -50,9 +50,15 @@ Good tests describe **what** the system does through its public interfaces. They
 - Assert on observable outcomes (return values, state changes, side effects), not internal state
 - Write tests that survive refactoring — if you rename a private helper, no test should break
 
-### Integration-Style Tests Over Unit Mocking
+### Mock at Architectural Boundaries (Ports)
 
-Prefer tests that exercise real collaborators working together. Mock only at **system boundaries** — external APIs, databases, clocks, filesystems. When your test mocks an internal collaborator, it's testing the wiring, not the behavior.
+Prefer tests that exercise real collaborators working together within a layer. Mock at **port boundaries** — the interfaces that separate architectural layers:
+
+- **Port interfaces** (repository, gateway, event publisher): Mock these in use case tests. They are architectural boundaries by design. Prefer fakes (in-memory implementations) over mocking frameworks.
+- **Unmanaged external services** (third-party APIs, message buses, SMTP): Always mock. These are both ports and external systems.
+- **Never mock** internal collaborators within the same layer, domain objects, value objects, or implementation details behind a port.
+
+The principle is *mock at the port, not at the class*. When your test mocks an internal collaborator that has no port interface, it's testing wiring, not behavior.
 
 ### Tests Are Documentation
 
