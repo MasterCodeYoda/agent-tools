@@ -639,3 +639,21 @@ Before presenting plan for approval:
 - [ ] Risks are identified
 - [ ] Plan presented to user for approval
 - [ ] User has explicitly approved the plan
+
+## Integration Points
+
+### With /workflow:refine
+
+Refine produces `./planning/<project>/requirements.md` — plan consumes it. Run refine first for complex features; plan accepts the output directly.
+
+### With /workflow:execute
+
+Plan produces `implementation-plan.md` and `session-state.md` — execute consumes both. The Execution Handoff section provides the bridge.
+
+### With PM tools (Linear, Jira)
+
+Plan creates/updates work items after user approval. See @workflow-guide (`planning/pm-integration.md`) for tool-specific workflows.
+
+### With /workflow:audit
+
+Audit findings (P1 items) can feed into planning as requirements for the next cycle.

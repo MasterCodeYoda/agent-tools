@@ -344,3 +344,21 @@ Every spec needs a `persona` field. This helps the Planner understand who is doi
 ### Interactive Over Assumed
 
 When in doubt, ask the user rather than guess. A spec based on real knowledge is worth more than one filled with assumptions.
+
+## Integration Points
+
+### With /qa:setup
+
+Discover depends on `sentinel.config.yaml` produced by setup. If config is missing, direct user to run `/qa:setup` first. Config provides `base_url`, `specs.nl_dir`, and auth settings.
+
+### With /qa:audit
+
+Discover produces NL specs. Audit evaluates them for drift against the app. When audit finds gaps, it recommends discover to author new specs.
+
+### With @use-browser
+
+Discover's `--scan` mode uses Chrome DevTools MCP (or agent-browser) to explore the app, take snapshots, and build the feature map.
+
+### With Playwright Test Agents
+
+Discover's output (NL specs) feeds directly into Playwright's Planner → Generator pipeline. Specs are the contract between discover (authoring) and Playwright (execution).

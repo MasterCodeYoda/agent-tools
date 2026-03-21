@@ -221,3 +221,17 @@ Run `npx playwright test` to execute tests.
 Run `/qa:discover` to author new NL specs.
 Run `/qa:audit --live` to get fresh behavioral drift data.
 ```
+
+## Integration Points
+
+### With /qa:setup
+
+Audit depends on `sentinel.config.yaml` produced by setup. If config is missing, direct user to run `/qa:setup` first.
+
+### With /qa:discover
+
+Discover produces NL specs that audit evaluates for drift. When audit finds uncovered flows, recommend running discover to author new specs. When audit finds stale specs, recommend updating via discover.
+
+### With /workflow:audit
+
+The QA coverage domain in `/workflow:audit --focus qa` performs static drift analysis. This command (`/qa:audit`) performs deeper behavioral analysis including live test execution. They complement — static catches obvious mismatches, live catches behavioral regressions.
