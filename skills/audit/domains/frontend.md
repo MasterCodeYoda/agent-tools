@@ -202,14 +202,14 @@ After presenting the report, offer:
 
 1. **Fix critical findings** — Address P1 items (accessibility violations and security issues)
 2. **Create follow-up tasks** — Track P2/P3 improvements
-3. **Re-audit after fixes** — Run `/workflow:audit-frontend [same scope]` to verify
+3. **Re-audit after fixes** — Run `/workflow:audit --focus frontend [same scope]` to verify
 4. **Install frontend tooling** — [if not configured: recommend axe-core, Lighthouse CI, eslint-plugin-jsx-a11y]
 5. **Save report** — Export findings to `./planning/frontend-audit-report.md`
 ```
 
 ## Integration Points
 
-### With /workflow:audit-code
+### With /workflow:audit --focus code
 
 audit-code examines backend/general code quality; audit-frontend examines frontend-specific concerns. They are complementary — run both for full-stack coverage.
 

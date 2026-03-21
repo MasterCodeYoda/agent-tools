@@ -313,30 +313,30 @@ After presenting the report, offer:
 1. **Fix critical findings** — Address P1 items (security gaps, missing CI, unprotected branches)
 2. **Implement quick wins** — Low-effort, high-impact improvements from the Quick Wins table
 3. **Create follow-up tasks** — Track P2/P3 improvements
-4. **Re-audit after fixes** — Run `/workflow:audit-repo` to verify progress
+4. **Re-audit after fixes** — Run `/workflow:audit --focus repo` to verify progress
 5. **Save report** — Export findings to `./planning/repo-audit-report.md`
-6. **Run complementary audits** — `/workflow:audit-code`, `/workflow:audit-tests` for code-level findings
+6. **Run complementary audits** — `/workflow:audit --focus code`, `/workflow:audit --focus tests` for code-level findings
 ```
 
 ## Integration Points
 
-### With /workflow:audit-code
+### With /workflow:audit --focus code
 
 audit-repo examines repository infrastructure; audit-code examines production code quality. They are complementary — repo infrastructure enables code quality enforcement.
 
-### With /workflow:audit-tests
+### With /workflow:audit --focus tests
 
 audit-repo checks that testing infrastructure exists and is configured; audit-tests evaluates the actual test quality and coverage.
 
-### With /workflow:audit-docs
+### With /workflow:audit --focus docs
 
 audit-repo checks that documentation infrastructure exists (README, CONTRIBUTING, ADRs); audit-docs evaluates documentation quality and accuracy.
 
-### With /workflow:audit-frontend
+### With /workflow:audit --focus frontend
 
 audit-repo checks CI/CD and build pipeline health; audit-frontend examines frontend-specific code quality. Bundle analysis depends on functional CI.
 
-### With /workflow:audit-api
+### With /workflow:audit --focus api
 
 audit-repo checks API documentation infrastructure; audit-api evaluates API design quality and security.
 

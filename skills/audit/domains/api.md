@@ -191,18 +191,18 @@ After presenting the report, offer:
 
 1. **Fix critical findings** — Address P1 items (security violations and missing auth)
 2. **Create follow-up tasks** — Track P2/P3 improvements
-3. **Re-audit after fixes** — Run `/workflow:audit-api [same scope]` to verify
+3. **Re-audit after fixes** — Run `/workflow:audit --focus api [same scope]` to verify
 4. **Install API tooling** — [if linting not configured: recommend Spectral, Vacuum, or Redocly]
 5. **Save report** — Export findings to `./planning/api-audit-report.md`
 ```
 
 ## Integration Points
 
-### With /workflow:audit-code
+### With /workflow:audit --focus code
 
 audit-code checks code quality; audit-api checks API design quality. They are complementary — code quality doesn't guarantee good API design and vice versa.
 
-### With /workflow:audit-docs
+### With /workflow:audit --focus docs
 
 audit-docs checks if API documentation exists; audit-api checks if it's correct and matches the implementation.
 

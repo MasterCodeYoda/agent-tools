@@ -213,7 +213,7 @@ After presenting the report, offer:
 
 1. **Fix critical findings** — Address P1 items (assertion-free and tautological tests)
 2. **Create follow-up tasks** — Track P2/P3 improvements
-3. **Re-audit after fixes** — Run `/workflow:audit-tests [same scope]` to verify
+3. **Re-audit after fixes** — Run `/workflow:audit --focus tests [same scope]` to verify
 4. **Install quality tools** — [if mutation testing not available: recommend tool for language]
 5. **Save report** — Export findings to `./planning/test-audit-report.md`
 ```
@@ -228,7 +228,7 @@ During execution, if an audit was recently run, reference its findings for the a
 
 If audit reveals a recurring pattern worth documenting, offer compound.
 
-### With /workflow:audit-repo
+### With /workflow:audit --focus repo
 
 audit-tests evaluates test quality and coverage; audit-repo checks that testing infrastructure exists and is properly configured in CI.
 
