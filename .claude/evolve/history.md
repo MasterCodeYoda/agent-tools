@@ -4,11 +4,11 @@ Score trend and run log for `/evolve` command iterations.
 
 ## 2026-03-21 (run 2)
 
-- **Score**: 48 → 78/100 (Good)
-- **Iterations**: 3 of 5 (stopped: remaining gaps are P3 terminology/parity and recommendations)
-- **Gaps**: 17 detected (P1: 1, P2: 8, P3: 8), 10 addressed
-- **Proposals**: 10 applied (10 validated, 0 with caveats)
-- **Effectiveness**: 0 checks run (structural/reference fixes — no skill guidance changes affecting detection)
+- **Score**: 48 → 88/100 (Good)
+- **Iterations**: 3 evolve iterations + 5 recommendation implementations
+- **Gaps**: 17 detected (P1: 1, P2: 8, P3: 8), all addressed
+- **Proposals**: 16 applied (16 validated, 0 with caveats)
+- **Effectiveness**: 0 checks run (structural/reference/content fixes)
 - **Branch**: evolve/2026-03-21-b
 - **Status**: pending review
 - **Key changes**:
@@ -20,6 +20,11 @@ Score trend and run log for `/evolve` command iterations.
   - Added visual-design to code-patterns Related Skills (bidirectional)
   - Strengthened mocking boundary attribution in audit tests domain
   - Grounded 2 unanchored frontend audit agents with skill references
+  - Replaced port/adapter terminology with "service abstractions" across test-strategy
+  - Aligned core-concepts.md layer naming to ecosystem convention
+  - Removed empty TS validators dir, documented idiomatic TS approach in SKILL.md
+  - Expanded C# guide: domain events, aggregate roots, Result pattern (+343 lines)
+  - Created C# examples.md: complete Task Management feature across all layers (+558 lines)
 
 ## 2026-03-21 (run 1)
 
