@@ -215,7 +215,7 @@ Fix: commit your planning docs first, then retry:
 
 **If no session state but planning docs exist:**
 
-- Read @planning/*.md for context (requirements, implementation plan)
+- Read ./planning/*.md for context (requirements, implementation plan)
 - Create new session-state.md
 - Initialize from implementation-plan.md
 - Set session_count: 1

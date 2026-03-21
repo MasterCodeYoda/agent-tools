@@ -17,10 +17,10 @@ The single most important rule in Clean Architecture:
 
 ```
 ┌─────────────────────────────────────────────┐
-│            Frameworks & Drivers             │
+│            Frameworks Layer                 │
 │  (Web, UI, DB, External Interfaces)         │
 │ ┌─────────────────────────────────────────┐ │
-│ │         Interface Adapters               │ │
+│ │         Infrastructure Layer             │ │
 │ │   (Controllers, Gateways, Presenters)   │ │
 │ │ ┌───────────────────────────────────┐   │ │
 │ │ │      Application Business         │   │ │

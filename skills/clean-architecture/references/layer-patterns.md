@@ -19,7 +19,6 @@ The heart of the software - pure business logic independent of any technology.
 - **Value Objects**: Immutable descriptive objects
 - **Domain Services**: Business operations spanning multiple entities
 - **Domain Events**: Significant business occurrences
-- **Repository Interfaces**: Abstractions for data access
 - **Domain Exceptions**: Business rule violations
 
 ### Responsibilities
@@ -479,7 +478,7 @@ Infrastructure → Framework (Infrastructure doesn't know Framework)
 ```
 
 ### Interface Placement
-- **Repository Interfaces**: Domain or Application layer
+- **Repository Interfaces**: Application layer (colocated with use cases)
 - **Gateway Interfaces**: Application layer
 - **Service Interfaces**: Application layer
 - **Implementations**: Infrastructure layer

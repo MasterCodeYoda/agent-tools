@@ -110,7 +110,7 @@ Spawn 3 parallel agents:
 - Colocation (component + test + styles + stories together)
 - Circular component dependencies
 
-**state-and-data-flow-reviewer**:
+**state-and-data-flow-reviewer** — References @code-patterns (`languages/typescript.md`, state management patterns):
 - State duplication (same data in multiple stores/contexts)
 - Server state vs UI state separation (TanStack Query/SWR for server state)
 - Unnecessary re-render patterns (missing memo, unstable references in deps)
@@ -118,7 +118,7 @@ Spawn 3 parallel agents:
 - Derived state stored instead of computed
 - Global state overuse (auth/theme/locale are global; form state is local)
 
-**ux-completeness-reviewer**:
+**ux-completeness-reviewer** — References @code-patterns (`languages/typescript.md`, error handling) and @visual-design (design token and polish patterns):
 - Error boundary coverage (every route/feature boundary wrapped)
 - Loading state coverage (all async paths have loading UI — skeletons preferred)
 - Empty state coverage (no blank screens when data is absent)

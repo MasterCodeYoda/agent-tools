@@ -3,7 +3,7 @@ name: visual-design
 description: Visual design micro-patterns from detail.design for evaluating and improving UI polish — motion, accessibility, typography, and interaction details that make big differences.
 ---
 
-## When to Use
+## When to Use This Skill
 
 - **Evaluating app design** — Auditing an existing application for visual polish and micro-interaction quality.
 - **Implementing UI features** — Building new components and wanting to apply best-practice design details.

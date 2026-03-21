@@ -2,6 +2,7 @@
 name: git:commit-pr
 allowed-tools: Bash(git checkout --branch:*), Bash(git add:*), Bash(git status:*), Bash(git push:*), Bash(git commit:*), Bash(gh pr create:*)
 description: Commit, push, and open a PR
+argument-hint: "[optional context about changes and PR details]"
 ---
 
 ## CRITICAL: Git Command Rules

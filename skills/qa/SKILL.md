@@ -7,6 +7,13 @@ description: QA skills for testing workflows — visual inspection tools and NL 
 
 Quality assurance workflows: NL spec-driven e2e testing with Playwright Test Agents, and visual inspection tools.
 
+## When to Use This Skill
+
+- **Testing web applications** — Setting up or running e2e test pipelines with Playwright Test Agents
+- **Authoring NL test specs** — Creating structured natural language specifications that describe what to test
+- **Auditing spec-to-test alignment** — Detecting drift between NL specs, generated tests, and actual app behavior
+- **Visual inspection** — Using browser automation to visually verify UI behavior
+
 ## Sentinel: NL Spec Authoring & Audit
 
 Sentinel is a thin layer over Playwright Test Agents. Claude authors structured Natural Language (NL) specs describing what to test. Playwright's Planner and Generator agents convert those specs into `.spec.ts` test files, and `npx playwright test` executes them deterministically. Sentinel's role is authoring (discover) and maintenance (audit) — not execution.

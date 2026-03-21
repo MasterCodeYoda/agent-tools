@@ -124,4 +124,5 @@ For detailed language-specific patterns (loaded on request only):
 
 - **clean-architecture**: For architectural patterns and layer organization
 - **test-strategy**: For testing methodology and strategy selection
+- **visual-design**: For UI polish micro-patterns complementing frontend code patterns
 - **workflow-guide**: For workflow and implementation planning

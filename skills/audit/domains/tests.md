@@ -70,9 +70,9 @@ Spawn 2 parallel agents that read test files:
 - Static guarantee duplication (tests that verify type correctness, nullability, exhaustive matching, or lint rules already enforced by the compiler/linter)
 - Arrange-Act-Assert structure clarity
 
-**mock-boundary-checker** — References @test-strategy (`references/mocking-and-contracts.md`):
+**mock-boundary-checker** — References @test-strategy (`references/mocking-and-contracts.md`). Core principle: mock at architectural **service abstraction boundaries** only (repository, gateway, event publisher), never internal collaborators:
 - Internal collaborator mocking (same-system classes mocked instead of using real)
-- Boundary identification (which mocks are at real boundaries vs. internal)
+- Boundary identification (which mocks are at real architectural ports vs. internal classes)
 - Mock-to-real ratio (flag files with > 50% mocked dependencies)
 - Fake vs. mock usage (recommend fakes for repositories, mocks only for side effects)
 - Dependency injection patterns (flag `new` inside functions being tested)

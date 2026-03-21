@@ -67,15 +67,15 @@ Good tests describe **what** the system does through its public interfaces. They
 - Assert on observable outcomes (return values, state changes, side effects), not internal state
 - Write tests that survive refactoring — if you rename a private helper, no test should break
 
-### Mock at Architectural Boundaries (Ports)
+### Mock at Architectural Boundaries (Service Abstractions)
 
-Prefer tests that exercise real collaborators working together within a layer. Mock at **port boundaries** — the interfaces that separate architectural layers:
+Prefer tests that exercise real collaborators working together within a layer. Mock at **service abstraction boundaries** — the interfaces that separate architectural layers:
 
-- **Port interfaces** (repository, gateway, event publisher): Mock these in use case tests. They are architectural boundaries by design. Prefer fakes (in-memory implementations) over mocking frameworks.
-- **Unmanaged external services** (third-party APIs, message buses, SMTP): Always mock. These are both ports and external systems.
-- **Never mock** internal collaborators within the same layer, domain objects, value objects, or implementation details behind a port.
+- **Service abstractions** (repository, gateway, event publisher): Mock these in use case tests. They are architectural boundaries by design. Prefer fakes (in-memory implementations) over mocking frameworks.
+- **Unmanaged external services** (third-party APIs, message buses, SMTP): Always mock. These are both boundaries and external systems.
+- **Never mock** internal collaborators within the same layer, domain objects, value objects, or implementation details behind a service abstraction.
 
-The principle is *mock at the port, not at the class*. When your test mocks an internal collaborator that has no port interface, it's testing wiring, not behavior.
+The principle is *mock at the boundary, not at the class*. When your test mocks an internal collaborator that has no service abstraction interface, it's testing wiring, not behavior.
 
 ### Tests Are Documentation
 
