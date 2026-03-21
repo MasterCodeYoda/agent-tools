@@ -1,0 +1,14 @@
+name: dependency-rule-violations
+description: >
+  Python codebase with planted Clean Architecture violations.
+  Tests whether audit-code's dependency-direction-checker and
+  data-access-pattern-checker agents detect layer boundary issues
+  when guided by @clean-architecture skill.
+skill: clean-architecture
+command: workflow:audit-code
+agents_tested:
+  - dependency-direction-checker
+  - data-access-pattern-checker
+  - pattern-compliance-analyst
+language: python
+planted_issues: 6

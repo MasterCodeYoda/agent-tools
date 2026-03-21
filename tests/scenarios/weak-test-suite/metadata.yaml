@@ -1,0 +1,14 @@
+name: weak-test-suite
+description: >
+  Python test suite with planted testing anti-patterns.
+  Tests whether audit-tests's assertion-analyst and
+  mock-boundary-checker agents detect quality issues
+  when guided by @test-strategy skill.
+skill: test-strategy
+command: workflow:audit-tests
+agents_tested:
+  - assertion-analyst
+  - mock-boundary-checker
+  - behavior-coverage-reviewer
+language: python
+planted_issues: 7

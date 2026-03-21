@@ -1,0 +1,84 @@
+# Expected findings when running /workflow:audit-tests against this scenario.
+
+findings:
+  - id: WTS-01
+    severity: P1
+    type: assertion-free-test
+    file: code/tests/test_calculator.py
+    function: test_division_runs
+    description: >
+      Test calls production code but has no assertions.
+      Creates false confidence — test passes even if division is wrong.
+    skill_pattern: "test-strategy/references/test-quality.md — Assertion-free tests"
+    agent: assertion-analyst
+
+  - id: WTS-02
+    severity: P2
+    type: weak-assertion
+    file: code/tests/test_calculator.py
+    function: test_multiply_returns_something
+    description: >
+      Uses truthiness assertion (assert result) instead of checking
+      the actual value. Only fails on 0, None, or empty — passes for
+      any wrong positive number.
+    skill_pattern: "test-strategy/references/test-design.md — Assertion strength"
+    agent: assertion-analyst
+
+  - id: WTS-03
+    severity: P2
+    type: tautological-assertion
+    file: code/tests/test_calculator.py
+    function: test_add_tautological
+    description: >
+      Expected value is computed using the same logic as production code
+      (a + b). If the implementation is wrong, the test is wrong too.
+      Expected values must be literal constants.
+    skill_pattern: "test-strategy/references/test-quality.md — Tautological patterns"
+    agent: assertion-analyst
+
+  - id: WTS-04
+    severity: P2
+    type: computed-expected-value
+    file: code/tests/test_calculator.py
+    function: test_subtract_computed
+    description: >
+      Expected value uses production function to compute expected.
+      assert subtract(10, 3) == 10 - 3 should be == 7.
+    skill_pattern: "test-strategy/references/test-quality.md — Computed expected values"
+    agent: assertion-analyst
+
+  - id: WTS-05
+    severity: P2
+    type: internal-collaborator-mock
+    file: code/tests/test_calculator.py
+    function: test_calculate_total_mocks_internals
+    description: >
+      Mocks Calculator.multiply — an internal collaborator in the
+      same module. Only external boundaries should be mocked.
+      This test breaks on any refactoring of calculate_total's internals.
+    skill_pattern: "test-strategy/references/mocking-and-contracts.md — Mock boundaries"
+    agent: mock-boundary-checker
+
+  - id: WTS-06
+    severity: P2
+    type: multiple-behaviors-per-test
+    file: code/tests/test_calculator.py
+    function: test_all_operations
+    description: >
+      Single test verifies add, subtract, multiply, and divide.
+      When it fails, which operation broke? Tests should verify
+      one behavior each.
+    skill_pattern: "test-strategy/references/test-design.md — Single behavior per test"
+    agent: assertion-analyst
+
+  - id: WTS-07
+    severity: P2
+    type: static-guarantee-duplication
+    file: code/tests/test_calculator.py
+    function: test_calculator_has_add_method
+    description: >
+      Tests that Calculator has an 'add' attribute. This is already
+      enforced by the type system / import system — if add() didn't
+      exist, calling code wouldn't compile/run.
+    skill_pattern: "test-strategy/references/test-quality.md — Static guarantee duplication"
+    agent: assertion-analyst

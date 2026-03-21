@@ -1,0 +1,65 @@
+# Expected findings when running /workflow:audit-code against this scenario.
+# Each entry maps to a specific planted issue in the code.
+# The evolve effectiveness loop checks: did the audit find these?
+
+findings:
+  - id: DRV-01
+    severity: P1
+    type: dependency-rule-violation
+    file: code/domain/order.py
+    description: >
+      Domain entity imports from infrastructure layer (SQLAlchemy).
+      Domain must have zero external dependencies.
+    skill_pattern: "clean-architecture/references/layer-patterns.md — Domain: What It MUST NOT Know About"
+    agent: dependency-direction-checker
+
+  - id: DRV-02
+    severity: P2
+    type: anemic-domain
+    file: code/domain/order.py
+    description: >
+      OrderStatus entity is a plain dataclass with no behavior —
+      classic anemic domain model. Should enforce business invariants.
+    skill_pattern: "clean-architecture/references/layer-patterns.md — Rich Domain Model"
+    agent: dependency-direction-checker
+
+  - id: DRV-03
+    severity: P2
+    type: fat-controller
+    file: code/framework/api.py
+    description: >
+      Business logic (discount calculation, validation rules) lives
+      directly in the FastAPI route handler instead of domain/application layer.
+    skill_pattern: "clean-architecture/references/layer-patterns.md — Framework layer responsibilities"
+    agent: dependency-direction-checker
+
+  - id: DRV-04
+    severity: P2
+    type: repository-query-leak
+    file: code/application/order_service.py
+    description: >
+      Application layer contains raw SQL query instead of using
+      repository abstraction. Queries belong in infrastructure layer.
+    skill_pattern: "clean-architecture/references/layer-patterns.md — Infrastructure layer"
+    agent: data-access-pattern-checker
+
+  - id: DRV-05
+    severity: P2
+    type: missing-repository-interface
+    file: code/domain/order.py
+    description: >
+      No repository interface defined in domain layer. The application
+      layer should depend on domain-defined abstractions, not concrete
+      infrastructure implementations.
+    skill_pattern: "clean-architecture/references/layer-patterns.md — Domain: Repository Interfaces"
+    agent: dependency-direction-checker
+
+  - id: DRV-06
+    severity: P2
+    type: orm-entity-in-response
+    file: code/framework/api.py
+    description: >
+      SQLAlchemy model object returned directly in API response.
+      Framework layer should map to response DTOs, not expose ORM entities.
+    skill_pattern: "clean-architecture/references/layer-patterns.md — Data access layer isolation"
+    agent: data-access-pattern-checker
