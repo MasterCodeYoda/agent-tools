@@ -2,6 +2,7 @@
 name: git:commit
 allowed-tools: Bash(git add:*), Bash(git status:*), Bash(git commit:*)
 description: Create a git commit
+argument-hint: "[optional context about which changes to commit]"
 ---
 
 ## CRITICAL: Git Command Rules
