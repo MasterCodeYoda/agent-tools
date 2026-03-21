@@ -1,5 +1,5 @@
 ---
-name: workflow:audit-product
+name: product:audit
 description: Audit product-market fit, positioning, messaging, go-to-market readiness, and competitive stance from readable artifacts
 argument-hint: "['.', directory path, or '--focus positioning|messaging|gtm|devex']"
 ---
