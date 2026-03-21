@@ -567,13 +567,36 @@ Beyond detecting internal gaps and validating against synthetic scenarios, evolv
 
 ### Feedback Signals
 
-When invoked with `--compound` or when evolution tracking history has 3+ entries, activate compound analysis:
+When invoked with `--compound` or when evolution tracking history has 3+ entries, activate compound analysis.
 
-**Signal 1 — Audit finding patterns:**
-If `/workflow:audit-code`, `/workflow:audit-tests`, or other audits have been run recently in user projects (check git log for compound docs in `docs/solutions/`), look for:
-- **Recurring finding types** that no skill explicitly addresses — these are skill gaps discovered in the wild
-- **Finding types that audits miss but users manually flag** — evidence of insufficient skill guidance
-- **False positives** that users override or ignore — evidence of over-specification in skills
+References: @workflow-guide (`references/conversation-analysis.md`)
+
+**Signal 1 — Conversation history analysis (primary signal):**
+
+Analyze Claude Code conversation history from `~/.claude/` for the current project:
+
+```
+1. Get project root: git rev-parse --show-toplevel
+2. Read ~/.claude/history.jsonl — filter entries where "project" starts with project root
+   (prefix match — handles subfolder sessions correctly)
+3. Group by sessionId, count command invocations by type
+4. For each session, read ~/.claude/usage-data/facets/{sessionId}.json
+5. Aggregate by command type:
+   - Usage frequency (which commands are used, which are never used)
+   - Friction rate (sessions with friction_counts > 0 / total sessions per command)
+   - Outcome distribution (fully_achieved vs. partial vs. other per command)
+   - Friction detail themes (what kinds of friction recur)
+```
+
+Report:
+- **High-friction commands**: "workflow:review had wrong_approach friction in 3 of 8 sessions — investigate skill guidance in these areas"
+- **Never-used commands**: "product:brief has 0 invocations across 45 sessions — may indicate discoverability or value issue"
+- **Consistently effective commands**: "workflow:plan had 0 friction across 12 sessions — guidance is working"
+- **Friction themes**: "Architecture layer placement caused friction in 4 sessions across 2 commands — clean-architecture guidance may need refinement"
+
+Cross-reference friction signals with scenarios:
+- Commands with high friction + matching scenario → run effectiveness check to validate
+- Commands with high friction + no scenario → recommend scenario creation as priority
 
 **Signal 2 — Evolution history analysis:**
 Read `.claude/evolve/history.md` and git log for `evolve/` branches:

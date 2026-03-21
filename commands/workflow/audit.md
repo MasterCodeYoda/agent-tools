@@ -194,6 +194,13 @@ Each finding: `[domain tags] file:line — description — evidence — recommen
 - "Authentication is consistently weak: no auth middleware (api), no auth tests (tests), no security docs (docs), no branch protection requiring reviews (repo)"
 - "Domain layer is undertested: low coverage (tests), anemic models (code), no NL specs for core domain flows (qa)"
 
+### Finding Persistence (from conversation history)
+
+[If prior audit sessions exist for this project in ~/.claude/history.jsonl — see @workflow-guide references/conversation-analysis.md]
+- [N] findings are **recurring** from [N] prior audit sessions — may indicate systemic issues requiring architectural fixes, not individual patches
+- [N] prior findings were **resolved** since last audit (confirmed via git history)
+- [N] prior findings were **ignored** — may be false positives or low-value; consider downgrading in future runs
+
 ### Positive Observations
 [Strong areas across domains]
 

@@ -66,6 +66,40 @@ User provides brief description:
 /workflow:compound "resolved circular dependency in auth module"
 ```
 
+## Undocumented Solution Surfacing
+
+Before starting capture, check conversation history for solved problems in this project that were never documented. References: @workflow-guide (`references/conversation-analysis.md`)
+
+```
+1. Get project root: git rev-parse --show-toplevel
+2. Read ~/.claude/history.jsonl — filter entries where "project" starts with project root (prefix match, not exact — handles subfolder sessions)
+3. Group by sessionId to get distinct sessions for this project
+4. For each session, read ~/.claude/usage-data/facets/{sessionId}.json (if exists)
+5. Filter for sessions with outcome "fully_achieved" and a meaningful brief_summary
+6. Cross-reference against docs/solutions/ — exclude sessions whose summary matches an existing compound doc
+7. Present undocumented solutions (if any) before proceeding to capture
+```
+
+If undocumented solutions are found:
+```markdown
+Before we capture your current problem, I found [N] prior sessions
+that solved problems in this project but were never documented:
+
+1. [date] — [brief_summary from facet]
+2. [date] — [brief_summary from facet]
+3. [date] — [brief_summary from facet]
+
+Would you like to document any of these as well?
+- Select by number (e.g., "1, 3")
+- "skip" to proceed with current capture only
+- "all" to document everything
+
+For selected items, I'll load the conversation context and run the
+standard compound analysis.
+```
+
+If no undocumented solutions found, proceed directly to capture.
+
 ## Preconditions
 
 Before documenting, verify:
