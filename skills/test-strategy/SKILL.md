@@ -372,7 +372,14 @@ These principles are especially important for AI agents, who tend to pattern-mat
 
 ## Commands
 
-- `/workflow:audit-tests` — Audit an existing test suite against these principles
+- `/workflow:audit` — Audit test suite quality against these principles (tests domain)
+- `/workflow:review` — Code review references these patterns for test quality assessment
+
+## Related Skills
+
+- **code-patterns**: Language-specific testing tools and frameworks
+- **clean-architecture**: Layer-specific testing strategies
+- **qa**: E2E test specification authoring (NL specs for Playwright)
 
 ## Credits
 
