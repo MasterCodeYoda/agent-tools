@@ -193,14 +193,16 @@ Present findings using the standard prioritized format:
 
 ### Coverage Alignment Matrix
 
-| Skill | audit-code | audit-tests | audit-frontend | audit-api | audit-docs | audit-repo | review |
-|-------|-----------|-------------|----------------|-----------|-----------|-----------|--------|
-| code-patterns | [status] | — | [status] | — | — | — | [status] |
-| clean-architecture | [status] | — | [status] | [status] | — | — | [status] |
-| test-strategy | — | [status] | — | — | — | — | [status] |
-| visual-design | — | — | [status] | — | — | — | — |
-| qa | ... | ... | ... | ... | ... | ... | ... |
-| workflow-guide | — | — | — | — | [status] | [status] | — |
+Columns represent audit domains within `/workflow:audit`. Individual `audit-*.md` files serve as domain definitions.
+
+| Skill | Code | Tests | API | Frontend | Docs | Repo | QA | Review |
+|-------|------|-------|-----|----------|------|------|----|--------|
+| code-patterns | [status] | — | — | [status] | — | — | — | [status] |
+| clean-architecture | [status] | — | [status] | [status] | — | — | — | [status] |
+| test-strategy | — | [status] | — | — | — | — | — | [status] |
+| visual-design | — | — | — | [status] | — | — | — | — |
+| qa | — | — | — | — | — | — | [status] | — |
+| workflow-guide | — | — | — | — | [status] | [status] | — | — |
 
 Legend: Full = all major patterns covered | Partial = some gaps | — = no coverage expected | Missing = coverage expected but absent
 
