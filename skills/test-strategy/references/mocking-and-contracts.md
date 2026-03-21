@@ -1,10 +1,10 @@
 # Mocking Strategy and Contract Testing
 
-When and how to use test doubles, with a focus on mocking at architectural port boundaries. Plus contract testing for service boundaries.
+When and how to use test doubles, with a focus on mocking at architectural service abstraction boundaries. Plus contract testing for service boundaries.
 
-## Core Principle: Mock at Port Boundaries
+## Core Principle: Mock at Service Abstraction Boundaries
 
-Mock at **architectural boundaries (ports)** — the interfaces that separate layers. Use real implementations for everything within a layer.
+Mock at **architectural boundaries (service abstractions)** — the interfaces that separate layers. Use real implementations for everything within a layer.
 
 ```
 ┌──────────────────────────────────────────────┐
@@ -13,7 +13,7 @@ Mock at **architectural boundaries (ports)** — the interfaces that separate la
 │  Domain ──real── Application ──real── Framework │
 │                    │    │                     │
 │              MOCK HERE  │                    │
-│              (ports)    │                    │
+│       (service abstractions)                │
 │                ↓        ↓                    │
 │         ┌──────────┐  ┌──────────┐           │
 │         │ Repo IF  │  │Gateway IF│           │
@@ -30,7 +30,7 @@ Mock at **architectural boundaries (ports)** — the interfaces that separate la
           └─────────┘   └─────────┘
 ```
 
-**Port interfaces** (repository, gateway, event publisher) are architectural boundaries you own but intentionally isolate. Mock them in use case tests. Use fakes (in-memory implementations) over mocking frameworks when practical.
+**Service abstractions** (repository, gateway, event publisher) are architectural boundaries you own but intentionally isolate. Mock them in use case tests. Use fakes (in-memory implementations) over mocking frameworks when practical.
 
 ## What to Mock
 
@@ -46,9 +46,9 @@ test "sends welcome email after signup":
   assert emailService.send was called with recipient: newUser.email
 ```
 
-### Repository Ports (Databases and Persistence)
+### Repository Abstractions (Databases and Persistence)
 
-In use case tests, mock the repository port interface — it's an architectural boundary. Use fakes (in-memory implementations) for speed and simplicity. In infrastructure integration tests, use a real database to validate the adapter fulfills the port contract.
+In use case tests, mock the repository service abstraction — it's an architectural boundary. Use fakes (in-memory implementations) for speed and simplicity. In infrastructure integration tests, use a real database to validate the implementation fulfills the abstraction's contract.
 
 ```
 // Unit test: mock the repository
