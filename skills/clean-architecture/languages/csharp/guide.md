@@ -203,6 +203,349 @@ namespace Domain.ValueObjects
 }
 ```
 
+### Domain Events
+
+Domain events capture something meaningful that happened in the domain. C# records
+make them immutable and serializable by default:
+
+```csharp
+namespace Domain.Events
+{
+    // Base interface for all domain events
+    public interface IDomainEvent
+    {
+        DateTimeOffset OccurredAt { get; }
+    }
+
+    // Immutable event records — no setters, value semantics
+    public record TaskCreatedEvent(
+        string TaskId,
+        string Description,
+        DateTimeOffset OccurredAt
+    ) : IDomainEvent;
+
+    public record TaskCompletedEvent(
+        string TaskId,
+        DateTimeOffset CompletedAt,
+        DateTimeOffset OccurredAt
+    ) : IDomainEvent;
+
+    public record TaskPriorityChangedEvent(
+        string TaskId,
+        string OldPriority,
+        string NewPriority,
+        DateTimeOffset OccurredAt
+    ) : IDomainEvent;
+}
+```
+
+Entities collect domain events internally and expose them for dispatch after persistence:
+
+```csharp
+namespace Domain.Entities
+{
+    public abstract class EntityBase
+    {
+        private readonly List<IDomainEvent> _domainEvents = [];
+
+        public IReadOnlyList<IDomainEvent> GetDomainEvents() =>
+            _domainEvents.AsReadOnly();
+
+        public void ClearDomainEvents() => _domainEvents.Clear();
+
+        protected void RaiseDomainEvent(IDomainEvent domainEvent) =>
+            _domainEvents.Add(domainEvent);
+    }
+
+    public class Task : EntityBase
+    {
+        // ... existing fields ...
+
+        public Task(string description)
+            : this(description, Guid.NewGuid().ToString(), DateTimeOffset.UtcNow)
+        {
+            RaiseDomainEvent(new TaskCreatedEvent(Id, description, DateTimeOffset.UtcNow));
+        }
+
+        public void Complete(DateTimeOffset? completedAt = null)
+        {
+            if (_completed)
+                throw new InvalidOperationException("Task is already completed");
+
+            _completed = true;
+            _completedAt = completedAt ?? DateTimeOffset.UtcNow;
+
+            RaiseDomainEvent(new TaskCompletedEvent(Id, _completedAt.Value, DateTimeOffset.UtcNow));
+        }
+    }
+}
+```
+
+The use case collects events from the entity and dispatches them after a successful save.
+This ensures events are only published when state has actually been persisted:
+
+```csharp
+// In a use case or SaveChanges override
+var events = task.GetDomainEvents();
+await taskRepository.SaveAsync(task);
+task.ClearDomainEvents();
+
+foreach (var domainEvent in events)
+{
+    await mediator.Publish(domainEvent);
+}
+```
+
+If using MediatR, domain event records can implement `INotification` for handler dispatch:
+
+```csharp
+public record TaskCompletedEvent(
+    string TaskId,
+    DateTimeOffset CompletedAt,
+    DateTimeOffset OccurredAt
+) : IDomainEvent, INotification;
+
+public class SendCompletionEmailHandler(IEmailService emailService)
+    : INotificationHandler<TaskCompletedEvent>
+{
+    public async Task Handle(TaskCompletedEvent notification, CancellationToken ct)
+    {
+        await emailService.SendTaskCompletedAsync(notification.TaskId);
+    }
+}
+```
+
+### Aggregate Roots
+
+An aggregate root is the entry point to a cluster of related entities that are treated
+as a single consistency boundary. External code never modifies child entities directly —
+all changes go through the aggregate root, which enforces business invariants.
+
+```csharp
+namespace Domain.Entities
+{
+    public class Order : EntityBase
+    {
+        private readonly List<OrderItem> _items = [];
+
+        public string Id { get; }
+        public string CustomerId { get; }
+        public DateTimeOffset CreatedAt { get; }
+
+        // Expose child collection as read-only — callers cannot add/remove directly
+        public IReadOnlyList<OrderItem> Items => _items.AsReadOnly();
+
+        public decimal Total => _items.Sum(i => i.Quantity * i.UnitPrice);
+
+        public Order(string customerId)
+        {
+            Id = Guid.NewGuid().ToString();
+            CustomerId = customerId;
+            CreatedAt = DateTimeOffset.UtcNow;
+        }
+
+        // For reconstitution from persistence
+        internal Order(string id, string customerId, DateTimeOffset createdAt, List<OrderItem> items)
+        {
+            Id = id;
+            CustomerId = customerId;
+            CreatedAt = createdAt;
+            _items = items;
+        }
+
+        public void AddItem(string productId, string productName, decimal unitPrice, int quantity)
+        {
+            if (quantity <= 0)
+                throw new ArgumentException("Quantity must be positive", nameof(quantity));
+
+            if (unitPrice < 0)
+                throw new ArgumentException("Price cannot be negative", nameof(unitPrice));
+
+            var existing = _items.FirstOrDefault(i => i.ProductId == productId);
+            if (existing is not null)
+            {
+                existing.IncreaseQuantity(quantity);
+                return;
+            }
+
+            _items.Add(new OrderItem(productId, productName, unitPrice, quantity));
+            RaiseDomainEvent(new OrderItemAddedEvent(Id, productId, quantity, DateTimeOffset.UtcNow));
+        }
+
+        public void RemoveItem(string productId)
+        {
+            var item = _items.FirstOrDefault(i => i.ProductId == productId)
+                ?? throw new InvalidOperationException($"Item {productId} not in order");
+
+            _items.Remove(item);
+        }
+
+        // Invariant enforcement at aggregate level
+        public void Submit()
+        {
+            if (_items.Count == 0)
+                throw new InvalidOperationException("Cannot submit an empty order");
+
+            if (Total > 10_000m)
+                throw new InvalidOperationException("Order exceeds maximum allowed total");
+
+            RaiseDomainEvent(new OrderSubmittedEvent(Id, Total, DateTimeOffset.UtcNow));
+        }
+    }
+
+    public class OrderItem
+    {
+        public string ProductId { get; }
+        public string ProductName { get; }
+        public decimal UnitPrice { get; }
+        public int Quantity { get; private set; }
+
+        internal OrderItem(string productId, string productName, decimal unitPrice, int quantity)
+        {
+            ProductId = productId;
+            ProductName = productName;
+            UnitPrice = unitPrice;
+            Quantity = quantity;
+        }
+
+        internal void IncreaseQuantity(int amount) => Quantity += amount;
+    }
+}
+```
+
+**Repository rule:** repositories save and load entire aggregates, never individual
+child entities. The `IOrderRepository` works with `Order`, not `OrderItem`:
+
+```csharp
+public interface IOrderRepository
+{
+    Task<Order?> FindByIdAsync(string id);
+    Task SaveAsync(Order order);
+}
+```
+
+**EF Core mapping** for backing fields uses `.HasField()` so EF can populate the
+private collection directly:
+
+```csharp
+modelBuilder.Entity<OrderEntity>(entity =>
+{
+    entity.HasKey(e => e.Id);
+    entity.HasMany(e => e.Items)
+        .WithOne()
+        .HasForeignKey(i => i.OrderId);
+});
+
+// If mapping directly to domain (advanced), use backing field:
+modelBuilder.Entity<Order>(entity =>
+{
+    entity.Navigation(e => e.Items)
+        .HasField("_items")
+        .UsePropertyAccessMode(PropertyAccessMode.Field);
+});
+```
+
+### Result Pattern vs Exceptions
+
+Use exceptions for truly exceptional situations (infrastructure failures, programming
+errors). Use the Result pattern for expected failures like validation errors and
+business rule violations — these are not exceptional, they are part of normal flow.
+
+| Situation | Approach |
+|---|---|
+| Database connection lost | Exception |
+| Invalid email format | Result |
+| Null argument to public API | Exception (`ArgumentNullException`) |
+| Duplicate username | Result |
+| File system permission error | Exception |
+| Insufficient account balance | Result |
+
+A minimal `Result<T>` implementation using records:
+
+```csharp
+namespace Domain.Common
+{
+    public record Result<T>
+    {
+        public T? Value { get; }
+        public string? Error { get; }
+        public bool IsSuccess { get; }
+
+        private Result(T value) { Value = value; IsSuccess = true; }
+        private Result(string error) { Error = error; IsSuccess = false; }
+
+        public static Result<T> Success(T value) => new(value);
+        public static Result<T> Failure(string error) => new(error);
+
+        public TOut Match<TOut>(Func<T, TOut> onSuccess, Func<string, TOut> onFailure) =>
+            IsSuccess ? onSuccess(Value!) : onFailure(Error!);
+    }
+}
+```
+
+Value object creation returning a Result instead of throwing:
+
+```csharp
+public record EmailAddress
+{
+    public string Value { get; }
+
+    private EmailAddress(string value) => Value = value;
+
+    public static Result<EmailAddress> Create(string email)
+    {
+        if (string.IsNullOrWhiteSpace(email))
+            return Result<EmailAddress>.Failure("Email cannot be empty");
+
+        if (!email.Contains('@') || !email.Contains('.'))
+            return Result<EmailAddress>.Failure($"Invalid email format: {email}");
+
+        return Result<EmailAddress>.Success(new EmailAddress(email.ToLowerInvariant()));
+    }
+}
+```
+
+Use cases return `Result<T>` so callers handle outcomes explicitly:
+
+```csharp
+public class CreateTaskUseCase(ITaskRepository taskRepository)
+    : IUseCase<CreateTaskRequest, Result<CreateTaskResponse>>
+{
+    public async Task<Result<CreateTaskResponse>> ExecuteAsync(CreateTaskRequest request)
+    {
+        if (string.IsNullOrWhiteSpace(request.Description))
+            return Result<CreateTaskResponse>.Failure("Description is required");
+
+        if (request.Description.Length > 500)
+            return Result<CreateTaskResponse>.Failure("Description too long (max 500 chars)");
+
+        var task = new Domain.Entities.Task(request.Description);
+        await taskRepository.SaveAsync(task);
+
+        return Result<CreateTaskResponse>.Success(
+            new CreateTaskResponse(task.Id, true, task.CreatedAt));
+    }
+}
+```
+
+Map Result to HTTP responses in controllers:
+
+```csharp
+[HttpPost]
+public async Task<ActionResult<TaskDto>> CreateTask([FromBody] CreateTaskDto dto)
+{
+    var result = await useCase.ExecuteAsync(new CreateTaskRequest(dto.Description));
+
+    return result.Match<ActionResult<TaskDto>>(
+        onSuccess: response => CreatedAtAction(
+            nameof(GetTask),
+            new { id = response.TaskId },
+            new TaskDto(response.TaskId, dto.Description)),
+        onFailure: error => BadRequest(new ProblemDetails { Detail = error })
+    );
+}
+```
+
 ## Application Layer Patterns
 
 ### Use Cases with Records (C# 9+)
