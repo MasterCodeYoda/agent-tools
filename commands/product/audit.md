@@ -1,12 +1,14 @@
 ---
 name: product:audit
-description: Audit product-market fit, positioning, messaging, go-to-market readiness, and competitive stance from readable artifacts
-argument-hint: "['.', directory path, or '--focus positioning|messaging|gtm|devex']"
+description: Research-driven audit of product positioning, messaging, competitive stance, and go-to-market readiness
+argument-hint: "['.', directory path, or '--focus positioning|messaging|gtm|devex|competitive']"
 ---
 
 # Product & Market Audit
 
-Examine product artifacts for value proposition clarity, messaging consistency, positioning strength, go-to-market readiness, and trust signals. Produce prioritized, actionable findings.
+References: @product
+
+Research-driven assessment of product positioning, messaging, competitive stance, and go-to-market readiness. **Research-first**: agents conduct extensive primary web research into competitors, market context, and comparable products before assessing local artifacts.
 
 ## User Input
 
@@ -20,12 +22,13 @@ Parse input to determine audit scope:
 
 | Input Pattern | Scope | Action |
 |---|---|---|
-| `.` or empty | Current project | Full product audit across all readable artifacts |
+| `.` or empty | Current project | Full product audit with competitive research |
 | Directory path | Target project | Audit the specified project |
 | `--focus positioning` | Positioning only | Value proposition, differentiation, competitive stance |
 | `--focus messaging` | Messaging only | Cross-surface consistency, tone, clarity |
 | `--focus gtm` | GTM readiness | Pricing, onboarding, self-serve vs. sales-led signals |
-| `--focus devex` | Developer experience | SDK, quickstart, time-to-value (developer-facing products) |
+| `--focus devex` | Developer experience | SDK, quickstart, time-to-value |
+| `--focus competitive` | Competitive only | Deep competitive research and comparison |
 | `--recent 7d` | Recent changes | Audit product-facing files modified in last N days |
 | `--diff main` | Changed files | Audit product-facing files changed vs. specified branch |
 
@@ -45,6 +48,31 @@ Before analysis, detect the project's product surface:
 9. Detect competitive positioning artifacts (comparison docs, migration guides, "why us" pages)
 10. Detect developer experience artifacts (SDK, API reference, playground, sample apps)
 ```
+
+## Research Phase (runs before analysis)
+
+**This phase is mandatory.** Before any assessment agents run, conduct primary research to establish market context.
+
+Spawn 2 parallel research agents:
+
+**market-researcher**:
+1. From the project's README/landing page, identify what problem the product solves and what category it occupies
+2. Web search for: "[product category] tools", "[product category] alternatives", "best [product category] [current year]"
+3. Identify 3-5 direct competitors and 2-3 indirect alternatives (including "do nothing" / manual process)
+4. For each competitor, fetch and read:
+   - Landing page (hero message, value prop, CTA)
+   - Pricing page (model, tiers, free tier)
+   - GitHub repo if open source (stars, last release, activity, contributor count via `gh`)
+   - README (positioning, quickstart quality)
+5. Search for community discussions: "[product name] vs [competitor]", "[product name] review", "[product name] alternative"
+6. Return: competitor profiles, market category definition, community sentiment summary
+
+**comparable-success-researcher**:
+1. Identify 2-3 products in adjacent categories known for excellent positioning (not necessarily competitors — products that solve different problems but position exceptionally well)
+2. Analyze what makes their positioning effective: specificity, clarity, differentiation, visual demo, onboarding speed
+3. Return: positioning patterns to benchmark against, specific examples of effective messaging
+
+**Research output feeds all subsequent analysis agents as context.**
 
 ## Product Context Adaptation
 
@@ -68,16 +96,20 @@ Based on auto-detection, determine audit scope:
 All audit agents must follow these reasoning principles:
 
 - **Cite evidence.** Every finding must reference specific file paths and line numbers (or section anchors for docs). No finding without a concrete citation.
+- **Use research context.** Every assessment must be informed by the Research Phase output. Don't evaluate positioning in a vacuum — compare against what competitors actually do. "Value prop is vague" is P3; "value prop is vague AND all three competitors lead with specific metrics" is P2.
 - **Check the opposite hypothesis.** Before reporting a P1 or P2 finding, briefly consider: "Could this be intentional?" Look for documented positioning decisions, deliberate audience narrowing, or strategic omissions. If found, downgrade or retract.
 - **Product-Strategy Trace.** Connect each finding to at least one impact category: conversion impact (will prospects bounce?), trust impact (does this erode credibility?), adoption impact (does this slow time-to-value?), retention signal (does this hurt stickiness?), or competitive impact (does this weaken differentiation?). If a finding has no clear impact connection, demote to P3 or retract.
+- **Benchmark against research.** When making recommendations, reference specific examples from researched competitors or comparable products. "Consider adding a visual demo" is weak; "Competitor X's landing page leads with an interactive demo that shows the output in 3 seconds — consider a similar approach" is actionable.
 
 ## Three-Tier Analysis
 
+All analysis agents receive the Research Phase output as context.
+
 ### Tier 1 — Artifact Surface Read (always runs)
 
-Spawn 3 parallel agents that read product-facing artifacts:
+Spawn 3 parallel agents that read product-facing artifacts + research context:
 
-**value-proposition-analyst**:
+**value-proposition-analyst** — References @product (Clarity Hierarchy, Copy Patterns):
 - Can a prospect understand what the product does in 30 seconds from the README or landing page?
 - Is the tagline/headline specific and differentiated (not generic "fast, simple, powerful")?
 - Does the value proposition name a specific pain point and audience?
