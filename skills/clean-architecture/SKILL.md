@@ -239,11 +239,7 @@ python .claude/skills/clean-architecture/languages/python/validators/validate_im
 python .claude/skills/clean-architecture/languages/python/validators/validate_structure.py
 ```
 
-**TypeScript:**
-
-```bash
-npx tsx .claude/skills/clean-architecture/languages/typescript/validators/validate_imports.ts
-```
+**TypeScript:** Use compile-time enforcement via multi-package architecture (separate `domain/`, `application/`, `infrastructure/` packages with strict `tsconfig.json` project references) or ESLint with `eslint-plugin-boundaries` for single-package projects.
 
 ### Manual Review Checklist
 
