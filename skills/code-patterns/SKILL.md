@@ -115,10 +115,11 @@ For detailed language-specific patterns (loaded on request only):
 
 ## Commands
 
-- `/workflow:audit-code` — Audit production code against these patterns
-- `/workflow:audit-frontend` — Audit frontend code against TypeScript/React patterns
+- `/workflow:audit` — Audit production code against these patterns (code and frontend domains)
+- `/workflow:review` — Code review references these patterns for quality assessment
 
 ## Related Skills
 
 - **clean-architecture**: For architectural patterns and layer organization
-- **spec**: For feature planning and implementation workflow
+- **test-strategy**: For testing methodology and strategy selection
+- **workflow-guide**: For workflow and implementation planning
