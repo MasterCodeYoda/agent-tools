@@ -25,20 +25,31 @@ Parse input to determine audit scope:
 | `--recent 7d` | Recent changes | Audit repo config files modified in last N days |
 | `--diff main` | Changed files | Audit config files changed vs. specified branch |
 
-## Auto-Detection Phase
+## Auto-Detection Phase (Exhaustive Discovery)
 
-Before analysis, detect the repository's setup:
+**Discovery mandate**: Complete ALL steps below before reporting any findings. Use multiple search strategies for each step. You have a dedicated 1M token context window; use it for thoroughness, not sampling. See the orchestrator's Exhaustive Discovery Protocol for general principles.
 
-```
-1. Detect CI/CD platform (GitHub Actions, GitLab CI, CircleCI, Jenkins, Buildkite)
-2. Detect branch protection configuration
-3. Detect testing infrastructure (test runner, coverage tools, mutation testing)
-4. Detect code review setup (CODEOWNERS, required reviewers, review bots)
-5. Detect agent documentation (CLAUDE.md, AGENTS.md, MCP configs)
-6. Detect dependency management (lock files, Dependabot/Renovate, audit tools)
-7. Detect security tooling (secret scanning, SAST, pre-commit hooks)
-8. Detect documentation infrastructure (README quality, ADRs, contributing guide)
-```
+### Step 1: Discover ALL CI/CD infrastructure
+- Read ALL workflow files in `.github/workflows/`, `.gitlab-ci.yml`, `Jenkinsfile`, `.circleci/`, `buildkite/`
+- For each workflow: note triggers, jobs, steps, and what they actually execute
+- Cross-reference CI test/lint/build steps against configs found in other domains
+
+### Step 2: Detect ALL security and review infrastructure
+- Check for branch protection (GitHub API if `gh` available, or workflow comments/docs)
+- Check for CODEOWNERS, PR templates, issue templates
+- Check for secret scanning (gitleaks, detect-secrets, GitHub secret scanning)
+- Check for dependency auditing (cargo-deny, npm audit, Dependabot, Renovate)
+- Check for pre-commit hooks (husky, lefthook, pre-commit framework)
+
+### Step 3: Detect ALL agent and documentation infrastructure
+- Check for CLAUDE.md, AGENTS.md, MCP configs, agent tool definitions
+- Check for README, CONTRIBUTING, SECURITY, CHANGELOG
+- Check for ADR directory and decision records
+- Check for lock files (Cargo.lock, package-lock.json, yarn.lock, pnpm-lock.yaml)
+
+### Step 4: Map and cross-reference
+- Build a complete inventory of repo infrastructure before reporting gaps
+- When claiming something is "missing," verify with at least 2 search strategies
 
 ## Scope Gate
 
@@ -50,10 +61,9 @@ Based on auto-detection, determine audit scope:
 
 ## Agent Reasoning Standards
 
-All audit agents must follow these reasoning principles:
+Follow all standards from the orchestrator's Agent Reasoning Standards (cite evidence, check opposite hypothesis, verify absence claims, complete discovery before findings, use full 1M context budget, tag domain, flag cross-domain connections). Additionally:
 
-- **Cite evidence.** Every finding must reference specific file paths and line numbers. No finding without a concrete citation.
-- **Check the opposite hypothesis.** Before reporting a P1 or P2 finding, briefly consider: "Could this be intentional?" Look for alternative configurations, monorepo conventions, or documented decisions that might justify the setup. If found, downgrade or retract.
+- **Check for alternative configurations.** Before reporting missing infrastructure, look for monorepo conventions, GitHub UI-only settings, or documented decisions that might explain the setup.
 
 ## Three-Tier Analysis
 

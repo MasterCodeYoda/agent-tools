@@ -24,18 +24,25 @@ Parse input to determine audit scope:
 | `--recent 7d` | Recent changes | Audit files modified in last N days |
 | `--diff main` | Changed files | Audit files changed vs. specified branch |
 
-## Auto-Detection Phase
+## Auto-Detection Phase (Exhaustive Discovery)
 
-Before analysis, detect the project's setup:
+**Discovery mandate**: Complete ALL steps below before reporting any findings. Use multiple search strategies for each step. You have a dedicated 1M token context window; use it for thoroughness, not sampling. See the orchestrator's Exhaustive Discovery Protocol for general principles.
 
-```
-1. Detect primary language(s)
-2. Detect architecture style (Clean Architecture, feature-based, traditional layers, flat)
-3. Locate production code directories (exclude tests, node_modules, build artifacts)
-4. Count source files and estimate LoC
-5. Check for quality tools (mypy/ruff/bandit, ESLint/tsc, Roslyn, clippy)
-6. Detect logging framework (structlog, winston, serilog, tracing)
-```
+### Step 1: Map ALL source code locations
+- Search for ALL source directories across the entire repo (crates, apps, packages, libs, src)
+- Check workspace configs (`Cargo.toml [workspace]`, `turbo.json`, `package.json workspaces`) for the authoritative list
+- Do not assume directory names — verify by checking for actual source files in each
+
+### Step 2: Detect architecture and tooling
+- Detect primary language(s) and architecture style
+- Check for ALL quality tools: linters, formatters, type checkers, static analyzers
+- Read ALL lint/tool configs completely — note which files they cover and which they exclude
+- Check CI workflow files for which tools actually run (vs. configured but not executed)
+
+### Step 3: Count and classify
+- Count source files per directory/crate/package using glob, not estimates
+- Distinguish production code from test code, build artifacts, and generated code
+- Detect logging framework (structlog, winston, serilog, tracing)
 
 ## Scope Gate
 
@@ -47,10 +54,8 @@ Based on auto-detection, prompt user for scope confirmation:
 
 ## Agent Reasoning Standards
 
-All audit agents must follow these reasoning principles:
+Follow all standards from the orchestrator's Agent Reasoning Standards (cite evidence, check opposite hypothesis, verify absence claims, complete discovery before findings, use full 1M context budget, tag domain, flag cross-domain connections). Additionally:
 
-- **Cite evidence.** Every finding must reference specific `file:line` locations. No finding without a concrete code citation.
-- **Check the opposite hypothesis.** Before reporting a P1 or P2 finding, briefly consider: "Could this actually be correct?" Look for guards, framework behavior, or design intent that might justify the pattern. If found, downgrade or retract.
 - **Trace function calls.** When a finding involves a function or method, follow it to its actual definition. Don't assume behavior from names — check for overrides, wrappers, and framework interception.
 
 ## Three-Tier Analysis

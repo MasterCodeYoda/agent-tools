@@ -24,19 +24,34 @@ Parse input to determine audit scope:
 | `--recent 7d` | Recent changes | Audit files modified in last N days |
 | `--diff main` | Changed files | Audit files changed vs. specified branch |
 
-## Auto-Detection Phase
+## Auto-Detection Phase (Exhaustive Discovery)
 
-Before analysis, detect the project's testing setup:
+**Discovery mandate**: Complete ALL steps below before reporting any findings. Use multiple search strategies for each step — a single search returning empty is not proof of absence. You have a dedicated 1M token context window; use it for thoroughness, not sampling. See the orchestrator's Exhaustive Discovery Protocol for general principles.
 
-```
-1. Detect test framework (pytest, jest/vitest, xUnit, JUnit, Go testing)
-2. Locate test files (convention-based: *_test.py, *.test.ts, *.spec.ts, *Tests.cs)
-3. Locate corresponding production code files
-4. Count test files and estimate suite size
-5. Check for available quality tools:
-   - Coverage: pytest-cov, c8/istanbul, coverlet, JaCoCo
-   - Mutation: mutmut, Stryker, Stryker.NET, PIT, cargo-mutants
-```
+### Step 1: Discover ALL test frameworks and configs
+- Search for ALL test config files across the entire repo: `vitest.config.*`, `jest.config.*`, `playwright.config.*`, `.mocharc.*`, `pytest.ini`, `pyproject.toml`, `Cargo.toml [dev-dependencies]`
+- **Read EACH config file completely** — note which file patterns and directories each covers
+- Check for multiple configs (monorepos often have per-app configs AND root configs — finding one is not enough)
+- Check `package.json` test scripts in every workspace package
+- Check CI workflow files for test execution commands (reveals which configs actually run in CI vs. local-only)
+
+### Step 2: Locate ALL test files using multiple strategies
+- **Strategy A (glob)**: Search for test file patterns: `*.test.ts`, `*.test.tsx`, `*.spec.ts`, `*.spec.tsx`, `*_test.rs`, `*_test.py`, `*Tests.cs`, `*_test.go`
+- **Strategy B (content)**: Search for test markers: `#[test]`, `#[cfg(test)]`, `#[tokio::test]`, `describe(`, `it(`, `test(`, `[Fact]`, `[Test]`, `def test_`
+- **Strategy C (directories)**: Check ALL directories named `tests/`, `test/`, `__tests__/`, `specs/`, `e2e/`
+- **Cross-reference**: If strategies A and B yield different counts, investigate. Discrepancies reveal missed test locations.
+
+### Step 3: Map test layers
+For each distinct test layer found (unit, integration, E2E, contract, property-based), record: location, framework, file count, function count, what it tests, how it runs (which CI step, or local-only).
+
+### Step 4: Verify quality tool presence
+- Coverage: Search for coverage configs AND CI coverage steps
+- Mutation: Search for mutation testing configs AND actual usage in test code
+- Property-based: Search for `proptest!`, `prop_assert`, `@given`, `hypothesis`, `quickcheck` in actual test code (not just Cargo.toml/package.json dependencies)
+
+### Step 5: Cross-check CI execution
+- Read CI workflow files to determine which test layers execute in CI vs. local-only
+- Flag any test configs that exist but aren't referenced by any CI step
 
 ## Scope Gate
 
@@ -48,10 +63,9 @@ Based on auto-detection, prompt user for scope confirmation:
 
 ## Agent Reasoning Standards
 
-All audit agents must follow these reasoning principles:
+Follow all standards from the orchestrator's Agent Reasoning Standards (cite evidence, check opposite hypothesis, verify absence claims, complete discovery before findings, use full 1M context budget, tag domain, flag cross-domain connections). Additionally:
 
-- **Cite evidence.** Every finding must reference specific `file:line` locations. No finding without a concrete code citation.
-- **Check the opposite hypothesis.** Before reporting a P1 or P2 finding, briefly consider: "Could this actually be correct?" Look for test helpers, shared fixtures, or framework behavior that might justify the pattern. If found, downgrade or retract.
+- **Check test helpers and fixtures.** Before reporting a gap, look for shared test infrastructure (helpers, builders, fixtures) that might satisfy the concern from a different location than expected.
 
 ## Three-Tier Analysis
 

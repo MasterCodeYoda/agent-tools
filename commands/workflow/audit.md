@@ -81,12 +81,41 @@ Aggregate file counts across active domains:
 
 ## Agent Reasoning Standards
 
-All agents across all domains must follow:
+All agents across all domains must follow. **The orchestrator MUST include these standards in every agent prompt at dispatch time.**
 
 - **Cite evidence.** Every finding must reference specific `file:line`. No finding without a concrete citation.
 - **Check the opposite hypothesis.** Before reporting P1/P2, consider: "Could this be intentional?" Check for framework behavior, design decisions, or documented conventions.
+- **Verify absence claims.** Before reporting that something doesn't exist ("no tests for X", "Y is never called", "Z is missing"), run at least 2 independent searches using different strategies (different search terms, different file patterns, different directories). A single search returning empty is not proof of absence — it may be a search strategy failure. If 2+ independent searches cannot find it, say "could not locate" with the strategies tried, rather than asserting "does not exist."
+- **Complete discovery before findings.** Finish the full Exhaustive Discovery phase for your domain before reporting ANY findings. Premature findings based on partial discovery are the #1 source of false positives in audits.
+- **Use your full context budget.** Each audit agent runs in a dedicated 1M token context window. This is a large budget — use it for exhaustive search and thorough file reading rather than sampling and extrapolating. Reading 50 files is better than sampling 5 and guessing about the other 45. There is no reason to limit your search depth.
 - **Tag your domain.** Every finding must include its domain tag (code, tests, api, frontend, docs, repo, qa) for deduplication.
 - **Flag cross-domain connections.** If a finding relates to another domain, note it: "Related: API endpoint also has no input validation (api domain)."
+
+## Exhaustive Discovery Protocol
+
+Every domain agent must complete discovery before reporting findings. Discovery follows this general pattern — each domain's Auto-Detection Phase adds domain-specific search strategies.
+
+### Multi-Strategy Search
+
+For every discovery question ("where are the tests?", "what configs exist?", "how many endpoints?"), use at least 2 of these strategies:
+
+1. **Glob patterns** — Find files by naming convention (`*.test.ts`, `*_test.rs`, `*.spec.ts`)
+2. **Content grep** — Find files by content (`#[test]`, `describe(`, `it(`, `assert`)
+3. **Config reading** — Read ALL config files that define scope (vitest, jest, playwright, Cargo.toml, CI workflows)
+4. **CI cross-reference** — Check CI workflow files for actual execution commands (reveals which configs run, which are orphaned)
+
+### Cross-Check Requirements
+
+- If you find N test files via glob but a different count via grep, investigate the discrepancy
+- If a config file defines a test scope, verify files in that scope actually exist
+- If CI runs a test command, verify it matches the configs you found
+- **Multiple configs are common** — monorepos often have per-app configs. Finding one config does NOT mean it's the only one. Always search for others.
+
+### Reporting Discipline
+
+- Report your discovery inventory (what you found, where, how many) BEFORE findings
+- When reporting an absence, include the search strategies you tried
+- When reporting a count, include the search command that produced it
 
 ## Domain Agent Teams
 
@@ -113,8 +142,9 @@ For each active domain: read its domain definition file, spawn the agents define
    - `quick`: Tier 1 agents only
    - `standard`: Tier 1 + Tier 2 agents
    - `deep`: Tier 1 + Tier 2 + Tier 3 agents
-3. Spawn all domain agents in parallel (domains are independent)
-4. Collect findings from all agents
+3. **Include the Agent Reasoning Standards and Exhaustive Discovery Protocol in every agent prompt.** These are not optional — they prevent false findings. Each agent has a dedicated 1M token context window; instruct them to use it fully.
+4. Spawn all domain agents in parallel (domains are independent)
+5. Collect findings from all agents
 
 ### Deduplication
 

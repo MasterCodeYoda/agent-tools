@@ -26,17 +26,25 @@ Parse input to determine audit scope:
 | `--recent 7d` | Recent changes | Audit files modified in last N days |
 | `--diff main` | Changed files | Audit files changed vs. specified branch |
 
-## Auto-Detection Phase
+## Auto-Detection Phase (Exhaustive Discovery)
 
-Before analysis, detect the project's documentation setup:
+**Discovery mandate**: Complete ALL steps below before reporting any findings. Use multiple search strategies for each step. You have a dedicated 1M token context window; use it for thoroughness, not sampling. See the orchestrator's Exhaustive Discovery Protocol for general principles.
 
-```
-1. Detect documentation structure (root docs, doc directories, planning dirs, solution docs)
-2. Detect code documentation patterns per language (docstrings, JSDoc, XML comments, doc comments)
-3. Detect API documentation (OpenAPI, GraphQL schemas)
-4. Count documentation files
-5. Check for doc tooling (MkDocs, Docusaurus, Sphinx, rustdoc)
-```
+### Step 1: Discover ALL documentation locations
+- Search for ALL doc directories: `docs/`, `documentation/`, `wiki/`, `planning/`, `guides/`
+- Search for ALL doc site apps (Docusaurus, Astro/Starlight, MkDocs, Sphinx) — monorepos may have multiple doc sites (user-facing, technical, API)
+- Check for ADR directories (`docs/ADR/`, `adr/`, `decisions/`)
+- Find ALL markdown/mdx files across the entire repo
+
+### Step 2: Detect code documentation patterns
+- Detect per-language doc patterns: `///` (Rust), `/** */` (JSDoc), `"""` (Python docstrings), `///` (C# XML)
+- Sample doc coverage across multiple directories, not just one
+- Check for doc generation tooling (rustdoc, typedoc, sphinx)
+
+### Step 3: Count and classify
+- Count doc files per location using glob
+- Classify: README, contributing, architecture, API, inline, planning, solution docs
+- Check for doc tooling configs and build steps in CI
 
 ## Scope Gate
 
@@ -48,10 +56,9 @@ Based on auto-detection, prompt user for scope confirmation:
 
 ## Agent Reasoning Standards
 
-All audit agents must follow these reasoning principles:
+Follow all standards from the orchestrator's Agent Reasoning Standards (cite evidence, check opposite hypothesis, verify absence claims, complete discovery before findings, use full 1M context budget, tag domain, flag cross-domain connections). Additionally:
 
-- **Cite evidence.** Every finding must reference specific file paths and locations. No finding without a concrete citation.
-- **Check the opposite hypothesis.** Before reporting a P1 or P2 finding, briefly consider: "Could this be intentional?" Look for documentation conventions, auto-generated doc tooling, or explicit decisions to document elsewhere. If found, downgrade or retract.
+- **Check for doc generation tooling.** Before reporting missing docs, check if docs are auto-generated from code (rustdoc, typedoc, sphinx) or hosted elsewhere.
 
 ## Three-Tier Analysis
 

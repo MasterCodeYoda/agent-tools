@@ -25,18 +25,23 @@ Parse input to determine audit scope:
 | `--recent 7d` | Recent changes | Audit files modified in last N days |
 | `--diff main` | Changed files | Audit files changed vs. specified branch |
 
-## Auto-Detection Phase
+## Auto-Detection Phase (Exhaustive Discovery)
 
-Before analysis, detect the project's API setup:
+**Discovery mandate**: Complete ALL steps below before reporting any findings. Use multiple search strategies for each step. You have a dedicated 1M token context window; use it for thoroughness, not sampling. See the orchestrator's Exhaustive Discovery Protocol for general principles.
 
-```
-1. Detect API type (REST, GraphQL, gRPC, or hybrid)
-2. Locate spec files (OpenAPI/Swagger YAML/JSON, GraphQL schema files, proto files)
-3. Locate route/endpoint definitions in source code
-4. Detect API framework (Express, FastAPI, ASP.NET, Axum, NestJS, Apollo)
-5. Count endpoints/operations
-6. Check for API tooling (Spectral, Vacuum, graphql-eslint, Redocly)
-```
+### Step 1: Discover ALL API surfaces
+- Search for ALL API types in the repo: REST endpoints, GraphQL schemas, gRPC protos, IPC commands (Tauri, Electron), MCP tools
+- Projects may have multiple API surfaces (public HTTP, internal IPC, admin API) — find all of them
+- Search for route definitions using both glob (`routes/`, `api/`) and content grep (`#[tauri::command]`, `@app.route`, `router.get`)
+
+### Step 2: Locate specs and tooling
+- Search for ALL spec files: `openapi.*`, `swagger.*`, `schema.graphql`, `*.proto`
+- Detect API framework(s) per surface
+- Check for API tooling (Spectral, Vacuum, graphql-eslint, Redocly)
+
+### Step 3: Count and classify
+- Count endpoints/operations per API surface using exhaustive search
+- Cross-reference discovered endpoints against any spec files for completeness
 
 ## Scope Gate
 
@@ -48,10 +53,8 @@ Based on auto-detection, prompt user for scope confirmation:
 
 ## Agent Reasoning Standards
 
-All audit agents must follow these reasoning principles:
+Follow all standards from the orchestrator's Agent Reasoning Standards (cite evidence, check opposite hypothesis, verify absence claims, complete discovery before findings, use full 1M context budget, tag domain, flag cross-domain connections). Additionally:
 
-- **Cite evidence.** Every finding must reference specific `file:line` locations or spec paths. No finding without a concrete citation.
-- **Check the opposite hypothesis.** Before reporting a P1 or P2 finding, briefly consider: "Could this be intentional?" Look for documented conventions, framework defaults, or versioning strategy that might justify the pattern. If found, downgrade or retract.
 - **Trace endpoint behavior.** When a finding involves a handler or resolver, follow it to its actual implementation. Don't assume behavior from route names or schema types alone.
 
 ## Three-Tier Analysis

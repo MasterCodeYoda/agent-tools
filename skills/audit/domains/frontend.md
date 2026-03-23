@@ -26,19 +26,26 @@ Parse input to determine audit scope:
 | `--recent 7d` | Recent changes | Audit files modified in last N days |
 | `--diff main` | Changed files | Audit files changed vs. specified branch |
 
-## Auto-Detection Phase
+## Auto-Detection Phase (Exhaustive Discovery)
 
-Before analysis, detect the project's frontend setup:
+**Discovery mandate**: Complete ALL steps below before reporting any findings. Use multiple search strategies for each step. You have a dedicated 1M token context window; use it for thoroughness, not sampling. See the orchestrator's Exhaustive Discovery Protocol for general principles.
 
-```
-1. Detect frontend framework (React, Vue, Angular, Svelte, Astro, vanilla)
-2. Detect meta-framework (Next.js, Nuxt, SvelteKit, Remix, Astro)
-3. Detect styling approach (CSS Modules, Tailwind, styled-components, Sass, vanilla CSS)
-4. Detect state management (Zustand, Redux, Pinia, Context API, signals)
-5. Detect build tooling (Vite, webpack, Turbopack, esbuild)
-6. Detect testing setup (Vitest, Jest, Playwright, Cypress, Testing Library)
-7. Count component files and estimate complexity
-```
+### Step 1: Discover ALL frontend apps and packages
+- Search for ALL frontend directories in the repo (monorepos may have multiple: desktop, web, docs, admin)
+- Check workspace configs (`package.json workspaces`, `turbo.json`) for the authoritative list
+- Each app may have its own framework, config, and test setup — treat them independently
+
+### Step 2: Detect frameworks, tooling, and testing per app
+- For EACH frontend app: detect framework, meta-framework, styling, state management, build tooling
+- Search for ALL test configs per app (`vitest.config.*`, `jest.config.*`, test sections in `vite.config.*`)
+- **Read EACH config completely** — note which file patterns and directories it covers
+- Search for test files using multiple strategies (glob for `*.test.tsx` AND grep for `describe(` / `it(`)
+- Check CI workflow files for which frontend test commands actually execute
+
+### Step 3: Count and classify
+- Count component files per app using glob, not estimates
+- Count test files per app — cross-reference glob counts with config-defined scope
+- Estimate complexity from component sizes and hook usage
 
 ## Scope Gate
 
@@ -50,10 +57,9 @@ Based on auto-detection, prompt user for scope confirmation:
 
 ## Agent Reasoning Standards
 
-All audit agents must follow these reasoning principles:
+Follow all standards from the orchestrator's Agent Reasoning Standards (cite evidence, check opposite hypothesis, verify absence claims, complete discovery before findings, use full 1M context budget, tag domain, flag cross-domain connections). Additionally:
 
-- **Cite evidence.** Every finding must reference specific `file:line` locations. No finding without a concrete code citation.
-- **Check the opposite hypothesis.** Before reporting a P1 or P2 finding, briefly consider: "Could this be intentional?" Look for design system conventions, framework-specific patterns, or accessibility overrides that might justify the approach. If found, downgrade or retract.
+- **Check design system conventions.** Before reporting a frontend pattern issue, look for design system conventions, framework-specific patterns, or accessibility overrides that might justify the approach.
 
 ## Three-Tier Analysis
 

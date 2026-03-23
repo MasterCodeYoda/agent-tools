@@ -6,15 +6,35 @@ Consumed by `/workflow:audit` orchestrator. Use `--focus qa` for this domain onl
 
 References: @qa, @test-strategy
 
-## Auto-Detection
+## Auto-Detection (Exhaustive Discovery)
 
-```
-1. Check for NL test spec directories (sentinel/, specs/, e2e-specs/, tests/e2e/)
-2. Check for Playwright configuration (playwright.config.ts/js)
-3. Check for generated test files alongside or referencing NL specs
-4. Detect primary user flows from routes/pages/components
-5. Count specs vs. estimated critical flows
-```
+**Discovery mandate**: Complete ALL steps below before reporting any findings. Use multiple search strategies for each step — a single search returning empty is not proof of absence. You have a dedicated 1M token context window; use it for thoroughness, not sampling. See the orchestrator's Exhaustive Discovery Protocol for general principles.
+
+### Step 1: Discover ALL E2E and spec infrastructure
+- Search for ALL Playwright/Cypress configs across the entire repo (not just root): `playwright.config.*`, `cypress.config.*`
+- Search for NL spec directories using multiple patterns: `sentinel/`, `specs/`, `e2e-specs/`, `tests/e2e/`, `tests/specs/`, `*.nl.md`, `*.nl.spec`
+- **Read EACH config file completely** — note which test directories and file patterns each covers
+- Check for multiple E2E setups (desktop app vs. web app may have separate configs)
+
+### Step 2: Locate ALL E2E test files
+- **Strategy A (glob)**: Search for `*.spec.ts`, `*.spec.tsx`, `*.e2e.ts` across ALL app directories
+- **Strategy B (content)**: Search for Playwright/Cypress markers: `test.describe`, `test(`, `cy.`, `page.goto`
+- **Cross-reference**: If strategies yield different file sets, investigate the discrepancy
+
+### Step 3: Map E2E coverage to features
+- Read ALL spec files (not a sample) to build a complete coverage map
+- Cross-reference against routes, pages, and critical user flows in the app
+- When claiming a flow is "untested," verify by searching spec files for relevant keywords (feature name, route, component)
+
+### Step 4: Cross-check CI execution
+- Read CI workflow files to determine if E2E tests run in CI or are local-only
+- Flag test infrastructure that exists but never executes in CI
+
+## Agent Reasoning Standards
+
+Follow all standards from the orchestrator's Agent Reasoning Standards (cite evidence, check opposite hypothesis, verify absence claims, complete discovery before findings, use full 1M context budget, tag domain, flag cross-domain connections). Additionally:
+
+- **Check ALL spec files before claiming a flow is untested.** Search spec files for feature keywords, route names, and component names — coverage may exist in a spec named differently than expected.
 
 ## Scope Gate
 
