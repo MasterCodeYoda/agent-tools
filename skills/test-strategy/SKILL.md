@@ -402,7 +402,7 @@ These principles are especially important for AI agents, who tend to pattern-mat
 ## Related Skills
 
 - **code-patterns**: Language-specific testing tools and frameworks
-- **clean-architecture**: Layer-specific testing strategies
+- **clean-architecture**: Layer-specific testing strategies (Domain: pure unit tests, Application: mock at service abstraction boundaries, Infrastructure: integration tests, Frameworks: E2E). For layer-specific expectations, defer to clean-architecture; test-strategy owns the methodology *within* each layer.
 - **qa**: E2E test specification authoring. **E2E boundary**: test-strategy owns testing philosophy and assertion design for all test types — when an E2E test needs an assertion, consult test-strategy for *how* to write it. qa owns *what* E2E flows to cover and the NL spec-to-Playwright pipeline. In practice: qa decides "we need an E2E test for checkout"; test-strategy decides "that test should assert on the order confirmation, not on internal state."
 
 ## Credits
