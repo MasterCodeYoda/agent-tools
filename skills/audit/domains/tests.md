@@ -137,7 +137,12 @@ Spawn 2 parallel agents that read test files:
 - Assess refactoring resilience ("would renaming a private method break tests?")
 - Evaluate "Would this test catch a subtle bug introduced by someone else?"
 - Static guarantee waste ("are tests spending effort verifying properties the type system or linter already enforce?")
-- Suggest strategy improvements (e.g., "this parser would benefit from property-based testing")
+- Strategy-fit assessment (ref: @test-strategy SKILL.md, "Strategy Selection" table):
+  - Parsers/transformations tested with examples only → suggest property-based testing
+  - Service boundaries tested without contract tests → suggest contract testing
+  - Legacy/AI-generated code tested without characterization baseline → flag risk
+  - Evolving interfaces tested spec-first → suggest TDD for design feedback
+- Suggest strategy improvements with specific tool recommendations per language
 
 ## Output: Prioritized Report
 
