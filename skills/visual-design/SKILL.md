@@ -47,6 +47,11 @@ Use this checklist as a rapid diagnostic when evaluating any application's visua
 - [ ] Does the Enter key behave contextually (send vs. newline)?
 - [ ] Are CJK input methods handled correctly?
 
+### Design Tokens & Consistency
+- [ ] Are colors, spacing, and typography sourced from a single token set (CSS custom properties, theme object, or design system)?
+- [ ] Are magic numbers absent — no ad-hoc `#3b82f6` or `padding: 13px` outside the token system?
+- [ ] Is the token set used consistently across components (no component-local overrides that drift)?
+
 ### Typography & Visual
 - [ ] Is `text-box-trim` used for precise text alignment?
 - [ ] Is text truncation handled elegantly (gradient fade + ellipsis)?
