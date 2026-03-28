@@ -78,7 +78,31 @@ Analyze changes to determine:
 - Affected components/layers
 - Test coverage changes
 
-### 3. Select Review Depth
+### 3. Locate Plan and Acceptance Criteria (if available)
+
+Check whether an implementation plan or requirements doc exists for the changes under review:
+
+```bash
+# Check for planning docs in the repo
+ls ./planning/*/implementation-plan.md 2>/dev/null
+ls ./planning/*/requirements.md 2>/dev/null
+```
+
+**If a plan is found**, load and extract:
+- Acceptance criteria from requirements.md
+- Definition of Done checklist from implementation-plan.md
+- Task breakdown (to verify all planned tasks were addressed)
+
+**If reviewing a PR**, also check:
+- PR description for linked requirements or acceptance criteria
+- Issue references (e.g., `LIN-123`, `PROJ-456`) that may contain acceptance criteria
+
+**If no plan or criteria found**: Skip the acceptance criteria review agent — code quality review proceeds as normal. Note the absence in the review output:
+```markdown
+**Acceptance Criteria**: No plan or requirements doc found — criteria verification skipped.
+```
+
+### 4. Select Review Depth
 
 Based on scope, recommend depth:
 
@@ -140,9 +164,17 @@ Run in parallel:
 - Regression risk assessment
 - If mutation tool available: flag domain logic changes lacking mutation testing coverage
 
-### Deep Review (8 agents)
+**acceptance-criteria-verifier** (only when plan/requirements found in §3):
+- Cross-reference each acceptance criterion against the changes — is it addressed?
+- Check the plan's Definition of Done checklist — are all items satisfiable from the diff?
+- Verify all planned tasks are reflected in the changes (no missing slices)
+- Flag criteria that appear unmet or only partially addressed as P1 findings
+- Flag planned tasks with no corresponding changes as P2 findings
+- If the plan has an Out of Scope section, verify nothing out-of-scope crept in
 
-Standard agents plus:
+### Deep Review (8+ agents)
+
+Standard agents (including acceptance-criteria-verifier when plan available) plus:
 
 **domain-expert** (based on file types):
 - Language-specific best practices
@@ -238,6 +270,17 @@ Standard agents plus:
 
 [List each P3 finding]
 
+### Acceptance Criteria Status (if plan available)
+
+| Criterion | Status | Evidence |
+|-----------|--------|----------|
+| [Criterion 1] | MET / UNMET / PARTIAL | [file:line or explanation] |
+| [Criterion 2] | MET / UNMET / PARTIAL | [file:line or explanation] |
+
+**Definition of Done**: [X]/[Y] items verified
+**Planned Tasks**: [X]/[Y] reflected in changes
+**Scope Creep**: [None detected / Items found outside plan scope]
+
 ### Positive Observations
 
 - [Good pattern followed]
@@ -249,8 +292,8 @@ Standard agents plus:
 
 ## Verdict
 
-[ ] **APPROVE** - No P1 issues, code is ready
-[ ] **REQUEST CHANGES** - P1 issues must be addressed
+[ ] **APPROVE** - No P1 issues, all acceptance criteria met (if plan available), code is ready
+[ ] **REQUEST CHANGES** - P1 issues or unmet acceptance criteria must be addressed
 [ ] **COMMENT** - Suggestions but no blockers
 ```
 
@@ -326,6 +369,10 @@ Post review findings to PR?
 1. Yes - Add as PR comment
 2. No - Keep local only
 ```
+
+### With /workflow:plan and /workflow:execute
+
+If a `./planning/<project>/implementation-plan.md` or `requirements.md` exists, review automatically loads acceptance criteria and Definition of Done to verify completeness — not just code quality. This closes the loop between what was planned and what was delivered. Unmet criteria are flagged as P1 (blocking) findings.
 
 ### With /workflow:compound
 
