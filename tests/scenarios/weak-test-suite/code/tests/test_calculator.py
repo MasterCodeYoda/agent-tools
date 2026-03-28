@@ -61,6 +61,24 @@ def test_calculator_has_add_method():
     # every other test would fail at import time.
 
 
+# VIOLATION WTS-08: Wrong strategy — parser tested with examples only
+# parse_expression is a data transformation / parser that should use
+# property-based testing to cover edge cases (negative numbers, whitespace,
+# operator ambiguity). Example-based tests miss the input space.
+def test_parse_addition():
+    left, op, right = calc.parse_expression("3 + 4")
+    assert left == 3.0
+    assert op == "+"
+    assert right == 4.0
+
+
+def test_parse_subtraction():
+    left, op, right = calc.parse_expression("10 - 2")
+    assert left == 10.0
+    assert op == "-"
+    assert right == 2.0
+
+
 # GOOD TEST — included as a positive observation baseline
 def test_divide_by_zero_raises():
     import pytest
