@@ -4,19 +4,25 @@ Score trend and run log for `/evolve` command iterations.
 
 ## 2026-03-28
 
-- **Score**: 71 → 87/100 (Good)
-- **Iterations**: 2 of 5 (stopped: remaining P2 is recommendation, P3s only)
-- **Gaps**: 14 detected (P1: 0, P2: 5, P3: 9), 4 P2 addressed
-- **Proposals**: 5 applied (5 validated, 0 with caveats)
-- **Effectiveness**: 0 checks run (coverage/consistency fixes — no detection scenarios matched)
+- **Score**: 71 → 93/100 (Excellent)
+- **Iterations**: 2 of 5 (stopped: all P2s addressed, P3s only remain)
+- **Gaps**: 14 detected (P1: 0, P2: 5, P3: 9), all P2s addressed + 4 recommendations implemented
+- **Proposals**: 11 applied (11 validated, 0 with caveats) + 2 scenario updates
+- **Effectiveness**: 0 checks run (coverage/consistency/terminology fixes)
 - **Branch**: evolve/2026-03-28
 - **Status**: pending review
 - **Key changes**:
   - Eliminated remaining "Port Interfaces" terminology in layer-patterns.md and decision-tree.md
   - Added strategy-fit assessment to test audit behavior-coverage-reviewer
   - Added error message quality check to code audit production-readiness-scout
-  - Added design token consistency checklist to visual-design skill (grounds frontend audit check)
-- **Note**: Previous runs' structural P1s are fully resolved; this run focused on coverage alignment and terminology consistency. Score plateau approaching — remaining gaps are cross-domain recommendations and minor P3 drift.
+  - Added design token consistency checklist to visual-design skill (grounds frontend audit)
+  - Added API spec-to-implementation cross-validation (docs + api domains)
+  - Added structured concurrency patterns to TypeScript guide (Promise combinators, AbortController, anti-patterns)
+  - Documented layer boundary enforcement variation by language in clean-architecture
+  - Clarified E2E testing boundary between test-strategy and qa skills
+  - Updated weak-test-suite scenario: +1 planted issue (WTS-08, strategy-fit violation)
+  - Updated visual-design-violations scenario: +1 planted issue (VDV-09, design token drift)
+- **Note**: Score plateau — remaining gaps are P3 (minor terminology drift, reference precision). LP3 (mutation testing setup commands) was verified as already addressed in mutation-testing.md.
 
 ## 2026-03-21 (run 2)
 
