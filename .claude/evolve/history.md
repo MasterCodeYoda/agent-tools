@@ -2,6 +2,22 @@
 
 Score trend and run log for `/evolve` command iterations.
 
+## 2026-03-28
+
+- **Score**: 71 → 87/100 (Good)
+- **Iterations**: 2 of 5 (stopped: remaining P2 is recommendation, P3s only)
+- **Gaps**: 14 detected (P1: 0, P2: 5, P3: 9), 4 P2 addressed
+- **Proposals**: 5 applied (5 validated, 0 with caveats)
+- **Effectiveness**: 0 checks run (coverage/consistency fixes — no detection scenarios matched)
+- **Branch**: evolve/2026-03-28
+- **Status**: pending review
+- **Key changes**:
+  - Eliminated remaining "Port Interfaces" terminology in layer-patterns.md and decision-tree.md
+  - Added strategy-fit assessment to test audit behavior-coverage-reviewer
+  - Added error message quality check to code audit production-readiness-scout
+  - Added design token consistency checklist to visual-design skill (grounds frontend audit check)
+- **Note**: Previous runs' structural P1s are fully resolved; this run focused on coverage alignment and terminology consistency. Score plateau approaching — remaining gaps are cross-domain recommendations and minor P3 drift.
+
 ## 2026-03-21 (run 2)
 
 - **Score**: 48 → 88/100 (Good)
