@@ -93,7 +93,7 @@ These principles apply across all languages:
 - **Infrastructure**: Integration tests with real resources (test containers)
 - **Frameworks**: E2E tests for critical paths
 
-For strategy selection (TDD vs spec-first vs property-based), see @test-strategy — the authoritative skill for testing methodology.
+For strategy selection (TDD vs spec-first vs property-based) and assertion design, see @test-strategy. For *which* layer gets *which* test type, see the Testing by Layer section above.
 
 ### Code Organization
 - Organize by feature/domain, not by technical layer

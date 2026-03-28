@@ -390,7 +390,7 @@ Enforcement mechanisms vary by language. Audit agents should adjust expectations
 
 For projects without compile-time enforcement, audit agents should flag layer violations more aggressively since there's no tooling safety net.
 
-For testing strategy selection and mocking philosophy, @test-strategy is authoritative.
+For testing methodology (strategy selection, assertion design, mocking philosophy), @test-strategy is authoritative. For *which* layer gets *which* test type, the Layer-Specific Testing section above applies — test-strategy owns *how* to test within each layer.
 
 ## When NOT to Use Clean Architecture
 
