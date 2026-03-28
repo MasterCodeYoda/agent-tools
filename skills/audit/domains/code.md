@@ -130,6 +130,7 @@ Spawn 4 parallel agents:
 **production-readiness-scout** — References quality checkpoints (`skills/workflow-guide/implementation/quality-checkpoints.md`):
 - Security: input validation, SQL injection prevention, auth/authz, secrets management
 - Error handling: graceful degradation, exception boundaries
+- Error message quality: actionable messages (not stack traces or internal identifiers), no internal information leakage (ref: @code-patterns error handling philosophy)
 - Resilience: retry logic, circuit breakers, timeouts, idempotency
 - Deployment: config externalized, health checks, graceful shutdown
 
