@@ -91,6 +91,7 @@ Spawn 2 parallel agents:
 - Dead external links
 - Configuration drift (documented config doesn't match actual)
 - Version discrepancies
+- API spec drift: if OpenAPI/GraphQL specs exist, verify endpoint descriptions, parameter names, and response schemas match actual handler implementations (cross-domain with `/workflow:audit --focus api`)
 
 **planning-doc-verifier** — If `./planning/` exists:
 - Requirements vs. implementation alignment
