@@ -88,3 +88,16 @@ findings:
       (buttons). Default cursor is correct for buttons.
     skill_pattern: "visual-design/references/design/no-pointer-cursor.md"
     agent: ux-completeness-reviewer
+
+  - id: VDV-09
+    severity: P2
+    type: design-token-inconsistency
+    file: code/components/UserBadge.tsx
+    description: >
+      Component uses hardcoded colors (#e74c3c, #2ecc71, #3498db, #fafafa,
+      #1a1a1a), magic-number spacing (13px, 11px, 17px), and ad-hoc font
+      sizes (11px) instead of sourcing from a token set. Other components
+      in the app use different values for similar purposes (#333, #eee),
+      creating visual drift.
+    skill_pattern: "visual-design/SKILL.md — Design Tokens & Consistency: magic numbers absent, token set used consistently"
+    agent: ux-completeness-reviewer
