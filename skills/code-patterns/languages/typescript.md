@@ -98,6 +98,51 @@ await fetch(url, { signal: controller.signal });
 - `Blob` / `File` / `FormData`
 - `setTimeout` / `setInterval` / `queueMicrotask`
 
+### Structured Concurrency Patterns
+
+TypeScript lacks Rust's `JoinSet`/`TaskTracker` primitives, but the same structured concurrency principles apply. Choose the right `Promise` combinator and always handle cancellation.
+
+**Combinator selection:**
+
+| Need | Combinator | Behavior |
+|------|-----------|----------|
+| All must succeed | `Promise.all` | Rejects on first failure, remaining results lost |
+| All must settle (success or failure) | `Promise.allSettled` | Never rejects; returns `{status, value/reason}[]` |
+| First to succeed | `Promise.any` | Rejects only if ALL fail (`AggregateError`) |
+| First to settle | `Promise.race` | Resolves/rejects with whichever settles first |
+
+**Cancellation with AbortController:**
+
+```typescript
+async function fetchWithTimeout(url: string, timeoutMs: number): Promise<Response> {
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), timeoutMs);
+  try {
+    return await fetch(url, { signal: controller.signal });
+  } finally {
+    clearTimeout(timeout);
+  }
+}
+
+// Cancelling parallel work
+async function fetchAllOrCancel(urls: string[]): Promise<Response[]> {
+  const controller = new AbortController();
+  try {
+    return await Promise.all(
+      urls.map(url => fetch(url, { signal: controller.signal }))
+    );
+  } catch (err) {
+    controller.abort(); // cancel remaining fetches on first failure
+    throw err;
+  }
+}
+```
+
+**Anti-patterns:**
+- `Promise.all` without error handling — one rejection loses all results. Use `Promise.allSettled` when partial results are acceptable.
+- Fire-and-forget promises (`doSomethingAsync()` without `await`) — errors are silently swallowed. Always `await` or attach `.catch()`.
+- Missing `AbortController` cleanup — long-lived operations (file uploads, SSE streams) must support cancellation to avoid resource leaks.
+
 ### Node.js Native TypeScript Support (22.18.0+)
 
 Starting with Node.js 22.18.0 (released July 2025), Node can execute TypeScript files directly without compilation:

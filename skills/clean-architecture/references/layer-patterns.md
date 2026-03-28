@@ -116,7 +116,7 @@ Orchestrates domain objects to accomplish use cases. Defines what the system doe
 - **Request/Response DTOs**: Input/output for use cases
 - **Application Services**: Use case implementations
 - **Application Events**: Application-level occurrences
-- **Port Interfaces**: Contracts for external services
+- **Service Abstractions**: Contracts for external services (repository, gateway, event publisher)
 
 ### Responsibilities
 - Coordinate domain objects

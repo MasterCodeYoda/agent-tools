@@ -82,3 +82,16 @@ findings:
       exist, calling code wouldn't compile/run.
     skill_pattern: "test-strategy/SKILL.md — Duplicating Static Guarantees; Respect Static Guarantees"
     agent: assertion-analyst
+
+  - id: WTS-08
+    severity: P2
+    type: wrong-strategy-for-context
+    file: code/tests/test_calculator.py
+    function: test_parse_addition, test_parse_subtraction
+    description: >
+      parse_expression is a data transformation / parser but is tested
+      with only 2 example-based tests. Property-based testing would
+      cover edge cases (negative numbers, whitespace variations,
+      operator ambiguity like "3 - -4") that examples miss.
+    skill_pattern: "test-strategy/SKILL.md — Strategy Selection: 'Data transformations / parsers → Property-Based Testing'"
+    agent: behavior-coverage-reviewer

@@ -377,7 +377,20 @@ Essential reading for deep understanding:
 - **Infrastructure**: Integration tests with real resources (test containers, test databases)
 - **Frameworks**: E2E tests for critical paths
 
-For testing strategy selection and mocking philosophy, @test-strategy is authoritative.
+### Layer Boundary Enforcement by Language
+
+Enforcement mechanisms vary by language. Audit agents should adjust expectations accordingly:
+
+| Language | Primary Enforcement | Mechanism |
+|----------|-------------------|-----------|
+| **Rust** | Compile-time | Separate crates per layer — compiler prevents illegal imports |
+| **TypeScript** | Lint-time | `eslint-plugin-boundaries` for single-package; multi-package workspace for strict enforcement |
+| **C#** | Project-time | Separate `.csproj` per layer — build system enforces dependency direction |
+| **Python** | Convention + review | Import discipline, `import-linter` optional — code review is primary enforcement |
+
+For projects without compile-time enforcement, audit agents should flag layer violations more aggressively since there's no tooling safety net.
+
+For testing methodology (strategy selection, assertion design, mocking philosophy), @test-strategy is authoritative. For *which* layer gets *which* test type, the Layer-Specific Testing section above applies — test-strategy owns *how* to test within each layer.
 
 ## When NOT to Use Clean Architecture
 

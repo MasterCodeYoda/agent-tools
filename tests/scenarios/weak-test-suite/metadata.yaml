@@ -11,4 +11,4 @@ agents_tested:
   - mock-boundary-checker
   - behavior-coverage-reviewer
 language: python
-planted_issues: 7
+planted_issues: 8

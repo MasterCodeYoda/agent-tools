@@ -116,7 +116,7 @@ Ask user to confirm: "This looks like a [quick/standard/deep] review. Proceed?"
 
 ## Agent Orchestration
 
-For review criteria and quality standards, reference @workflow-guide (quality checkpoints)
+For review criteria and quality standards, reference @workflow-guide (`implementation/quality-checkpoints.md`)
 
 ### Quick Review (2 agents)
 

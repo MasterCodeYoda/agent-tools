@@ -12,4 +12,4 @@ agents_tested:
   - accessibility-scanner
   - ux-completeness-reviewer
 language: typescript
-planted_issues: 8
+planted_issues: 9

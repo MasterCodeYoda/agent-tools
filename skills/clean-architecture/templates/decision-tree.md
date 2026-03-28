@@ -70,7 +70,7 @@ Is it a business rule or concept?
 **Examples:**
 - `CreateOrderUseCase`, `ProcessPaymentUseCase` (Use Cases)
 - `OrderRequest`, `OrderResponse` (DTOs)
-- `NotificationService`, `PaymentGateway` (Port Interfaces)
+- `NotificationService`, `PaymentGateway` (Service Abstractions)
 - `OrderView`, `CustomerSummary` (Read Models)
 
 **What NOT to put here:**

@@ -207,7 +207,7 @@ audit-code checks code quality; audit-api checks API design quality. They are co
 
 ### With /workflow:audit --focus docs
 
-audit-docs checks if API documentation exists; audit-api checks if it's correct and matches the implementation.
+audit-docs checks if API documentation exists and is aligned with implementation (including API spec drift); audit-api checks if API design is correct and conventions are followed. When both domains run, their findings on spec-to-implementation alignment are deduplicated by the orchestrator.
 
 ### With /workflow:review
 

@@ -361,7 +361,7 @@ For detailed templates and patterns, reference these sections:
 
 ## Related Skills
 
-- **clean-architecture**: Architectural patterns that workflow commands implement via vertical slicing
+- **clean-architecture**: Authoritative for layer definitions and dependency direction. Workflow commands implement clean-architecture patterns via vertical slicing; defer to clean-architecture for what belongs in each layer.
 - **code-patterns**: Language-specific implementation patterns used during `/workflow:execute`
 - **test-strategy**: Testing methodology integrated into execution and review workflows
 - **audit**: Unified audit consumes workflow-guide for documentation domain criteria
