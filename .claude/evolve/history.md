@@ -4,13 +4,13 @@ Score trend and run log for `/evolve` command iterations.
 
 ## 2026-03-28
 
-- **Score**: 71 → 93/100 (Excellent)
-- **Iterations**: 2 of 5 (stopped: all P2s addressed, P3s only remain)
-- **Gaps**: 14 detected (P1: 0, P2: 5, P3: 9), all P2s addressed + 4 recommendations implemented
-- **Proposals**: 11 applied (11 validated, 0 with caveats) + 2 scenario updates
+- **Score**: 71 → 95/100 (Excellent)
+- **Iterations**: 2 of 5 (stopped: all P2s addressed, then P3s resolved collaboratively)
+- **Gaps**: 14 detected (P1: 0, P2: 5, P3: 9), 13 resolved (1 P3 intentionally skipped)
+- **Proposals**: 15 applied (15 validated, 0 with caveats) + 2 scenario updates
 - **Effectiveness**: 0 checks run (coverage/consistency/terminology fixes)
 - **Branch**: evolve/2026-03-28
-- **Status**: pending review
+- **Status**: merged
 - **Key changes**:
   - Eliminated remaining "Port Interfaces" terminology in layer-patterns.md and decision-tree.md
   - Added strategy-fit assessment to test audit behavior-coverage-reviewer
@@ -22,7 +22,12 @@ Score trend and run log for `/evolve` command iterations.
   - Clarified E2E testing boundary between test-strategy and qa skills
   - Updated weak-test-suite scenario: +1 planted issue (WTS-08, strategy-fit violation)
   - Updated visual-design-violations scenario: +1 planted issue (VDV-09, design token drift)
-- **Note**: Score plateau — remaining gaps are P3 (minor terminology drift, reference precision). LP3 (mutation testing setup commands) was verified as already addressed in mutation-testing.md.
+  - Cross-referenced layer-specific testing in test-strategy Related Skills
+  - Clarified test-strategy deference scope in clean-architecture and code-patterns
+  - Explicit sub-file path in review command quality checkpoints reference
+  - Specified clean-architecture deference scope in workflow-guide
+- **Skipped**: C1-09 (product:audit @clean-architecture link) — intentional domain separation
+- **Note**: LP3 (mutation testing setup commands) verified as already addressed in mutation-testing.md. Score plateau reached — only intentional skips remain.
 
 ## 2026-03-21 (run 2)
 
