@@ -122,17 +122,17 @@ ls ./planning/*.md 2>/dev/null
 # Structure A: Project subdirectory (multi-project)
 ./planning/
 ├── project-a/
-│   ├── requirements.md
-│   ├── implementation-plan.md
-│   └── session-state.md
+│   ├── requirements.md           # File mode only
+│   ├── implementation-plan.md    # Both modes
+│   └── session-state.md          # Both modes
 └── project-b/
     └── ...
 
 # Structure B: Direct files (single project)
 ./planning/
-├── requirements.md
-├── implementation-plan.md
-└── session-state.md
+├── requirements.md               # File mode only
+├── implementation-plan.md        # Both modes
+└── session-state.md              # Both modes
 ```
 
 ### 1.25. Detect Existing Worktree (from session-state)
@@ -215,7 +215,9 @@ Fix: commit your planning docs first, then retry:
 
 **If no session state but planning docs exist:**
 
-- Read ./planning/*.md for context (requirements, implementation plan)
+- Read ./planning/*.md for context (implementation plan and, in file mode, requirements)
+- If `requirements_source` is `pm` (or no `requirements.md` exists and a `work_item` is recorded), fetch requirements
+  context from the PM issue instead — do not warn about missing `requirements.md`
 - Create new session-state.md
 - Initialize from implementation-plan.md
 - Set session_count: 1
@@ -421,6 +423,9 @@ Write to `./planning/<project>/session-state.md`:
 ```yaml
 ---
 project: [project-name]
+requirements_source: [file|pm]
+work_item: [ISSUE-ID]
+pm_tool: [linear|jira|manual]
 session_count: [N]
 status: in_progress
 progress:

@@ -2,9 +2,9 @@
 
 The workflow commands work with any tracking system: Linear, Jira, or manual.
 
-## Issue Creation (from /workflow:refine)
+## Issue Creation (from /workflow:refine, file mode)
 
-When requirements are complete, `/workflow:refine` can create a tracking issue.
+When requirements are complete in file mode, `/workflow:refine` can optionally create a tracking issue.
 
 ### Linear Issue Creation
 
@@ -44,7 +44,7 @@ mcp__jira__createIssue({
 | User Stories | `description` (formatted as list) |
 | Success Criteria | `description` (acceptance criteria section) |
 
-### After Issue Creation
+### After Issue Creation (file mode only)
 
 Update `requirements.md` with the new issue ID:
 
@@ -53,6 +53,129 @@ Update `requirements.md` with the new issue ID:
 - Issue: [NEW-ISSUE-ID]
 - Implementation Plan: [Link when created]
 ```
+
+## Issue Update (from /workflow:refine, PM mode)
+
+When refining in PM mode, write refined requirements directly back to the PM issue. The issue is the source of truth — no `requirements.md` is created.
+
+### Linear Issue Update
+
+```bash
+mcp__linear__updateIssue({
+  id: "[issue-id]",
+  description: "[Full refined description — structured markdown]"
+})
+```
+
+**Description Structure** (written as markdown to the issue description field):
+
+```markdown
+## Problem Statement
+
+[Who has this problem and what happens — from Phase 1]
+
+## Proposed Solution
+
+[High-level approach — from Phase 2]
+
+### Why This Approach
+- [Reason 1]
+- [Reason 2]
+
+### Alternatives Considered
+- [Alternative 1]: [Why not chosen]
+
+## User Stories
+
+### Core Stories
+- As a [user], I want [capability] so that [benefit]
+
+### Supporting Stories
+- As a [user], I want [capability] so that [benefit]
+
+## Key Requirements
+
+### Must Have
+- [Essential requirement]
+
+### Nice to Have
+- [Optional requirement]
+
+### Out of Scope
+- [Explicitly excluded]
+
+## Acceptance Criteria
+
+- [ ] [Specific testable criterion]
+- [ ] [Specific testable criterion]
+
+## Open Questions
+
+- [ ] [Unresolved items needing input]
+```
+
+**Field Mapping (Update)**:
+
+| Refinement Output | Linear Field |
+|---|---|
+| Full structured description | `description` |
+| Feature Title | `title` (update if refined) |
+
+### Jira Issue Update
+
+```bash
+mcp__jira__updateIssue({
+  issueKey: "[PROJ-123]",
+  description: "[Full refined description — structured markdown]",
+  summary: "[Feature Title — update if refined]"
+})
+```
+
+Use the same description structure as Linear above. Jira renders markdown in description fields.
+
+### Creating a New Issue (PM mode)
+
+If refining a new idea (no existing issue), create the issue first, then populate:
+
+1. Create the issue using the Issue Creation mappings above
+2. Record the new issue ID
+3. Use the issue ID for all subsequent workflow commands
+
+## Requirements Source Mode
+
+### Overview
+
+A binary choice per workflow that determines where requirements live:
+
+- **File mode**: `requirements.md` is created by `/workflow:refine` and consumed by plan/execute/review. PM issue creation is an optional add-on. Best for ad-hoc work, personal projects, or teams without PM tooling.
+- **PM mode**: The PM issue (Linear/Jira) is the source of truth for requirements. `/workflow:refine` writes requirements back to the issue directly — no `requirements.md` is created. `implementation-plan.md` and `session-state.md` are still created in `./planning/<project>/`. Best for teams where PM issues are the canonical location for requirements.
+
+### Mode Detection
+
+Determine the requirements source at the start of each workflow command, in priority order:
+
+1. **Explicit invocation**: Issue key in input (e.g., `LIN-123`, `PROJ-456`) → PM mode. File path in input (e.g., `./planning/.../requirements.md`) → file mode.
+2. **Project context**: Check AGENTS.md, CLAUDE.md, and `.claude/settings.json` for indicators that a PM system is in use. If found and invocation is ambiguous (empty input or plain text), default to PM mode.
+3. **Available MCP tools**: If Linear or Jira MCP tools are available and no project context contradicts, suggest PM mode as default.
+4. **Fallback**: File mode.
+
+**Communicate the determination**: State the chosen mode and reason to the user. Allow course correction:
+> "I'll use PM mode for this — your project indicates Linear is in use. Say 'use file mode' if you'd prefer to work with a local requirements.md instead."
+
+### Session State Propagation
+
+Record `requirements_source` in `session-state.md` so downstream commands (plan, execute, review) inherit the mode without re-detecting:
+
+```yaml
+---
+project: [name]
+requirements_source: [file|pm]
+work_item: [ISSUE-ID]
+pm_tool: [linear|jira|manual]
+---
+```
+
+When a downstream command finds `requirements_source` in session state, it uses that mode directly. When no session state exists, the command runs its own mode detection.
 
 ## Auto-Detection
 
@@ -278,6 +401,7 @@ git commit -m "feat(area): implement feature [TASK-ID]"
 ```yaml
 ---
 project: feature-name
+requirements_source: pm
 work_item: LIN-123
 pm_tool: linear
 ---

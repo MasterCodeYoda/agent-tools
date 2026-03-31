@@ -80,26 +80,36 @@ Analyze changes to determine:
 
 ### 3. Locate Plan and Acceptance Criteria (if available)
 
-Check whether an implementation plan or requirements doc exists for the changes under review:
+Check whether an implementation plan or requirements exist for the changes under review. The source depends on the
+requirements source mode:
 
 ```bash
 # Check for planning docs in the repo
 ls ./planning/*/implementation-plan.md 2>/dev/null
+ls ./planning/*/session-state.md 2>/dev/null
 ls ./planning/*/requirements.md 2>/dev/null
 ```
 
-**If a plan is found**, load and extract:
-- Acceptance criteria from requirements.md
-- Definition of Done checklist from implementation-plan.md
+**Determine requirements source**:
+1. If `session-state.md` exists and has `requirements_source: pm` → use PM mode
+2. If `session-state.md` exists and has `requirements_source: file` → use file mode
+3. If `requirements.md` exists → file mode
+4. If no `requirements.md` but a `work_item` is recorded in session state → PM mode
+5. If reviewing a PR with issue references (e.g., `LIN-123`, `PROJ-456`) → fetch criteria from PM issue
+
+**File mode**: Load and extract:
+- Acceptance criteria from `requirements.md`
+- Definition of Done checklist from `implementation-plan.md`
 - Task breakdown (to verify all planned tasks were addressed)
 
-**If reviewing a PR**, also check:
-- PR description for linked requirements or acceptance criteria
-- Issue references (e.g., `LIN-123`, `PROJ-456`) that may contain acceptance criteria
+**PM mode**: Fetch acceptance criteria from the PM issue using the Issue Retrieval Strategy from @workflow-guide
+(PM integration). Also load Definition of Done and task breakdown from `implementation-plan.md` (which exists in both
+modes).
 
-**If no plan or criteria found**: Skip the acceptance criteria review agent — code quality review proceeds as normal. Note the absence in the review output:
+**If no plan or criteria found**: Skip the acceptance criteria review agent — code quality review proceeds as normal.
+Note the absence in the review output:
 ```markdown
-**Acceptance Criteria**: No plan or requirements doc found — criteria verification skipped.
+**Acceptance Criteria**: No plan, requirements doc, or linked PM issue found — criteria verification skipped.
 ```
 
 ### 4. Select Review Depth
@@ -164,7 +174,9 @@ Run in parallel:
 - Regression risk assessment
 - If mutation tool available: flag domain logic changes lacking mutation testing coverage
 
-**acceptance-criteria-verifier** (only when plan/requirements found in §3):
+**acceptance-criteria-verifier** (only when plan/requirements/PM issue found in §3):
+- Load acceptance criteria from the appropriate source: `requirements.md` (file mode) or PM issue (PM mode) via
+  Issue Retrieval Strategy from @workflow-guide (PM integration)
 - Cross-reference each acceptance criterion against the changes — is it addressed?
 - Check the plan's Definition of Done checklist — are all items satisfiable from the diff?
 - Verify all planned tasks are reflected in the changes (no missing slices)
@@ -372,7 +384,7 @@ Post review findings to PR?
 
 ### With /workflow:plan and /workflow:execute
 
-If a `./planning/<project>/implementation-plan.md` or `requirements.md` exists, review automatically loads acceptance criteria and Definition of Done to verify completeness — not just code quality. This closes the loop between what was planned and what was delivered. Unmet criteria are flagged as P1 (blocking) findings.
+Review automatically loads acceptance criteria to verify completeness — not just code quality. In file mode, criteria come from `requirements.md`. In PM mode, criteria are fetched from the linked PM issue. `implementation-plan.md` provides the Definition of Done and task breakdown in both modes. This closes the loop between what was planned and what was delivered. Unmet criteria are flagged as P1 (blocking) findings.
 
 ### With /workflow:compound
 

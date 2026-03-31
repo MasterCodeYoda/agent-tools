@@ -33,12 +33,12 @@ Before interpreting input, extract the `--worktree` flag if present:
   Run /workflow:plan without --worktree from this worktree.
   ```
 
-**If input is empty**, check for existing requirements:
+**If input is empty**, check for existing context based on requirements source mode (see below):
 
-1. Look for `./planning/*/requirements.md` files
-2. If found, list them and ask which to plan
-3. If not found, ask: "What would you like to plan? Provide a requirements.md path, work item ID, or describe the
-   feature."
+- **File mode**: Look for `./planning/*/requirements.md` files. If found, list them and ask which to plan.
+- **PM mode**: Prompt for an issue key or check project context for recent issues.
+- **If neither found**, ask: "What would you like to plan? Provide a requirements.md path, work item ID, or describe the
+  feature."
 
 ## Input Detection
 
@@ -56,6 +56,21 @@ Parse input to determine source type:
 
 **For text input**: If the description is vague or complex, suggest: "This sounds like it might benefit from
 requirements discovery. Would you like to run `/workflow:refine` first to clarify requirements?"
+
+## Requirements Source Mode
+
+Determine whether this planning session uses **file mode** or **PM mode**. Follow the detection logic from
+@workflow-guide (`planning/pm-integration.md`):
+
+1. **Explicit invocation**: Issue key or PM URL → PM mode. File path (requirements.md or planning directory) → file mode.
+2. **Existing artifacts**: If `./planning/<project>/requirements.md` exists → file mode. If absent and an issue key is
+   available → PM mode.
+3. **Project context**: Check AGENTS.md, CLAUDE.md, `.claude/settings.json` for PM system indicators. If found and
+   invocation is ambiguous, default to PM mode.
+4. **Available MCP tools**: Linear/Jira MCP tools present → suggest PM mode.
+5. **Fallback**: File mode.
+
+State the determination to the user and allow course correction.
 
 ## Context Gathering
 
@@ -99,9 +114,9 @@ Run parallel exploration using sub-agents to understand context:
 
 ## Load Requirements
 
-### From requirements.md
+### From requirements.md (file mode)
 
-If input is a requirements.md path or planning directory:
+If requirements source is file mode:
 
 1. Read the requirements document
 2. Extract key information:
@@ -111,13 +126,14 @@ If input is a requirements.md path or planning directory:
     - Success criteria
     - Related issue IDs
 
-### From Work Item
+### From Work Item (PM mode)
 
-If input is a Linear or Jira issue:
+If requirements source is PM mode:
 
 1. Fetch issue details using the Issue Retrieval Strategy from @workflow-guide (PM integration)
 2. Extract requirements from title, description, and acceptance criteria
 3. Note the issue ID for linking
+4. Do not look for or warn about missing `requirements.md`
 
 ### Review with User
 
@@ -267,6 +283,9 @@ Target file: `./planning/<project>/session-state.md`
 ```yaml
 ---
 project: [project-name]
+requirements_source: [file|pm]
+work_item: [ISSUE-ID]          # Set when PM issue is linked
+pm_tool: [linear|jira|manual]  # Set when PM tool is detected
 session_count: 0
 status: planned
 progress:
@@ -644,7 +663,7 @@ Before presenting plan for approval:
 
 ### With /workflow:refine
 
-Refine produces `./planning/<project>/requirements.md` — plan consumes it. Run refine first for complex features; plan accepts the output directly.
+In file mode, refine produces `./planning/<project>/requirements.md` — plan consumes it. In PM mode, refine updates the PM issue — plan fetches requirements from it. Run refine first for complex features; plan accepts the output directly in either mode.
 
 ### With /workflow:execute
 

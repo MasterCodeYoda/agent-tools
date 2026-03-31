@@ -21,8 +21,10 @@ Parse input to determine discovery mode:
 | Input Pattern                          | Interpretation                       |
 |----------------------------------------|--------------------------------------|
 | Empty                                  | Prompt for initial description       |
-| `./planning/<project>/requirements.md` | Refine existing requirements         |
+| `./planning/<project>/requirements.md` | Refine existing requirements (file mode) |
 | `continue`                             | Resume in-progress refinement        |
+| `LIN-[0-9]+` or `[A-Z]+-[0-9]+`       | Refine existing PM issue (PM mode)   |
+| PM issue URL                           | Refine existing PM issue (PM mode)   |
 | Text                                   | Start discovery with initial context |
 
 **If input is empty**, ask: "What feature or problem would you like to explore? Describe the idea, user need, or problem
@@ -30,12 +32,30 @@ you're trying to solve."
 
 **If path to existing requirements.md**, load and review for refinement.
 
-**If `continue`**, check for `./planning/*/requirements.md` with `Status: Draft` and resume.
+**If `continue`**, check for `./planning/*/requirements.md` with `Status: Draft` (file mode) or in-progress PM issues
+(PM mode) and resume.
+
+**If issue key or PM URL**, fetch issue details using the Issue Retrieval Strategy from @workflow-guide (PM integration).
+Use the existing issue content as starting context for refinement.
 
 **When conducting problem discovery**, use the `AskUserQuestion` tool, if available, to guide the user through the
 information gathering process. If such a tool is not available, ask the user questions one at a time, or in small groups
 of questions that are interrelated, waiting for their answer after each question before proceeding. Ask followup
 questions when necessary.
+
+## Requirements Source Mode
+
+Determine whether this refinement uses **file mode** or **PM mode**. Follow the detection logic from @workflow-guide
+(`planning/pm-integration.md`):
+
+1. **Explicit invocation**: Issue key or PM URL → PM mode. File path → file mode.
+2. **Project context**: Check AGENTS.md, CLAUDE.md, `.claude/settings.json` for PM system indicators. If found and
+   invocation is ambiguous (empty or text input), default to PM mode.
+3. **Available MCP tools**: Linear/Jira MCP tools present → suggest PM mode.
+4. **Fallback**: File mode.
+
+State the determination to the user and allow course correction:
+> "I'll use [PM mode / file mode] for this refinement. [Reason]. Say 'use [other] mode' if you'd prefer."
 
 ## Phase 1: Problem Discovery
 
@@ -221,7 +241,7 @@ Ask:
 
 Ask: "What questions do we still need to answer before or during implementation?"
 
-## Write Requirements Document
+## Capture Requirements
 
 ### Determine Project Name
 
@@ -238,9 +258,12 @@ Or ask user if unclear: "What should we call this project/feature?"
 mkdir -p ./planning/<project>/
 ```
 
-### Generate requirements.md
+This directory is created in both modes — it holds `implementation-plan.md` and `session-state.md` regardless of
+requirements source.
 
-Write `./planning/<project>/requirements.md`:
+### File Mode: Generate requirements.md
+
+**Only in file mode.** Write `./planning/<project>/requirements.md`:
 
 ```markdown
 # [Feature Title]
@@ -295,7 +318,22 @@ Created: [timestamp]
 Status: Draft
 ```
 
-## PM Tool Integration
+### PM Mode: Write Requirements to PM Issue
+
+**Only in PM mode.** Write the refined requirements directly to the PM issue. No `requirements.md` is created.
+
+If refining an existing issue, update it. If starting from scratch, create a new issue first.
+
+For issue creation and update MCP calls and field mappings, reference @workflow-guide (`planning/pm-integration.md`).
+
+Write the structured description to the issue using the description structure defined in @workflow-guide
+(`planning/pm-integration.md` — Issue Update section).
+
+## PM Tool Integration (file mode only)
+
+**Skip this section entirely in PM mode** — the issue was already created/updated above.
+
+In file mode, optionally offer issue creation after saving `requirements.md`:
 
 ### Detect PM Configuration
 
@@ -381,7 +419,9 @@ To track this work:
 
 ## Completion
 
-Present summary to user:
+Present summary to user based on mode:
+
+### File Mode Completion
 
 ```markdown
 ## Requirements Complete
@@ -403,6 +443,30 @@ Status: Ready for Planning
 2. **Review requirements** - Open requirements.md for review
 3. **Refine further** - `/workflow:refine ./planning/[project]/requirements.md`
 4. **Share for feedback** - Send requirements to stakeholders
+```
+
+### PM Mode Completion
+
+```markdown
+## Requirements Complete
+
+Issue: [ISSUE-ID] (updated with refined requirements)
+Planning directory: `./planning/[project]/` (ready for implementation plan)
+Status: Ready for Planning
+
+### Summary
+
+**Problem**: [one-line problem statement]
+**Solution**: [one-line approach]
+**Core Stories**: [count]
+**Must-Have Requirements**: [count]
+
+### What's Next?
+
+1. **Create implementation plan** - `/workflow:plan [ISSUE-ID]`
+2. **View requirements** - Check [ISSUE-ID] in [Linear/Jira]
+3. **Refine further** - `/workflow:refine [ISSUE-ID]`
+4. **Share for feedback** - Share issue with stakeholders
 ```
 
 ## Key Principles

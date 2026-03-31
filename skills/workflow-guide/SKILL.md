@@ -60,14 +60,37 @@ This order follows the dependency rule: each layer depends only on layers inside
 
 Testing integrates naturally with bottom-up implementation: write tests for each layer as you build it upward. See @test-strategy for strategy selection.
 
+## Requirements Source Mode
+
+A binary choice per workflow that determines where requirements live. See @workflow-guide (`planning/pm-integration.md`) for detection logic and PM-specific field mappings.
+
+### File Mode
+
+`requirements.md` is created by `/workflow:refine` and consumed by plan/execute/review. PM issue creation is an optional add-on. Best for ad-hoc work, personal projects, or teams without PM tooling.
+
+### PM Mode
+
+The PM issue (Linear/Jira) is the source of truth for requirements. `/workflow:refine` writes requirements back to the issue directly — no `requirements.md` is created. `implementation-plan.md` and `session-state.md` are still created in `./planning/<project>/`. Best for teams where PM issues are the canonical location for requirements.
+
+### Mode Detection
+
+Mode is determined at the start of each workflow command:
+
+1. **Explicit invocation**: Issue key → PM mode. File path → file mode.
+2. **Project context**: AGENTS.md, CLAUDE.md, or `.claude/settings.json` indicating PM system → default PM mode for ambiguous input.
+3. **Available MCP tools**: Linear/Jira MCP tools present → suggest PM mode.
+4. **Fallback**: File mode.
+
+The agent states its determination and lets the user course-correct.
+
 ## The Ten Commands
 
 ### /workflow:refine
 **Purpose**: Discover and refine requirements through conversation
 
-**Outputs**:
-- `./planning/<project>/requirements.md` - Problem, solution, user stories, requirements
-- PM issue (optional) - Linear or Jira issue creation
+**Outputs** (depends on requirements source mode):
+- **File mode**: `./planning/<project>/requirements.md` — problem, solution, user stories, requirements. PM issue creation offered as optional add-on.
+- **PM mode**: PM issue updated with refined requirements directly. No `requirements.md` created. `./planning/<project>/` directory created for later use by plan.
 
 **When to use**: When starting from a vague idea, unclear requirements, or needing stakeholder alignment before planning
 
@@ -155,9 +178,9 @@ Items genuinely not required by acceptance criteria but worth noting for future 
 ```
 ./planning/
 ├── <project-name>/
-│   ├── requirements.md          # What we're building (from /workflow:refine)
-│   ├── implementation-plan.md   # How we're building it (from /workflow:plan)
-│   ├── session-state.md         # Multi-session tracking (from /workflow:plan)
+│   ├── requirements.md          # File mode only (from /workflow:refine)
+│   ├── implementation-plan.md   # Both modes (from /workflow:plan)
+│   ├── session-state.md         # Both modes (from /workflow:plan)
 │   └── technical-decisions.md   # Key decisions (optional)
 └── archive/                     # Completed work
 ```
@@ -167,6 +190,9 @@ Items genuinely not required by acceptance criteria but worth noting for future 
 ```yaml
 ---
 project: [name]
+requirements_source: [file|pm]
+work_item: [ISSUE-ID]          # Set when PM issue is linked
+pm_tool: [linear|jira|manual]  # Set when PM tool is detected
 session_count: [N]
 status: [planned|in_progress|complete]
 progress:
