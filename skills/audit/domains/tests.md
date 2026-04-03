@@ -130,6 +130,21 @@ Spawn 2 parallel agents that read test files:
 
 ### Tier 3 — Heuristic Analysis (AI judgment)
 
+**scrap-analyst** — References @test-strategy (`references/scrap-scoring.md`, `references/scrap-duplication.md`):
+- Score each test function using the SCRAP composite metric (complexity + smell penalties)
+- For each test, compute: line count, assertion count, branch count, setup depth, mock count, helper indirection, helper-hidden lines, temp resources, literal data size, phase count
+- Apply smell penalties: no-assertions (+10), low-assertion-density (+6), multiple-phases (+5), high-mocking (+4), large-example (+4), helper-hidden-complexity (+4), temp-resource-work (+3), literal-heavy-setup (+3)
+- Apply the API-contract exception for integration-style tests meeting all criteria
+- Detect table-driven tests and score them favorably
+- Compute file-level rollups: avg_scrap, max_scrap, pressure score, pressure level
+- Compute block-level rollups per test class / describe block
+- Run fuzzy duplication analysis: normalize test structure, compute Jaccard similarity, find clusters, calculate extraction pressure
+- Identify coverage-matrix candidates (low-complexity repetitive tests suitable for table-driving)
+- Determine remediation mode (STABLE / LOCAL / SPLIT) and AI actionability class (LEAVE_ALONE / AUTO_TABLE_DRIVE / AUTO_REFACTOR / MANUAL_SPLIT / REVIEW_FIRST)
+- Produce ranked recommendations with confidence levels (HIGH / MEDIUM / LOW)
+- Report worst examples by SCRAP score, highest-pressure blocks, and specific extraction recommendations with line ranges
+- If a SCRAP baseline exists (sidecar JSON in `target/scrap/` or similar), compare against it and report verdict (improved / worse / mixed / unchanged) with metric deltas
+
 **behavior-coverage-reviewer** — References @test-strategy (SKILL.md philosophy + `references/test-design.md`):
 - Read test + production code side-by-side for the scoped area
 - Identify behaviors tested vs. behaviors present
@@ -166,6 +181,11 @@ Present findings using the same P1/P2/P3 structure as `/workflow:review`:
 | Coverage (domain) | X% | [above/below 85% floor] |
 | Mutation score | X% | [if available: domain 80%+/app 70%+/framework validation if applicable] |
 | Mock boundary violations | N | [ok/warning] |
+| SCRAP avg / max | X / Y | [focused/normal/questionable/poor] |
+| SCRAP pressure | X (LEVEL) | [STABLE/LOW/MEDIUM/HIGH/CRITICAL] |
+| Remediation mode | MODE | [STABLE/LOCAL/SPLIT] |
+| Actionability | CLASS | [LEAVE_ALONE/AUTO_TABLE_DRIVE/AUTO_REFACTOR/MANUAL_SPLIT/REVIEW_FIRST] |
+| Duplication clusters | N | [count of harmful duplication clusters with positive extraction pressure] |
 
 ### Health Score
 
@@ -256,4 +276,5 @@ All agent prompts reference specific sections of the @test-strategy skill as the
 
 ## References
 
+- [SCRAP reference implementation](https://github.com/unclebob/scrap) — Uncle Bob Martin's structural quality analyzer for test code
 - [react-doctor](https://github.com/millionco/react-doctor) — Health scoring concept adapted from this React diagnostic CLI

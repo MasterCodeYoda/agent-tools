@@ -116,6 +116,7 @@ When generating tests, agents face unique failure modes that human developers do
 - **Context leakage** — Tests that pass because they share mutable state with other tests. Each test must be independently runnable.
 - **Unverified intent** — AI-generated code has the same intent gap as legacy code. An agent that wrote a function last week is not meaningfully different from a developer who left the company — you may not know *why* it does what it does. When working with AI-generated code that wasn't fully reviewed, apply characterization testing first to surface "what did the AI actually build?", then specification testing to verify "is that what we wanted?".
 - **Untested mutations** — After writing tests, run mutation testing (or manual sabotage) on domain logic to verify tests catch real bugs, not just exercise code paths. See `references/mutation-testing.md`.
+- **Structural complexity creep** — Tests can become as complex as the production code they verify. SCRAP scoring (`references/scrap-scoring.md`) provides a composite metric that catches oversized tests, excessive mocking, hidden helper complexity, and other structural anti-patterns. Use SCRAP actionability classes to determine whether test files need refactoring, table-driving, splitting, or can be left alone.
 
 See `references/test-quality.md` for a complete quality verification framework.
 
@@ -389,6 +390,8 @@ These principles are especially important for AI agents, who tend to pattern-mat
 - `references/property-testing.md` — Property-based testing patterns, tools, and when to use
 - `references/test-quality.md` — Mutation testing, assertion quality, the coverage trap
 - `references/mutation-testing.md` — Tool configuration, incremental strategies, agent-driven survivor analysis
+- `references/scrap-scoring.md` — SCRAP structural quality metric for test code: composite scoring, smell penalties, actionability classes, baseline/compare workflow
+- `references/scrap-duplication.md` — SCRAP duplication analysis: fuzzy similarity detection, extraction pressure, coverage-matrix identification
 
 ### Language-Specific Test Organization
 

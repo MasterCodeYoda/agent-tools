@@ -1,0 +1,14 @@
+name: scrap-scoring
+description: >
+  Python test suite with planted SCRAP-detectable anti-patterns.
+  Tests whether the scrap-analyst agent correctly scores test
+  structural quality, detects smell penalties, identifies
+  duplication clusters, and produces accurate actionability
+  guidance when guided by @test-strategy SCRAP references.
+skill: test-strategy
+command: workflow:audit-tests
+agents_tested:
+  - scrap-analyst
+  - assertion-analyst
+language: python
+planted_issues: 8

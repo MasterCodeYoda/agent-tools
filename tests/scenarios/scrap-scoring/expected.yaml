@@ -1,0 +1,102 @@
+# Expected findings when running /workflow:audit --focus tests against this scenario.
+# The scrap-analyst agent should detect all planted SCRAP violations.
+
+findings:
+  - id: SCRAP-01
+    severity: P1
+    type: oversized-multi-phase-test
+    file: code/tests/test_order_processor.py
+    function: test_full_order_lifecycle
+    description: >
+      Test spans 5 distinct act/assert phases (create, process, discount,
+      fulfill, format) with large setup. SCRAP score ~25+ (poor).
+      Smells: large-example, multiple-phases, low-assertion-density.
+      Should be split into focused tests per lifecycle stage.
+    skill_pattern: "test-strategy/references/scrap-scoring.md — Smell Penalties: multiple-phases (+5), large-example (+4), low-assertion-density (+6)"
+    agent: scrap-analyst
+
+  - id: SCRAP-02
+    severity: P2
+    type: high-mocking
+    file: code/tests/test_order_processor.py
+    function: test_process_order_with_mocked_internals
+    description: >
+      Four nested mock patches on internal methods (validate_order,
+      calculate_total, calculate_tax, calculate_shipping). SCRAP
+      smell: high-mocking (+4). Tests wiring, not behavior.
+    skill_pattern: "test-strategy/references/scrap-scoring.md — Smell Penalties: high-mocking (+4)"
+    agent: scrap-analyst
+
+  - id: SCRAP-03
+    severity: P2
+    type: branching-test-logic
+    file: code/tests/test_order_processor.py
+    function: test_validation_covers_all_error_types
+    description: >
+      Test contains if/else branching inside a loop over test cases.
+      Control flow in tests obscures what's being verified.
+      Should be parameterized with @pytest.mark.parametrize instead.
+    skill_pattern: "test-strategy/references/scrap-scoring.md — Complexity: branch_count"
+    agent: scrap-analyst
+
+  - id: SCRAP-04
+    severity: P2
+    type: temp-resource-work
+    file: code/tests/test_order_processor.py
+    function: test_receipt_can_be_written_to_file
+    description: >
+      Creates and manages temp files in a unit test. SCRAP
+      smell: temp-resource-work (+3). File I/O belongs in
+      integration tests, not unit tests.
+    skill_pattern: "test-strategy/references/scrap-scoring.md — Smell Penalties: temp-resource-work (+3)"
+    agent: scrap-analyst
+
+  - id: SCRAP-05
+    severity: P2
+    type: literal-heavy-setup
+    file: code/tests/test_order_processor.py
+    function: test_bulk_order_total
+    description: >
+      Inline construction of 12 LineItem objects. SCRAP
+      smell: literal-heavy-setup (+3). Large inline data obscures
+      test intent. Extract to a fixture or test data file.
+    skill_pattern: "test-strategy/references/scrap-scoring.md — Smell Penalties: literal-heavy-setup (+3)"
+    agent: scrap-analyst
+
+  - id: SCRAP-06
+    severity: P2
+    type: helper-hidden-complexity
+    file: code/tests/test_order_processor.py
+    function: test_complex_order_formatting
+    description: >
+      Two helpers (_build_complex_order_with_discounts,
+      _process_and_format) hide ~15 lines of setup. SCRAP
+      smell: helper-hidden-complexity (+4). Complexity was
+      moved, not eliminated.
+    skill_pattern: "test-strategy/references/scrap-scoring.md — Smell Penalties: helper-hidden-complexity (+4)"
+    agent: scrap-analyst
+
+  - id: SCRAP-07
+    severity: P3
+    type: coverage-matrix-candidate
+    file: code/tests/test_order_processor.py
+    function: test_shipping_free_for_100, test_shipping_free_for_200, test_shipping_free_for_500
+    description: >
+      Three structurally identical tests varying only the unit_price
+      parameter. Coverage-matrix candidate — should be consolidated
+      into a parameterized test. Actionability: AUTO_TABLE_DRIVE.
+    skill_pattern: "test-strategy/references/scrap-duplication.md — Coverage-Matrix Detection"
+    agent: scrap-analyst
+
+  - id: SCRAP-08
+    severity: P2
+    type: harmful-duplication-cluster
+    file: code/tests/test_order_processor.py
+    function: test_fulfilled_order_has_correct_total, test_fulfilled_order_has_correct_status, test_fulfilled_order_receipt_contains_id
+    description: >
+      Three tests with identical 5-line setup scaffolding (create items,
+      create order, validate, process, fulfill). Harmful duplication —
+      shared setup should be extracted into a fixture. Positive
+      extraction pressure expected.
+    skill_pattern: "test-strategy/references/scrap-duplication.md — Extraction Pressure"
+    agent: scrap-analyst

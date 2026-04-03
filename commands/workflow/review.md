@@ -173,6 +173,12 @@ Run in parallel:
 - Edge cases for changed logic
 - Regression risk assessment
 - If mutation tool available: flag domain logic changes lacking mutation testing coverage
+- SCRAP structural analysis on changed test files (see `references/scrap-scoring.md`):
+  - Score each changed/added test function and report any with SCRAP > 12 (questionable) or > 20 (poor)
+  - Flag smell penalties: no-assertions, low-assertion-density, multiple-phases, high-mocking, large-example
+  - If a SCRAP baseline exists, compare and report verdict (improved/worse/mixed/unchanged)
+  - Report actionability class for changed test files (AUTO_REFACTOR, REVIEW_FIRST, etc.)
+  - Flag duplication clusters with positive extraction pressure in changed test files
 
 **acceptance-criteria-verifier** (only when plan/requirements/PM issue found in §3):
 - Load acceptance criteria from the appropriate source: `requirements.md` (file mode) or PM issue (PM mode) via
