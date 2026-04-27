@@ -27,7 +27,7 @@ Skills are context-aware reference material that Claude loads on demand via `@sk
 
 | Skill | Purpose |
 |-------|---------|
-| **workflow-guide** | Core philosophy — vertical slicing, session continuity, P1/P2/P3 prioritization, and the workflow command set |
+| **workflow-guide** | Core philosophy — decomposition modes (vertical-slice + deliverable-partition), session continuity, P1/P2/P3 prioritization, and the workflow command set |
 | **clean-architecture** | Language-agnostic Clean Architecture with the Dependency Rule, layer patterns, and per-language guides (Python, TypeScript, C#, Rust) |
 | **code-patterns** | Language-specific best practices — type safety, error handling, testing idioms, and framework conventions |
 | **test-strategy** | Strategy selection (TDD, spec-first, property-based, contract, characterization), Red-Green-Refactor, and AI-specific anti-patterns |
@@ -105,9 +105,13 @@ agent-tools/
 
 ## Design Principles
 
-**Vertical Slicing** — Build complete features end-to-end, not layer by layer. Every plan breaks work into thin, deliverable slices.
+**Decomposition Modes** — Two top-level modes:
+- *Vertical-slice* (default for incremental feature work, especially user-facing): build complete features end-to-end through all layers, not layer by layer.
+- *Deliverable-partition* (for foundation, cross-cutting, or large-effort work where vertical slicing risks process-induced slowdown or gaps in requirements / Definition of Done conformance): decompose by deliverable with verbatim parent-AC ownership in each sub-issue, AC traceability matrix in the parent.
 
-**Bottom-Up Implementation** — Domain first, then Application, Infrastructure, and finally Framework. Pure business logic before I/O.
+See `skills/workflow-guide/SKILL.md` for full mode-selection criteria.
+
+**Bottom-Up Implementation (within a vertical slice)** — Domain first, then Application, Infrastructure, and finally Framework. Pure business logic before I/O. In deliverable-partition mode, plan deliverables in their dependency order instead (e.g., contracts before consumers).
 
 **Session Continuity** — State persists in `./planning/<project>/session-state.md` so work resumes across sessions without losing context.
 

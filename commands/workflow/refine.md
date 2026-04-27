@@ -57,6 +57,24 @@ Determine whether this refinement uses **file mode** or **PM mode**. Follow the 
 State the determination to the user and allow course correction:
 > "I'll use [PM mode / file mode] for this refinement. [Reason]. Say 'use [other] mode' if you'd prefer."
 
+## Decomposition Mode Selection
+
+Refinement output shape depends on decomposition mode (see @workflow-guide for full criteria):
+
+- **Vertical-slice mode** — refinement produces user stories that each ship a feature increment end-to-end. Phase 3 output is "As a [user], I want…" stories with shared acceptance criteria.
+- **Deliverable-partition mode** — refinement produces a sub-issue breakdown where each sub-issue owns a verbatim subset of the parent epic's acceptance criteria. Phase 3 output is a deliverable list + AC traceability matrix, not user stories.
+
+### Mode Detection
+
+1. **Explicit invocation**: User says "use vertical-slice mode" or "use deliverable-partition mode" → that mode.
+2. **Work shape heuristics**: User-facing feature in deployed system → vertical-slice. Greenfield scaffolding, validators, CI/CD, base contracts, contract-first changes, compliance/migration roll-outs → deliverable-partition.
+3. **Fallback**: Vertical-slice for ambiguous feature work; deliverable-partition for ambiguous foundation/infrastructure work.
+
+State the determination to the user and allow course correction:
+> "I'll use [vertical-slice / deliverable-partition] mode for this refinement. [Reason]. Say 'use [other] mode' if you'd prefer."
+
+In deliverable-partition mode, **skip Phase 3 (User Stories) and run Phase 3-D (Deliverable Breakdown) instead**. All other phases apply identically.
+
 ## Phase 1: Problem Discovery
 
 ### Understand the Problem Space
@@ -133,7 +151,7 @@ Discuss possible solutions:
 
 Confirm: "Does this approach feel right for solving the problem?"
 
-## Phase 3: User Stories
+## Phase 3: User Stories (vertical-slice mode)
 
 ### Extract Key User Needs
 
@@ -156,6 +174,63 @@ Ask:
 
 - "Are there other user types who would use this?"
 - "What's the most important story - the one that defines success?"
+
+## Phase 3-D: Deliverable Breakdown (deliverable-partition mode)
+
+In deliverable-partition mode, replace Phase 3 with this phase. The output is a deliverable list + AC traceability matrix that downstream sub-issues will consume.
+
+### Identify Deliverables
+
+List the artifacts the epic must produce. Each deliverable is a discrete artifact (a library scaffold, a validator rule set, a CI pipeline, a hook installer, a documentation page, a contract type), not a layer or a user-visible increment.
+
+Ask:
+
+- "What artifacts does this epic produce when complete?"
+- "Are any of these artifacts naturally bundled (one sub-issue) or naturally separate (multiple sub-issues)?"
+- "What's the dependency order between deliverables?"
+
+### Partition Acceptance Criteria
+
+For each parent acceptance criterion, identify the deliverable that owns it. Every parent AC must be owned by exactly one deliverable — no orphans, no shared ownership.
+
+Capture as a traceability matrix:
+
+```markdown
+## AC Traceability Matrix
+
+| Parent AC | Owning sub-issue | Verified at |
+|-----------|------------------|-------------|
+| AC1 | Sub-issue 1 (Library scaffold) | Sub-issue 1 close |
+| AC2 | Sub-issue 2 (Validator rules) | Sub-issue 2 close |
+| AC3 | Sub-issue 1 (Library scaffold) | Sub-issue 1 close |
+```
+
+Ask:
+
+- "Every parent AC needs to live in exactly one sub-issue — does this partition cover all of them?"
+- "Any AC where ownership is genuinely ambiguous? (If yes, that's a sign the AC itself may need refinement before partitioning.)"
+
+### Sub-issue Definition
+
+For each deliverable, draft a sub-issue body containing:
+
+- Deliverable name + scope
+- **Inherited parent ACs (verbatim, no paraphrasing)** — verified at this sub-issue's close
+- Sub-issue-specific tasks
+- Dependencies on other sub-issues
+- Per-deliverable Definition of Done (per @workflow-guide `implementation/quality-checkpoints.md`)
+
+The full Deliverable-Partition Template lives in @workflow-guide (`planning/templates.md`).
+
+### Gap-prevention Confirmation
+
+Before completing this phase, confirm:
+
+- [ ] Every parent AC appears in exactly one sub-issue.
+- [ ] Every inherited AC text is verbatim (not paraphrased).
+- [ ] Sub-issue dependency order is recorded.
+
+Ask: "Any deferred AC needs a tracking issue + explicit approval. Any in this epic, or are all parent ACs covered?"
 
 ## Phase 4: Requirements Organization
 

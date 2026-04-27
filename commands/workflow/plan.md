@@ -72,6 +72,25 @@ Determine whether this planning session uses **file mode** or **PM mode**. Follo
 
 State the determination to the user and allow course correction.
 
+## Decomposition Mode Selection
+
+Implementation plan shape depends on decomposition mode (see @workflow-guide):
+
+- **Vertical-slice mode** — plan is organized as Vertical Slice Breakdown (Domain → Application → Infrastructure → Framework per slice).
+- **Deliverable-partition mode** — plan is organized as Deliverable Breakdown (per-deliverable task list with verbatim parent-AC ownership in each sub-issue).
+
+### Mode Detection
+
+1. **Inherit from refinement**: If requirements were produced by `/workflow:refine` and a mode was recorded, use that mode.
+2. **Explicit invocation**: User specifies "use vertical-slice mode" or "use deliverable-partition mode".
+3. **Work shape heuristics**: User-facing feature in deployed system → vertical-slice. Greenfield scaffolding, validators, CI/CD, base contracts, contract-first changes, compliance/migration roll-outs → deliverable-partition.
+4. **Fallback**: Vertical-slice for ambiguous feature work; deliverable-partition for ambiguous foundation/infrastructure work.
+
+State the determination to the user and allow course correction:
+> "I'll plan in [vertical-slice / deliverable-partition] mode. [Reason]. Say 'use [other] mode' if you'd prefer."
+
+The plan template below has both mode variants — use the one matching the selected mode.
+
 ## Context Gathering
 
 ### 1. Auto-Detect Project Context
@@ -165,45 +184,103 @@ Target file: `./planning/<project>/implementation-plan.md`
 [Key architectural decisions]
 [Why this approach was chosen]
 
-## Vertical Slice Breakdown
+## Breakdown (use the variant matching selected mode)
 
-### Slice 1: [Core Functionality]
+### Variant A: Vertical Slice Breakdown (vertical-slice mode)
+
+#### Slice 1: [Core Functionality]
 
 **Issue**: [ISSUE-ID]
 **Commit Point**: After all layers complete for this slice
 **PM Update**: Mark [ISSUE-ID] as Done
 
-#### Domain Layer
+##### Domain Layer
 
 - [ ] [Entity/model with specific fields]
 - [ ] [Validation rules]
 - [ ] [Business logic]
 
-#### Application Layer
+##### Application Layer
 
 - [ ] [Use case implementation]
 - [ ] [Request/Response DTOs]
 
-#### Infrastructure Layer
+##### Infrastructure Layer
 
 - [ ] [Repository methods needed]
 - [ ] [External service integrations]
 - [ ] [Database changes]
 
-#### Framework Layer
+##### Framework Layer
 
 - [ ] [API endpoints or UI components]
 - [ ] [Input validation]
 
-#### Slice Completion
+##### Slice Completion
 
 - [ ] Tests passing
 - [ ] Code committed with issue reference
 - [ ] PM tool updated (issue → Done)
 
-### Slice 2: [Enhancement] (if applicable)
+#### Slice 2: [Enhancement] (if applicable)
 
 [Same structure - include Issue, Commit Point, PM Update, and Slice Completion]
+
+### Variant B: Deliverable Breakdown (deliverable-partition mode)
+
+#### Parent Acceptance Criteria
+
+- [ ] AC1 — [verbatim text]
+- [ ] AC2 — [verbatim text]
+- [ ] AC3 — [verbatim text]
+
+#### AC Traceability Matrix
+
+| Parent AC | Owning sub-issue | Verified at |
+|-----------|------------------|-------------|
+| AC1 | Sub-issue 1 | Sub-issue 1 close |
+| AC2 | Sub-issue 2 | Sub-issue 2 close |
+| AC3 | Sub-issue 1 | Sub-issue 1 close |
+
+Every parent AC must appear in exactly one row. Audit-on-close: zero orphans before parent epic closes.
+
+#### Sub-issue 1: [Deliverable name]
+
+**Issue**: [SUB-ISSUE-ID]
+**Commit Point**: After deliverable ships and all inherited ACs verified
+**PM Update**: Mark [SUB-ISSUE-ID] as Done
+
+**Inherited parent ACs (verbatim, verified at this sub-issue's close):**
+
+- [ ] AC1 — [exact text from parent]
+- [ ] AC3 — [exact text from parent]
+
+**Sub-issue-specific tasks:**
+
+- [ ] [Task derived from owned ACs]
+- [ ] [Task]
+
+**Dependencies:**
+
+- Blocked by: [other sub-issues, if any]
+
+**Sub-issue Completion:**
+
+- [ ] All inherited verbatim parent ACs verified
+- [ ] Tests passing (positive + negative cases per @workflow-guide `implementation/quality-checkpoints.md`)
+- [ ] Code committed with sub-issue reference
+- [ ] PM tool updated (sub-issue → Done)
+
+#### Sub-issue 2: [Deliverable name]
+
+[Same structure]
+
+#### Gap-prevention check (run before parent epic closes)
+
+- [ ] Every parent AC appears in exactly one sub-issue's "Inherited" block.
+- [ ] No sub-issue has paraphrased ACs; each is verbatim from the parent.
+- [ ] Every closed sub-issue verified its inherited ACs.
+- [ ] Any deferred AC has a tracking issue + explicit approval; otherwise the parent does not close.
 
 ## Task Breakdown
 
@@ -628,11 +705,11 @@ or a later request like "start implementation", "run /workflow:execute", "go ahe
 - Implementation plan documents the "how"
 - Clear separation enables better stakeholder communication
 
-### Vertical Slicing
+### Decomposition Matches Mode
 
-- Plan complete features, not layers
-- Each slice delivers user value
-- Enables incremental delivery
+- Vertical-slice mode: plan complete features through all layers, not by layer; each slice delivers user value
+- Deliverable-partition mode: plan by deliverable with verbatim parent-AC ownership in each sub-issue; each sub-issue ships its artifact comprehensively
+- Mode is selected at planning time per Decomposition Mode Selection above; do not mix modes inside a single plan
 
 ### Realistic Scope
 

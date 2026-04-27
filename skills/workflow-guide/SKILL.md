@@ -1,6 +1,6 @@
 ---
 name: workflow-guide
-description: Comprehensive guidance for the workflow command set - planning, execution, review, and knowledge capture following vertical slicing and Clean Architecture principles.
+description: Comprehensive guidance for the workflow command set — planning, execution, review, and knowledge capture. Supports vertical-slice and deliverable-partition decomposition modes for feature increments and foundation/cross-cutting work respectively.
 ---
 
 # Workflow Guide
@@ -17,11 +17,25 @@ This skill provides extended guidance for the `/workflow:*` command set. Command
 4. **Knowledge compounds** - Each solved problem makes future work easier
 5. **User approves before action** - Plans require explicit user approval before saving or executing
 
-### Vertical Slicing
+### Decomposition Modes
+
+How an epic decomposes into stories or sub-issues depends on the work's shape. Two modes:
+
+**Vertical Slice** — for incremental feature work delivering observable value, especially user-facing, in deployed systems where each slice ships and stakeholders see progress. Default for post-first-release feature increments.
+
+**Deliverable-Partition** — for work that doesn't slice cleanly into user-facing increments, or where slicing risks process-induced slowdown or gaps in requirements / Definition of Done conformance. Two named sub-cases:
+
+- *Foundation / pre-first-release*: greenfield scaffolding, validators, CI/CD, base contracts. No deployed surface yet to slice through.
+- *Cross-cutting / large-effort*: post-first-release work like contract-first shared-library changes, compliance roll-outs, framework migrations, pipeline epics decomposed by event boundary.
+
+Same mechanism for both deliverable-partition sub-cases: decompose by deliverable, AC traceability matrix in the parent epic, verbatim AC ownership in each sub-issue, per-deliverable Definition of Done.
+
+#### Vertical Slice — When and How
 
 Build features end-to-end, not layer-by-layer.
 
-**Traditional (Horizontal) Approach** - Avoid:
+**Layer-by-layer approach** — avoid within vertical-slice mode:
+
 ```
 1. Build all domain entities
 2. Build all repositories
@@ -31,34 +45,80 @@ Build features end-to-end, not layer-by-layer.
 6. Integrate and test
 ```
 
-**Vertical Slicing Approach** - Preferred:
+**Vertical-slice approach**:
+
 ```
 1. Pick highest priority user story
 2. Build ONLY what's needed for that story through ALL layers
-3. Deploy it
+3. Ship it
 4. Pick next story, repeat
 ```
 
-### Why Vertical Slicing Works
+#### Deliverable-Partition — When and How
 
-- **Faster Time to Value** - Deploy features as they're ready
-- **Reduced Risk** - Small slices are testable
-- **Better Feedback** - Users see progress immediately
-- **Easier Integration** - Continuous, not big-bang
-- **Clear Progress** - Working features, not "90% complete" layers
+Decompose the epic into the artifacts it must produce, not into user-facing increments.
 
-### Bottom-Up Implementation
+The "layer-by-layer is wrong" warning **does not apply** here — comprehensively building one deliverable (e.g., a CI pipeline, a validator rule, a contract type) to its owned AC subset is exactly the work.
 
-While we plan **top-down** (user story → layers), we implement **bottom-up**:
+**Deliverable-partition approach**:
 
-1. **Domain Layer First** - Pure business logic, no dependencies
-2. **Application Layer** - Use cases, orchestration (depends on domain abstractions)
-3. **Infrastructure Layer** - Data access, external services (implements application interfaces)
-4. **Framework Layer** - API endpoints, UI
+```
+1. List the artifacts the epic must produce (validator, CI, hooks, README, ...)
+2. Partition the parent acceptance criteria across those artifacts —
+   each parent AC owned by exactly one sub-issue, verbatim
+3. Build each artifact comprehensively to its owned AC subset
+4. Verify the AC traceability matrix has zero orphans before closing the parent
+```
+
+#### Mode Selection
+
+Pick **vertical slice** when:
+
+- The system has users (or simulated equivalents) observing value at each slice.
+- Each story can ship independently and deliver an observable increment.
+- The epic spans Domain → Framework cleanly and stories don't share files extensively.
+
+Pick **deliverable-partition** when:
+
+- No deployed surface yet (greenfield / pre-first-release).
+- The epic produces multiple distinct artifacts (validator rules, CI steps, hooks, contracts) rather than user-facing increments.
+- Vertical slicing would force "minimal X, full X later" boundaries that risk silently weakening parent ACs.
+- The epic touches a shared library/contract that downstream consumers must adopt incrementally.
+- Compliance, refactor, or framework-migration work spans the system without a natural user-story shape.
+
+When in doubt, default to vertical slice for feature work and deliverable-partition for foundation, infrastructure, or cross-cutting work.
+
+### When Vertical Slicing Works Best
+
+- **Faster time to value** — slices ship as they're ready and stakeholders observe progress.
+- **Reduced risk** — small, end-to-end-tested slices isolate failures.
+- **Better feedback** — users see progress immediately.
+- **Easier integration** — continuous integration of complete features, not big-bang merges.
+- **Clear progress signal** — working features, not "90% complete" partial layers.
+
+These benefits assume a deployed surface and observers. Pre-first-release work, foundation work, and cross-cutting work that doesn't surface to a user typically does not realize them — picking vertical slicing in those situations imports the costs without the payoff.
+
+### When Deliverable-Partition Works Better
+
+- **Gap-prevention discipline** — verbatim AC ownership in each sub-issue plus an AC traceability matrix in the parent makes Definition-of-Done conformance auditable at a glance. No silent paraphrasing drift between parent and child.
+- **No fictional value-delivery framing** — foundation / scaffolding work doesn't pretend each artifact is a user-visible increment.
+- **Sequencing matches the work shape** — contracts before consumers; validators before the rules they enforce; CI before the gates it runs.
+- **No "minimal X, full X later" temptation** — each sub-issue ships its deliverable comprehensively, not a partial first pass to be ratcheted in subsequent stories.
+
+### Bottom-Up Implementation (within a vertical slice)
+
+Within a vertical slice, plan **top-down** (user story → layers) and implement **bottom-up**:
+
+1. **Domain Layer First** — pure business logic, no dependencies
+2. **Application Layer** — use cases, orchestration (depends on domain abstractions)
+3. **Infrastructure Layer** — data access, external services (implements application interfaces)
+4. **Framework Layer** — API endpoints, UI
 
 This order follows the dependency rule: each layer depends only on layers inside it. Infrastructure implements the interfaces that Application defines.
 
 Testing integrates naturally with bottom-up implementation: write tests for each layer as you build it upward. See @test-strategy for strategy selection.
+
+In **deliverable-partition** mode, the dependency rule still applies inside each deliverable, but the per-deliverable shape varies — a validator rule, a CI pipeline step, or a hook installer doesn't necessarily span four layers. Plan deliverables in their dependency order (e.g., contracts before consumers; library scaffold before validator rules that operate on the library).
 
 ## Requirements Source Mode
 
@@ -321,9 +381,11 @@ class Task:
     def __init__(self, title, description):
 ```
 
-### Building Horizontal Infrastructure
+### Building Horizontal Infrastructure (within vertical-slice mode)
 
-**Wrong**: All repository methods upfront
+When you're slicing a feature vertically, resist drifting into building all repository methods, all service abstractions, or all use-case shapes upfront. Stay within the slice's needs.
+
+**Wrong** — all repository methods upfront for a feature where the slice only needs `create()`:
 ```python
 class TaskRepository:
     def create(self, task): ...
@@ -332,11 +394,13 @@ class TaskRepository:
     def find_by_status(self, status): ...
 ```
 
-**Right**: Only what current story needs
+**Right** — only what the current story needs:
 ```python
 class TaskRepository:
     def create(self, task): ...
 ```
+
+This pitfall does **not** apply in deliverable-partition mode. There, comprehensively building one deliverable (e.g., a complete CI pipeline, a fully-specified contract type) to its owned AC subset is exactly the work, not a smell.
 
 ### Premature Abstraction
 
@@ -396,24 +460,25 @@ For detailed templates and patterns, reference these sections:
 
 | Principle | Application |
 |-----------|-------------|
-| Vertical slicing | Build by story, not by layer |
-| Bottom-up implementation | Domain → Application → Infrastructure → Framework |
+| Decomposition matches work shape | Vertical slice for feature work; deliverable-partition for foundation and cross-cutting work |
+| Within vertical slices, build bottom-up | Domain → Application → Infrastructure → Framework per slice |
+| Within deliverable-partition, partition then ship | Each sub-issue owns a verbatim slice of parent ACs; ship deliverables in dependency order |
 | Required vs. Out of Scope | All planned tasks required; future ideas in Out of Scope |
 | User approval gates | Plans require explicit approval before saving or executing |
 | Session continuity | Session state as source of truth |
 | Knowledge compounding | Document solutions for future reference |
 | Quality built in | Tests and checks as you go |
 | Testing strategy | Select approach per situation, verify behavior |
-| Ship complete work | Finish features before moving on |
+| Ship complete work | Finish slices/deliverables before moving on |
 
 ## Remember
 
-- **YAGNI** - Build only what the current story needs
-- **Ship Early** - Deploy as soon as the slice works
-- **Refactor Continuously** - Clean up as patterns emerge
-- **Stay Vertical** - Resist building horizontal layers
-- **Test Behavior** - Verify what code does, not how it does it
-- **Compound Knowledge** - Each problem solved helps future work
+- **YAGNI** — In vertical-slice mode, build only what the current story needs. In deliverable-partition mode, build the deliverable's owned AC subset comprehensively — no more, no less.
+- **Ship Early** — Deploy slices as soon as they work; close sub-issues as soon as their deliverables ship.
+- **Refactor Continuously** — Clean up as patterns emerge.
+- **Stay in mode** — Don't drift into horizontal layer-building inside a vertical slice; don't pretend a foundation epic has user-facing slices.
+- **Test Behavior** — Verify what code does, not how it does it.
+- **Compound Knowledge** — Each problem solved helps future work.
 
 ## References
 

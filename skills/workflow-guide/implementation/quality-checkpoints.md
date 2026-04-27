@@ -1,8 +1,11 @@
 # Quality Checkpoints
 
-Verify each layer and complete vertical slice meets standards.
+Verify work meets standards at the right granularity for its decomposition mode (see @workflow-guide):
 
-## Layer Quality Gates
+- **Vertical-slice mode**: per-layer gates plus a slice-completion checkpoint.
+- **Deliverable-partition mode**: per-deliverable gates plus a sub-issue-completion checkpoint with verbatim AC verification.
+
+## Layer Quality Gates (vertical-slice mode)
 
 ### Domain Layer
 
@@ -83,7 +86,7 @@ Verify each layer and complete vertical slice meets standards.
 - Missing input validation
 - Incorrect status codes
 
-## Vertical Slice Checkpoint
+## Vertical Slice Checkpoint (vertical-slice mode)
 
 ### Before Completion
 
@@ -105,21 +108,62 @@ Verify each layer and complete vertical slice meets standards.
 - [ ] Code follows patterns
 - [ ] Behavioral diff against main confirms only expected changes (when relevant)
 
-## Slice Completion Protocol
+## Deliverable-Partition Quality Gates (deliverable-partition mode)
+
+Per-deliverable gates replace per-layer gates. Each deliverable's shape determines its gates — a validator rule, a CI step, a hook installer, a contract type, or an infrastructure module each have different verification surfaces.
+
+### Generic Per-Deliverable Gates
+
+**Code Quality:**
+- [ ] Deliverable is comprehensively built to its owned AC subset (no "minimal-now, full-later" partial shape)
+- [ ] No business logic leaking into the wrong concern
+- [ ] Public surface (API, CLI, config keys) is documented at the deliverable level
+
+**Testing:**
+- [ ] Positive-case test demonstrates the deliverable performs its function
+- [ ] Negative-case test demonstrates the deliverable rejects what it should reject (especially for validators, contracts, or rule-enforcement deliverables)
+- [ ] Integration evidence — the deliverable functions inside the system it ships to (CI run, validator pass on real code, hook firing on a real commit)
+
+**AC Verification:**
+- [ ] Every parent AC inherited by this sub-issue is verified verbatim — not a paraphrased equivalent
+- [ ] Verification evidence is recorded (test name, CI run, manual check) so audit-on-close has a paper trail
+
+### Sub-issue Completion Checkpoint
+
+**Functional:**
+- [ ] Every inherited verbatim parent AC is verified
+- [ ] Deliverable functions in the system it ships to (not just in isolation)
+
+**Integration:**
+- [ ] Deliverable composes with prior-shipped deliverables in the dependency chain
+- [ ] No regression in prior-closed sub-issues' verified ACs
+
+**Quality:**
+- [ ] Tests pass
+- [ ] Linting / type checks pass
+- [ ] No new warnings
+- [ ] Code follows patterns
+- [ ] Behavioral diff against main confirms only expected changes (when relevant)
+
+**Gap-prevention (project-level audit):**
+- [ ] No parent AC has been silently weakened during decomposition
+- [ ] If any AC could not be met, a tracking issue exists with explicit approval to defer
+
+## Slice / Sub-issue Completion Protocol
 
 ### When to Commit
 
-Commit at the completion of each **vertical slice** (story), NOT at:
+Commit at the completion of each **vertical slice** (story) in vertical-slice mode, or each **sub-issue** (deliverable) in deliverable-partition mode. NOT at:
 - Session boundaries only
 - Feature/epic completion only
 - Arbitrary "stopping points"
 
-### Slice Completion Checklist
+### Slice / Sub-issue Completion Checklist
 
-Before moving to the next slice:
+Before moving to the next slice or sub-issue:
 
-- [ ] All acceptance criteria for THIS slice met
-- [ ] Tests pass for THIS slice
+- [ ] All acceptance criteria for THIS slice/sub-issue met (in deliverable-partition mode: every inherited verbatim parent AC verified)
+- [ ] Tests pass for THIS slice/sub-issue
 - [ ] Code committed with descriptive message and issue ID
 - [ ] PM tool updated (issue marked Done)
 - [ ] Session state updated (if tracking)

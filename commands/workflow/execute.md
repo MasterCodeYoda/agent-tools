@@ -296,18 +296,21 @@ while (tasks remain):
   10. Check for session boundary
 ```
 
-### Story/Slice Completion Checkpoint
+### Story / Slice / Sub-issue Completion Checkpoint
 
-**CRITICAL**: When implementing multi-story features (epics), commit each story independently:
+**CRITICAL**: Commit each unit of decomposition independently — a story/slice in vertical-slice mode, a sub-issue/deliverable in deliverable-partition mode.
 
 ```
-For each story/slice in an epic:
-1. Implement story end-to-end (all layers)
+For each story/slice (vertical-slice mode) or sub-issue/deliverable (deliverable-partition mode) in an epic:
+1. Implement the unit:
+   - Vertical-slice mode: end-to-end through all layers
+   - Deliverable-partition mode: comprehensively against the deliverable's owned AC subset
 2. Run full test suite
 3. Mark task completed in TodoWrite
-4. Commit with message: `feat(scope): description (ISSUE-ID)`
-5. Update PM tool (Linear/Jira) - mark story Done
-6. Move to next story
+4. In deliverable-partition mode only: verify every inherited verbatim parent AC against test/CI evidence
+5. Commit with message: `feat(scope): description (ISSUE-ID)`
+6. Update PM tool (Linear/Jira) — mark story or sub-issue Done
+7. Move to next unit
 ```
 
 **Why This Matters**:
@@ -316,19 +319,24 @@ For each story/slice in an epic:
 - PM tools show real progress, not "everything in progress"
 - Git history enables bisect and blame
 - Risk of work loss is minimized
+- In deliverable-partition mode: per-sub-issue closure with verbatim AC verification is the gap-prevention mechanism
 
 **Anti-Pattern to Avoid**:
 
 ```
-❌ Work on all 4 stories, commit once at the end
+❌ Work on all units, commit once at the end
    - No incremental progress visible
    - Risk of losing significant work
    - Hard to review and debug
 
-✅ Complete story → commit → update PM → next story
+❌ Close a sub-issue with a paraphrased AC instead of the verbatim parent AC
+   - Drift between parent and sub-issue is silent
+   - Audit-on-close cannot detect a weakened AC
+
+✅ Complete unit → verify ACs (verbatim in deliverable-partition mode) → commit → update PM → next unit
    - Clear progress tracking
    - Easy rollback if needed
-   - Better collaboration
+   - Gap-prevention discipline preserved
 ```
 
 ### Quality Gates

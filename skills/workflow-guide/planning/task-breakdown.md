@@ -1,17 +1,19 @@
 # Task Breakdown Patterns
 
-Break down vertical slices into a flat list of required tasks organized by layer. All tasks derived from acceptance criteria are required — there are no optional tiers.
+Break work into a flat list of required tasks. The shape of that list depends on decomposition mode (see @workflow-guide). All tasks derived from acceptance criteria are required — there are no optional tiers.
 
 ## Task Classification
 
 Every task in the plan must be one of:
 
-1. **Required** — Derived from acceptance criteria or necessary for the feature to work. These go in the task list.
+1. **Required** — Derived from acceptance criteria or necessary for the work to function. These go in the task list.
 2. **Out of Scope** — Genuinely future work not covered by acceptance criteria. These go in the Out of Scope section.
 
 There is no middle ground. If a task maps to an acceptance criterion, it is required regardless of whether it feels like "polish" or "enhancement."
 
-## Task Breakdown Template
+## Vertical-Slice Task Breakdown Template
+
+For vertical-slice mode (incremental feature work, especially user-facing). Tasks are organized by layer, completed bottom-up within the slice:
 
 ```markdown
 ## Tasks for [Story ID]: [Story Title]
@@ -47,6 +49,38 @@ Items not required by acceptance criteria but worth noting for future iterations
 - [Item 2] - [why it's deferred]
 ```
 
+## Deliverable-Partition Task Breakdown Template
+
+For deliverable-partition mode (foundation, cross-cutting, or large-effort work). Tasks are organized per sub-issue, each owning a verbatim slice of the parent epic's acceptance criteria:
+
+```markdown
+## Tasks for Sub-issue [Sub-ID]: [Deliverable name]
+
+All tasks are required for completion.
+
+### Inherited parent ACs (verbatim, verified at this sub-issue's close)
+
+- [ ] AC[n] — [exact text from parent, no paraphrasing]
+- [ ] AC[m] — [exact text from parent, no paraphrasing]
+
+### Sub-issue-specific tasks
+
+- [ ] [Task derived from owned ACs — describes the deliverable, not a layer]
+- [ ] [Task]
+- [ ] [Task]
+
+### Testing
+
+- [ ] [Mode-appropriate test per @workflow-guide (`implementation/quality-checkpoints.md`)]
+- [ ] [Negative-case / failure-mode test where the deliverable enforces a rule]
+
+### Out of Scope
+
+- [Item] - [why deferred, with tracking issue link if applicable]
+```
+
+The layer-by-layer breakdown does not apply: a deliverable may be a single artifact (a CI step, a validator rule, a hook installer) that doesn't span four layers. Plan tasks against the deliverable's actual shape.
+
 ## Estimation Guidelines
 
 ### Task Size Reference
@@ -71,9 +105,9 @@ Items not required by acceptance criteria but worth noting for future iterations
 - Consider splitting into multiple stories
 - Each story should deliver value independently
 
-## Breaking Down Complex Stories
+## Breaking Down Complex Work
 
-### Vertical Split (Recommended)
+### In Vertical-Slice Mode: Vertical Split (Recommended)
 
 ```
 Story 1: Basic create functionality
@@ -81,9 +115,9 @@ Story 2: Advanced validation
 Story 3: Bulk operations
 ```
 
-Each delivers complete, working functionality.
+Each delivers complete, working functionality through all layers.
 
-### Horizontal Split (Avoid)
+### In Vertical-Slice Mode: Horizontal Split (Avoid)
 
 ```
 Story 1: Build all backend
@@ -91,7 +125,28 @@ Story 2: Build all frontend
 Story 3: Integration
 ```
 
-Delays value delivery, increases integration risk.
+Delays value delivery, increases integration risk. This anti-pattern applies *within* vertical-slice mode — building horizontal layers across stories defeats the slicing rationale.
+
+### In Deliverable-Partition Mode: Per-Deliverable Split (Recommended)
+
+```
+Sub-issue 1: Library scaffold (owns parent AC1, AC3)
+Sub-issue 2: Validator rules (owns parent AC2, AC4, AC5)
+Sub-issue 3: CI pipeline (owns parent AC6, AC9)
+Sub-issue 4: Documentation (owns parent AC7, AC8)
+```
+
+Each sub-issue ships its deliverable comprehensively to the AC subset it owns. The "horizontal" warning above does not apply — a single deliverable that spans all of one concern (e.g., the entire CI pipeline) is exactly the work in this mode.
+
+### In Deliverable-Partition Mode: Avoid Premature Slicing
+
+```
+Sub-issue 1: Minimal CI + minimal validator + one library scaffolded
+Sub-issue 2: Add second library + extend validator
+Sub-issue 3: Add CI gates + ratchet validator strictness
+```
+
+Each "minimal X, full X later" boundary risks silently weakening parent ACs. Decompose by deliverable, not by maturity stages.
 
 ## Task Dependencies
 
