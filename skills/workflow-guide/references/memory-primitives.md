@@ -31,6 +31,18 @@ Scopes (high → low precedence in load order; concatenation, not override):
 
 Topic files referenced by `MEMORY.md` are loaded on demand based on the index, not on a global threshold.
 
+### Crosswalk to compound's L1/L2/L3
+
+`/workflow:compound --maintain` audits memory using a three-level shorthand. The mapping:
+
+| compound term | This doc's term                                          |
+|---------------|----------------------------------------------------------|
+| Level 1       | User CLAUDE.md (`~/.claude/CLAUDE.md`)                   |
+| Level 2       | Project CLAUDE.md (`<repo>/CLAUDE.md` or `<repo>/.claude/CLAUDE.md`) |
+| Level 3       | Auto-memory (`MEMORY.md` + `memory/*.md` for this project) |
+
+Compound's audit intentionally omits the managed-policy scope (org-level, rare) and the local scope (`CLAUDE.local.md`, gitignored personal preferences) — both have audit semantics that differ from the shared/team-visible levels.
+
 ## The Primitives Table
 
 | Primitive                              | Type     | Use when                                                                                                           |
