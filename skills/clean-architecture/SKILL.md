@@ -348,11 +348,6 @@ Essential reading for deep understanding:
     - Three-crate/package architecture for compile-time enforcement
     - Service abstractions in application layer pattern
 
-- **Agent-Native Architecture**: `references/agent-native-architecture.md`
-    - Building applications where agents are first-class citizens
-    - Tool design: parity, granularity, composability
-    - Files as universal interface, context injection patterns
-
 ## Testing Strategies
 
 ### Test Pyramid Approach
