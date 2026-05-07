@@ -390,6 +390,8 @@ Activated by `--maintain`. Evaluate agent memory quality across the full hierarc
 
 **Why maintenance belongs in compound:** You can't compound effectively on a foundation of stale or inaccurate memory. Capture and maintenance are two sides of the same knowledge lifecycle.
 
+**Primitives reference:** For the underlying memory file types, settings, hooks, and slash commands this mode operates on — including the 200-line / 25 KB hard cutoff for `MEMORY.md`, `CLAUDE.md` scope precedence, `.claude/rules/` with `paths:` frontmatter, and how this mode relates to Anthropic's `/dream` — see @workflow-guide (`references/memory-primitives.md`).
+
 ## Maintain Auto-Detection
 
 ```
