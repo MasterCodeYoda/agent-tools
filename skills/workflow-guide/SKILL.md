@@ -482,6 +482,27 @@ For detailed templates and patterns, reference these sections:
 
 ## References
 
+### Sub-files
+
+This skill ships additional reference material that commands consume directly via `@workflow-guide (`<path>`)`:
+
+**Planning** — used by `/workflow:plan`, `/workflow:refine`:
+- `planning/pm-integration.md` — PM-system integration patterns
+- `planning/task-breakdown.md` — Decomposition guidance
+- `planning/templates.md` — Plan templates
+
+**Implementation** — used by `/workflow:execute`, `/workflow:review`, audit domains:
+- `implementation/dependency-establishment.md` — Dependency setup patterns
+- `implementation/logging.md` — Structured logging standards (consumed by `audit:code` observability-readiness-analyst)
+- `implementation/quality-checkpoints.md` — Quality gate patterns
+
+**References** — used across multiple commands:
+- `references/conversation-analysis.md` — Extracting signals from `~/.claude/` conversation history (used by `/evolve`, `/workflow:compound`, `/workflow:audit`)
+- `references/memory-primitives.md` — Claude Code memory file types, settings, hooks, and slash commands (used by `/workflow:compound --maintain`)
+
+**Examples**:
+- `examples/planning-example.md` — Worked planning example
+
 ### Knowledge Compounding
 
 The concept of "compounding" AI assistance—capturing solutions so each problem solved makes future work easier—is adapted from:
