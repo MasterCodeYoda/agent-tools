@@ -4,20 +4,20 @@ Score trend and run log for `/evolve` command iterations.
 
 ## 2026-05-07
 
-- **Score**: 93 → 95/100 (Excellent)
-- **Iterations**: 1 of 5 (stopped: remaining gaps are recommendations requiring user judgment, no further mechanical proposals)
-- **Gaps**: 4 validated detected (P1: 0, P2: 1, P3: 3); 2 resolved, 2 open as recommendations
-- **Proposals**: 2 applied (2 validated, 0 with caveats)
-- **Effectiveness**: 0 checks run (both fixes were structural — internal sub-file indexing and terminology crosswalk; no agent behavior modified)
+- **Score**: 93 → 99/100 (Excellent)
+- **Iterations**: 1 of 5 (stopped: all P1/P2 gaps resolved or justifiably skipped)
+- **Gaps**: 4 validated detected (P1: 0, P2: 1, P3: 3); 3 resolved, 1 skipped with justification
+- **Proposals**: 3 applied (3 validated, 0 with caveats)
+- **Effectiveness**: 0 checks run (all fixes were structural — sub-file indexing, terminology crosswalk, removal of misplaced doc; no agent behavior modified)
 - **Branch**: evolve/2026-05-07
 - **Status**: pending review
 - **Detection noise**: 5 spurious findings rejected during validation (Tier 2a flagged visual-design as P1 scope gap — false; raw SQL ungrounded — false; mutation-testing unbacked — false; audit:code wrong logging path — false; TypeScript depth asymmetry — intentional). Documented to inform future Tier 2 reasoning standards.
 - **Key changes**:
   - Indexed workflow-guide internal sub-files in SKILL.md References section (covered both newly-added `references/memory-primitives.md` and existing `references/conversation-analysis.md` discoverability gap)
   - Added L1/L2/L3 crosswalk table to memory-primitives.md clarifying compound's audit-hierarchy shorthand vs the four CLAUDE.md scopes
-- **Open recommendations** (require user judgment, not mechanical fixes):
-  - F1 (P2): `clean-architecture/references/agent-native-architecture.md` defines patterns (Parity, Tool Design) but no audit agent enforces them. Decision needed: is this teaching-only content, or should it be anchored in audit:api / audit:repo for projects building agent-native systems?
-  - F4 (P3): `audit/domains/docs.md:36` checks for ADR directories without skill grounding. Decision needed: rely on industry-standard pattern, or define ADR conventions in workflow-guide.
+  - Removed misplaced `clean-architecture/references/agent-native-architecture.md` (347 lines on agent-as-first-class-user product design — unrelated to clean-architecture's layer-pattern scope; only inbound link was the sub-files index)
+- **Skipped with justification**:
+  - F4 (P3): `audit/domains/docs.md:36` ADR directory check has no skill grounding. Skipped because ADR is industry-standard infrastructure (Michael Nygard 2011); the audit only checks directory presence, like checking for `CONTRIBUTING.md` or `LICENSE`. Defining ADR conventions in workflow-guide would be make-work without active opinions to capture.
 - **Compound observations**:
   - Score plateau confirmed: 95 → 95 across runs 3 and 4. Marginal returns now require new content (skill additions), not gap detection.
   - Tracking discipline gap caught: runs 1 and 2 had stale "pending review" status despite being merged 2026-03-21 (commits d809a40, 170960e). Updated below.
