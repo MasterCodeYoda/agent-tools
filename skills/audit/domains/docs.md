@@ -99,9 +99,9 @@ Spawn 2 parallel agents:
 - Issue key validity
 - Checklist completeness vs. actual status
 
-### Tier 3 — Quality & Completeness (AI judgment)
+### Tier 3 — Quality, Completeness & Onboarding Load (AI judgment)
 
-Spawn 2 parallel agents:
+Spawn 4 parallel agents:
 
 **clarity-analyst**:
 - Jargon without explanation
@@ -116,6 +116,27 @@ Spawn 2 parallel agents:
 - Missing troubleshooting guides
 - Incomplete API coverage
 - Missing getting-started guide for new contributors
+
+**onboarding-load-walkthrough** — simulate the realistic first-day-or-two reading path for each relevant persona (a new engineer; and, where they're a stated/implied audience, a non-engineer PM and a new ops/on-call hire). For each persona:
+- Walk the actual entry path (README → docs front door → overview → architecture → flows/runbooks as applicable) and instrument it: new concepts/abstractions introduced per page (count them), unstated prerequisites (does page X assume you've internalized page Y?), "I'd have to go look that up" mid-thought detours, dead-ends (links/sections that promise something the reader needs and don't deliver), and roughly new-concepts-per-500-words.
+- Build a **concept dependency graph** (which concepts must be understood before which) and check whether the doc/sidebar ordering respects it — especially whether keystone pages are read *early* or buried.
+- Name **"the cliff"** — the specific page or transition where the reader's cognitive budget blows out — for each persona.
+- Assess whether a usable **marked path** exists ("read these N pages, in this order"); if not, that's a finding.
+- Produce a per-page **cognitive-load rating (1–5)** per persona and a per-persona **onboarding-readiness rating**.
+
+**readability-mechanics** — measure the prose surface across the doc set, per page (rolled up per section):
+- Sentence-length distribution (median; count of sentences >~35 words; quote the worst run-ons with file:line)
+- Clause nesting / syntactic complexity (3+-subordinate-clause sentences, em-dash pile-ups, "the X of the Y that does the Z" chains)
+- Passive voice — flag specifically where it hides *which component does what* (matters for onboarding)
+- Paragraph length — count walls of text (>~120 words); note where a table/list/`<Steps>` would serve better
+- Scannability — heading density (per ~500 words), table/list vs. prose-block ratio, presence of a useful page intro
+- Heading informativeness (bare class names, generic "Overview"/"Details"/"Notes")
+- Link-text quality (bare "here"/"this"/section-path-as-anchor-text)
+- Jargon/acronym density (undefined-on-page acronyms per section)
+- Tone/voice consistency within and between pages
+- Output: a per-page **readability grade (A–F)** scorecard, a section rollup, a ranked "worst offenders" list (file:line + quote + problem type), and a "quick wins" list (the mechanical fixes that move grades most for least effort)
+
+Findings from these two feed the same prioritized report. Note: the `onboarding-load-walkthrough` and `readability-mechanics` findings often overlap with accuracy findings (a confidently-wrong page is *worse* for a newcomer than a missing one) — cross-reference rather than duplicate.
 
 ## Output: Prioritized Report
 
