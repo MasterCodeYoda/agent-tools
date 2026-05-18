@@ -37,13 +37,35 @@ discover (Claude)  →  Planner (Playwright)  →  Generator (Playwright)  →  
 
 <!-- agent:include grok -->
 
-**TODO (Grok)**: Document how Grok can be used as the NL spec author and auditor in the Sentinel / Playwright Test Agents workflow. Include any recommended prompting patterns or integration differences.
+### Grok Implementation
+
+Grok can participate in the Sentinel / Playwright Test Agents workflow in two primary ways:
+
+- **Directly as the model** driving the Planner, Generator, and/or Healer roles via the Playwright MCP server (typically through Grok Build, Cursor with a Grok backend, or a custom MCP client).
+- **As a meta-tool** for authoring or refining high-quality NL specs before they are fed into the Playwright agent loop, or for reviewing and improving generated tests.
+
+**Strengths**: Strong reasoning for planning complex flows and producing maintainable, well-structured test code (especially POM patterns).
+
+**Limitations / Differences**:
+- There is no native `--loop=grok` in `npx playwright init-agents`. Most teams use `--loop=vscode` (or omit the flag) while running Grok as the model.
+- Generated tests often still benefit from the Playwright Healer for selector robustness.
+- Best results usually come from giving Grok rich context (seed test + constants + style guidelines) and explicitly asking it to verify state after major steps.
 
 <!-- /agent:include grok -->
 
 <!-- agent:include factory -->
 
-**TODO (Factory)**: Document how Factory Droid can be used for NL spec authoring and auditing with Playwright Test Agents. Note any verification-oriented workflows or differences in the pipeline.
+### Factory Droid Implementation
+
+Factory Droid approaches NL-driven testing differently from the dedicated Playwright Planner/Generator/Healer loop. Instead of routing NL specs through Playwright’s specific agents, Factory tends to:
+
+- Delegate testing responsibilities to specialized **Test Droids** (or Reliability Droids) as part of larger, orchestrated multi-agent workflows.
+- Use `AGENTS.md`, persistent project memory (`.factory/memories.md`), and rules (`.factory/rules/`) to keep the Test Droid aligned with team standards and verification requirements.
+- Treat NL spec authoring as one possible input among others (tickets, monitoring signals, existing tests, etc.) rather than the central hand-off artifact.
+
+**Verification-oriented strengths**: Factory places heavy emphasis on guardrails, role boundaries, and auditable outcomes. Test Droids can be explicitly instructed to produce evidence, catch regressions, and maintain coverage as part of a broader engineering process.
+
+**Workflow differences**: You are more likely to give a Test Droid an ongoing responsibility (“Maintain E2E coverage for checkout and report drift”) than to manually step through a Planner → Generator → Healer pipeline. The platform’s multi-agent nature and strong convention enforcement are the primary advantages.
 
 <!-- /agent:include factory -->
 
