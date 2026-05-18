@@ -239,6 +239,8 @@ python .claude/skills/clean-architecture/languages/python/validators/validate_im
 python .claude/skills/clean-architecture/languages/python/validators/validate_structure.py
 ```
 
+(Note: The `.claude/skills/...` path above assumes the skill is symlinked into your Claude user or project directory. Adjust the path according to your installation.)
+
 **TypeScript:** Use compile-time enforcement via multi-package architecture (separate `domain/`, `application/`, `infrastructure/` packages with strict `tsconfig.json` project references) or ESLint with `eslint-plugin-boundaries` for single-package projects.
 
 ### Manual Review Checklist

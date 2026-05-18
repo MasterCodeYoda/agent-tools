@@ -197,9 +197,31 @@ auth:
 
 Run Playwright Test Agents init to set up the agent scaffolding:
 
+<!-- agent:include claude -->
 ```bash
 npx playwright init-agents --loop=claude
 ```
+<!-- /agent:include claude -->
+
+<!-- agent:include grok -->
+
+```bash
+npx playwright init-agents
+```
+
+**Note for Grok users**: A native `--loop=grok` option does not currently exist. The command above will attempt auto-detection. You may need to configure the agents manually afterward or use the TUI to drive the Planner, Generator, and Healer roles.
+
+<!-- /agent:include grok -->
+
+<!-- agent:include factory -->
+
+```bash
+npx playwright init-agents
+```
+
+**Note for Factory users**: There is currently no official `--loop=factory` option. The command above will attempt auto-detection. Manual configuration of the agent roles may be required.
+
+<!-- /agent:include factory -->
 
 If this command is not available (older Playwright version or command not recognized), manually scaffold the agent config:
 

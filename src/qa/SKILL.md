@@ -16,9 +16,15 @@ Quality assurance workflows: NL spec-driven e2e testing with Playwright Test Age
 
 ## Sentinel: NL Spec Authoring & Audit
 
-Sentinel is a thin layer over Playwright Test Agents. Claude authors structured Natural Language (NL) specs describing what to test. Playwright's Planner and Generator agents convert those specs into `.spec.ts` test files, and `npx playwright test` executes them deterministically. Sentinel's role is authoring (discover) and maintenance (audit) — not execution.
+Sentinel is a thin layer over Playwright Test Agents. It provides authoring (discover) and maintenance (audit) capabilities for NL-driven testing. The actual test generation and execution are handled by Playwright's Planner, Generator, and Healer agents.
 
-### Pipeline
+---
+
+<!-- agent:include claude -->
+
+**Current integration is primarily demonstrated with Claude Code as the NL spec author and auditor.**
+
+### Pipeline (Claude-centric example)
 
 ```
 discover (Claude)  →  Planner (Playwright)  →  Generator (Playwright)  →  npx playwright test  →  audit (Claude)
@@ -26,6 +32,20 @@ discover (Claude)  →  Planner (Playwright)  →  Generator (Playwright)  →  
  NL specs             test plan              .spec.ts files           test results + report     drift detection
  (specs/*.md)                                (tests/*.spec.ts)       (playwright-report/)      (audit report)
 ```
+
+<!-- /agent:include claude -->
+
+<!-- agent:include grok -->
+
+**TODO (Grok)**: Document how Grok can be used as the NL spec author and auditor in the Sentinel / Playwright Test Agents workflow. Include any recommended prompting patterns or integration differences.
+
+<!-- /agent:include grok -->
+
+<!-- agent:include factory -->
+
+**TODO (Factory)**: Document how Factory Droid can be used for NL spec authoring and auditing with Playwright Test Agents. Note any verification-oriented workflows or differences in the pipeline.
+
+<!-- /agent:include factory -->
 
 ### What Sentinel Does
 - **Discover**: Author NL specs by scanning the app, importing docs, or guided conversation

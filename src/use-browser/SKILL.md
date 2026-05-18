@@ -38,14 +38,21 @@ MCP tools then work automatically — no port management, no dedicated profile.
 
 ### Port-based CDP (fallback)
 
-For sandboxed or Docker environments where autoConnect isn't available:
+For sandboxed, Docker, or remote environments where `autoConnect` isn't available, start Chrome with remote debugging enabled:
 
 ```bash
+# macOS
 /Applications/Google\ Chrome.app/Contents/MacOS/Google\ Chrome \
   --remote-debugging-port=9222 &
+
+# Linux (example)
+google-chrome --remote-debugging-port=9222 &
+
+# Windows (example)
+"C:\Program Files\Google\Chrome\Application\chrome.exe" --remote-debugging-port=9222
 ```
 
-Then configure MCP with `--browser-url=http://127.0.0.1:9222`.
+Then configure the MCP server with `--browser-url=http://127.0.0.1:9222`.
 
 ### Standalone (agent-browser only)
 
@@ -369,7 +376,7 @@ agent-browser snapshot -i --json
 agent-browser get text @e1 --json
 ```
 
-## Examples
+## agent-browser CLI Reference
 
 ### MCP-first workflow (preferred)
 
