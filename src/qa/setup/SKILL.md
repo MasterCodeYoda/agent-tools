@@ -209,7 +209,7 @@ npx playwright init-agents --loop=claude
 npx playwright init-agents
 ```
 
-**Note for Grok users**: A native `--loop=grok` option does not currently exist. The command above will attempt auto-detection. You may need to configure the agents manually afterward or use the TUI to drive the Planner, Generator, and Healer roles.
+A native `--loop=grok` option does not currently exist. The command above will attempt to auto-detect the environment. You may need to configure the agents manually or drive the Planner, Generator, and Healer roles directly through the Grok TUI.
 
 <!-- /agent:include grok -->
 
@@ -219,11 +219,11 @@ npx playwright init-agents
 npx playwright init-agents
 ```
 
-**Note for Factory users**: There is currently no official `--loop=factory` option. The command above will attempt auto-detection. Manual configuration of the agent roles may be required.
+There is currently no official `--loop=factory` option. The command above will attempt auto-detection. Manual configuration of the agent roles may be required.
 
 <!-- /agent:include factory -->
 
-If this command is not available (older Playwright version or command not recognized), manually scaffold the agent config:
+If this command is not available (older Playwright version or the command is not recognized), manually scaffold the agent configuration:
 
 1. Inform the user: "Playwright init-agents not available. Scaffolding manually."
 2. Proceed to Phase 5 to generate `playwright.config.ts` and `tests/seed.spec.ts` directly.

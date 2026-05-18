@@ -6,53 +6,53 @@ allowed-tools: Bash(agent-browser:*)
 
 # Browser Use
 
-This skill provides browser automation through two complementary tools:
-- **Chrome DevTools MCP** (preferred) — tools prefixed `mcp__chrome-devtools__*` that operate on the user's running Chrome
-- **agent-browser CLI** — standalone headless browser for recording, CI, cloud providers, and when MCP is unavailable
+This skill provides browser automation through two complementary approaches:
+- **Chrome DevTools MCP** — tools prefixed `mcp__chrome-devtools__*` that connect to a running Chrome instance (when available)
+- **agent-browser CLI** — a standalone, headless browser tool useful for CI, cloud environments, recording, and situations where a local Chrome instance is not accessible
 
 ## Tool Selection
 
-| Use Chrome DevTools MCP when | Use agent-browser CLI when |
-|------------------------------|---------------------------|
-| Navigation, snapshots, screenshots | Video recording (`record start/stop`) |
-| JavaScript evaluation | Session management (`--session`, `--profile`) |
-| Click, fill, form interaction | Cloud providers (`-p browserbase`, etc.) |
-| Lighthouse audits, perf profiling | State save/load (`auth save/login`) |
-| Network/console inspection | PDF export |
-| User's normal Chrome with existing auth | `--annotate` labeled screenshots |
-| Waiting for conditions | CI/testing or headless-only environments |
-| Emulation and device simulation | Diff comparisons (`diff snapshot/screenshot`) |
+Choose the right tool based on your environment and goals:
 
-**Default to MCP tools.** They work with the user's running Chrome, reuse existing cookies/auth, and require no extra browser process.
+| Chrome DevTools MCP is often stronger for | agent-browser CLI is often stronger for |
+|-------------------------------------------|-----------------------------------------|
+| Navigation, snapshots, screenshots, and live inspection | Video recording (`record start/stop`) |
+| JavaScript evaluation and console/network debugging | Session management and state persistence (`--session`, `--profile`) |
+| Click, fill, form interaction, and emulation | Cloud-based or headless-only environments (Browserbase, Browserless, etc.) |
+| Lighthouse audits and performance profiling | PDF export and annotated screenshots |
+| Reusing the user’s existing Chrome session and authentication | Diff comparisons and offline / CI workflows |
+
+There is no universal “best” tool — it depends on whether you have a running Chrome instance, need recording, or are working in constrained environments.
 
 ## Connection Setup
 
-### autoConnect (primary)
+### Connecting to a Running Browser (MCP)
 
-The Chrome DevTools MCP server uses `--autoConnect` to connect to the user's running Chrome automatically. One-time setup:
+When a running Chrome instance is available, the Chrome DevTools MCP server can connect to it directly.
 
-1. Open Chrome and navigate to `chrome://inspect#remote-debugging`
+**Preferred method (autoConnect):**
+1. Open Chrome and go to `chrome://inspect#remote-debugging`
 2. Enable remote debugging
 
-MCP tools then work automatically — no port management, no dedicated profile.
+MCP tools will then connect automatically with no extra configuration.
 
-### Port-based CDP (fallback)
-
-For sandboxed, Docker, or remote environments where `autoConnect` isn't available, start Chrome with remote debugging enabled:
+**Alternative (manual connection):**
+If `autoConnect` is not available (sandboxed environments, Docker, remote machines, etc.), start Chrome with remote debugging and point the MCP server at it:
 
 ```bash
 # macOS
 /Applications/Google\ Chrome.app/Contents/MacOS/Google\ Chrome \
   --remote-debugging-port=9222 &
 
-# Linux (example)
+# Linux
 google-chrome --remote-debugging-port=9222 &
 
-# Windows (example)
+# Windows
 "C:\Program Files\Google\Chrome\Application\chrome.exe" --remote-debugging-port=9222
 ```
 
-Then configure the MCP server with `--browser-url=http://127.0.0.1:9222`.
+Then pass the address when starting the MCP server:
+`--browser-url=http://127.0.0.1:9222`
 
 ### Standalone (agent-browser only)
 
@@ -378,7 +378,7 @@ agent-browser get text @e1 --json
 
 ## agent-browser CLI Reference
 
-### MCP-first workflow (preferred)
+### Chrome DevTools MCP workflow
 
 ```
 # Navigate and inspect
@@ -391,10 +391,10 @@ mcp__chrome-devtools__fill(selector: "[name=email]", value: "user@example.com")
 mcp__chrome-devtools__fill(selector: "[name=password]", value: "password123")
 mcp__chrome-devtools__click(selector: "button[type=submit]")
 mcp__chrome-devtools__wait_for(text: "Welcome")
-mcp__chrome-devtools__take_snapshot  # Verify result
+mcp__chrome-devtools__take_snapshot
 ```
 
-### agent-browser for video recording
+### Using agent-browser for video recording
 
 ```bash
 # Explore first, then record a clean demo
