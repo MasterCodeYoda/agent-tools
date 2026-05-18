@@ -1,0 +1,64 @@
+---
+# Document Metadata
+title: "Clean Architecture"
+subtitle: "A Comprehensive Guide to Software Architecture Patterns"
+author:
+  - "Agent Tools Team"
+date: \today
+lang: en-US
+keywords:
+  - Clean Architecture
+  - Software Design
+  - Domain-Driven Design
+  - SOLID Principles
+  - Vertical Slicing
+
+# Document Class and Settings
+documentclass: book
+classoption:
+  - 11pt
+  - a4paper
+  - openany
+  - twoside
+
+# PDF Engine
+pdf-engine: xelatex
+
+# Geometry (page margins)
+geometry:
+  - top=25mm
+  - bottom=25mm
+  - left=30mm
+  - right=25mm
+  - headheight=14pt
+
+# Typography
+mainfont: "Palatino"
+sansfont: "Helvetica Neue"
+monofont: "Menlo"
+fontsize: 11pt
+linestretch: 1.15
+
+# Code Highlighting
+highlight-style: tango
+listings: false
+
+# Table of Contents
+toc: true
+toc-depth: 3
+numbersections: true
+secnumdepth: 2
+
+# Links and References
+colorlinks: true
+linkcolor: NavyBlue
+urlcolor: NavyBlue
+toccolor: NavyBlue
+
+# Header configuration
+header-includes:
+  - \input{header.tex}
+
+# Chapter styling
+top-level-division: chapter
+---

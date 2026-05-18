@@ -1,0 +1,514 @@
+---
+name: workflow
+description: Parent skill for the workflow family — planning, execution, review, audit, compound, and knowledge capture. Supports vertical-slice and deliverable-partition decomposition modes.
+user-invocable: false
+---
+
+# Workflow
+
+This is the parent skill for the `workflow` family. It contains high-level philosophy, decomposition guidance, and navigation to the functional areas below (planning, execution, audit, review, compound, and refine). The functional areas contain the detailed processes and artifacts.
+
+## Philosophy
+
+### Core Tenets
+
+1. **Do what works, don't overcomplicate** - Simple processes that get results beat complex frameworks
+2. **Work spans multiple sessions** - Structure for continuity without loss of fidelity
+3. **Speed + quality + attention to detail wins** - Fast execution with high standards
+4. **Knowledge compounds** - Each solved problem makes future work easier
+5. **User approves before action** - Plans require explicit user approval before saving or executing
+
+### Decomposition Modes
+
+How an epic decomposes into stories or sub-issues depends on the work's shape. Two modes:
+
+**Vertical Slice** — for incremental feature work delivering observable value, especially user-facing, in deployed systems where each slice ships and stakeholders see progress. Default for post-first-release feature increments.
+
+**Deliverable-Partition** — for work that doesn't slice cleanly into user-facing increments, or where slicing risks process-induced slowdown or gaps in requirements / Definition of Done conformance. Two named sub-cases:
+
+- *Foundation / pre-first-release*: greenfield scaffolding, validators, CI/CD, base contracts. No deployed surface yet to slice through.
+- *Cross-cutting / large-effort*: post-first-release work like contract-first shared-library changes, compliance roll-outs, framework migrations, pipeline epics decomposed by event boundary.
+
+Same mechanism for both deliverable-partition sub-cases: decompose by deliverable, AC traceability matrix in the parent epic, verbatim AC ownership in each sub-issue, per-deliverable Definition of Done.
+
+#### Vertical Slice — When and How
+
+Build features end-to-end, not layer-by-layer.
+
+**Layer-by-layer approach** — avoid within vertical-slice mode:
+
+```
+1. Build all domain entities
+2. Build all repositories
+3. Build all use cases
+4. Build all API endpoints
+5. Build UI
+6. Integrate and test
+```
+
+**Vertical-slice approach**:
+
+```
+1. Pick highest priority user story
+2. Build ONLY what's needed for that story through ALL layers
+3. Ship it
+4. Pick next story, repeat
+```
+
+#### Deliverable-Partition — When and How
+
+Decompose the epic into the artifacts it must produce, not into user-facing increments.
+
+The "layer-by-layer is wrong" warning **does not apply** here — comprehensively building one deliverable (e.g., a CI pipeline, a validator rule, a contract type) to its owned AC subset is exactly the work.
+
+**Deliverable-partition approach**:
+
+```
+1. List the artifacts the epic must produce (validator, CI, hooks, README, ...)
+2. Partition the parent acceptance criteria across those artifacts —
+   each parent AC owned by exactly one sub-issue, verbatim
+3. Build each artifact comprehensively to its owned AC subset
+4. Verify the AC traceability matrix has zero orphans before closing the parent
+```
+
+#### Mode Selection
+
+Pick **vertical slice** when:
+
+- The system has users (or simulated equivalents) observing value at each slice.
+- Each story can ship independently and deliver an observable increment.
+- The epic spans Domain → Framework cleanly and stories don't share files extensively.
+
+Pick **deliverable-partition** when:
+
+- No deployed surface yet (greenfield / pre-first-release).
+- The epic produces multiple distinct artifacts (validator rules, CI steps, hooks, contracts) rather than user-facing increments.
+- Vertical slicing would force "minimal X, full X later" boundaries that risk silently weakening parent ACs.
+- The epic touches a shared library/contract that downstream consumers must adopt incrementally.
+- Compliance, refactor, or framework-migration work spans the system without a natural user-story shape.
+
+When in doubt, default to vertical slice for feature work and deliverable-partition for foundation, infrastructure, or cross-cutting work.
+
+### When Vertical Slicing Works Best
+
+- **Faster time to value** — slices ship as they're ready and stakeholders observe progress.
+- **Reduced risk** — small, end-to-end-tested slices isolate failures.
+- **Better feedback** — users see progress immediately.
+- **Easier integration** — continuous integration of complete features, not big-bang merges.
+- **Clear progress signal** — working features, not "90% complete" partial layers.
+
+These benefits assume a deployed surface and observers. Pre-first-release work, foundation work, and cross-cutting work that doesn't surface to a user typically does not realize them — picking vertical slicing in those situations imports the costs without the payoff.
+
+### When Deliverable-Partition Works Better
+
+- **Gap-prevention discipline** — verbatim AC ownership in each sub-issue plus an AC traceability matrix in the parent makes Definition-of-Done conformance auditable at a glance. No silent paraphrasing drift between parent and child.
+- **No fictional value-delivery framing** — foundation / scaffolding work doesn't pretend each artifact is a user-visible increment.
+- **Sequencing matches the work shape** — contracts before consumers; validators before the rules they enforce; CI before the gates it runs.
+- **No "minimal X, full X later" temptation** — each sub-issue ships its deliverable comprehensively, not a partial first pass to be ratcheted in subsequent stories.
+
+### Bottom-Up Implementation (within a vertical slice)
+
+Within a vertical slice, plan **top-down** (user story → layers) and implement **bottom-up**:
+
+1. **Domain Layer First** — pure business logic, no dependencies
+2. **Application Layer** — use cases, orchestration (depends on domain abstractions)
+3. **Infrastructure Layer** — data access, external services (implements application interfaces)
+4. **Framework Layer** — API endpoints, UI
+
+This order follows the dependency rule: each layer depends only on layers inside it. Infrastructure implements the interfaces that Application defines.
+
+Testing integrates naturally with bottom-up implementation: write tests for each layer as you build it upward. See @test-strategy for strategy selection.
+
+In **deliverable-partition** mode, the dependency rule still applies inside each deliverable, but the per-deliverable shape varies — a validator rule, a CI pipeline step, or a hook installer doesn't necessarily span four layers. Plan deliverables in their dependency order (e.g., contracts before consumers; library scaffold before validator rules that operate on the library).
+
+## Requirements Source Mode
+
+A binary choice per workflow that determines where requirements live. See @workflow (`planning/pm-integration.md`) for detection logic and PM-specific field mappings.
+
+### File Mode
+
+`requirements.md` is created by `/workflow:refine` and consumed by plan/execute/review. PM issue creation is an optional add-on. Best for ad-hoc work, personal projects, or teams without PM tooling.
+
+### PM Mode
+
+The PM issue (Linear/Jira) is the source of truth for requirements. `/workflow:refine` writes requirements back to the issue directly — no `requirements.md` is created. `implementation-plan.md` and `session-state.md` are still created in `./planning/<project>/`. Best for teams where PM issues are the canonical location for requirements.
+
+### Mode Detection
+
+Mode is determined at the start of each workflow command:
+
+1. **Explicit invocation**: Issue key → PM mode. File path → file mode.
+2. **Project context**: AGENTS.md, CLAUDE.md, or `.claude/settings.json` indicating PM system → default PM mode for ambiguous input.
+3. **Available MCP tools**: Linear/Jira MCP tools present → suggest PM mode.
+4. **Fallback**: File mode.
+
+The agent states its determination and lets the user course-correct.
+
+## Functional Areas & Commands
+
+### /workflow:refine
+**Purpose**: Discover and refine requirements through conversation
+
+**Outputs** (depends on requirements source mode):
+- **File mode**: `./planning/<project>/requirements.md` — problem, solution, user stories, requirements. PM issue creation offered as optional add-on.
+- **PM mode**: PM issue updated with refined requirements directly. No `requirements.md` created. `./planning/<project>/` directory created for later use by plan.
+
+**When to use**: When starting from a vague idea, unclear requirements, or needing stakeholder alignment before planning
+
+### /workflow:plan
+**Purpose**: Create implementation plans from requirements
+
+**Outputs**:
+- `./planning/<project>/implementation-plan.md` - How to build it
+- `./planning/<project>/session-state.md` - Continuity tracking
+
+**Flags**:
+- `--worktree` — On approval, create an isolated git worktree, save planning docs inside it, and commit them. This prepares the worktree for `/workflow:execute` to detect automatically (no `--worktree` flag needed on execute).
+
+**Approval gate**: Plans MUST be presented to the user for explicit approval before saving documents or starting
+execution. After approval, the user chooses: save the plan only, or save and proceed to execution.
+
+**When to use**: After requirements are clear (from `/workflow:refine` or existing documentation)
+
+### /workflow:execute
+**Purpose**: Session-based work with progress tracking
+
+**Key features**:
+- Session state persistence
+- TodoWrite integration
+- Quality checkpoints
+- Completion verification before stopping
+- Compound prompts at boundaries
+- `--worktree` flag for parallel epic execution in isolated git worktrees (also available on `/workflow:plan`)
+
+**When to use**: Implementing planned work
+
+### /workflow:review
+**Purpose**: Flexible code review
+
+**Supports**:
+- PR reviews (`/workflow:review #123`)
+- Git ranges (`/workflow:review main..HEAD`)
+- Files (`/workflow:review ./src/auth/`)
+- Uncommitted (`/workflow:review changes`)
+
+**When to use**: Before merging or deploying
+
+### /workflow:audit
+**Purpose**: Unified project audit — auto-detects project shape, dispatches domain-specific agent teams, deduplicates findings across domains
+
+**Domains** (activated based on project auto-detection):
+- Code quality (@code-patterns, @clean-architecture)
+- Test quality (@test-strategy)
+- API design (@clean-architecture)
+- Frontend quality (@code-patterns, @visual-design)
+- Documentation (@workflow)
+- Repo infrastructure
+- QA coverage (@qa)
+
+**Key features**:
+- Single entry point for comprehensive assessment
+- Cross-domain deduplication (same root cause → one finding)
+- Project-type-aware weighting (backend vs frontend vs full-stack)
+- Depth control (`--depth quick|standard|deep`)
+- Focus mode (`--focus code,tests`) for domain-specific depth
+- Unified health score with per-domain breakdown
+
+**When to use**: Onboarding to a codebase, periodic health check, pre-release quality gate
+
+### /workflow:compound
+**Purpose**: Capture knowledge from solved problems
+
+**Creates**: `docs/solutions/<category>/<slug>.md`
+
+**When to use**: After solving non-trivial problems
+
+## Task Planning
+
+All tasks in an implementation plan are required. If a task is derived from acceptance criteria or is necessary for the feature to work, it belongs in the flat task list and must be completed before the work is considered done.
+
+There are no priority tiers. Acceptance criteria are binary — met or not met.
+
+### Out of Scope
+Items genuinely not required by acceptance criteria but worth noting for future iterations belong in an "Out of Scope" section. This section is for ideas and enhancements, not for deferring planned work.
+
+## Session Continuity
+
+### Planning Directory Structure
+
+```
+./planning/
+├── <project-name>/
+│   ├── requirements.md          # File mode only (from /workflow:refine)
+│   ├── implementation-plan.md   # Both modes (from /workflow:plan)
+│   ├── session-state.md         # Both modes (from /workflow:plan)
+│   └── technical-decisions.md   # Key decisions (optional)
+└── archive/                     # Completed work
+```
+
+### Session State Schema
+
+```yaml
+---
+project: [name]
+requirements_source: [file|pm]
+work_item: [ISSUE-ID]          # Set when PM issue is linked
+pm_tool: [linear|jira|manual]  # Set when PM tool is detected
+session_count: [N]
+status: [planned|in_progress|complete]
+progress:
+  total_tasks: [X]
+  completed: [Y]
+  percent: [Z%]
+current_layer: [domain|infrastructure|application|framework]
+branch: <type>/<issue-key or description>
+worktree: <path>  # Only set when using --worktree; absolute path to worktree directory
+---
+## Current Focus
+[What's being worked on]
+
+## Last Session Summary
+[Handoff context]
+
+## Session History
+[Append-only log]
+```
+
+### Branch Naming Convention
+
+**Rule**: All working branches MUST follow the `<type>/<identifier>` pattern exactly.
+
+| Type | With Issue Key | Without Issue Key |
+|------|----------------|-------------------|
+| Bug fix | `fix/INK-123` | `fix/login-validation` |
+| Feature | `feat/INK-124` | `feat/user-dashboard` |
+
+**Rules**:
+- When an issue key exists, use it as the ENTIRE identifier — do NOT append a description (e.g. `feat/INK-124`, never `feat/INK-124-user-dashboard` or `matt/INK-124-desc`)
+- Without an issue key, use a short lowercase-hyphenated description (2-4 words max)
+- No usernames, dates, or other prefixes in branch names
+
+**Anti-patterns** (never do these):
+- `matt/ink-123-some-description` — no username prefixes, no appended descriptions with issue keys
+- `feature/INK-123-implement-user-dashboard` — too long, wrong type prefix
+- `INK-123` — missing type prefix
+
+### Handoff Protocol
+
+At session boundaries:
+1. Update session state with progress
+2. Commit work with clear message
+3. Offer compound documentation
+4. Generate detailed handoff summary
+
+## Parallel Execution with Worktrees
+
+### When to Use
+
+- An epic has 2+ independent stories/slices that don't modify the same files
+- You want multiple Claude sessions to execute different slices simultaneously
+- The planning phase has identified parallel execution groups (see epic planning template)
+
+### When NOT to Use
+
+- Stories have sequential dependencies (Story 2 builds on Story 1's code)
+- Stories modify the same files (merge conflicts are likely)
+- The project is small enough that serial execution is fast enough
+- You're working on a single story or bug fix
+
+### Prerequisites
+
+1. **Planning docs must be in the worktree** — either use `/workflow:plan --worktree` (which commits docs into the worktree automatically) or manually commit `./planning/` before running `/workflow:execute --worktree`
+2. **Parallel groups identified** — the implementation plan should indicate which stories can run concurrently
+3. **No shared file modifications** — stories in the same parallel group must touch different files
+
+### Parallel Execution Workflow
+
+```
+1. Plan the epic:  /workflow:plan --worktree <epic>
+                   (or /workflow:plan <epic>, then commit docs manually)
+2. Start parallel sessions (each in its own terminal):
+   Session A: /workflow:execute ./planning/<project>/   (detects existing worktree from plan)
+   Session B: /workflow:execute --worktree ./planning/<project>/   (creates new worktree)
+3. Each session works in its own worktree with its own branch
+4. Sessions complete — each handoff documents its worktree path and branch
+5. USER merges one branch at a time (after ALL sessions complete):
+   cd <main-repo-root>
+   git checkout main
+   git merge feat/<slice-a-key>    # Run full test suite
+   git merge feat/<slice-b-key>    # Run full test suite again
+6. USER cleans up worktrees (only after all merges succeed):
+   git worktree list               # Verify no sessions are still active
+   git worktree remove .claude/worktrees/<name-a>
+   git worktree remove .claude/worktrees/<name-b>
+   git worktree prune
+```
+
+### Branch Naming for Parallel Work
+
+Each worktree gets its own branch following the standard naming convention:
+- `<type>/<issue-key>` (e.g., `feat/LIN-101`, `feat/LIN-102`)
+- The `--worktree` flag auto-creates and renames the branch to match
+
+### Merge Strategy
+
+Merge branches **one at a time**, running the full test suite after each merge. This isolates merge conflicts to a single branch and makes failures easy to attribute.
+
+### Worktree Safety Rules
+
+These rules prevent data loss in multi-session parallel workflows:
+
+1. **Sessions never remove worktrees** — Handoff documents the worktree path but does NOT delete it. Cleanup is always a separate, user-initiated action.
+2. **Only remove worktrees you created** — Never clean up another session's worktree.
+3. **Check `git worktree list` before removal** — Verify no other worktrees are still active.
+4. **Never remove a worktree while CWD is inside it** — The shell will break irrecoverably.
+5. **EnterWorktree exit prompt** — When Claude Code asks "keep or remove?" on session exit, **always choose "keep"** in parallel workflows. Remove only manually after merging.
+6. **Session-state tracks ownership** — The `worktree:` field in `session-state.md` records which worktree belongs to each session.
+
+## Common Pitfalls
+
+### Over-Engineering the First Slice
+
+**Wrong**: Building everything a feature might need
+```python
+class Task:
+    def __init__(self, title, description, status, priority,
+                 assignee, labels, attachments, comments, ...):
+```
+
+**Right**: Building only what the current story needs
+```python
+class Task:
+    def __init__(self, title, description):
+```
+
+### Building Horizontal Infrastructure (within vertical-slice mode)
+
+When you're slicing a feature vertically, resist drifting into building all repository methods, all service abstractions, or all use-case shapes upfront. Stay within the slice's needs.
+
+**Wrong** — all repository methods upfront for a feature where the slice only needs `create()`:
+```python
+class TaskRepository:
+    def create(self, task): ...
+    def update(self, task): ...
+    def delete(self, task_id): ...
+    def find_by_status(self, status): ...
+```
+
+**Right** — only what the current story needs:
+```python
+class TaskRepository:
+    def create(self, task): ...
+```
+
+This pitfall does **not** apply in deliverable-partition mode. There, comprehensively building one deliverable (e.g., a complete CI pipeline, a fully-specified contract type) to its owned AC subset is exactly the work, not a smell.
+
+### Premature Abstraction
+
+**Wrong**: Complex inheritance before patterns emerge
+```python
+class BaseEntity: ...
+class AuditableEntity(BaseEntity): ...
+class Task(AuditableEntity): ...
+```
+
+**Right**: Simple, direct implementation
+```python
+@dataclass
+class Task:
+    id: str
+    title: str
+```
+
+### Skipping Quality Gates
+
+**Wrong**: Moving to next task with failing tests
+**Right**: Fix failures immediately, maintain green builds
+
+### 80% Done Syndrome
+
+**Wrong**: Moving to next feature before current is complete
+**Right**: Ship complete features, then move on
+
+## Extended Guidance
+
+For detailed templates and patterns used by the functional areas, reference these sections:
+
+### Planning Phase
+- `planning/templates.md` - Vertical slice, quick, epic, spike, bug fix templates
+- `planning/task-breakdown.md` - Task breakdown patterns and estimation
+
+### Implementation Phase
+- `implementation/quality-checkpoints.md` - Per-layer quality gates
+- `implementation/dependency-establishment.md` - Worktree dependency cache restoration
+- `@test-strategy` - Testing strategy, TDD, property-based testing, contracts, and test quality
+- `implementation/logging.md` - Structured logging standards, required fields, context propagation
+
+### PM Integration
+- `planning/pm-integration.md` - Linear, Jira, and manual workflow guides
+
+### Examples
+- `examples/planning-example.md` - Complete planning walkthrough
+
+## Related Skills
+
+- **clean-architecture**: Authoritative for layer definitions and dependency direction. The workflow functional areas follow clean-architecture patterns via vertical slicing.
+- **code-patterns**: Language-specific implementation patterns used during execution.
+- **test-strategy**: Testing methodology integrated into execution and review.
+- **audit**: The audit functional area consumes documentation domain criteria from this skill.
+
+## Key Principles Summary
+
+| Principle | Application |
+|-----------|-------------|
+| Decomposition matches work shape | Vertical slice for feature work; deliverable-partition for foundation and cross-cutting work |
+| Within vertical slices, build bottom-up | Domain → Application → Infrastructure → Framework per slice |
+| Within deliverable-partition, partition then ship | Each sub-issue owns a verbatim slice of parent ACs; ship deliverables in dependency order |
+| Required vs. Out of Scope | All planned tasks required; future ideas in Out of Scope |
+| User approval gates | Plans require explicit approval before saving or executing |
+| Session continuity | Session state as source of truth |
+| Knowledge compounding | Document solutions for future reference |
+| Quality built in | Tests and checks as you go |
+| Testing strategy | Select approach per situation, verify behavior |
+| Ship complete work | Finish slices/deliverables before moving on |
+
+## Remember
+
+- **YAGNI** — In vertical-slice mode, build only what the current story needs. In deliverable-partition mode, build the deliverable's owned AC subset comprehensively — no more, no less.
+- **Ship Early** — Deploy slices as soon as they work; close sub-issues as soon as their deliverables ship.
+- **Refactor Continuously** — Clean up as patterns emerge.
+- **Stay in mode** — Don't drift into horizontal layer-building inside a vertical slice; don't pretend a foundation epic has user-facing slices.
+- **Test Behavior** — Verify what code does, not how it does it.
+- **Compound Knowledge** — Each problem solved helps future work.
+
+## References
+
+### Sub-files
+
+This parent skill organizes supporting reference material used by the functional areas:
+
+**Planning** — used by `/workflow:plan`, `/workflow:refine`:
+- `planning/pm-integration.md` — PM-system integration patterns
+- `planning/task-breakdown.md` — Decomposition guidance
+- `planning/templates.md` — Plan templates
+
+**Implementation** — used by `/workflow:execute`, `/workflow:review`, audit domains:
+- `implementation/dependency-establishment.md` — Dependency setup patterns
+- `implementation/logging.md` — Structured logging standards (consumed by `audit:code` observability-readiness-analyst)
+- `implementation/quality-checkpoints.md` — Quality gate patterns
+
+**References** — used across multiple commands:
+- `references/conversation-analysis.md` — Extracting signals from `~/.claude/` conversation history (used by `/evolve`, `/workflow:compound`, `/workflow:audit`)
+- `references/memory-primitives.md` — Claude Code memory file types, settings, hooks, and slash commands (used by `/workflow:compound --maintain`)
+
+**Examples**:
+- `examples/planning-example.md` — Worked planning example
+
+### Knowledge Compounding
+
+The concept of "compounding" AI assistance—capturing solutions so each problem solved makes future work easier—is adapted from:
+
+- **"How to Use AI to Do Practical Stuff: A New Guide"** by Ethan Mollick, Every.to
+  https://every.to/chain-of-thought/how-to-use-ai-to-do-practical-stuff-a-new-guide
+
+This idea drives the compound functional area: systematically documenting solutions creates a knowledge base that accumulates value over time.

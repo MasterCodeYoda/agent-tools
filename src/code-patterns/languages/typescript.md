@@ -1,0 +1,3334 @@
+<!-- Last reviewed: 2026-01-21 -->
+
+> This file is loaded on demand. See main SKILL.md for overview.
+
+# TypeScript/React Patterns and Standards
+
+This skill provides TypeScript and React-specific coding standards, patterns, and best practices for building robust web applications.
+
+> **TypeScript 7 (2026)**: Microsoft announced a Go-based TypeScript compiler targeting 10x faster builds. TypeScript 7 will include breaking changes: strict-by-default, ES5 target dropped, AMD/UMD/SystemJS removed. Current projects should already follow strict mode as documented here.
+
+## Environment and Tooling
+
+- **Runtime**: Bun (primary) or Node.js 22+ LTS (fallback)
+- **Package Manager**: npm, yarn, or bun
+- **TypeScript**: 5.5+ with strict mode (5.7+ recommended)
+- **React**: 18+ with functional components
+- **Build Tool**: Vite or Next.js
+- **Testing**: Vitest + React Testing Library (or bun:test)
+- **Linting**: ESLint with TypeScript parser
+- **Formatting**: Prettier
+
+## Runtime Environments
+
+Modern TypeScript applications can run on multiple server-side runtimes. Writing portable code enables flexibility for performance optimization, compliance requirements, and broad adoption. This section covers runtime selection, portable patterns, and adapter strategies for painless runtime switching.
+
+### Runtime Selection
+
+Choose your runtime based on project requirements:
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│                    RUNTIME DECISION TREE                        │
+├─────────────────────────────────────────────────────────────────┤
+│                                                                 │
+│  Use BUN when:                    Use NODE when:                │
+│  ─────────────────                ──────────────                │
+│  • Performance-critical apps      • Native addon dependencies   │
+│  • Native TypeScript preferred    • Enterprise compliance/HIPAA │
+│  • Greenfield projects            • Maximum npm compatibility   │
+│  • Internal tooling               • Open-source broad adoption  │
+│  • Development speed matters      • Mission-critical production │
+│  • Serverless/edge deployment     • Established large codebase  │
+│                                                                 │
+│  Performance: 3-4x faster startup, 2x request throughput        │
+│  Compatibility: ~95-99% npm packages work on Bun                │
+│                                                                 │
+└─────────────────────────────────────────────────────────────────┘
+```
+
+### Portable Web APIs
+
+WinterTC (formerly WinterCG) standardizes Web Platform APIs across server-side runtimes. These APIs work identically in Bun, Node.js 18+, and Deno:
+
+```typescript
+// PORTABLE: Use Web Standard APIs everywhere
+
+// HTTP with fetch (no imports needed)
+const response = await fetch('https://api.example.com/data');
+const data = await response.json();
+
+// URL manipulation
+const url = new URL('/api/users', 'https://example.com');
+url.searchParams.set('page', '1');
+
+// Text encoding/decoding
+const encoder = new TextEncoder();
+const decoder = new TextDecoder();
+const bytes = encoder.encode('Hello');
+const text = decoder.decode(bytes);
+
+// Cryptography
+const uuid = crypto.randomUUID();
+const hash = await crypto.subtle.digest(
+  'SHA-256',
+  encoder.encode('data')
+);
+
+// Streams
+const stream = new ReadableStream({
+  start(controller) {
+    controller.enqueue('chunk');
+    controller.close();
+  }
+});
+
+// Abort signals for cancellation
+const controller = new AbortController();
+await fetch(url, { signal: controller.signal });
+```
+
+**Portable APIs available across all runtimes:**
+- `fetch` / `Request` / `Response` / `Headers`
+- `URL` / `URLSearchParams`
+- `TextEncoder` / `TextDecoder`
+- `crypto.subtle` / `crypto.randomUUID()`
+- `AbortController` / `AbortSignal`
+- `ReadableStream` / `WritableStream` / `TransformStream`
+- `Blob` / `File` / `FormData`
+- `setTimeout` / `setInterval` / `queueMicrotask`
+
+### Structured Concurrency Patterns
+
+TypeScript lacks Rust's `JoinSet`/`TaskTracker` primitives, but the same structured concurrency principles apply. Choose the right `Promise` combinator and always handle cancellation.
+
+**Combinator selection:**
+
+| Need | Combinator | Behavior |
+|------|-----------|----------|
+| All must succeed | `Promise.all` | Rejects on first failure, remaining results lost |
+| All must settle (success or failure) | `Promise.allSettled` | Never rejects; returns `{status, value/reason}[]` |
+| First to succeed | `Promise.any` | Rejects only if ALL fail (`AggregateError`) |
+| First to settle | `Promise.race` | Resolves/rejects with whichever settles first |
+
+**Cancellation with AbortController:**
+
+```typescript
+async function fetchWithTimeout(url: string, timeoutMs: number): Promise<Response> {
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), timeoutMs);
+  try {
+    return await fetch(url, { signal: controller.signal });
+  } finally {
+    clearTimeout(timeout);
+  }
+}
+
+// Cancelling parallel work
+async function fetchAllOrCancel(urls: string[]): Promise<Response[]> {
+  const controller = new AbortController();
+  try {
+    return await Promise.all(
+      urls.map(url => fetch(url, { signal: controller.signal }))
+    );
+  } catch (err) {
+    controller.abort(); // cancel remaining fetches on first failure
+    throw err;
+  }
+}
+```
+
+**Anti-patterns:**
+- `Promise.all` without error handling — one rejection loses all results. Use `Promise.allSettled` when partial results are acceptable.
+- Fire-and-forget promises (`doSomethingAsync()` without `await`) — errors are silently swallowed. Always `await` or attach `.catch()`.
+- Missing `AbortController` cleanup — long-lived operations (file uploads, SSE streams) must support cancellation to avoid resource leaks.
+
+### Node.js Native TypeScript Support (22.18.0+)
+
+Starting with Node.js 22.18.0 (released July 2025), Node can execute TypeScript files directly without compilation:
+
+```bash
+# Run TypeScript directly (Node 22.18.0+)
+node --experimental-strip-types app.ts
+
+# Or with type checking (slower startup)
+node --experimental-transform-types app.ts
+```
+
+**When to use native execution:**
+- Development scripts and CLI tools
+- Quick prototyping
+- Simple applications without build requirements
+
+**When to continue using tsc/bundlers:**
+- Production builds (tree-shaking, minification)
+- Complex projects with path aliases
+- Projects targeting multiple runtimes
+- When you need source maps
+
+```typescript
+// package.json for projects using native TypeScript
+{
+  "type": "module",
+  "scripts": {
+    "dev": "node --experimental-strip-types src/index.ts",
+    "build": "tsc",
+    "start": "node dist/index.js"
+  }
+}
+```
+
+### Runtime Detection
+
+Use WinterTC-standard detection for runtime-conditional code:
+
+```typescript
+// src/runtime/detect.ts
+
+type RuntimeType = 'bun' | 'node' | 'deno' | 'unknown';
+
+/**
+ * Detect the current JavaScript runtime using WinterTC standard.
+ * Uses navigator.userAgent which is standardized across runtimes.
+ */
+export function detectRuntime(): RuntimeType {
+  // WinterTC standard: use navigator.userAgent
+  if (typeof navigator !== 'undefined' && navigator.userAgent) {
+    const ua = navigator.userAgent;
+    if (ua.includes('Bun/')) return 'bun';
+    if (ua.includes('Deno/')) return 'deno';
+    if (ua.includes('Node.js/')) return 'node';
+  }
+
+  // Fallback for older Node.js versions (pre-21)
+  if (typeof process !== 'undefined' && process.versions?.node) {
+    return 'node';
+  }
+
+  return 'unknown';
+}
+
+// Export singleton detection results
+export const RUNTIME: RuntimeType = detectRuntime();
+export const IS_BUN = RUNTIME === 'bun';
+export const IS_NODE = RUNTIME === 'node';
+export const IS_DENO = RUNTIME === 'deno';
+```
+
+```typescript
+// WRONG - Unreliable global checks
+const isBun = typeof Bun !== 'undefined';
+const isNode = typeof process !== 'undefined';
+
+// WRONG - Non-standard version checks
+const runtime = process.versions.bun ? 'bun' : 'node';
+
+// RIGHT - WinterTC standard
+import { RUNTIME, IS_BUN } from './runtime/detect';
+
+if (IS_BUN) {
+  // Bun-optimized path
+}
+```
+
+### Runtime Adapters
+
+Use the adapter pattern to abstract runtime-specific features. This enables easy runtime switching without changing application code.
+
+#### Environment Variables Adapter
+
+```typescript
+// src/adapters/env.adapter.ts
+
+export interface EnvAdapter {
+  get(key: string): string | undefined;
+  getRequired(key: string): string;
+  getNumber(key: string, defaultValue?: number): number;
+  getBoolean(key: string, defaultValue?: boolean): boolean;
+}
+
+class BunEnvAdapter implements EnvAdapter {
+  get(key: string): string | undefined {
+    return Bun.env[key];
+  }
+
+  getRequired(key: string): string {
+    const value = Bun.env[key];
+    if (value === undefined) {
+      throw new Error(`Missing required environment variable: ${key}`);
+    }
+    return value;
+  }
+
+  getNumber(key: string, defaultValue = 0): number {
+    const value = Bun.env[key];
+    return value ? Number(value) : defaultValue;
+  }
+
+  getBoolean(key: string, defaultValue = false): boolean {
+    const value = Bun.env[key];
+    if (!value) return defaultValue;
+    return value.toLowerCase() === 'true' || value === '1';
+  }
+}
+
+class NodeEnvAdapter implements EnvAdapter {
+  get(key: string): string | undefined {
+    return process.env[key];
+  }
+
+  getRequired(key: string): string {
+    const value = process.env[key];
+    if (value === undefined) {
+      throw new Error(`Missing required environment variable: ${key}`);
+    }
+    return value;
+  }
+
+  getNumber(key: string, defaultValue = 0): number {
+    const value = process.env[key];
+    return value ? Number(value) : defaultValue;
+  }
+
+  getBoolean(key: string, defaultValue = false): boolean {
+    const value = process.env[key];
+    if (!value) return defaultValue;
+    return value.toLowerCase() === 'true' || value === '1';
+  }
+}
+
+// Factory function
+export function createEnvAdapter(runtime: RuntimeType): EnvAdapter {
+  return runtime === 'bun' ? new BunEnvAdapter() : new NodeEnvAdapter();
+}
+```
+
+#### File I/O Adapter
+
+```typescript
+// src/adapters/file.adapter.ts
+
+export interface FileAdapter {
+  readText(path: string): Promise<string>;
+  readJson<T>(path: string): Promise<T>;
+  writeText(path: string, content: string): Promise<void>;
+  writeJson(path: string, data: unknown): Promise<void>;
+  exists(path: string): Promise<boolean>;
+}
+
+class BunFileAdapter implements FileAdapter {
+  async readText(path: string): Promise<string> {
+    return Bun.file(path).text();
+  }
+
+  async readJson<T>(path: string): Promise<T> {
+    return Bun.file(path).json();
+  }
+
+  async writeText(path: string, content: string): Promise<void> {
+    await Bun.write(path, content);
+  }
+
+  async writeJson(path: string, data: unknown): Promise<void> {
+    await Bun.write(path, JSON.stringify(data, null, 2));
+  }
+
+  async exists(path: string): Promise<boolean> {
+    return Bun.file(path).exists();
+  }
+}
+
+class NodeFileAdapter implements FileAdapter {
+  async readText(path: string): Promise<string> {
+    const { readFile } = await import('node:fs/promises');
+    return readFile(path, 'utf-8');
+  }
+
+  async readJson<T>(path: string): Promise<T> {
+    const content = await this.readText(path);
+    return JSON.parse(content);
+  }
+
+  async writeText(path: string, content: string): Promise<void> {
+    const { writeFile } = await import('node:fs/promises');
+    await writeFile(path, content, 'utf-8');
+  }
+
+  async writeJson(path: string, data: unknown): Promise<void> {
+    await this.writeText(path, JSON.stringify(data, null, 2));
+  }
+
+  async exists(path: string): Promise<boolean> {
+    const { access } = await import('node:fs/promises');
+    try {
+      await access(path);
+      return true;
+    } catch {
+      return false;
+    }
+  }
+}
+
+export function createFileAdapter(runtime: RuntimeType): FileAdapter {
+  return runtime === 'bun' ? new BunFileAdapter() : new NodeFileAdapter();
+}
+```
+
+#### HTTP Server Adapter
+
+```typescript
+// src/adapters/server.adapter.ts
+
+export interface ServeOptions {
+  port: number;
+  hostname?: string;
+  handler: (request: Request) => Response | Promise<Response>;
+}
+
+export interface ServerHandle {
+  stop(): Promise<void>;
+  port: number;
+  url: string;
+}
+
+class BunServerAdapter {
+  serve(options: ServeOptions): ServerHandle {
+    const server = Bun.serve({
+      port: options.port,
+      hostname: options.hostname ?? 'localhost',
+      fetch: options.handler,
+    });
+
+    return {
+      stop: async () => server.stop(),
+      port: server.port,
+      url: `http://${server.hostname}:${server.port}`,
+    };
+  }
+}
+
+class NodeServerAdapter {
+  serve(options: ServeOptions): ServerHandle {
+    // Wrap node:http with Web Request/Response
+    const { createServer } = require('node:http');
+
+    const server = createServer(async (req, res) => {
+      const url = `http://${options.hostname ?? 'localhost'}:${options.port}${req.url}`;
+      const request = new Request(url, {
+        method: req.method,
+        headers: req.headers as HeadersInit,
+      });
+
+      const response = await options.handler(request);
+
+      res.statusCode = response.status;
+      response.headers.forEach((value, key) => {
+        res.setHeader(key, value);
+      });
+      res.end(await response.text());
+    });
+
+    server.listen(options.port, options.hostname);
+
+    return {
+      stop: () => new Promise((resolve) => server.close(resolve)),
+      port: options.port,
+      url: `http://${options.hostname ?? 'localhost'}:${options.port}`,
+    };
+  }
+}
+
+export function createServerAdapter(runtime: RuntimeType) {
+  return runtime === 'bun' ? new BunServerAdapter() : new NodeServerAdapter();
+}
+```
+
+#### SQLite Adapter
+
+```typescript
+// src/adapters/sqlite.adapter.ts
+
+export interface SQLiteDatabase {
+  run(sql: string, params?: unknown[]): void;
+  get<T>(sql: string, params?: unknown[]): T | undefined;
+  all<T>(sql: string, params?: unknown[]): T[];
+  close(): void;
+}
+
+export interface SQLiteAdapter {
+  open(path: string): SQLiteDatabase;
+}
+
+class BunSQLiteAdapter implements SQLiteAdapter {
+  open(path: string): SQLiteDatabase {
+    // bun:sqlite is 3-6x faster than better-sqlite3
+    const { Database } = require('bun:sqlite');
+    const db = new Database(path);
+
+    return {
+      run: (sql, params) => db.run(sql, params),
+      get: (sql, params) => db.query(sql).get(params),
+      all: (sql, params) => db.query(sql).all(params),
+      close: () => db.close(),
+    };
+  }
+}
+
+class NodeSQLiteAdapter implements SQLiteAdapter {
+  open(path: string): SQLiteDatabase {
+    const Database = require('better-sqlite3');
+    const db = new Database(path);
+
+    return {
+      run: (sql, params) => db.prepare(sql).run(params),
+      get: (sql, params) => db.prepare(sql).get(params),
+      all: (sql, params) => db.prepare(sql).all(params),
+      close: () => db.close(),
+    };
+  }
+}
+
+export function createSQLiteAdapter(runtime: RuntimeType): SQLiteAdapter {
+  return runtime === 'bun' ? new BunSQLiteAdapter() : new NodeSQLiteAdapter();
+}
+```
+
+#### Adapter Composition
+
+```typescript
+// src/adapters/index.ts
+
+import { detectRuntime, RuntimeType } from '../runtime/detect';
+import { createEnvAdapter, EnvAdapter } from './env.adapter';
+import { createFileAdapter, FileAdapter } from './file.adapter';
+import { createServerAdapter } from './server.adapter';
+import { createSQLiteAdapter, SQLiteAdapter } from './sqlite.adapter';
+
+export interface Adapters {
+  env: EnvAdapter;
+  file: FileAdapter;
+  server: ReturnType<typeof createServerAdapter>;
+  sqlite: SQLiteAdapter;
+}
+
+export function createAdapters(runtime: RuntimeType = detectRuntime()): Adapters {
+  return {
+    env: createEnvAdapter(runtime),
+    file: createFileAdapter(runtime),
+    server: createServerAdapter(runtime),
+    sqlite: createSQLiteAdapter(runtime),
+  };
+}
+
+// Singleton for application use
+export const adapters = createAdapters();
+```
+
+### Testing Across Runtimes
+
+Configure your project to test on both Bun and Node.js:
+
+#### Package.json Scripts
+
+```json
+{
+  "scripts": {
+    "test": "vitest",
+    "test:bun": "bun test",
+    "test:node": "vitest run",
+    "test:all": "npm run test:node && npm run test:bun",
+    "dev": "bun run src/index.ts",
+    "dev:node": "tsx src/index.ts",
+    "start": "node dist/index.js",
+    "start:bun": "bun run dist/index.js"
+  }
+}
+```
+
+#### CI Configuration
+
+```yaml
+# .github/workflows/test.yml
+name: Test
+
+on: [push, pull_request]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        runtime: [node, bun]
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Bun
+        if: matrix.runtime == 'bun'
+        uses: oven-sh/setup-bun@v1
+
+      - name: Setup Node
+        if: matrix.runtime == 'node'
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install dependencies
+        run: ${{ matrix.runtime == 'bun' && 'bun install' || 'npm ci' }}
+
+      - name: Run tests
+        run: npm run test:${{ matrix.runtime }}
+```
+
+#### Runtime-Conditional Tests
+
+```typescript
+// test/helpers/runtime.ts
+import { RUNTIME } from '../../src/runtime/detect';
+
+// Skip tests that only apply to specific runtimes
+export const describeBun = RUNTIME === 'bun' ? describe : describe.skip;
+export const describeNode = RUNTIME === 'node' ? describe : describe.skip;
+export const itBun = RUNTIME === 'bun' ? it : it.skip;
+export const itNode = RUNTIME === 'node' ? it : it.skip;
+```
+
+```typescript
+// test/adapters/sqlite.test.ts
+import { describeBun, describeNode } from '../helpers/runtime';
+
+describeBun('Bun SQLite', () => {
+  it('uses bun:sqlite natively', () => {
+    const adapter = new BunSQLiteAdapter();
+    // Test Bun-specific behavior
+  });
+});
+
+describeNode('Node SQLite', () => {
+  it('uses better-sqlite3', () => {
+    const adapter = new NodeSQLiteAdapter();
+    // Test Node-specific behavior
+  });
+});
+
+// Tests that run on all runtimes
+describe('SQLite Adapter', () => {
+  it('implements the interface correctly', () => {
+    const adapter = createSQLiteAdapter(RUNTIME);
+    // Common interface tests
+  });
+});
+```
+
+### Framework Considerations
+
+#### Hono for Runtime-Agnostic APIs
+
+Hono is a lightweight, runtime-agnostic web framework that works identically on Bun, Node.js, Deno, and edge platforms:
+
+```typescript
+// src/app.ts - Portable Hono application
+import { Hono } from 'hono';
+import { cors } from 'hono/cors';
+import { logger } from 'hono/logger';
+
+const app = new Hono();
+
+app.use('*', cors());
+app.use('*', logger());
+
+app.get('/api/health', (c) => c.json({ status: 'ok' }));
+
+app.get('/api/users/:id', async (c) => {
+  const id = c.req.param('id');
+  // Your business logic here
+  return c.json({ id, name: 'Example User' });
+});
+
+export default app;
+```
+
+```typescript
+// src/bun-entry.ts
+import app from './app';
+
+Bun.serve({
+  fetch: app.fetch,
+  port: Bun.env.PORT ?? 3000,
+});
+
+console.log('Bun server running on port', Bun.env.PORT ?? 3000);
+```
+
+```typescript
+// src/node-entry.ts
+import { serve } from '@hono/node-server';
+import app from './app';
+
+const port = Number(process.env.PORT) || 3000;
+
+serve({
+  fetch: app.fetch,
+  port,
+});
+
+console.log('Node server running on port', port);
+```
+
+#### NestJS Considerations
+
+NestJS works with Bun via `@nestjs/platform-express`. Use adapters for runtime-specific optimizations:
+
+```typescript
+// src/main.ts
+import { NestFactory } from '@nestjs/core';
+import { AppModule } from './app.module';
+import { adapters } from './adapters';
+
+async function bootstrap() {
+  const app = await NestFactory.create(AppModule);
+  const port = adapters.env.getNumber('PORT', 3000);
+
+  await app.listen(port);
+  console.log(`Application running on port ${port}`);
+}
+
+bootstrap();
+```
+
+```typescript
+// src/config/config.module.ts
+import { Module, Global } from '@nestjs/common';
+import { adapters } from '../adapters';
+
+@Global()
+@Module({
+  providers: [
+    {
+      provide: 'ENV_ADAPTER',
+      useValue: adapters.env,
+    },
+    {
+      provide: 'FILE_ADAPTER',
+      useValue: adapters.file,
+    },
+  ],
+  exports: ['ENV_ADAPTER', 'FILE_ADAPTER'],
+})
+export class ConfigModule {}
+```
+
+#### Next.js Considerations
+
+```typescript
+/*
+ * Next.js with Bun:
+ * - Development: `bun --bun next dev` for faster startup
+ * - Production: Standard Node.js deployment recommended for stability
+ * - API Routes: Can use portable adapters for runtime-agnostic code
+ */
+```
+
+```json
+// package.json
+{
+  "scripts": {
+    "dev": "bun --bun next dev",
+    "dev:node": "next dev",
+    "build": "next build",
+    "start": "next start"
+  }
+}
+```
+
+### Migration Patterns
+
+When switching between runtimes, follow this checklist:
+
+**Pre-Migration:**
+1. Audit native addon dependencies (check `node-gyp`, `.node` files)
+2. Check Bun compatibility tracker for critical packages
+3. Run full test suite as baseline
+
+**Migration Steps:**
+1. Replace direct `process.env` / `Bun.env` access with `EnvAdapter`
+2. Replace direct file I/O with `FileAdapter`
+3. Replace HTTP server setup with `ServerAdapter` or Hono
+4. Update `package.json` scripts for dual-runtime support
+5. Configure CI matrix for both runtimes
+6. Test native addon fallbacks
+
+**Post-Migration:**
+1. Benchmark performance on both runtimes
+2. Document runtime-specific behaviors
+3. Update deployment configurations
+
+```json
+// package.json - Dual-runtime support
+{
+  "scripts": {
+    "dev": "bun run src/index.ts",
+    "dev:node": "tsx src/index.ts",
+    "build": "tsc",
+    "start": "node dist/index.js",
+    "start:bun": "bun run dist/index.js",
+    "test": "npm run test:node && npm run test:bun",
+    "test:node": "vitest run",
+    "test:bun": "bun test"
+  }
+}
+```
+
+## TypeScript Configuration
+
+### tsconfig.json
+
+```json
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "lib": ["ES2022", "DOM", "DOM.Iterable"],
+    "module": "ESNext",
+    "moduleResolution": "bundler",
+    "strict": true,
+    "noImplicitAny": true,
+    "strictNullChecks": true,
+    "strictFunctionTypes": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "noImplicitReturns": true,
+    "noFallthroughCasesInSwitch": true,
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "allowSyntheticDefaultImports": true,
+    "forceConsistentCasingInFileNames": true,
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+    "jsx": "react-jsx"
+  },
+  "include": ["src"],
+  "exclude": ["node_modules", "dist"]
+}
+```
+
+### ESM-First Configuration
+
+ESM (ECMAScript Modules) is now the standard. Configure projects for ESM from the start:
+
+```json
+// package.json
+{
+  "type": "module"
+}
+```
+
+```json
+// tsconfig.json
+{
+  "compilerOptions": {
+    "module": "ESNext",
+    "moduleResolution": "bundler",  // or "node16" for pure Node.js
+    "verbatimModuleSyntax": true    // Enforces explicit type imports
+  }
+}
+```
+
+**ESM Best Practices:**
+- Always use `import`/`export`, never `require()`
+- Use `.js` extensions in imports when targeting Node.js directly
+- Prefer `import type { }` for type-only imports
+- Use top-level await where appropriate
+
+```typescript
+// Correct ESM with verbatimModuleSyntax
+import type { User } from './types.js';
+import { createUser } from './services.js';
+
+// Avoid - CommonJS patterns
+const { createUser } = require('./services');
+module.exports = { handler };
+```
+
+## Type-First Development
+
+### Type Everything Explicitly
+
+```typescript
+// WRONG - Implicit any
+function processData(data) {
+  return data.map(item => item.value);
+}
+
+// WRONG - Implicit return type
+function calculateTotal(items: Item[]) {
+  return items.reduce((sum, item) => sum + item.price, 0);
+}
+
+// RIGHT - Fully typed
+function processData(data: DataItem[]): number[] {
+  return data.map((item) => item.value);
+}
+
+function calculateTotal(items: Item[]): number {
+  return items.reduce((sum, item) => sum + item.price, 0);
+}
+```
+
+### Domain Types
+
+Create specific types for your domain:
+
+```typescript
+// WRONG - Primitive obsession
+function transferMoney(
+  fromAccount: string,
+  toAccount: string,
+  amount: number,
+  currency: string
+): void {
+  // ...
+}
+
+// RIGHT - Domain types
+type AccountId = string & { readonly brand: unique symbol };
+type Currency = 'USD' | 'EUR' | 'GBP';
+
+interface Money {
+  readonly amount: number;
+  readonly currency: Currency;
+}
+
+function transferMoney(
+  fromAccount: AccountId,
+  toAccount: AccountId,
+  money: Money
+): void {
+  // ...
+}
+
+// Type branding for compile-time safety
+const accountId = '12345' as AccountId;
+```
+
+### Leveraging TypeScript 5.5+ Features
+
+#### Inferred Type Predicates
+
+TypeScript 5.5+ automatically infers type predicates in filter operations:
+
+```typescript
+// Before 5.5 - Required explicit type predicate
+const users = [getUser(), null, getUser(), undefined];
+
+// Pre-5.5: filter doesn't narrow types
+const validUsers = users.filter(u => u !== null && u !== undefined);
+// validUsers: (User | null | undefined)[] - still nullable!
+
+// Pre-5.5: Required explicit type guard
+function isNotNull<T>(value: T | null | undefined): value is T {
+  return value !== null && value !== undefined;
+}
+const validUsersOld = users.filter(isNotNull);
+// validUsersOld: User[]
+
+// TypeScript 5.5+: Automatic inference
+const validUsersNew = users.filter(u => u !== null && u !== undefined);
+// validUsersNew: User[] - correctly narrowed!
+
+// Works with custom conditions too
+interface Task { id: string; completed: boolean }
+const tasks: Task[] = getTasks();
+
+// TS 5.5+ infers the type predicate automatically
+const completedTasks = tasks.filter(t => t.completed);
+// completedTasks: Task[] (not Task | undefined)
+```
+
+#### Regex Literal Checking
+
+TypeScript 5.5+ validates regex patterns at compile time:
+
+```typescript
+// Caught at compile time in 5.5+
+const emailRegex = /[a-z+@/;  // Error: Invalid regex
+
+// Valid regex passes compilation
+const validEmailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+```
+
+## React Patterns
+
+### Component Structure
+
+```typescript
+// UserProfile.tsx
+import { FC, memo, useCallback, useMemo } from 'react';
+
+interface UserProfileProps {
+  userId: string;
+  onEdit?: (userId: string) => void;
+  className?: string;
+}
+
+export const UserProfile: FC<UserProfileProps> = memo(({
+  userId,
+  onEdit,
+  className
+}) => {
+  // Hooks at the top
+  const { data: user, isLoading, error } = useUser(userId);
+  const theme = useTheme();
+
+  // Memoized values
+  const fullName = useMemo(
+    () => user ? `${user.firstName} ${user.lastName}` : '',
+    [user]
+  );
+
+  // Callbacks
+  const handleEdit = useCallback(() => {
+    onEdit?.(userId);
+  }, [onEdit, userId]);
+
+  // Early returns for edge cases
+  if (isLoading) return <ProfileSkeleton />;
+  if (error) return <ErrorMessage error={error} />;
+  if (!user) return null;
+
+  // Main render
+  return (
+    <div className={className}>
+      <h2>{fullName}</h2>
+      <button onClick={handleEdit}>Edit</button>
+    </div>
+  );
+});
+
+UserProfile.displayName = 'UserProfile';
+```
+
+### Custom Hooks
+
+**Data fetching** — Prefer TanStack Query (or SWR, RTK Query) over manual `useEffect` fetching. These libraries handle caching, deduplication, race conditions, background refetching, and loading/error states declaratively.
+
+```typescript
+// hooks/useUser.ts — TanStack Query (preferred)
+import { useQuery } from '@tanstack/react-query';
+
+export function useUser(userId: string) {
+  return useQuery({
+    queryKey: ['user', userId],
+    queryFn: () => api.getUser(userId),
+    staleTime: 5 * 60 * 1000,
+  });
+}
+
+// Usage: const { data: user, isLoading, error } = useUser(id);
+```
+
+**External system synchronization** — The legitimate use case for `useEffect`. Always extract into a named custom hook, include cleanup, and never make the callback `async` directly.
+
+```typescript
+// hooks/useOnlineStatus.ts — external browser API (legitimate useEffect)
+import { useSyncExternalStore } from 'react';
+
+export function useOnlineStatus() {
+  return useSyncExternalStore(
+    (callback) => {
+      window.addEventListener('online', callback);
+      window.addEventListener('offline', callback);
+      return () => {
+        window.removeEventListener('online', callback);
+        window.removeEventListener('offline', callback);
+      };
+    },
+    () => navigator.onLine,
+    () => true, // server snapshot
+  );
+}
+
+// hooks/useEventListener.ts — DOM event subscription (legitimate useEffect)
+export function useEventListener<K extends keyof WindowEventMap>(
+  event: K,
+  handler: (e: WindowEventMap[K]) => void,
+  element: EventTarget = window,
+) {
+  const savedHandler = useRef(handler);
+  savedHandler.current = handler;
+
+  useEffect(() => {
+    const listener = (e: Event) => savedHandler.current(e as WindowEventMap[K]);
+    element.addEventListener(event, listener);
+    return () => element.removeEventListener(event, listener);
+  }, [event, element]);
+}
+
+// hooks/useWebSocket.ts — external connection (legitimate useEffect)
+export function useWebSocket(url: string, onMessage: (data: unknown) => void) {
+  const savedOnMessage = useRef(onMessage);
+  savedOnMessage.current = onMessage;
+
+  useEffect(() => {
+    const ws = new WebSocket(url);
+    ws.onmessage = (e) => savedOnMessage.current(JSON.parse(e.data));
+    return () => ws.close();
+  }, [url]);
+}
+```
+
+### Context Pattern
+
+```typescript
+// contexts/AuthContext.tsx
+import { createContext, useContext, FC, ReactNode } from 'react';
+
+interface User {
+  id: string;
+  email: string;
+  role: 'admin' | 'user';
+}
+
+interface AuthContextValue {
+  user: User | null;
+  login: (email: string, password: string) => Promise<void>;
+  logout: () => void;
+  isAuthenticated: boolean;
+}
+
+const AuthContext = createContext<AuthContextValue | undefined>(undefined);
+
+export const AuthProvider: FC<{ children: ReactNode }> = ({ children }) => {
+  const [user, setUser] = useState<User | null>(null);
+
+  const login = useCallback(async (email: string, password: string) => {
+    const response = await api.login(email, password);
+    setUser(response.user);
+  }, []);
+
+  const logout = useCallback(() => {
+    setUser(null);
+  }, []);
+
+  const value = useMemo(
+    () => ({
+      user,
+      login,
+      logout,
+      isAuthenticated: !!user,
+    }),
+    [user, login, logout]
+  );
+
+  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
+};
+
+export function useAuth(): AuthContextValue {
+  const context = useContext(AuthContext);
+  if (!context) {
+    throw new Error('useAuth must be used within AuthProvider');
+  }
+  return context;
+}
+```
+
+## SSR/Hybrid Rendering Patterns
+
+Modern React frameworks support hybrid rendering where some components run on the server (Server Components) and others run in the browser (Client Components). These patterns help you make the right decisions about where code should execute.
+
+### Server vs Client Component Decision
+
+Use this decision tree to determine where a component should render:
+
+```typescript
+/*
+ * SERVER COMPONENT (default) when:
+ * - Fetching data from databases or APIs
+ * - Accessing backend resources directly
+ * - Keeping sensitive data on the server (API keys, tokens)
+ * - Large dependencies that shouldn't ship to client
+ * - No interactivity needed (display only)
+ *
+ * CLIENT COMPONENT when:
+ * - Using React hooks (useState, useEffect, useContext, etc.)
+ * - Adding event handlers (onClick, onChange, etc.)
+ * - Using browser-only APIs (window, document, localStorage)
+ * - Using class components with lifecycle methods
+ * - Relying on custom hooks with state or effects
+ */
+
+// Server Component - fetches data, no interactivity
+async function ProductList({ categoryId }: { categoryId: string }) {
+  // Can fetch directly - runs on server
+  const products = await fetchProducts(categoryId);
+
+  return (
+    <ul>
+      {products.map((product) => (
+        <ProductCard key={product.id} product={product} />
+      ))}
+    </ul>
+  );
+}
+
+// Client Component - has interactivity
+'use client'; // Framework-specific directive
+
+import { useState } from 'react';
+
+function AddToCartButton({ productId }: { productId: string }) {
+  const [isAdding, setIsAdding] = useState(false);
+
+  const handleClick = async () => {
+    setIsAdding(true);
+    await addToCart(productId);
+    setIsAdding(false);
+  };
+
+  return (
+    <button onClick={handleClick} disabled={isAdding}>
+      {isAdding ? 'Adding...' : 'Add to Cart'}
+    </button>
+  );
+}
+```
+
+### Composition Patterns for Hybrid Rendering
+
+The key principle: Server Components can render Client Components, but Client Components cannot import Server Components. Use composition to work around this limitation.
+
+```typescript
+// WRONG - Client Component importing Server Component
+'use client';
+import { ServerDataDisplay } from './ServerDataDisplay'; // Error!
+
+function ClientWrapper() {
+  return <ServerDataDisplay />;
+}
+
+// RIGHT - Pass Server Component as children (slots pattern)
+// layout.tsx (Server Component)
+async function Layout({ children }: { children: React.ReactNode }) {
+  const user = await getCurrentUser();
+
+  return (
+    <div>
+      <Header user={user} />
+      <InteractiveShell>
+        {/* Server-rendered content passed as children */}
+        {children}
+      </InteractiveShell>
+    </div>
+  );
+}
+
+// InteractiveShell.tsx (Client Component)
+'use client';
+
+import { useState } from 'react';
+
+interface InteractiveShellProps {
+  children: React.ReactNode;
+}
+
+function InteractiveShell({ children }: InteractiveShellProps) {
+  const [sidebarOpen, setSidebarOpen] = useState(true);
+
+  return (
+    <div className={sidebarOpen ? 'with-sidebar' : 'full-width'}>
+      <button onClick={() => setSidebarOpen(!sidebarOpen)}>
+        Toggle Sidebar
+      </button>
+      {/* Server-rendered children passed through */}
+      <main>{children}</main>
+    </div>
+  );
+}
+```
+
+### Data Fetching Patterns
+
+Fetch data as close to where it's used as possible, leveraging automatic request deduplication:
+
+```typescript
+// Pattern: Parallel data fetching
+async function Dashboard() {
+  // These run in parallel, not sequentially
+  const [user, stats, notifications] = await Promise.all([
+    fetchUser(),
+    fetchStats(),
+    fetchNotifications(),
+  ]);
+
+  return (
+    <div>
+      <UserProfile user={user} />
+      <StatsPanel stats={stats} />
+      <NotificationList notifications={notifications} />
+    </div>
+  );
+}
+
+// Pattern: Colocated data fetching with deduplication
+// Both components fetch the same user - framework deduplicates the request
+async function UserAvatar() {
+  const user = await fetchUser(); // Deduped
+  return <Avatar src={user.avatarUrl} />;
+}
+
+async function UserGreeting() {
+  const user = await fetchUser(); // Same request, deduped
+  return <h1>Hello, {user.name}!</h1>;
+}
+
+// Pattern: Passing data vs fetching
+// WRONG - Prop drilling through many levels
+async function Page() {
+  const user = await fetchUser();
+  return <Layout user={user}><Content user={user} /></Layout>;
+}
+
+// RIGHT - Fetch where needed (leveraging deduplication)
+async function Page() {
+  return <Layout><Content /></Layout>;
+}
+
+async function Content() {
+  const user = await fetchUser(); // Fetch at point of use
+  return <div>{user.name}</div>;
+}
+```
+
+### Loading State Patterns
+
+Use streaming and suspense boundaries to show loading states without blocking:
+
+```typescript
+import { Suspense } from 'react';
+
+// Pattern: Granular loading boundaries
+async function Page() {
+  return (
+    <div>
+      {/* User info loads first */}
+      <Suspense fallback={<HeaderSkeleton />}>
+        <Header />
+      </Suspense>
+
+      <div className="content">
+        {/* Main content can load independently */}
+        <Suspense fallback={<ContentSkeleton />}>
+          <MainContent />
+        </Suspense>
+
+        {/* Sidebar loads independently */}
+        <Suspense fallback={<SidebarSkeleton />}>
+          <Sidebar />
+        </Suspense>
+      </div>
+    </div>
+  );
+}
+
+// Pattern: Nested suspense for progressive loading
+async function ProductPage({ id }: { id: string }) {
+  return (
+    <Suspense fallback={<ProductSkeleton />}>
+      <ProductDetails id={id} />
+      {/* Reviews can load after product details */}
+      <Suspense fallback={<ReviewsSkeleton />}>
+        <ProductReviews productId={id} />
+      </Suspense>
+    </Suspense>
+  );
+}
+
+// Skeleton component pattern
+function ProductSkeleton() {
+  return (
+    <div className="animate-pulse">
+      <div className="h-64 bg-gray-200 rounded" />
+      <div className="mt-4 h-8 bg-gray-200 rounded w-3/4" />
+      <div className="mt-2 h-4 bg-gray-200 rounded w-1/2" />
+    </div>
+  );
+}
+```
+
+### Layout Patterns
+
+Layouts persist across navigations and maintain state. Use them strategically:
+
+```typescript
+// Root layout - wraps entire application
+interface RootLayoutProps {
+  children: React.ReactNode;
+}
+
+async function RootLayout({ children }: RootLayoutProps) {
+  return (
+    <html>
+      <body>
+        <Providers>
+          <Header />
+          {children}
+          <Footer />
+        </Providers>
+      </body>
+    </html>
+  );
+}
+
+// Nested layout - wraps a route segment
+interface DashboardLayoutProps {
+  children: React.ReactNode;
+}
+
+async function DashboardLayout({ children }: DashboardLayoutProps) {
+  const user = await getCurrentUser();
+
+  // This layout persists when navigating between dashboard routes
+  return (
+    <div className="dashboard">
+      <DashboardNav user={user} />
+      <main>{children}</main>
+    </div>
+  );
+}
+
+// Pattern: Parallel routes for independent loading
+// Use when different sections of a page have different data needs
+interface DashboardPageProps {
+  overview: React.ReactNode;  // Slot for overview route
+  analytics: React.ReactNode; // Slot for analytics route
+}
+
+function DashboardPage({ overview, analytics }: DashboardPageProps) {
+  return (
+    <div className="grid grid-cols-2">
+      <section>{overview}</section>
+      <section>{analytics}</section>
+    </div>
+  );
+}
+```
+
+### Server Actions Pattern
+
+Server Actions allow client components to call server-side functions directly:
+
+```typescript
+// actions.ts - Server-side action
+'use server';
+
+import { revalidatePath } from 'next/cache';
+
+interface CreatePostResult {
+  success: boolean;
+  error?: string;
+  postId?: string;
+}
+
+export async function createPost(formData: FormData): Promise<CreatePostResult> {
+  const title = formData.get('title') as string;
+  const content = formData.get('content') as string;
+
+  // Validate
+  if (!title || title.length < 3) {
+    return { success: false, error: 'Title must be at least 3 characters' };
+  }
+
+  try {
+    const post = await db.post.create({
+      data: { title, content },
+    });
+
+    // Revalidate the posts list page
+    revalidatePath('/posts');
+
+    return { success: true, postId: post.id };
+  } catch (error) {
+    return { success: false, error: 'Failed to create post' };
+  }
+}
+
+// PostForm.tsx - Client component using server action
+'use client';
+
+import { useActionState } from 'react';
+import { createPost } from './actions';
+
+function PostForm() {
+  const [state, formAction, isPending] = useActionState(createPost, null);
+
+  return (
+    <form action={formAction}>
+      <input name="title" placeholder="Title" required />
+      <textarea name="content" placeholder="Content" required />
+
+      {state?.error && <p className="error">{state.error}</p>}
+
+      <button type="submit" disabled={isPending}>
+        {isPending ? 'Creating...' : 'Create Post'}
+      </button>
+    </form>
+  );
+}
+```
+
+### External API Integration
+
+When integrating with external APIs from server components:
+
+```typescript
+// Pattern: API client for server components
+async function fetchFromExternalAPI<T>(
+  endpoint: string,
+  options?: RequestInit
+): Promise<T> {
+  const response = await fetch(`${process.env.API_BASE_URL}${endpoint}`, {
+    ...options,
+    headers: {
+      'Authorization': `Bearer ${process.env.API_KEY}`,
+      'Content-Type': 'application/json',
+      ...options?.headers,
+    },
+    // Configure caching behavior
+    next: {
+      revalidate: 60, // Revalidate every 60 seconds
+      tags: ['api-data'], // Tag for manual revalidation
+    },
+  });
+
+  if (!response.ok) {
+    throw new Error(`API Error: ${response.status}`);
+  }
+
+  return response.json();
+}
+
+// Server component using external API
+async function ExternalDataDisplay() {
+  const data = await fetchFromExternalAPI<ExternalData>('/endpoint');
+
+  return <DataVisualization data={data} />;
+}
+
+// Pattern: Passing server-fetched data to client components
+async function ChartPage() {
+  // Fetch on server (keeps API keys secure)
+  const chartData = await fetchFromExternalAPI<ChartData[]>('/metrics');
+
+  // Pass data to client component for interactivity
+  return <InteractiveChart data={chartData} />;
+}
+
+// InteractiveChart.tsx
+'use client';
+
+interface InteractiveChartProps {
+  data: ChartData[];
+}
+
+function InteractiveChart({ data }: InteractiveChartProps) {
+  const [selectedRange, setSelectedRange] = useState('7d');
+
+  // Client-side filtering of server-fetched data
+  const filteredData = useMemo(
+    () => filterByRange(data, selectedRange),
+    [data, selectedRange]
+  );
+
+  return (
+    <div>
+      <RangeSelector value={selectedRange} onChange={setSelectedRange} />
+      <Chart data={filteredData} />
+    </div>
+  );
+}
+```
+
+## State Management
+
+### useEffect — Decision Framework
+
+Effects are an escape hatch for synchronizing with **external systems** (WebSocket, browser API, third-party DOM widget, subscription). If code only touches React state/props/rendering, the effect is eliminable. Ref: [You Might Not Need an Effect](https://react.dev/learn/you-might-not-need-an-effect).
+
+**Audit every `useEffect`** — ask these three questions:
+1. Does this sync an *external* system (not React state/props)?
+2. Is this triggered by the component *being displayed* (not by a user action)?
+3. Could this be handled in render, an event handler, `useMemo`, `key` prop, or a data library?
+
+If "no" to #1 or #2, or "yes" to #3 → refactor. Use `eslint-plugin-react-you-might-not-need-an-effect` to auto-detect.
+
+### The 5 useEffect Anti-Patterns
+
+**A. Deriving/transforming data** — compute inline instead of syncing state.
+
+```typescript
+// WRONG — extra render cycle, unnecessary state
+function UserGreeting({ user }: { user: User }) {
+  const [fullName, setFullName] = useState(`${user.first} ${user.last}`);
+  useEffect(() => {
+    setFullName(`${user.first} ${user.last}`);
+  }, [user.first, user.last]);
+  return <h1>Hello, {fullName}</h1>;
+}
+
+// RIGHT — compute inline (useMemo for expensive calculations)
+function UserGreeting({ user }: { user: User }) {
+  const fullName = `${user.first} ${user.last}`;
+  return <h1>Hello, {fullName}</h1>;
+}
+```
+
+**B. Data fetching** — use TanStack Query / SWR / RTK Query instead of manual effects (see Custom Hooks above).
+
+```typescript
+// WRONG — race conditions, no caching, manual loading/error state
+useEffect(() => {
+  fetchUser(id).then(setUser);
+}, [id]);
+
+// RIGHT — TanStack Query handles races, caching, dedup, refetch
+const { data: user } = useQuery({
+  queryKey: ['user', id],
+  queryFn: () => fetchUser(id),
+});
+```
+
+In Next.js: prefer Server Components or Server Actions. In React 19+: `use(promise)` + Suspense.
+
+**C. Responding to user events** — put logic in the event handler, not an effect.
+
+```typescript
+// WRONG — effect reacts to state change caused by the click
+function ProductPage({ product }: { product: Product }) {
+  const [isInCart, setIsInCart] = useState(false);
+  useEffect(() => {
+    if (isInCart) showToast('Added to cart!');
+  }, [isInCart]);
+  return <button onClick={() => setIsInCart(true)}>Add</button>;
+}
+
+// RIGHT — toast in the handler, single render, full event context
+function ProductPage({ product }: { product: Product }) {
+  const handleAddToCart = () => {
+    addToCart(product);
+    showToast('Added to cart!');
+  };
+  return <button onClick={handleAddToCart}>Add</button>;
+}
+```
+
+**D. Resetting state when a prop changes** — use `key` prop to force a clean remount.
+
+```typescript
+// WRONG — one render with stale draft before effect runs
+function CommentEditor({ postId }: { postId: string }) {
+  const [draft, setDraft] = useState('');
+  useEffect(() => { setDraft(''); }, [postId]);
+  return <textarea value={draft} onChange={e => setDraft(e.target.value)} />;
+}
+
+// RIGHT — key prop forces clean remount with fresh state
+function CommentPage({ postId }: { postId: string }) {
+  return <CommentEditor key={postId} postId={postId} />;
+}
+
+function CommentEditor({ postId }: { postId: string }) {
+  const [draft, setDraft] = useState(''); // fresh state per postId
+  return <textarea value={draft} onChange={e => setDraft(e.target.value)} />;
+}
+```
+
+**E. Chaining effects / syncing state between effects** — lift state, use reducers, or compute in event handlers.
+
+```typescript
+// WRONG — cascading effects updating each other
+function ShippingForm({ country }: { country: string }) {
+  const [cities, setCities] = useState<string[]>([]);
+  const [city, setCity] = useState('');
+  const [zipCodes, setZipCodes] = useState<string[]>([]);
+
+  useEffect(() => { fetchCities(country).then(setCities); }, [country]);
+  useEffect(() => { setCity(cities[0] ?? ''); }, [cities]);
+  useEffect(() => { fetchZipCodes(city).then(setZipCodes); }, [city]);
+
+  // ...
+}
+
+// RIGHT — compute in event handler or use a single effect with cleanup
+function ShippingForm({ country }: { country: string }) {
+  const [city, setCity] = useState('');
+  const cities = useQuery({ queryKey: ['cities', country], queryFn: () => fetchCities(country) });
+  const zipCodes = useQuery({
+    queryKey: ['zips', city],
+    queryFn: () => fetchZipCodes(city),
+    enabled: !!city,
+  });
+
+  // Reset city when country changes via key prop on parent, or:
+  const handleCountryChange = (newCountry: string) => {
+    setCity(''); // reset dependent state in the handler
+    navigate(`?country=${newCountry}`);
+  };
+
+  // ...
+}
+```
+
+**Decision Rule**: Can you compute it from current props/state? → Derive inline. Does internal state need to reset when a prop changes? → Use `key`. Is it a user action? → Event handler. Is it data fetching? → Data library. Is it syncing an external system? → `useEffect` in a custom hook.
+
+### Legitimate useEffect — Best Practices
+
+When you *do* need an effect (external system sync only):
+
+- **Extract into a custom hook** with a descriptive name (`useWebSocket`, `useOnlineStatus`)
+- **Always return cleanup** — subscriptions, timers, observers must be torn down
+- **Never make the callback `async`** — use an inner async function + `AbortController`:
+
+```typescript
+useEffect(() => {
+  const controller = new AbortController();
+  async function sync() {
+    const data = await fetchExternal({ signal: controller.signal });
+    if (!controller.signal.aborted) updateExternalSystem(data);
+  }
+  sync();
+  return () => controller.abort();
+}, [dependency]);
+```
+
+- **React 19+ `useEffectEvent`** — extract non-reactive callbacks to avoid stale closures without adding values to deps:
+
+```typescript
+const onVisit = useEffectEvent((url: string) => {
+  logVisit(url, shoppingCart.length); // always reads latest shoppingCart
+});
+
+useEffect(() => {
+  onVisit(currentUrl);
+}, [currentUrl]); // shoppingCart not in deps
+```
+
+### Zustand Store Pattern
+
+```typescript
+// stores/userStore.ts
+import { create } from 'zustand';
+import { devtools, persist } from 'zustand/middleware';
+import { immer } from 'zustand/middleware/immer';
+
+interface User {
+  id: string;
+  name: string;
+  email: string;
+}
+
+interface UserStore {
+  users: Map<string, User>;
+  currentUserId: string | null;
+
+  // Selectors
+  getCurrentUser: () => User | undefined;
+
+  // Actions
+  setCurrentUser: (userId: string) => void;
+  updateUser: (userId: string, updates: Partial<User>) => void;
+  deleteUser: (userId: string) => void;
+  reset: () => void;
+}
+
+export const useUserStore = create<UserStore>()(
+  devtools(
+    persist(
+      immer((set, get) => ({
+        users: new Map(),
+        currentUserId: null,
+
+        getCurrentUser: () => {
+          const { users, currentUserId } = get();
+          return currentUserId ? users.get(currentUserId) : undefined;
+        },
+
+        setCurrentUser: (userId) =>
+          set((state) => {
+            state.currentUserId = userId;
+          }),
+
+        updateUser: (userId, updates) =>
+          set((state) => {
+            const user = state.users.get(userId);
+            if (user) {
+              state.users.set(userId, { ...user, ...updates });
+            }
+          }),
+
+        deleteUser: (userId) =>
+          set((state) => {
+            state.users.delete(userId);
+            if (state.currentUserId === userId) {
+              state.currentUserId = null;
+            }
+          }),
+
+        reset: () =>
+          set((state) => {
+            state.users.clear();
+            state.currentUserId = null;
+          }),
+      })),
+      {
+        name: 'user-store',
+      }
+    )
+  )
+);
+```
+
+## Error Handling
+
+### Error Boundaries
+
+```typescript
+// components/ErrorBoundary.tsx
+import { Component, ErrorInfo, ReactNode } from 'react';
+
+interface Props {
+  children: ReactNode;
+  fallback?: (error: Error, resetError: () => void) => ReactNode;
+}
+
+interface State {
+  hasError: boolean;
+  error: Error | null;
+}
+
+export class ErrorBoundary extends Component<Props, State> {
+  constructor(props: Props) {
+    super(props);
+    this.state = { hasError: false, error: null };
+  }
+
+  static getDerivedStateFromError(error: Error): State {
+    return { hasError: true, error };
+  }
+
+  componentDidCatch(error: Error, errorInfo: ErrorInfo): void {
+    console.error('ErrorBoundary caught:', error, errorInfo);
+    // Log to error reporting service
+  }
+
+  resetError = (): void => {
+    this.setState({ hasError: false, error: null });
+  };
+
+  render(): ReactNode {
+    if (this.state.hasError && this.state.error) {
+      if (this.props.fallback) {
+        return this.props.fallback(this.state.error, this.resetError);
+      }
+
+      return (
+        <div>
+          <h2>Something went wrong</h2>
+          <button onClick={this.resetError}>Try again</button>
+        </div>
+      );
+    }
+
+    return this.props.children;
+  }
+}
+```
+
+### Result Pattern
+
+```typescript
+// utils/result.ts
+export type Result<T, E = Error> =
+  | { success: true; data: T }
+  | { success: false; error: E };
+
+export const Result = {
+  ok<T>(data: T): Result<T, never> {
+    return { success: true, data };
+  },
+
+  err<E>(error: E): Result<never, E> {
+    return { success: false, error };
+  },
+
+  map<T, U, E>(
+    result: Result<T, E>,
+    fn: (data: T) => U
+  ): Result<U, E> {
+    return result.success
+      ? Result.ok(fn(result.data))
+      : result;
+  },
+
+  mapError<T, E, F>(
+    result: Result<T, E>,
+    fn: (error: E) => F
+  ): Result<T, F> {
+    return result.success
+      ? result
+      : Result.err(fn(result.error));
+  },
+};
+
+// Usage
+async function fetchUser(id: string): Promise<Result<User>> {
+  try {
+    const response = await fetch(`/api/users/${id}`);
+    if (!response.ok) {
+      return Result.err(new Error(`HTTP ${response.status}`));
+    }
+    const user = await response.json();
+    return Result.ok(user);
+  } catch (error) {
+    return Result.err(error as Error);
+  }
+}
+```
+
+### Result Pattern Libraries
+
+For larger projects, consider using established libraries:
+
+**neverthrow** - Lightweight, well-typed Result implementation:
+
+```typescript
+import { ok, err, Result, ResultAsync } from 'neverthrow';
+
+// Synchronous
+function divide(a: number, b: number): Result<number, Error> {
+  if (b === 0) return err(new Error('Division by zero'));
+  return ok(a / b);
+}
+
+// Async with ResultAsync
+function fetchUser(id: string): ResultAsync<User, ApiError> {
+  return ResultAsync.fromPromise(
+    fetch(`/api/users/${id}`).then(r => r.json()),
+    (error) => new ApiError('Failed to fetch user', error)
+  );
+}
+
+// Chaining
+const result = await fetchUser('123')
+  .map(user => user.email)
+  .mapErr(err => ({ code: 'USER_ERROR', message: err.message }));
+
+if (result.isOk()) {
+  console.log(result.value);  // Typed as string (email)
+}
+```
+
+> **Note**: neverthrow maintenance has slowed. For new projects, the inline Result pattern in this guide is sufficient. Consider neverthrow for consistency if already in your stack.
+
+## API Integration
+
+### Type-Safe API Client
+
+```typescript
+// api/client.ts
+interface ApiConfig {
+  baseUrl: string;
+  headers?: Record<string, string>;
+}
+
+class ApiClient {
+  constructor(private config: ApiConfig) {}
+
+  private async request<T>(
+    endpoint: string,
+    options?: RequestInit
+  ): Promise<T> {
+    const url = `${this.config.baseUrl}${endpoint}`;
+    const response = await fetch(url, {
+      ...options,
+      headers: {
+        'Content-Type': 'application/json',
+        ...this.config.headers,
+        ...options?.headers,
+      },
+    });
+
+    if (!response.ok) {
+      throw new ApiError(response.status, response.statusText);
+    }
+
+    return response.json();
+  }
+
+  get<T>(endpoint: string): Promise<T> {
+    return this.request<T>(endpoint, { method: 'GET' });
+  }
+
+  post<T>(endpoint: string, data?: unknown): Promise<T> {
+    return this.request<T>(endpoint, {
+      method: 'POST',
+      body: data ? JSON.stringify(data) : undefined,
+    });
+  }
+
+  put<T>(endpoint: string, data: unknown): Promise<T> {
+    return this.request<T>(endpoint, {
+      method: 'PUT',
+      body: JSON.stringify(data),
+    });
+  }
+
+  delete<T>(endpoint: string): Promise<T> {
+    return this.request<T>(endpoint, { method: 'DELETE' });
+  }
+}
+
+// Type-safe API endpoints with proper model naming
+interface CreateUserRequest {
+  email: string;
+  firstName: string;
+  lastName: string;
+  role?: 'admin' | 'user';
+}
+
+interface UpdateUserRequest {
+  firstName?: string;
+  lastName?: string;
+  role?: 'admin' | 'user';
+}
+
+interface UserResponse {
+  id: string;
+  email: string;
+  firstName: string;
+  lastName: string;
+  role: 'admin' | 'user';
+  createdAt: string;
+  updatedAt: string;
+}
+
+interface UserApi {
+  getUser(id: string): Promise<UserResponse>;
+  createUser(data: CreateUserRequest): Promise<UserResponse>;
+  updateUser(id: string, data: UpdateUserRequest): Promise<UserResponse>;
+  deleteUser(id: string): Promise<void>;
+}
+
+class UserApiClient implements UserApi {
+  constructor(private client: ApiClient) {}
+
+  getUser(id: string): Promise<UserResponse> {
+    return this.client.get<UserResponse>(`/users/${id}`);
+  }
+
+  createUser(data: CreateUserRequest): Promise<UserResponse> {
+    return this.client.post<UserResponse>('/users', data);
+  }
+
+  updateUser(id: string, data: UpdateUserRequest): Promise<UserResponse> {
+    return this.client.put<UserResponse>(`/users/${id}`, data);
+  }
+
+  deleteUser(id: string): Promise<void> {
+    return this.client.delete<void>(`/users/${id}`);
+  }
+}
+```
+
+## Testing Patterns
+
+### Test Configuration
+
+```typescript
+// vitest.config.ts
+import { defineConfig } from 'vitest/config';
+import react from '@vitejs/plugin-react';
+
+export default defineConfig({
+  plugins: [react()],
+  test: {
+    globals: true,
+    environment: 'jsdom',
+    setupFiles: ['./test/setup.ts'],
+    coverage: {
+      reporter: ['text', 'html', 'lcov'],
+      exclude: ['**/*.test.ts', '**/*.test.tsx', '**/test/**'],
+      thresholds: {
+        branches: 80,
+        functions: 80,
+        lines: 80,
+        statements: 80,
+      },
+    },
+  },
+});
+
+// test/setup.ts
+import '@testing-library/jest-dom';
+import { cleanup } from '@testing-library/react';
+import { afterEach, vi } from 'vitest';
+
+afterEach(() => {
+  cleanup();
+  vi.clearAllMocks();
+});
+
+// Mock window.matchMedia
+Object.defineProperty(window, 'matchMedia', {
+  writable: true,
+  value: vi.fn().mockImplementation(query => ({
+    matches: false,
+    media: query,
+    onchange: null,
+    addEventListener: vi.fn(),
+    removeEventListener: vi.fn(),
+    dispatchEvent: vi.fn(),
+  })),
+});
+```
+
+### Domain Layer Testing
+
+Test pure business logic without any external dependencies:
+
+```typescript
+// domain/order.test.ts
+import { describe, it, expect } from 'vitest';
+import { Order, OrderItem, OrderStatus } from './order';
+import { Money } from './money';
+
+describe('Order', () => {
+  describe('calculateTotal', () => {
+    it('calculates total correctly for multiple items', () => {
+      const order = new Order('order-1');
+
+      order.addItem(new OrderItem({
+        productId: 'prod-1',
+        price: Money.fromAmount(10.99, 'USD'),
+        quantity: 2,
+      }));
+
+      order.addItem(new OrderItem({
+        productId: 'prod-2',
+        price: Money.fromAmount(5.50, 'USD'),
+        quantity: 1,
+      }));
+
+      expect(order.total.amount).toBe(27.48);
+      expect(order.total.currency).toBe('USD');
+    });
+
+    it('applies discount correctly', () => {
+      const order = new Order('order-1');
+      order.addItem(new OrderItem({
+        productId: 'prod-1',
+        price: Money.fromAmount(100, 'USD'),
+        quantity: 1,
+      }));
+
+      order.applyDiscount(0.2); // 20% discount
+
+      expect(order.total.amount).toBe(80);
+    });
+  });
+
+  describe('status transitions', () => {
+    it('cannot modify order after confirmation', () => {
+      const order = new Order('order-1');
+      order.addItem(new OrderItem({
+        productId: 'prod-1',
+        price: Money.fromAmount(10, 'USD'),
+        quantity: 1,
+      }));
+
+      order.confirm();
+
+      expect(() => {
+        order.addItem(new OrderItem({
+          productId: 'prod-2',
+          price: Money.fromAmount(5, 'USD'),
+          quantity: 1,
+        }));
+      }).toThrow('Cannot modify confirmed order');
+    });
+
+    it('validates state transitions', () => {
+      const order = new Order('order-1');
+
+      // Cannot ship unconfirmed order
+      expect(() => order.ship()).toThrow('Cannot ship unconfirmed order');
+
+      order.confirm();
+      order.ship();
+
+      expect(order.status).toBe(OrderStatus.Shipped);
+    });
+  });
+});
+```
+
+### Application Layer Testing
+
+Test use cases with mocked dependencies:
+
+```typescript
+// application/createOrder.test.ts
+import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { CreateOrderUseCase } from './createOrder';
+import type { OrderRepository } from '../repositories/orderRepository';
+import type { ProductRepository } from '../repositories/productRepository';
+import type { PaymentService } from '../services/paymentService';
+
+describe('CreateOrderUseCase', () => {
+  let useCase: CreateOrderUseCase;
+  let orderRepo: OrderRepository;
+  let productRepo: ProductRepository;
+  let paymentService: PaymentService;
+
+  beforeEach(() => {
+    orderRepo = {
+      save: vi.fn(),
+      findById: vi.fn(),
+    } as any;
+
+    productRepo = {
+      findById: vi.fn(),
+      checkStock: vi.fn(),
+    } as any;
+
+    paymentService = {
+      processPayment: vi.fn(),
+    } as any;
+
+    useCase = new CreateOrderUseCase(orderRepo, productRepo, paymentService);
+  });
+
+  it('creates order successfully', async () => {
+    // Arrange
+    const request = {
+      customerId: 'cust-123',
+      items: [
+        { productId: 'prod-1', quantity: 2 },
+        { productId: 'prod-2', quantity: 1 },
+      ],
+      paymentMethod: 'credit_card' as const,
+    };
+
+    vi.mocked(productRepo.findById)
+      .mockResolvedValueOnce({ id: 'prod-1', price: 10.99, name: 'Product 1' })
+      .mockResolvedValueOnce({ id: 'prod-2', price: 5.50, name: 'Product 2' });
+
+    vi.mocked(productRepo.checkStock).mockResolvedValue(true);
+    vi.mocked(paymentService.processPayment).mockResolvedValue({ success: true, transactionId: 'txn-123' });
+
+    // Act
+    const result = await useCase.execute(request);
+
+    // Assert
+    expect(result.orderId).toBeDefined();
+    expect(result.total).toBe(27.48);
+    expect(orderRepo.save).toHaveBeenCalledOnce();
+    expect(paymentService.processPayment).toHaveBeenCalledWith(
+      expect.objectContaining({
+        amount: 27.48,
+        method: 'credit_card',
+      })
+    );
+  });
+
+  it('rolls back order on payment failure', async () => {
+    // Arrange
+    const request = {
+      customerId: 'cust-123',
+      items: [{ productId: 'prod-1', quantity: 1 }],
+      paymentMethod: 'credit_card' as const,
+    };
+
+    vi.mocked(productRepo.findById).mockResolvedValue({ id: 'prod-1', price: 10.99, name: 'Product 1' });
+    vi.mocked(productRepo.checkStock).mockResolvedValue(true);
+    vi.mocked(paymentService.processPayment).mockRejectedValue(new Error('Payment declined'));
+
+    // Act & Assert
+    await expect(useCase.execute(request)).rejects.toThrow('Payment declined');
+    expect(orderRepo.save).not.toHaveBeenCalled();
+  });
+});
+```
+
+### React Component Testing
+
+```typescript
+// components/UserProfile.test.tsx
+import { render, screen, fireEvent, waitFor, within } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
+import { vi } from 'vitest';
+import { UserProfile } from './UserProfile';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+
+// Test utilities
+const createWrapper = () => {
+  const queryClient = new QueryClient({
+    defaultOptions: {
+      queries: { retry: false },
+    },
+  });
+
+  return ({ children }: { children: React.ReactNode }) => (
+    <QueryClientProvider client={queryClient}>
+      {children}
+    </QueryClientProvider>
+  );
+};
+
+describe('UserProfile', () => {
+  it('renders user information correctly', async () => {
+    const mockUser = {
+      id: '123',
+      firstName: 'John',
+      lastName: 'Doe',
+      email: 'john@example.com',
+      role: 'user' as const,
+    };
+
+    // Mock API call
+    vi.mocked(api.getUser).mockResolvedValue(mockUser);
+
+    render(<UserProfile userId="123" />, { wrapper: createWrapper() });
+
+    // Wait for data to load
+    await waitFor(() => {
+      expect(screen.getByText('John Doe')).toBeInTheDocument();
+    });
+
+    expect(screen.getByText('john@example.com')).toBeInTheDocument();
+  });
+
+  it('handles edit flow correctly', async () => {
+    const user = userEvent.setup();
+    const onEdit = vi.fn();
+
+    render(
+      <UserProfile userId="123" onEdit={onEdit} />,
+      { wrapper: createWrapper() }
+    );
+
+    const editButton = await screen.findByRole('button', { name: /edit/i });
+    await user.click(editButton);
+
+    expect(onEdit).toHaveBeenCalledWith('123');
+  });
+
+  it('displays error state appropriately', async () => {
+    vi.mocked(api.getUser).mockRejectedValue(new Error('User not found'));
+
+    render(<UserProfile userId="invalid" />, { wrapper: createWrapper() });
+
+    await waitFor(() => {
+      expect(screen.getByText(/user not found/i)).toBeInTheDocument();
+    });
+
+    // Should show retry button
+    expect(screen.getByRole('button', { name: /retry/i })).toBeInTheDocument();
+  });
+});
+```
+
+### Hook Testing
+
+```typescript
+// hooks/useAuth.test.tsx
+import { renderHook, act, waitFor } from '@testing-library/react';
+import { vi } from 'vitest';
+import { useAuth } from './useAuth';
+import { AuthProvider } from '../contexts/AuthContext';
+
+const wrapper = ({ children }: { children: React.ReactNode }) => (
+  <AuthProvider>{children}</AuthProvider>
+);
+
+describe('useAuth', () => {
+  it('handles login flow', async () => {
+    const { result } = renderHook(() => useAuth(), { wrapper });
+
+    expect(result.current.isAuthenticated).toBe(false);
+
+    await act(async () => {
+      await result.current.login('user@example.com', 'password');
+    });
+
+    await waitFor(() => {
+      expect(result.current.isAuthenticated).toBe(true);
+      expect(result.current.user).toEqual(
+        expect.objectContaining({
+          email: 'user@example.com',
+        })
+      );
+    });
+  });
+
+  it('handles logout', async () => {
+    const { result } = renderHook(() => useAuth(), { wrapper });
+
+    // Login first
+    await act(async () => {
+      await result.current.login('user@example.com', 'password');
+    });
+
+    expect(result.current.isAuthenticated).toBe(true);
+
+    // Then logout
+    act(() => {
+      result.current.logout();
+    });
+
+    expect(result.current.isAuthenticated).toBe(false);
+    expect(result.current.user).toBeNull();
+  });
+});
+```
+
+### Integration Testing
+
+```typescript
+// integration/userFlow.test.tsx
+import { render, screen, waitFor } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
+import { App } from '../App';
+import { setupServer } from 'msw/node';
+import { rest } from 'msw';
+
+// Setup MSW for API mocking
+const server = setupServer(
+  rest.post('/api/login', (req, res, ctx) => {
+    return res(
+      ctx.json({
+        user: { id: '1', email: 'test@example.com' },
+        token: 'mock-token',
+      })
+    );
+  }),
+  rest.get('/api/users/:id', (req, res, ctx) => {
+    return res(
+      ctx.json({
+        id: req.params.id,
+        email: 'test@example.com',
+        firstName: 'Test',
+        lastName: 'User',
+      })
+    );
+  })
+);
+
+beforeAll(() => server.listen());
+afterEach(() => server.resetHandlers());
+afterAll(() => server.close());
+
+describe('User Flow Integration', () => {
+  it('completes full authentication and profile viewing flow', async () => {
+    const user = userEvent.setup();
+
+    render(<App />);
+
+    // Login
+    const emailInput = screen.getByLabelText(/email/i);
+    const passwordInput = screen.getByLabelText(/password/i);
+    const loginButton = screen.getByRole('button', { name: /login/i });
+
+    await user.type(emailInput, 'test@example.com');
+    await user.type(passwordInput, 'password123');
+    await user.click(loginButton);
+
+    // Wait for redirect to dashboard
+    await waitFor(() => {
+      expect(screen.getByText(/welcome test user/i)).toBeInTheDocument();
+    });
+
+    // Navigate to profile
+    const profileLink = screen.getByRole('link', { name: /profile/i });
+    await user.click(profileLink);
+
+    // Verify profile loads
+    await waitFor(() => {
+      expect(screen.getByText('test@example.com')).toBeInTheDocument();
+    });
+  });
+});
+```
+
+### Store Testing (Zustand)
+
+```typescript
+// stores/userStore.test.ts
+import { renderHook, act } from '@testing-library/react';
+import { useUserStore } from './userStore';
+
+describe('UserStore', () => {
+  beforeEach(() => {
+    // Reset store before each test
+    useUserStore.setState({
+      users: new Map(),
+      currentUserId: null,
+    });
+  });
+
+  it('manages users correctly', () => {
+    const { result } = renderHook(() => useUserStore());
+
+    // Add user
+    act(() => {
+      result.current.users.set('user-1', {
+        id: 'user-1',
+        name: 'John Doe',
+        email: 'john@example.com',
+      });
+    });
+
+    // Set current user
+    act(() => {
+      result.current.setCurrentUser('user-1');
+    });
+
+    expect(result.current.getCurrentUser()).toEqual({
+      id: 'user-1',
+      name: 'John Doe',
+      email: 'john@example.com',
+    });
+
+    // Update user
+    act(() => {
+      result.current.updateUser('user-1', { name: 'Jane Doe' });
+    });
+
+    expect(result.current.getCurrentUser()?.name).toBe('Jane Doe');
+
+    // Delete user
+    act(() => {
+      result.current.deleteUser('user-1');
+    });
+
+    expect(result.current.getCurrentUser()).toBeUndefined();
+    expect(result.current.currentUserId).toBeNull();
+  });
+});
+```
+
+### Testing Utilities
+
+```typescript
+// test/utils.tsx
+import { ReactElement, ReactNode } from 'react';
+import { render as rtlRender, RenderOptions } from '@testing-library/react';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { MemoryRouter } from 'react-router-dom';
+
+// Create a custom render function that includes providers
+export function renderWithProviders(
+  ui: ReactElement,
+  {
+    route = '/',
+    ...renderOptions
+  }: RenderOptions & { route?: string } = {}
+) {
+  const queryClient = new QueryClient({
+    defaultOptions: {
+      queries: { retry: false, staleTime: 0 },
+      mutations: { retry: false },
+    },
+  });
+
+  function Wrapper({ children }: { children: ReactNode }) {
+    return (
+      <QueryClientProvider client={queryClient}>
+        <MemoryRouter initialEntries={[route]}>
+          {children}
+        </MemoryRouter>
+      </QueryClientProvider>
+    );
+  }
+
+  return {
+    ...rtlRender(ui, { wrapper: Wrapper, ...renderOptions }),
+    queryClient,
+  };
+}
+
+// Mock timers utility
+export function useFakeTimers() {
+  beforeEach(() => {
+    vi.useFakeTimers();
+  });
+
+  afterEach(() => {
+    vi.runOnlyPendingTimers();
+    vi.useRealTimers();
+  });
+
+  return {
+    advance: (ms: number) => vi.advanceTimersByTime(ms),
+    runAll: () => vi.runAllTimers(),
+  };
+}
+
+// Create mock context values
+export function createMockAuthContext(overrides = {}) {
+  return {
+    user: null,
+    login: vi.fn(),
+    logout: vi.fn(),
+    isAuthenticated: false,
+    ...overrides,
+  };
+}
+```
+
+### Snapshot Testing
+
+```typescript
+// components/Card.test.tsx
+import { render } from '@testing-library/react';
+import { Card } from './Card';
+
+describe('Card', () => {
+  it('matches snapshot with default props', () => {
+    const { container } = render(
+      <Card title="Test Card">
+        <p>Card content</p>
+      </Card>
+    );
+
+    expect(container.firstChild).toMatchSnapshot();
+  });
+
+  it('matches snapshot with all props', () => {
+    const { container } = render(
+      <Card
+        title="Complete Card"
+        subtitle="With subtitle"
+        footer={<button>Action</button>}
+        variant="elevated"
+      >
+        <p>Full content</p>
+      </Card>
+    );
+
+    expect(container.firstChild).toMatchSnapshot();
+  });
+});
+```
+
+### Performance Testing
+
+```typescript
+// components/LargeList.test.tsx
+import { render, screen } from '@testing-library/react';
+import { measurePerformance } from '../test/utils';
+import { LargeList } from './LargeList';
+
+describe('LargeList Performance', () => {
+  it('renders 1000 items within acceptable time', async () => {
+    const items = Array.from({ length: 1000 }, (_, i) => ({
+      id: `item-${i}`,
+      name: `Item ${i}`,
+    }));
+
+    const { duration } = await measurePerformance(() => {
+      render(<LargeList items={items} />);
+    });
+
+    // Should render within 100ms
+    expect(duration).toBeLessThan(100);
+
+    // Verify items rendered
+    expect(screen.getByText('Item 0')).toBeInTheDocument();
+    expect(screen.getByText('Item 999')).toBeInTheDocument();
+  });
+
+  it('handles updates efficiently', async () => {
+    const { rerender } = render(<LargeList items={[]} />);
+
+    const items = Array.from({ length: 100 }, (_, i) => ({
+      id: `item-${i}`,
+      name: `Item ${i}`,
+    }));
+
+    const { duration } = await measurePerformance(() => {
+      rerender(<LargeList items={items} />);
+    });
+
+    expect(duration).toBeLessThan(50);
+  });
+});
+```
+
+### Automated Accessibility Testing
+
+Integrate accessibility checks into your test suite and CI:
+
+```typescript
+// vitest.setup.ts
+import { configureAxe } from 'vitest-axe';
+
+// Configure axe for your project's requirements
+configureAxe({
+  rules: {
+    // Disable specific rules if needed
+    'color-contrast': { enabled: false },  // For dark mode testing
+  },
+});
+```
+
+```typescript
+// components/Form.test.tsx
+import { render } from '@testing-library/react';
+import { axe, toHaveNoViolations } from 'jest-axe';
+import { Form } from './Form';
+
+expect.extend(toHaveNoViolations);
+
+describe('Form Accessibility', () => {
+  it('has no accessibility violations', async () => {
+    const { container } = render(
+      <Form onSubmit={vi.fn()}>
+        <label htmlFor="email">Email</label>
+        <input id="email" type="email" required />
+        <button type="submit">Submit</button>
+      </Form>
+    );
+
+    const results = await axe(container);
+    expect(results).toHaveNoViolations();
+  });
+
+  it('supports keyboard navigation', async () => {
+    const user = userEvent.setup();
+    const onSubmit = vi.fn();
+
+    render(
+      <Form onSubmit={onSubmit}>
+        <input name="field1" />
+        <input name="field2" />
+        <button type="submit">Submit</button>
+      </Form>
+    );
+
+    // Tab through form
+    await user.tab();
+    expect(screen.getByName('field1')).toHaveFocus();
+
+    await user.tab();
+    expect(screen.getByName('field2')).toHaveFocus();
+
+    await user.tab();
+    expect(screen.getByRole('button')).toHaveFocus();
+  });
+});
+```
+
+**CI Integration - Lighthouse for Production A11y Audits:**
+
+```yaml
+# GitHub Actions - Lighthouse CI
+- name: Lighthouse CI
+  uses: treosh/lighthouse-ci-action@v10
+  with:
+    configPath: './lighthouserc.json'
+    uploadArtifacts: true
+```
+
+## Performance Optimization
+
+### Memoization
+
+```typescript
+// WRONG - Creates new object every render
+function UserList({ users }: { users: User[] }) {
+  return (
+    <List
+      data={users}
+      config={{ showAvatar: true, showEmail: false }} // New object!
+    />
+  );
+}
+
+// RIGHT - Memoized config
+const LIST_CONFIG = { showAvatar: true, showEmail: false } as const;
+
+function UserList({ users }: { users: User[] }) {
+  return <List data={users} config={LIST_CONFIG} />;
+}
+
+// Or with useMemo for dynamic values
+function UserList({ users, showEmail }: Props) {
+  const config = useMemo(
+    () => ({ showAvatar: true, showEmail }),
+    [showEmail]
+  );
+
+  return <List data={users} config={config} />;
+}
+```
+
+### Code Splitting
+
+```typescript
+// routes/index.tsx
+import { lazy, Suspense } from 'react';
+import { Routes, Route } from 'react-router-dom';
+
+// Lazy load route components
+const Dashboard = lazy(() => import('./Dashboard'));
+const UserProfile = lazy(() => import('./UserProfile'));
+const Settings = lazy(() => import('./Settings'));
+
+export function AppRoutes() {
+  return (
+    <Suspense fallback={<LoadingSpinner />}>
+      <Routes>
+        <Route path="/" element={<Dashboard />} />
+        <Route path="/profile/:id" element={<UserProfile />} />
+        <Route path="/settings" element={<Settings />} />
+      </Routes>
+    </Suspense>
+  );
+}
+```
+
+## Form Handling
+
+### React Hook Form with Zod
+
+```typescript
+// schemas/user.ts
+import { z } from 'zod';
+
+export const userFormSchema = z.object({
+  email: z.string().email('Invalid email'),
+  firstName: z.string().min(1, 'First name required'),
+  lastName: z.string().min(1, 'Last name required'),
+  age: z.number().min(18, 'Must be 18+').max(120),
+  role: z.enum(['admin', 'user']),
+});
+
+export type UserFormData = z.infer<typeof userFormSchema>;
+
+// components/UserForm.tsx
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+
+export function UserForm({ onSubmit }: { onSubmit: (data: UserFormData) => void }) {
+  const {
+    register,
+    handleSubmit,
+    formState: { errors, isSubmitting },
+  } = useForm<UserFormData>({
+    resolver: zodResolver(userFormSchema),
+    defaultValues: {
+      role: 'user',
+    },
+  });
+
+  return (
+    <form onSubmit={handleSubmit(onSubmit)}>
+      <input
+        {...register('email')}
+        placeholder="Email"
+        aria-invalid={!!errors.email}
+      />
+      {errors.email && <span>{errors.email.message}</span>}
+
+      <input
+        {...register('firstName')}
+        placeholder="First Name"
+        aria-invalid={!!errors.firstName}
+      />
+      {errors.firstName && <span>{errors.firstName.message}</span>}
+
+      <select {...register('role')}>
+        <option value="user">User</option>
+        <option value="admin">Admin</option>
+      </select>
+
+      <button type="submit" disabled={isSubmitting}>
+        {isSubmitting ? 'Saving...' : 'Save'}
+      </button>
+    </form>
+  );
+}
+```
+
+### Zod Validation Best Practices
+
+Prefer `safeParse` over `parse` for non-throwing validation:
+
+```typescript
+import { z } from 'zod';
+
+const UserSchema = z.object({
+  email: z.string().email(),
+  age: z.number().min(18),
+});
+
+// Throws on invalid input
+try {
+  const user = UserSchema.parse(input);
+} catch (error) {
+  if (error instanceof z.ZodError) {
+    // Handle validation error
+  }
+}
+
+// Preferred - returns Result-like object
+const result = UserSchema.safeParse(input);
+if (!result.success) {
+  // result.error contains detailed validation errors
+  console.log(result.error.flatten());
+  return;
+}
+// result.data is typed as { email: string; age: number }
+const user = result.data;
+```
+
+**Environment Variable Validation with Zod:**
+
+```typescript
+// src/config/env.ts
+import { z } from 'zod';
+
+const EnvSchema = z.object({
+  NODE_ENV: z.enum(['development', 'production', 'test']),
+  DATABASE_URL: z.string().url(),
+  API_KEY: z.string().min(1),
+  PORT: z.coerce.number().default(3000),  // Coerce string to number
+});
+
+// Validate at startup
+const result = EnvSchema.safeParse(process.env);
+if (!result.success) {
+  console.error('Invalid environment variables:', result.error.flatten());
+  process.exit(1);
+}
+
+export const env = result.data;
+```
+
+## Multi-Step Form (Wizard) Patterns
+
+Multi-step forms (wizards) collect data across multiple screens. These patterns handle step navigation, state management, validation, and persistence.
+
+### Wizard State Machine
+
+Use a state machine pattern to manage wizard flow with type safety:
+
+```typescript
+// types/wizard.ts
+interface WizardStep<TData> {
+  id: string;
+  title: string;
+  validate?: (data: Partial<TData>) => string[] | null;
+  isComplete: (data: Partial<TData>) => boolean;
+}
+
+interface WizardState<TData> {
+  currentStepIndex: number;
+  data: Partial<TData>;
+  completedSteps: Set<string>;
+  errors: Map<string, string[]>;
+  isDirty: boolean;
+}
+
+type WizardAction<TData> =
+  | { type: 'NEXT' }
+  | { type: 'BACK' }
+  | { type: 'GO_TO_STEP'; stepIndex: number }
+  | { type: 'UPDATE_DATA'; payload: Partial<TData> }
+  | { type: 'SET_ERRORS'; stepId: string; errors: string[] }
+  | { type: 'CLEAR_ERRORS'; stepId: string }
+  | { type: 'RESET' };
+
+function createWizardReducer<TData>(
+  steps: WizardStep<TData>[]
+) {
+  return function wizardReducer(
+    state: WizardState<TData>,
+    action: WizardAction<TData>
+  ): WizardState<TData> {
+    switch (action.type) {
+      case 'NEXT': {
+        const currentStep = steps[state.currentStepIndex];
+        const errors = currentStep.validate?.(state.data);
+
+        if (errors && errors.length > 0) {
+          return {
+            ...state,
+            errors: new Map(state.errors).set(currentStep.id, errors),
+          };
+        }
+
+        const nextIndex = Math.min(state.currentStepIndex + 1, steps.length - 1);
+        const completedSteps = new Set(state.completedSteps);
+        completedSteps.add(currentStep.id);
+
+        return {
+          ...state,
+          currentStepIndex: nextIndex,
+          completedSteps,
+          errors: new Map(state.errors),
+        };
+      }
+
+      case 'BACK':
+        return {
+          ...state,
+          currentStepIndex: Math.max(state.currentStepIndex - 1, 0),
+        };
+
+      case 'GO_TO_STEP': {
+        // Only allow jumping to completed steps or current step
+        const canNavigate =
+          action.stepIndex <= state.currentStepIndex ||
+          steps
+            .slice(0, action.stepIndex)
+            .every((step) => state.completedSteps.has(step.id));
+
+        if (!canNavigate) return state;
+
+        return {
+          ...state,
+          currentStepIndex: action.stepIndex,
+        };
+      }
+
+      case 'UPDATE_DATA':
+        return {
+          ...state,
+          data: { ...state.data, ...action.payload },
+          isDirty: true,
+        };
+
+      case 'SET_ERRORS': {
+        const errors = new Map(state.errors);
+        errors.set(action.stepId, action.errors);
+        return { ...state, errors };
+      }
+
+      case 'CLEAR_ERRORS': {
+        const errors = new Map(state.errors);
+        errors.delete(action.stepId);
+        return { ...state, errors };
+      }
+
+      case 'RESET':
+        return createInitialState<TData>();
+
+      default:
+        return state;
+    }
+  };
+}
+
+function createInitialState<TData>(): WizardState<TData> {
+  return {
+    currentStepIndex: 0,
+    data: {},
+    completedSteps: new Set(),
+    errors: new Map(),
+    isDirty: false,
+  };
+}
+```
+
+### useWizard Hook
+
+A reusable hook that encapsulates wizard logic:
+
+```typescript
+// hooks/useWizard.ts
+import { useReducer, useCallback, useMemo } from 'react';
+
+interface UseWizardOptions<TData> {
+  steps: WizardStep<TData>[];
+  initialData?: Partial<TData>;
+  onComplete?: (data: TData) => void | Promise<void>;
+}
+
+interface UseWizardReturn<TData> {
+  // State
+  currentStep: WizardStep<TData>;
+  currentStepIndex: number;
+  data: Partial<TData>;
+  errors: string[];
+  isFirstStep: boolean;
+  isLastStep: boolean;
+  completedSteps: string[];
+  progress: number;
+
+  // Actions
+  next: () => void;
+  back: () => void;
+  goToStep: (index: number) => void;
+  updateData: (data: Partial<TData>) => void;
+  reset: () => void;
+  submit: () => Promise<void>;
+}
+
+export function useWizard<TData>({
+  steps,
+  initialData = {},
+  onComplete,
+}: UseWizardOptions<TData>): UseWizardReturn<TData> {
+  const reducer = useMemo(() => createWizardReducer(steps), [steps]);
+
+  const [state, dispatch] = useReducer(reducer, {
+    ...createInitialState<TData>(),
+    data: initialData,
+  });
+
+  const currentStep = steps[state.currentStepIndex];
+
+  const next = useCallback(() => {
+    dispatch({ type: 'NEXT' });
+  }, []);
+
+  const back = useCallback(() => {
+    dispatch({ type: 'BACK' });
+  }, []);
+
+  const goToStep = useCallback((index: number) => {
+    dispatch({ type: 'GO_TO_STEP', stepIndex: index });
+  }, []);
+
+  const updateData = useCallback((data: Partial<TData>) => {
+    dispatch({ type: 'UPDATE_DATA', payload: data });
+  }, []);
+
+  const reset = useCallback(() => {
+    dispatch({ type: 'RESET' });
+  }, []);
+
+  const submit = useCallback(async () => {
+    // Validate final step
+    const errors = currentStep.validate?.(state.data);
+    if (errors && errors.length > 0) {
+      dispatch({ type: 'SET_ERRORS', stepId: currentStep.id, errors });
+      return;
+    }
+
+    // Call completion handler
+    await onComplete?.(state.data as TData);
+  }, [currentStep, state.data, onComplete]);
+
+  return {
+    currentStep,
+    currentStepIndex: state.currentStepIndex,
+    data: state.data,
+    errors: state.errors.get(currentStep.id) ?? [],
+    isFirstStep: state.currentStepIndex === 0,
+    isLastStep: state.currentStepIndex === steps.length - 1,
+    completedSteps: Array.from(state.completedSteps),
+    progress: ((state.currentStepIndex + 1) / steps.length) * 100,
+    next,
+    back,
+    goToStep,
+    updateData,
+    reset,
+    submit,
+  };
+}
+```
+
+## Utility Types
+
+### Common Patterns
+
+```typescript
+// Make all properties optional except specified
+type PartialExcept<T, K extends keyof T> = Partial<T> & Pick<T, K>;
+
+// Make specified properties optional
+type PartialPick<T, K extends keyof T> = Omit<T, K> & Partial<Pick<T, K>>;
+
+// Deep readonly
+type DeepReadonly<T> = {
+  readonly [P in keyof T]: T[P] extends object ? DeepReadonly<T[P]> : T[P];
+};
+
+// Nullable properties
+type Nullable<T> = { [P in keyof T]: T[P] | null };
+
+// Non-nullable properties
+type NonNullable<T> = { [P in keyof T]: NonNullable<T[P]> };
+
+// Extract promise type
+type Awaited<T> = T extends Promise<infer U> ? U : T;
+
+// Function component with children
+type FCC<P = {}> = FC<PropsWithChildren<P>>;
+```
+
+## CSS-in-JS Patterns
+
+### Styled Components / Emotion
+
+```typescript
+// styles/theme.ts
+export const theme = {
+  colors: {
+    primary: '#007bff',
+    secondary: '#6c757d',
+    success: '#28a745',
+    danger: '#dc3545',
+  },
+  spacing: (factor: number) => `${factor * 8}px`,
+  breakpoints: {
+    sm: '576px',
+    md: '768px',
+    lg: '992px',
+    xl: '1200px',
+  },
+} as const;
+
+// components/Button.tsx
+import styled from '@emotion/styled';
+
+interface ButtonProps {
+  variant?: 'primary' | 'secondary';
+  size?: 'sm' | 'md' | 'lg';
+}
+
+export const Button = styled.button<ButtonProps>`
+  padding: ${({ size = 'md', theme }) =>
+    size === 'sm' ? theme.spacing(1) :
+    size === 'lg' ? theme.spacing(3) :
+    theme.spacing(2)};
+
+  background-color: ${({ variant = 'primary', theme }) =>
+    theme.colors[variant]};
+
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+
+  &:hover {
+    opacity: 0.9;
+  }
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+`;
+```
+
+## Data Visualization Patterns
+
+Patterns for building reusable, accessible chart and visualization components. These patterns are library-agnostic and focus on component composition, data transformation, and accessibility.
+
+### Chart Wrapper Component Pattern
+
+Create a composable wrapper that handles common concerns:
+
+```typescript
+// components/charts/ChartContainer.tsx
+import { useRef, useEffect, useState, ReactNode } from 'react';
+
+interface ChartContainerProps {
+  children: (dimensions: { width: number; height: number }) => ReactNode;
+  aspectRatio?: number;
+  minHeight?: number;
+  className?: string;
+  'aria-label': string;
+  'aria-describedby'?: string;
+}
+
+export function ChartContainer({
+  children,
+  aspectRatio = 16 / 9,
+  minHeight = 200,
+  className,
+  'aria-label': ariaLabel,
+  'aria-describedby': ariaDescribedBy,
+}: ChartContainerProps) {
+  const containerRef = useRef<HTMLDivElement>(null);
+  const [dimensions, setDimensions] = useState({ width: 0, height: 0 });
+
+  useEffect(() => {
+    if (!containerRef.current) return;
+
+    const resizeObserver = new ResizeObserver((entries) => {
+      const { width } = entries[0].contentRect;
+      const height = Math.max(width / aspectRatio, minHeight);
+      setDimensions({ width, height });
+    });
+
+    resizeObserver.observe(containerRef.current);
+    return () => resizeObserver.disconnect();
+  }, [aspectRatio, minHeight]);
+
+  return (
+    <div
+      ref={containerRef}
+      className={className}
+      role="img"
+      aria-label={ariaLabel}
+      aria-describedby={ariaDescribedBy}
+      style={{ width: '100%', height: dimensions.height || 'auto' }}
+    >
+      {dimensions.width > 0 && children(dimensions)}
+    </div>
+  );
+}
+
+// Usage
+function SalesChart({ data }: { data: SalesData[] }) {
+  return (
+    <>
+      <ChartContainer
+        aria-label="Monthly sales chart"
+        aria-describedby="sales-chart-description"
+        aspectRatio={2}
+      >
+        {({ width, height }) => (
+          <LineChart data={data} width={width} height={height} />
+        )}
+      </ChartContainer>
+      <p id="sales-chart-description" className="sr-only">
+        Line chart showing sales trends from January to December.
+        Highest sales in December at $45,000.
+      </p>
+    </>
+  );
+}
+```
+
+## File Organization
+
+```
+src/
+├── components/           # Shared components
+│   ├── ui/              # Pure UI components
+│   ├── forms/           # Form components
+│   └── layout/          # Layout components
+├── features/            # Feature-specific code
+│   └── user/
+│       ├── components/
+│       ├── hooks/
+│       ├── api/
+│       └── types.ts
+├── hooks/               # Shared hooks
+├── utils/               # Utility functions
+├── api/                 # API client and config
+├── stores/              # Global state
+├── styles/              # Global styles and theme
+├── types/               # Shared TypeScript types
+└── App.tsx              # Root component
+```
+
+Remember: Prioritize type safety, performance, and maintainability. When in doubt, refer to the main AGENTS.md for project standards.
+
+## References
+
+- [react-doctor Issue #19](https://github.com/millionco/react-doctor/issues/19) — Derived state vs. reset state pattern distinction

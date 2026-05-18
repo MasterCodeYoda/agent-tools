@@ -1,0 +1,299 @@
+# Mocking Strategy and Contract Testing
+
+When and how to use test doubles, with a focus on mocking at architectural service abstraction boundaries. Plus contract testing for service boundaries.
+
+## Core Principle: Mock at Service Abstraction Boundaries
+
+Mock at **architectural boundaries (service abstractions)** — the interfaces that separate layers. Use real implementations for everything within a layer.
+
+```
+┌──────────────────────────────────────────────┐
+│              Your System                     │
+│                                              │
+│  Domain ──real── Application ──real── Framework │
+│                    │    │                     │
+│              MOCK HERE  │                    │
+│       (service abstractions)                │
+│                ↓        ↓                    │
+│         ┌──────────┐  ┌──────────┐           │
+│         │ Repo IF  │  │Gateway IF│           │
+│         └────┬─────┘  └────┬─────┘           │
+│              │              │                │
+│     Infrastructure (real in integration tests)│
+└──────────────┬──────────────┬────────────────┘
+               │              │
+          ALSO MOCK       ALWAYS MOCK
+          (integration)   (unmanaged)
+               │              │
+          ┌────┴────┐   ┌────┴────┐
+          │ Database│   │ Ext API │
+          └─────────┘   └─────────┘
+```
+
+**Service abstractions** (repository, gateway, event publisher) are architectural boundaries you own but intentionally isolate. Mock them in use case tests. Use fakes (in-memory implementations) over mocking frameworks when practical.
+
+## What to Mock
+
+### External APIs and Services
+
+Third-party HTTP services, payment processors, email providers — anything with a network boundary.
+
+```
+// Mock the HTTP client or SDK, not your wrapper
+test "sends welcome email after signup":
+  emailService = mock(EmailService)
+  signup(user: newUser, emailService: emailService)
+  assert emailService.send was called with recipient: newUser.email
+```
+
+### Repository Abstractions (Databases and Persistence)
+
+In use case tests, mock the repository service abstraction — it's an architectural boundary. Use fakes (in-memory implementations) for speed and simplicity. In infrastructure integration tests, use a real database to validate the implementation fulfills the abstraction's contract.
+
+```
+// Unit test: mock the repository
+test "use case returns not found for missing task":
+  repo = mock(TaskRepository, findById: returns(null))
+  result = getTask(id: "missing-123", repo: repo)
+  assert result is NotFoundError
+
+// Integration test: real database
+test "repository persists and retrieves task":
+  repo = RealTaskRepository(testDatabase)
+  repo.save(Task(title: "test"))
+  found = repo.findById(savedId)
+  assert found.title == "test"
+```
+
+### Time and Randomness
+
+Inject clocks and random generators so tests are deterministic.
+
+```
+test "task is overdue when past deadline":
+  clock = fixedClock(date: "2025-03-15")
+  task = Task(deadline: "2025-03-14", clock: clock)
+  assert task.isOverdue == true
+```
+
+### Filesystem and Environment
+
+File reads, environment variables, configuration files.
+
+## What NOT to Mock
+
+### Your Own Modules
+
+If you wrote it and it's part of the same system, use the real thing:
+
+```
+// Don't mock your own validator
+// BAD
+test "createTask calls validator":
+  validator = mock(TaskValidator)
+  createTask(title: "test", validator: validator)
+  assert validator.validate was called
+
+// GOOD — use the real validator, test the outcome
+test "createTask rejects invalid title":
+  result = createTask(title: "")
+  assert result is ValidationError
+```
+
+### Internal Collaborators
+
+If a service calls a helper, don't mock the helper. Test through the service's public API.
+
+### Simple Value Objects
+
+Entities, DTOs, and data structures — use real instances. They're fast and deterministic.
+
+## SDK-Style Interfaces for Testability
+
+Design your system boundaries as narrow interfaces that are easy to mock:
+
+```
+// Define a slim interface for the boundary
+interface PaymentGateway:
+  charge(amount, currency, token) → PaymentResult
+
+// Production implementation
+class StripeGateway implements PaymentGateway:
+  charge(amount, currency, token):
+    return stripe.charges.create(...)
+
+// Test double
+class FakePaymentGateway implements PaymentGateway:
+  charges = []
+  charge(amount, currency, token):
+    charges.append({amount, currency, token})
+    return PaymentResult(success: true)
+```
+
+This pattern gives you a clear contract at the boundary. The fake is simple, predictable, and tests can inspect its state.
+
+## Dependency Injection for Testing
+
+Accept dependencies through constructors or parameters instead of creating them internally.
+
+### Python
+
+```python
+class TaskService:
+    def __init__(self, repo: TaskRepository, clock: Clock = SystemClock()):
+        self._repo = repo
+        self._clock = clock
+
+    def create(self, title: str) -> Task:
+        task = Task(title=title, created_at=self._clock.now())
+        return self._repo.save(task)
+
+# In tests:
+service = TaskService(repo=FakeTaskRepo(), clock=FixedClock("2025-01-01"))
+```
+
+### TypeScript
+
+```typescript
+class TaskService {
+  constructor(
+    private repo: TaskRepository,
+    private clock: Clock = new SystemClock()
+  ) {}
+
+  create(title: string): Task {
+    const task = new Task(title, this.clock.now());
+    return this.repo.save(task);
+  }
+}
+
+// In tests:
+const service = new TaskService(new FakeTaskRepo(), new FixedClock("2025-01-01"));
+```
+
+### C#
+
+```csharp
+public class TaskService
+{
+    private readonly ITaskRepository _repo;
+    private readonly IClock _clock;
+
+    public TaskService(ITaskRepository repo, IClock? clock = null)
+    {
+        _repo = repo;
+        _clock = clock ?? new SystemClock();
+    }
+
+    public Task Create(string title)
+    {
+        var task = new Task(title, _clock.Now());
+        return _repo.Save(task);
+    }
+}
+
+// In tests:
+var service = new TaskService(new FakeTaskRepo(), new FixedClock(new DateTime(2025, 1, 1)));
+```
+
+## Fakes vs Mocks vs Stubs
+
+| Type | Purpose | When to Use |
+|------|---------|-------------|
+| **Fake** | Working implementation with shortcuts | In-memory repositories, fake APIs |
+| **Stub** | Returns pre-configured responses | When you need specific return values |
+| **Mock** | Records interactions for verification | When verifying a side effect (email sent, event published) |
+
+**Prefer fakes** for repositories and services. They're reusable, don't couple tests to call sequences, and behave like real implementations.
+
+**Use mocks sparingly** — only when verifying that a side effect occurred (notification sent, event published). Over-mocking leads to brittle tests that break on refactoring.
+
+## Contract Testing
+
+When services communicate across boundaries (HTTP APIs, message queues, shared databases), contract testing ensures both sides agree on the interface shape.
+
+### The Problem
+
+```
+Service A (consumer) ──HTTP──→ Service B (producer)
+
+A's tests mock B's responses (stubs).
+B's tests don't know what A expects.
+B changes response format → A's tests still pass (stubs are stale) → production breaks.
+```
+
+### How Contract Testing Works
+
+```
+1. Consumer defines expected interactions (contract)
+   "When I send GET /users/123, I expect { id, name, email }"
+
+2. Contract is shared with producer
+   (via a broker, repo, or file)
+
+3. Producer verifies it can satisfy the contract
+   "Given this request, can I produce a matching response?"
+
+4. Both sides run independently
+   Consumer tests against the contract (not the real service)
+   Producer tests against the contract (not a specific consumer)
+```
+
+### When to Use Contract Testing
+
+- **Microservice boundaries** — APIs between services you own
+- **Third-party API wrappers** — Verify your assumptions about external APIs
+- **Event-driven systems** — Message producers and consumers
+- **Shared libraries** — Public interface contracts
+
+### When NOT to Use Contract Testing
+
+- **Internal module boundaries** — Use integration tests instead
+- **Simple CRUD APIs** — E2E tests are sufficient
+- **Prototype/throwaway code** — Not worth the setup overhead
+
+### Contract Testing Tools
+
+| Ecosystem | Tool | Notes |
+|-----------|------|-------|
+| Language-agnostic | [Pact](https://pact.io/) | Most mature; consumer-driven; broker available |
+| OpenAPI-based | [Schemathesis](https://schemathesis.readthedocs.io/) | Property-based testing against OpenAPI specs |
+| gRPC | [buf](https://buf.build/) | Schema-based contract enforcement |
+| GraphQL | Schema validation | Built-in type system acts as contract |
+
+### Consumer-Driven Contracts
+
+The most common pattern: the **consumer** defines what it needs, and the **producer** verifies it can deliver.
+
+```
+// Consumer test (Service A)
+test "user service returns user profile":
+  contract = Pact(consumer: "OrderService", provider: "UserService")
+  contract.given("user 123 exists")
+    .uponReceiving("a request for user 123")
+    .withRequest(method: "GET", path: "/users/123")
+    .willRespondWith(
+      status: 200,
+      body: { id: "123", name: like("string"), email: like("string") }
+    )
+  // Test runs against a mock that enforces the contract
+
+// Producer test (Service B)
+test "satisfies OrderService contract":
+  verifier = PactVerifier(provider: "UserService")
+  verifier.verifyPact(contractFile)
+  // Runs real provider against each contract interaction
+```
+
+### Relationship to Mocking
+
+Contract testing and mocking serve different purposes:
+
+| | Mocking | Contract Testing |
+|---|---------|-----------------|
+| **Scope** | Single test | Cross-service agreement |
+| **Verified by** | Consumer only | Both consumer and producer |
+| **Staleness risk** | High (stubs drift) | Low (contracts are verified) |
+| **When it breaks** | Never (stubs always match) | When the contract is violated |
+
+Contract tests don't replace mocks — they ensure your mocks stay accurate.

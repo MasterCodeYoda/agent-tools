@@ -1,0 +1,48 @@
+% header.tex - Custom LaTeX includes for Clean Architecture PDF
+% Uses only packages commonly available in basic TeX installations
+
+% Define passthrough command for inline code (required by Pandoc 3.x)
+\providecommand{\passthrough}[1]{#1}
+
+% Required packages (common in most TeX distributions)
+\usepackage{fancyhdr}
+\usepackage{xcolor}
+\usepackage{graphicx}
+\usepackage{booktabs}
+\usepackage{longtable}
+\usepackage{float}
+
+% Define colors
+\definecolor{chaptercolor}{RGB}{0,70,127}
+\definecolor{shadecolor}{RGB}{248,248,248}
+
+% Header and footer configuration
+\pagestyle{fancy}
+\fancyhf{}
+\fancyhead[LE]{\leftmark}
+\fancyhead[RO]{\rightmark}
+\fancyfoot[C]{\thepage}
+\renewcommand{\headrulewidth}{0.4pt}
+\renewcommand{\footrulewidth}{0pt}
+
+% Adjust plain page style (used for chapter starts)
+\fancypagestyle{plain}{
+  \fancyhf{}
+  \fancyfoot[C]{\thepage}
+  \renewcommand{\headrulewidth}{0pt}
+}
+
+% Table improvements
+\renewcommand{\arraystretch}{1.3}
+\setlength{\tabcolsep}{8pt}
+
+% Prevent orphans and widows
+\widowpenalty=10000
+\clubpenalty=10000
+
+% Better hyphenation
+\tolerance=1000
+\emergencystretch=3em
+
+% Image handling defaults
+\setkeys{Gin}{width=\linewidth,height=0.75\textheight,keepaspectratio}
