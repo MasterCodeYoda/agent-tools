@@ -27,10 +27,16 @@ done
 
 # ── Source and target directories ───────────────────────────────────
 SKILLS_SOURCE="${SCRIPT_DIR}/src"
-# Note: The skill corpus now lives under src/ (post 2026-05 restructure).
-# The meta-skill 'skills' lives at src/skills/ and provides /skills:import and /skills:evolve.
+DIST_BASE="${SCRIPT_DIR}/dist"
+
+# Note: The canonical source is under src/. The publisher (tools/publish-skills.sh)
+# transforms it into dist/<agent>/skills/ with agent-specific markup resolved.
+# setup.sh now consumes from dist/ rather than src/ directly.
 
 CLAUDE_DIR="${HOME}/.claude"
+GROK_DIR="${HOME}/.grok"
+# Grok also supports ~/.grok/skills directly in some installations
+GROK_SKILLS_DIR="${HOME}/.grok/skills"
 FACTORY_DIR="${HOME}/.factory"
 
 # Colors for output
@@ -90,49 +96,96 @@ create_symlink() {
     fi
 }
 
-# ── Factory copy functions ──────────────────────────────────────────
 
-# Sync src/ -> ~/.factory/skills/ using rsync
-copy_factory_skills() {
-    local skills_dir="$1"
-    local target_dir="${FACTORY_DIR}/skills"
 
-    # Transition: if target is an old symlink, remove it so rsync can create a real dir
-    if [ -L "$target_dir" ]; then
-        rm "$target_dir"
+# ── Per-skill installation with publish-target support ─────────────
+
+# Extract publish-target from a skill's SKILL.md (defaults to user-profile)
+get_publish_target() {
+    local skill_path="$1"          # e.g. dist/claude/skills/workflow or src/...
+    local skill_md="${skill_path}/SKILL.md"
+
+    if [ -f "$skill_md" ]; then
+        local val
+        val=$(grep -iE '^publish-target:' "$skill_md" | head -1 | cut -d: -f2- | tr -d ' \t\r\n' | tr '[:upper:]' '[:lower:]')
+        if [ -n "$val" ]; then
+            echo "$val"
+            return
+        fi
+    fi
+    echo "user-profile"
+}
+
+# Install a single skill directory for a given agent
+install_skill() {
+    local agent="$1"               # claude, grok, factory
+    local skill_name="$2"          # e.g. "workflow", "skills"
+    local source_skill_dir="$3"    # e.g. dist/claude/skills/workflow
+
+    local target_base
+    local publish_target
+    publish_target=$(get_publish_target "$source_skill_dir")
+
+    local target_base
+    local scope_label
+
+    local target_base
+    local scope_label
+    local created_local_dir=false
+
+    if [ "$publish_target" = "project" ]; then
+        target_base="${SCRIPT_DIR}/.${agent}/skills"
+        scope_label="${YELLOW}[project]${NC}"
+
+        if [ ! -d "$target_base" ]; then
+            mkdir -p "$target_base"
+            echo -e "  ${YELLOW}→${NC} Created local project directory: .${agent}/skills/ (for project-scoped skills)"
+        fi
+    else
+        target_base="${HOME}/.${agent}/skills"
+        scope_label="[user]"
     fi
 
-    mkdir -p "$target_dir"
+    local target="${target_base}/${skill_name}"
 
-    rsync -a --delete \
-        --exclude='node_modules/' \
-        --exclude='.DS_Store' \
-        "${skills_dir}/" "${target_dir}/"
+    # Print clean one-line status
+    if [ "$agent" = "factory" ]; then
+        echo -e "  ${scope_label} ${skill_name}  (copied to)  ${target}"
+    else
+        echo -e "  ${scope_label} ${skill_name}  →  ${target}"
+    fi
 
-    if [ "$FACTORY_ONLY" = false ]; then
-        echo -e "${GREEN}✓${NC} Synced skills to ${target_dir}"
+    mkdir -p "$(dirname "$target")"
+
+    if [ "$agent" = "factory" ]; then
+        mkdir -p "$target_base"
+        rsync -a --delete "${source_skill_dir}/" "${target}/" 2>/dev/null || rsync -a "${source_skill_dir}/" "${target}/"
+    else
+        # Symlink, replacing if needed (non-interactive for normal setup flow)
+        ln -sfn "$source_skill_dir" "$target"
     fi
 }
 
-# Orchestrator: copy skills to Factory
-copy_to_factory() {
-    # Transition: remove old symlinks at top level before copy
-    if [ -L "${FACTORY_DIR}/commands" ]; then
-        rm "${FACTORY_DIR}/commands"
+# Install all skills for one agent from dist/
+install_skills_for_agent() {
+    local agent="$1"
+    local dist_agent_dir="${DIST_BASE}/${agent}/skills"
+
+    if [ ! -d "$dist_agent_dir" ]; then
+        echo -e "${YELLOW}No published content for ${agent}${NC}"
+        return
     fi
-    if [ -L "${FACTORY_DIR}/skills" ]; then
-        rm "${FACTORY_DIR}/skills"
-    fi
 
-    copy_factory_skills "$SKILLS_SOURCE"
-}
+    echo "Installing skills for ${agent}..."
 
-# ── Claude symlink setup ───────────────────────────────────────────
+    for skill_dir in "${dist_agent_dir}"/*/; do
+        [ -d "$skill_dir" ] || continue
+        local skill_name
+        skill_name=$(basename "$skill_dir")
 
-setup_claude() {
-    echo "Setting up ~/.claude symlinks..."
-    create_symlink "$SKILLS_SOURCE" "${CLAUDE_DIR}/skills"
-    # Note: All skills (including the meta-skill) now live under src/. No separate commands symlink.
+        install_skill "$agent" "$skill_name" "$skill_dir"
+    done
+
     echo
 }
 
@@ -169,27 +222,63 @@ validate_sources() {
         echo -e "${RED}Error: Skills directory not found at $SKILLS_SOURCE${NC}" >&2
         exit 1
     fi
-    # COMMANDS_SOURCE check removed — commands/ has been migrated into src/
+    if [ ! -x "${SCRIPT_DIR}/tools/publish-skills.sh" ]; then
+        echo -e "${RED}Error: Publisher not found or not executable: tools/publish-skills.sh${NC}" >&2
+        exit 1
+    fi
+}
+
+# ── Publishing step ─────────────────────────────────────────────────
+
+run_publisher() {
+    local publisher="${SCRIPT_DIR}/tools/publish-skills.sh"
+
+    echo "Publishing skills for all agents (claude, grok, factory)..."
+    if "$publisher" --quiet; then
+        echo -e "${GREEN}✓${NC} Publishing complete → dist/<agent>/skills/"
+    else
+        echo -e "${RED}✗${NC} Publishing failed. Aborting setup." >&2
+        exit 1
+    fi
+    echo
 }
 
 if [ "$FACTORY_ONLY" = true ]; then
-    # Fast path: just copy factory files, no output
+    # Fast path: publish + copy only for Factory
     validate_sources
-    copy_to_factory
+    run_publisher
+
+    echo "Factory-only mode: installing skills for factory..."
+    install_skills_for_agent "factory"
+
+    echo -e "${GREEN}✓${NC} Factory setup complete (using dist/factory/skills/)"
 else
-    # Full setup
+    # Full setup for all present agents
     validate_sources
+    run_publisher
 
     echo "========================================="
     echo "Setting up agent-tools"
     echo "========================================="
     echo
-    echo "Source directories:"
-    echo "  Skills:   $SKILLS_SOURCE (all skills, including the 'skills' meta-skill)"
-    echo
 
-    setup_claude
-    copy_to_factory
+    # Agent detection is based *only* on the user's global settings directories.
+    # If an agent is installed globally, we deploy both user-profile skills
+    # (to ~/.agent/skills) and project-scoped skills (to ./.agent/skills in this repo),
+    # creating the local project directory if it doesn't exist yet.
+    if [ -d "$CLAUDE_DIR" ]; then
+        install_skills_for_agent "claude"
+    fi
+
+    # Grok detection is slightly more lenient because the .grok directory
+    # layout is newer and some users have ~/.grok/skills directly.
+    if [ -d "$GROK_DIR" ] || [ -d "$GROK_SKILLS_DIR" ]; then
+        install_skills_for_agent "grok"
+    fi
+
+    if [ -d "$FACTORY_DIR" ]; then
+        install_skills_for_agent "factory"
+    fi
 
     # Clean up legacy factory-commands/ directory in the repo
     if [ -d "${SCRIPT_DIR}/factory-commands" ]; then
@@ -204,8 +293,23 @@ else
     echo -e "${GREEN}Setup complete!${NC}"
     echo "========================================="
     echo
-    echo "Configured:"
-    echo "  ~/.claude/skills   -> $SKILLS_SOURCE (symlink)"
-    echo "  ~/.factory/skills  -> copied from $SKILLS_SOURCE"
-    echo "  (All skills, including the 'skills' meta-skill, now live under src/)"
+    echo "Configured (from dist/<agent>/skills/):"
+    echo
+    if [ -d "$CLAUDE_DIR" ]; then
+        echo "  Claude:"
+        echo "    - User profile : ~/.claude/skills/"
+        echo "    - This project : ./.claude/skills/   (project-scoped skills only)"
+    fi
+    if [ -d "$GROK_DIR" ] || [ -d "$GROK_SKILLS_DIR" ]; then
+        echo "  Grok:"
+        echo "    - User profile : ~/.grok/skills/"
+        echo "    - This project : ./.grok/skills/     (project-scoped skills only)"
+    fi
+    if [ -d "$FACTORY_DIR" ]; then
+        echo "  Factory:"
+        echo "    - User profile : ~/.factory/skills/"
+        echo "    - This project : ./.factory/skills/  (project-scoped skills only)"
+    fi
+    echo
+    echo "  (Most skills → user profile. The 'skills' meta-skill → local project only.)"
 fi
