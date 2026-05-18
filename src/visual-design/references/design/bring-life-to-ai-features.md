@@ -12,7 +12,7 @@ AI features can feel cold and utilitarian without personality. Character customi
 ## How to Apply
 
 - Create customizable AI character options (like Notion's AI character appearance).
-- Use descriptive, varied action verbs to communicate what the AI is doing (one common approach, seen in Claude Code: "thinking", "analyzing", "writing" instead of just "loading").
+- Use descriptive, varied action verbs to communicate what the AI is doing (e.g. "thinking", "analyzing", "writing" instead of just "loading").
 - Apply thoughtful animation and visual feedback to AI interactions.
 - Let users personalize their AI assistant's appearance or tone where appropriate.
 - Add personality to AI responses through careful copywriting.

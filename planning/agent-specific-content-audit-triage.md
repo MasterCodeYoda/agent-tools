@@ -118,20 +118,25 @@ Top-level skills under `src/`:
 ---
 
 **Progress**:
-- Memory Primitives: **Final polish pass complete**. Grok and Factory sections now have high-quality, researched content. Document follows the desired per-section structure and is ready for publication.
-- Conversation Analysis: First structural pass complete.
-- Playwright Agent Init (`qa/setup/SKILL.md`): First pass complete.
-- Worktree Handling: First pass complete.
-- Use-Browser: Reviewed (largely portable; cross-platform fixes applied).
+- Memory Primitives: **Final polish pass complete**.
+- Conversation Analysis: First structural pass + Grok/Factory content complete.
+- Playwright Agent Init (`qa/setup/SKILL.md`): Mini deep-dive complete.
+- Worktree Handling: Deep-dive complete.
+- Use-Browser: Deep-dive complete (largely portable).
 - QA Pipeline Messaging (`qa/SKILL.md`): First pass complete.
-- Conversation Analysis (`conversation-analysis.md`): Factory and Grok sections now authored with researched content.
+- **Remaining Grok/Factory authoring scope is now very small**: Only two TODOs left, both in the main `src/qa/SKILL.md` (Sentinel pipeline description). All other high/medium items have received proper agent blocks + content.
 
 **Next Step**: User to select the next section for deep-dive from the recommended order above. We will analyze the file in detail and apply targeted markup.
 
-**Systematic First-Pass Triage — Complete**
+**Systematic First-Pass Triage — Complete (Light Sweep)**
 
-Every skill under `src/` has now received at least a triage-level review for agent-specific content. All identified issues have been either:
-- Addressed with first-pass markup + TODO placeholders, or
-- Generalized / noted as low-impact.
+A full pass across the entire corpus has now been completed:
 
-We are now ready to move into selective deep-dive work on the highest-impact areas (starting with Memory Primitives, as previously discussed).
+- All high- and medium-priority items received proper deep-dives + final polish.
+- All low-priority / minor items received a final light sweep and cleanup.
+- Every skill directory under `src/` has been reviewed at least at the triage level.
+- Remaining agent-specific content is now either properly wrapped in agent blocks with TODOs, or has been generalized where appropriate.
+
+The corpus is now in a much more portable state while preserving necessary agent-specific behavior.
+
+We can move forward with filling the Grok/Factory blocks, testing the publishing flow, or any other next phase.
