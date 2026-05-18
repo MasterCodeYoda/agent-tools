@@ -14,10 +14,12 @@ cd ~/Source/agent-tools
 
 | Target | Skills | Commands |
 |--------|--------|----------|
-| `~/.claude/` | `skills/` | `commands/` (nested) |
-| `~/.factory/` | `skills/` | `factory-commands/` (flattened, because Factory.ai doesn't support folder namespacing) |
+| `~/.claude/` | `src/` (via symlink) | (merged into skills) |
+| `~/.factory/` | `src/` (copied) | (merged into skills) |
 
 Re-run `setup.sh` after pulling new changes — it's idempotent.
+
+For details on how we express agent-specific content in the canonical skills, see [MARKUP.md](src/skills/references/MARKUP.md).
 
 ## What's Included
 

@@ -13,7 +13,7 @@ for arg in "$@"; do
             echo "Usage: setup.sh [OPTIONS]"
             echo ""
             echo "Options:"
-            echo "  --factory-only   Only copy commands/skills to ~/.factory (no symlinks, no banners)"
+            echo "  --factory-only   Only copy skills to ~/.factory (no symlinks, no banners)"
             echo "  --help, -h       Show this help message"
             exit 0
             ;;
@@ -26,8 +26,9 @@ for arg in "$@"; do
 done
 
 # ── Source and target directories ───────────────────────────────────
-SKILLS_SOURCE="${SCRIPT_DIR}/skills"
-COMMANDS_SOURCE="${SCRIPT_DIR}/commands"
+SKILLS_SOURCE="${SCRIPT_DIR}/src"
+# Note: The skill corpus now lives under src/ (post 2026-05 restructure).
+# The meta-skill 'skills' lives at src/skills/ and provides /skills:import and /skills:evolve.
 
 CLAUDE_DIR="${HOME}/.claude"
 FACTORY_DIR="${HOME}/.factory"
@@ -91,43 +92,7 @@ create_symlink() {
 
 # ── Factory copy functions ──────────────────────────────────────────
 
-# Copy flattened commands into ~/.factory/commands/
-# Factory doesn't support folder namespacing, so we flatten:
-#   commands/git/commit.md  ->  ~/.factory/commands/git-commit.md
-copy_factory_commands() {
-    local commands_dir="$1"
-    local target_dir="${FACTORY_DIR}/commands"
-
-    # Clean slate: remove old files, recreate directory
-    rm -rf "$target_dir"
-    mkdir -p "$target_dir"
-
-    local count=0
-
-    # Find all subfolders in commands (1 level deep)
-    for subfolder in "$commands_dir"/*/; do
-        [ -d "$subfolder" ] || continue
-
-        local folder_name=$(basename "$subfolder")
-
-        # Copy all .md files, flattening the namespace
-        for file in "$subfolder"*.md; do
-            [ -f "$file" ] || continue
-
-            local file_name=$(basename "$file")
-            local target_name="${folder_name}-${file_name}"
-
-            cp "$file" "${target_dir}/${target_name}"
-            count=$((count + 1))
-        done
-    done
-
-    if [ "$FACTORY_ONLY" = false ]; then
-        echo -e "${GREEN}✓${NC} Copied ${count} commands to ${target_dir}"
-    fi
-}
-
-# Sync skills/ -> ~/.factory/skills/ using rsync
+# Sync src/ -> ~/.factory/skills/ using rsync
 copy_factory_skills() {
     local skills_dir="$1"
     local target_dir="${FACTORY_DIR}/skills"
@@ -149,9 +114,9 @@ copy_factory_skills() {
     fi
 }
 
-# Orchestrator: handle legacy symlinks, then copy both
+# Orchestrator: copy skills to Factory
 copy_to_factory() {
-    # Transition: remove old symlinks at top level before copy functions run
+    # Transition: remove old symlinks at top level before copy
     if [ -L "${FACTORY_DIR}/commands" ]; then
         rm "${FACTORY_DIR}/commands"
     fi
@@ -159,7 +124,6 @@ copy_to_factory() {
         rm "${FACTORY_DIR}/skills"
     fi
 
-    copy_factory_commands "$COMMANDS_SOURCE"
     copy_factory_skills "$SKILLS_SOURCE"
 }
 
@@ -168,7 +132,7 @@ copy_to_factory() {
 setup_claude() {
     echo "Setting up ~/.claude symlinks..."
     create_symlink "$SKILLS_SOURCE" "${CLAUDE_DIR}/skills"
-    create_symlink "$COMMANDS_SOURCE" "${CLAUDE_DIR}/commands"
+    # Note: All skills (including the meta-skill) now live under src/. No separate commands symlink.
     echo
 }
 
@@ -205,10 +169,7 @@ validate_sources() {
         echo -e "${RED}Error: Skills directory not found at $SKILLS_SOURCE${NC}" >&2
         exit 1
     fi
-    if [ ! -d "$COMMANDS_SOURCE" ]; then
-        echo -e "${RED}Error: Commands directory not found at $COMMANDS_SOURCE${NC}" >&2
-        exit 1
-    fi
+    # COMMANDS_SOURCE check removed — commands/ has been migrated into src/
 }
 
 if [ "$FACTORY_ONLY" = true ]; then
@@ -224,8 +185,7 @@ else
     echo "========================================="
     echo
     echo "Source directories:"
-    echo "  Skills:   $SKILLS_SOURCE"
-    echo "  Commands: $COMMANDS_SOURCE"
+    echo "  Skills:   $SKILLS_SOURCE (all skills, including the 'skills' meta-skill)"
     echo
 
     setup_claude
@@ -246,7 +206,6 @@ else
     echo
     echo "Configured:"
     echo "  ~/.claude/skills   -> $SKILLS_SOURCE (symlink)"
-    echo "  ~/.claude/commands -> $COMMANDS_SOURCE (symlink)"
     echo "  ~/.factory/skills  -> copied from $SKILLS_SOURCE"
-    echo "  ~/.factory/commands -> flattened from $COMMANDS_SOURCE"
+    echo "  (All skills, including the 'skills' meta-skill, now live under src/)"
 fi
