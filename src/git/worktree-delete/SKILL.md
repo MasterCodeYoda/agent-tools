@@ -30,8 +30,24 @@ Parse the following from `$ARGUMENTS`:
 
 ### Resolving the worktree identifier
 
-- **Bare name** (no `/` characters): Resolve to `<REPO_ROOT>/.claude/worktrees/<name>/`
+- **Bare name** (no `/` characters): Resolve using the agent's worktree naming convention (see below).
 - **Path** (contains `/`): Use the path directly
+
+<!-- agent:include claude -->
+Resolve bare names to `<REPO_ROOT>/.claude/worktrees/<name>/`
+<!-- /agent:include claude -->
+
+<!-- agent:include grok -->
+
+**TODO (Grok)**: Define how bare worktree names resolve for Grok.
+
+<!-- /agent:include grok -->
+
+<!-- agent:include factory -->
+
+**TODO (Factory)**: Define how bare worktree names resolve for Factory.
+
+<!-- /agent:include factory -->
 - **No identifier**: List worktrees with `git worktree list` and ask the user which to remove
 
 ## Phase 1 — Validate

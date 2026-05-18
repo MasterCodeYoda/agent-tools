@@ -53,7 +53,23 @@ Run these checks in order. **Stop with a clear error** if any fail:
    ```
    If it fails, error: "Base ref '<base-ref>' does not exist."
 
-4. **No name collision** — Check that `<REPO_ROOT>/.claude/worktrees/<name>/` does not already exist. If it does, error: "A worktree named '<name>' already exists."
+4. **No name collision** — Check that the target worktree path does not already exist.
+
+<!-- agent:include claude -->
+Check that `<REPO_ROOT>/.claude/worktrees/<name>/` does not already exist. If it does, error: "A worktree named '<name>' already exists."
+<!-- /agent:include claude -->
+
+<!-- agent:include grok -->
+
+**TODO (Grok)**: Define the canonical location pattern for worktrees when using Grok (e.g. `.grok/worktrees/<name>` or another convention).
+
+<!-- /agent:include grok -->
+
+<!-- agent:include factory -->
+
+**TODO (Factory)**: Define the canonical location pattern for worktrees when using Factory Droid.
+
+<!-- /agent:include factory -->
 
 5. **Branch name not in use** — Check:
    ```bash
@@ -64,8 +80,24 @@ Run these checks in order. **Stop with a clear error** if any fail:
 ### 1.3 Create the worktree
 
 ```bash
-git worktree add -b <type>/<name> <REPO_ROOT>/.claude/worktrees/<name> <base-ref>
+git worktree add -b <type>/<name> <TARGET_WORKTREE_PATH> <base-ref>
 ```
+
+<!-- agent:include claude -->
+Use `<REPO_ROOT>/.claude/worktrees/<name>` as the target path.
+<!-- /agent:include claude -->
+
+<!-- agent:include grok -->
+
+**TODO (Grok)**: Define the target path pattern for Grok.
+
+<!-- /agent:include grok -->
+
+<!-- agent:include factory -->
+
+**TODO (Factory)**: Define the target path pattern for Factory.
+
+<!-- /agent:include factory -->
 
 If `--branch` was provided, use that as the full branch name instead of `<type>/<name>`.
 
@@ -74,8 +106,24 @@ If `--branch` was provided, use that as the full branch name instead of `<type>/
 Switch the session's working directory into the new worktree:
 
 ```bash
-cd <REPO_ROOT>/.claude/worktrees/<name>
+cd <TARGET_WORKTREE_PATH>
 ```
+
+<!-- agent:include claude -->
+Use `<REPO_ROOT>/.claude/worktrees/<name>` as the path.
+<!-- /agent:include claude -->
+
+<!-- agent:include grok -->
+
+**TODO (Grok)**: Define the worktree path for Grok.
+
+<!-- /agent:include grok -->
+
+<!-- agent:include factory -->
+
+**TODO (Factory)**: Define the worktree path for Factory.
+
+<!-- /agent:include factory -->
 
 This is the same pattern used by `workflow/execute.md` for entering existing worktrees. It switches the Bash working directory for subsequent commands without disrupting other sessions.
 
