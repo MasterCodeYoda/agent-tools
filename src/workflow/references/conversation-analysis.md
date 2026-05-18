@@ -1,163 +1,154 @@
 # Conversation History Analysis
 
-Reference for extracting signals from Claude Code conversation history stored in `~/.claude/`. Used by `/evolve`, `/workflow:compound`, and `/workflow:audit` for data-driven improvement.
+Reference for extracting signals from agent conversation history. Used by `/evolve`, `/workflow:compound`, and `/workflow:audit` for data-driven improvement.
+
+---
+
+## Why Conversation History Analysis Matters
+
+Even with good memory primitives, agents can still lose or under-utilize valuable context across sessions. Analyzing conversation history allows us to surface:
+
+- Command usage patterns and friction points
+- Problems that were solved but never documented
+- Recurring failure modes that should be turned into durable rules or skills
+- Signals that a skill or memory file is stale or incomplete
+
+This analysis is one of the main inputs to `/workflow:compound --maintain` and the broader evolution of the skill corpus.
+
+---
 
 ## Data Sources
 
-### 1. Command History (`~/.claude/history.jsonl`)
+Different agents expose different kinds of conversation history. The goal is to extract useful signals (frequency, friction, outcomes, undocumented solutions) while respecting privacy and project boundaries.
 
-JSONL file with one entry per user input. Fields:
+<!-- agent:include claude -->
 
-```json
-{
-  "display": "/workflow:audit",
-  "pastedContents": {},
-  "timestamp": 1774093069131,
-  "project": "/Users/.../project-name",
-  "sessionId": "uuid-..."
-}
-```
+### Claude Code Data Sources
 
-**Use for**: Command usage frequency, invocation patterns, which commands are used in which projects.
+Claude Code stores rich, queryable conversation history locally. The four primary sources are:
 
-### 2. Session Quality Facets (`~/.claude/usage-data/facets/{sessionId}.json`)
+1. **Command History** (`~/.claude/history.jsonl`)  
+   JSONL file with one entry per user input. Useful for command usage frequency and invocation patterns.
 
-Post-session quality analysis. Fields:
+2. **Session Quality Facets** (`~/.claude/usage-data/facets/{sessionId}.json`)  
+   Post-session analysis containing `underlying_goal`, `outcome`, `friction_counts`, `user_satisfaction`, and `brief_summary`. Excellent for detecting friction and solved-but-undocumented problems.
 
-```json
-{
-  "underlying_goal": "...",
-  "outcome": "fully_achieved",
-  "friction_counts": {"wrong_approach": 2},
-  "friction_detail": "...",
-  "user_satisfaction_counts": {"likely_satisfied": 1},
-  "claude_helpfulness": "essential",
-  "session_type": "single_task",
-  "brief_summary": "...",
-  "session_id": "uuid-..."
-}
-```
+3. **Conversation Database** (`~/.claude/__store.db`)  
+   SQLite database with full message history (`base_messages`, `user_messages`, `assistant_messages`). Enables deep reconstruction of conversations and tool usage.
 
-**Use for**: Session quality signals, friction detection, identifying solved-but-undocumented problems.
+4. **Project Conversations** (`~/.claude/projects/{encoded-path}/`)  
+   Per-project directories containing session transcripts and subagent data.
 
-### 3. Conversation Database (`~/.claude/__store.db`)
+**Project Scoping Note**: History is stored globally. Always filter by project root (using prefix matching) when doing project-specific analysis.
 
-SQLite database with conversation messages. Key tables:
+<!-- /agent:include claude -->
 
-**`base_messages`**: Threading and metadata.
-- `uuid`, `parent_uuid` (parent-child for branching/corrections)
-- `session_id`, `timestamp`, `cwd`, `message_type` (user/assistant)
+<!-- agent:include grok -->
 
-**`user_messages`**: User input content.
-- `uuid`, `message` (JSON with role + content array), `tool_use_result`
+### Grok Data Sources
 
-**`assistant_messages`**: Agent output content.
-- `uuid`, `message` (JSON with content including tool_use blocks)
-- `cost_usd`, `duration_ms`, `model`
+Grok stores conversation history primarily at the platform level, with additional context available through project files:
 
-**Use for**: Full conversation reconstruction, tool usage patterns, cost analysis.
+- **Platform Session History & Memory**: Grok maintains persistent user memory (via the Memory feature) and session history accessible through the platform and Grok Build.
+- **Grok Build Logs & State**: When using Grok Build (the coding agent), session activity, plans, and tool use are logged locally and in the platform.
+- **AGENTS.md + Skills**: These serve as the main durable project context. Custom Skills can be written to automatically capture or summarize important sessions into `AGENTS.md` or dedicated memory files.
+- **Large Context**: Advanced tiers offer very large context windows (1M–2M tokens), which can reduce the need for deep historical extraction in many cases.
 
-### 4. Project Conversations (`~/.claude/projects/{encoded-path}/`)
+**Project Scoping**: Most durable context lives in repo-level `AGENTS.md`. Platform memory is user-scoped but can be supplemented with project-specific Skills and files.
 
-Project paths encoded as directory names (slashes replaced with dashes):
-`/Users/foo/Source/myapp` → `-Users-foo-Source-myapp/`
+<!-- /agent:include grok -->
 
-Contains conversation JSONL files (UUID-named) and subagent directories.
+<!-- agent:include factory -->
 
-**Use for**: Project-specific conversation threads, subagent analysis.
+### Factory Droid Data Sources
 
-## Project Scoping
+Factory Droid stores conversation and session data primarily through the platform, with some local capabilities:
 
-**Critical**: History is global across all projects. When analyzing for a specific project, filter correctly.
+- **Platform Session History**: The Factory web/app provides rich session replay, audit logs, and conversation history across all interactions with Droid.
+- **Audit & Observability Tools**: Built-in audit trails that track decisions, tool use, and outcomes — useful for the "Finding Persistence" and "Recurring Friction" patterns.
+- **Local / CLI Logs**: When using Droid in the terminal, session state and logs can be captured locally (location depends on configuration).
+- **Custom Skills & Hooks**: Can be used to automatically log or summarize sessions into `.factory/memories.md` or dedicated audit files.
 
-### How to scope to current project
+**Project Scoping**: Most platform history is already scoped to repositories or workspaces. Local logs usually live inside the project or user config.
 
-```
-1. Get project root: git rev-parse --show-toplevel
-2. For history.jsonl: filter entries where "project" field starts with the project root
-3. For __store.db: filter base_messages where "cwd" starts with the project root
-4. For projects/: encode the project root as a directory name and read that directory
-```
+<!-- /agent:include factory -->
 
-**Use prefix matching, not exact match.** Users frequently work from subfolders within a project (e.g., `src/`, `packages/api/`). A session with CWD `/Users/foo/Source/myapp/src/components` is still a session for the `/Users/foo/Source/myapp` project.
-
-```python
-# Correct: prefix match against project root
-project_root = get_project_root()  # git rev-parse --show-toplevel
-is_match = entry["project"].startswith(project_root)
-
-# Wrong: exact CWD match (misses subfolder sessions)
-is_match = entry["project"] == os.getcwd()
-```
-
-### Cross-project analysis
-
-When `--global` is specified (or when looking for cross-project patterns), skip the project filter. Note which project each signal came from for attribution.
+---
 
 ## Signal Extraction Patterns
 
+The following patterns are generally useful. The specific data sources and tooling vary by agent.
+
 ### Command Usage Frequency
 
-```
-1. Read history.jsonl
-2. Filter by project root (prefix match)
-3. Group by display field (the command text)
-4. Count invocations and distinct sessions
-5. Sort by frequency
-```
-
-Output: "workflow:audit invoked 12 times across 8 sessions in this project"
+Identify which commands are used most often in a project or across projects. This helps surface over-used or under-used skills.
 
 ### Session Quality by Command
 
-```
-1. Get command history entries for current project
-2. Group by sessionId to identify which commands ran in which sessions
-3. For each session, read its facet file from usage-data/facets/{sessionId}.json
-4. Aggregate: friction_counts, outcomes, satisfaction by command type
-```
-
-Output: "Sessions using /workflow:plan had 0 friction (8 sessions). Sessions using /workflow:review had wrong_approach friction in 2 of 5 sessions."
+Correlate commands with session outcomes and friction signals. Useful for identifying which skills or workflows are causing pain.
 
 ### Undocumented Solutions
 
-```
-1. Read facets for sessions matching current project
-2. Filter for outcome "fully_achieved" with meaningful brief_summary
-3. Cross-reference against existing docs/solutions/ directory
-4. Present sessions that solved problems with no corresponding compound doc
-```
-
-Output: "3 sessions solved problems not documented in docs/solutions/"
+Find sessions that ended successfully (`fully_achieved`) with meaningful summaries but have no corresponding entry in `docs/solutions/`.
 
 ### Recurring Friction Patterns
 
-```
-1. Read facets for sessions matching current project
-2. Filter for sessions with friction_counts > 0
-3. Group friction_detail by theme
-4. Identify recurring patterns
-```
-
-Output: "Architecture guidance caused friction in 3 sessions — users consistently corrected layer placement advice"
+Group friction signals thematically to discover systemic issues that should be turned into rules, skills, or memory updates.
 
 ### Finding Persistence (for audits)
 
-```
-1. After producing audit findings, check history.jsonl for prior audit sessions
-2. Load prior audit session conversations from projects/{path}/
-3. Look for similar findings in prior audit output
-4. Classify: recurring (appeared before) vs. new
-5. If recurring: check if user acted on it (follow-up commits) or ignored it
-```
+Compare current audit findings against previous audit sessions to distinguish new issues from recurring ones.
 
-Output: "3 findings are recurring from 2 prior audits — may indicate systemic issues or persistent false positives"
+<!-- agent:include claude -->
+
+**Claude Code Implementation**
+
+All of the patterns above can be executed by querying the four data sources listed in the Data Sources section. See the original extraction examples for concrete queries and code patterns.
+
+<!-- /agent:include claude -->
+
+<!-- agent:include grok -->
+
+**Grok Implementation**
+
+Signal extraction on Grok is typically done through a combination of platform history review, large context reasoning, and custom Skills that summarize or log important sessions. Many teams build lightweight Skills that capture recurring friction or successful patterns directly into `AGENTS.md` or project memory files.
+
+<!-- /agent:include grok -->
+
+<!-- agent:include factory -->
+
+**Factory Implementation**
+
+Most of the patterns above can be performed using Factory’s platform audit tools and session history, combined with custom skills that summarize or query past interactions. For deeper analysis, teams often export session data or use dedicated audit skills that write structured findings into `.factory/memories.md` or a project audit log.
+
+<!-- /agent:include factory -->
+
+---
 
 ## Privacy Guidance
 
-When analyzing conversation history:
+When analyzing conversation history, follow these principles regardless of agent:
 
-- **Extract patterns, not content.** Report "3 sessions had friction with architecture guidance" — not the specific code or user messages.
-- **No external transmission.** All analysis runs locally. Signals feed into local evolve/compound reports only.
-- **Aggregate over specifics.** Prefer counts and categories over individual session details. When referencing specific sessions, use brief_summary (already anonymized by design) rather than conversation content.
-- **Respect project boundaries.** Default to current-project filtering. Cross-project analysis only when explicitly requested.
+- **Extract patterns, not content.** Report themes and counts (“3 sessions had friction with architecture guidance”) rather than quoting specific user messages or code.
+- **Keep analysis local.** Signals should only feed into local evolve/compound/audit workflows.
+- **Aggregate by default.** Prefer counts, categories, and summaries over individual session details.
+- **Respect project boundaries.** Default to current-project filtering. Only do cross-project analysis when explicitly requested.
+- **Anonymize where possible.** Use `brief_summary` fields or similar when they exist.
+
+<!-- agent:include claude -->
+
+**Claude-specific note**: The `brief_summary` field in quality facets is already designed to be a safe, anonymized summary. Prefer it over raw message content.
+
+<!-- /agent:include claude -->
+
+<!-- agent:include grok -->
+
+**Grok-specific note**: Grok’s Memory feature includes user controls to view, edit, or delete stored memories. When doing analysis, respect user privacy settings and platform data policies. Most durable project context lives in `AGENTS.md`, which is under user control.
+
+<!-- /agent:include grok -->
+
+<!-- agent:include factory -->
+
+**Factory-specific note**: Factory offers strong enterprise controls around data residency, audit logging, and access to conversation history. When doing analysis, respect organizational policies around session data and use the platform’s built-in audit features where available.
+
+<!-- /agent:include factory -->

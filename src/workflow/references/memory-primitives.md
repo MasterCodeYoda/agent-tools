@@ -1,49 +1,95 @@
-# Claude Code Memory Primitives
+# Memory Primitives
 
-Reference for the file types, settings, hooks, and slash commands that govern what Claude Code remembers across sessions. Used by `/workflow:compound` (especially `--maintain` mode) and consulted when memory feels stale, bloated, or mis-scoped.
+A cross-agent reference for long-term context, rules, and memory hygiene practices.
 
-The patterns below favor Anthropic's documented primitives over hand-rolled alternatives. When a primitive exists, prefer it: less prose in CLAUDE.md, more behavior enforced by the platform.
+Reference for the file types, settings, hooks, and slash commands that govern what an agent remembers across sessions. Used by `/workflow:compound` (especially `--maintain` mode) and consulted when memory feels stale, bloated, or mis-scoped.
 
-## Two Memory Systems, Two Failure Modes
+The patterns below favor an agent platform’s documented primitives over hand-rolled alternatives. When a primitive exists, prefer it: less prose in memory files, more behavior enforced by the platform.
 
-Claude Code has two independent memory systems, both auto-loaded each session.
+---
 
-### `CLAUDE.md` — user-authored
+## Core Concepts
 
-Plain markdown the user maintains. Loaded in full each session, walked up the directory tree, concatenated rather than overridden, supports `@path` imports up to 5 hops.
+These ideas are intended to be portable across agents, even when the concrete mechanisms differ.
 
-**Failure mode:** attention dilution. There is no hard cutoff — long files load — but priority gets diluted and instructions start being ignored. Anthropic's docs target **under 200 lines per file** and call out "the over-specified CLAUDE.md" as an explicit anti-pattern.
+### Durable Rules vs Transient Context
+- **Durable rules** should live in long-lived memory files that are loaded every session.
+- **Transient context** (one-off decisions, temporary state) should be pruned or archived so it does not pollute future sessions.
 
-Scopes (high → low precedence in load order; concatenation, not override):
+### Attention Dilution vs Silent Truncation
+Two common failure modes when memory grows too large:
+- **Attention dilution**: The agent receives too much information and starts ignoring instructions.
+- **Silent truncation**: The platform drops older content without warning.
 
-| Scope          | Path                                                | Shared with                              |
-|----------------|-----------------------------------------------------|------------------------------------------|
-| Managed policy | `/Library/Application Support/ClaudeCode/CLAUDE.md` (macOS), `/etc/claude-code/CLAUDE.md` (Linux), `C:\Program Files\ClaudeCode\CLAUDE.md` (Windows) | Org policy        |
-| Project        | `<repo>/CLAUDE.md` or `<repo>/.claude/CLAUDE.md`    | Team via source control                  |
-| User           | `~/.claude/CLAUDE.md`                               | Just you, all projects on this machine   |
-| Local          | `<repo>/CLAUDE.local.md` (gitignored)               | Just you, this project                   |
+### Prefer Enforcement Over Prose
+Whenever possible, use platform primitives (hooks, path-scoped rules, required artifacts, etc.) rather than relying on natural-language instructions that the agent might miss.
 
-### Auto-memory — Claude-authored
+---
 
-`MEMORY.md` index plus topic files at `~/.claude/projects/<encoded-path>/memory/`. Per-working-tree (machine-local; all worktrees of the same repo share one directory). Requires Claude Code v2.1.59+.
+## Memory Systems and Scopes
 
-**Failure mode:** silent truncation. The first **200 lines OR 25 KB of `MEMORY.md`, whichever comes first**, are loaded at session start. Content past that threshold is dropped without warning. Truncation drops from the bottom — newest entries first.
+### General Model
 
-Topic files referenced by `MEMORY.md` are loaded on demand based on the index, not on a global threshold.
+Most agents maintain at least two broad categories of memory:
+- **User-authored memory** — explicit instructions written by the user or team.
+- **Agent-authored memory** — automatically captured context, summaries, or learned patterns.
 
-### Crosswalk to compound's L1/L2/L3
+These are typically scoped by visibility and sharing needs (user-wide, project-wide, local-only, etc.).
 
-`/workflow:compound --maintain` audits memory using a three-level shorthand. The mapping:
+<!-- agent:include claude -->
 
-| compound term | This doc's term                                          |
-|---------------|----------------------------------------------------------|
-| Level 1       | User CLAUDE.md (`~/.claude/CLAUDE.md`)                   |
-| Level 2       | Project CLAUDE.md (`<repo>/CLAUDE.md` or `<repo>/.claude/CLAUDE.md`) |
-| Level 3       | Auto-memory (`MEMORY.md` + `memory/*.md` for this project) |
+### Claude Code Implementation
 
-Compound's audit intentionally omits the managed-policy scope (org-level, rare) and the local scope (`CLAUDE.local.md`, gitignored personal preferences) — both have audit semantics that differ from the shared/team-visible levels.
+Claude Code maintains two independent memory systems:
 
-## The Primitives Table
+- **User-authored**: `CLAUDE.md` files (with scopes: managed policy, project, user, local).
+- **Auto-memory**: `MEMORY.md` + topic files written by Claude (subject to 200-line / 25 KB truncation).
+
+See the detailed scopes table and primitive list below for Claude’s current mechanisms.
+
+<!-- /agent:include claude -->
+
+<!-- agent:include grok -->
+
+### Grok Implementation
+
+Grok’s approach to persistent memory combines platform features with file-based project context:
+
+- **Persistent User Memory**: Built-in Memory system (toggle + Custom Instructions) that remembers user preferences, style, projects, and recurring facts across conversations on the Grok platform.
+- **Project Context**: Strong support for `AGENTS.md` (with good Claude compatibility). Grok Build automatically loads these files for long-term project memory, decisions, and conventions.
+- **Skills**: Reusable, modular instruction sets that can act as portable context or rule bundles.
+- **Large Context Windows**: Up to 1M–2M tokens in advanced tiers, which reduces reliance on heavy external memory for many workflows.
+- **Multi-agent persistence**: Sub-agents can maintain encrypted state across turns.
+
+Grok currently relies primarily on `AGENTS.md`, large context windows, and its built-in Memory feature for persistent context. It has fewer dedicated file-based memory primitives than some other platforms. Most durable project memory lives in `AGENTS.md` and Skills.
+
+<!-- /agent:include grok -->
+
+<!-- agent:include factory -->
+
+### Factory Droid Implementation
+
+Factory Droid has no built-in cross-session memory. All persistent context must be provided through files. The recommended system has three main layers:
+
+- **Project Memory** — `.factory/memories.md` (lives in the repo root and travels with the code)
+- **Personal Memory** — `~/.factory/memories.md` (follows the individual across all projects)
+- **Rules & Conventions** — `.factory/rules/*.md` (project) and `~/.factory/rules/` (personal)
+
+`AGENTS.md` (both project-level and personal) serves as the central orchestrator that explicitly tells Droid to consult the memory and rules files before acting.
+
+Factory strongly distinguishes between **Memory** (descriptive records of decisions and context) and **Rules** (prescriptive standards for how work should be done).
+
+<!-- /agent:include factory -->
+
+---
+
+## Concrete Primitives
+
+<!-- agent:include claude -->
+
+### Claude Code Primitives
+
+The table below lists the specific mechanisms Claude Code currently exposes.
 
 | Primitive                              | Type     | Use when                                                                                                           |
 |----------------------------------------|----------|-------------------------------------------------------------------------------------------------------------------|
@@ -51,7 +97,7 @@ Compound's audit intentionally omits the managed-policy scope (org-level, rare) 
 | `<repo>/CLAUDE.local.md`               | File     | Personal project preferences. Auto-gitignored by `/init`.                                                          |
 | `~/.claude/CLAUDE.md`                  | File     | User-wide rules across every project on this machine.                                                              |
 | `@~/.claude/<file>` import             | Syntax   | Re-share personal content into a project's CLAUDE.md without committing it. Up to 5-hop chains.                    |
-| `.claude/rules/*.md` + `paths:` frontmatter | File pattern | Path-scoped instructions loaded only when matching files are touched. The right primitive for "rules that only apply to part of the codebase" — see Pattern 1 below. |
+| `.claude/rules/*.md` + `paths:`        | File pattern | Path-scoped instructions loaded only when matching files are touched. The right primitive for "rules that only apply to part of the codebase" — see Pattern 1 below. |
 | `~/.claude/rules/*.md`                 | File pattern | User-level rules (path-scoped). Same mechanism, user scope.                                                      |
 | `MEMORY.md` + `memory/*.md`            | File set | Auto-memory: Claude writes, you can edit/delete. Index is hard-truncated at 200 lines / 25 KB.                     |
 | `claudeMdExcludes` setting             | Glob list | Exclude monorepo CLAUDE.md files at any layer.                                                                    |
@@ -67,89 +113,265 @@ Compound's audit intentionally omits the managed-policy scope (org-level, rare) 
 | `PreCompact` / `PostCompact` hooks     | Hook     | Wrap conversation compaction events. Useful for deciding when to trigger maintenance.                              |
 | `/workflow:compound --maintain`        | Command (this repo) | The deliberate, evidence-producing alternative to `/dream` — a three-tier audit across all memory levels with selective approval. See "When to run compound --maintain" below. |
 
-Note: there is no `PreMemoryWrite` / `PostMemoryWrite` hook. That's an open feature request (anthropics/claude-code#44820). Capture-time gating must rely on the auto-memory rules in the user prompt, not on hook enforcement.
+<!-- /agent:include claude -->
 
-## Patterns: Use the Primitive Instead
+<!-- agent:include grok -->
 
-Patterns observed in community advice that map to existing primitives — when you spot one, prefer the primitive.
+### Grok Primitives
 
-### Pattern 1 — Externalize a category of guidance from CLAUDE.md
+Grok’s main persistent context mechanisms (as of 2026):
 
-**Smell:** CLAUDE.md is over 200 lines because a category of rules has accreted (e.g., "always check the failure log for migrations", "for security-sensitive code, do X").
+| Primitive                              | Type             | Use when                                                                 |
+|----------------------------------------|------------------|--------------------------------------------------------------------------|
+| `AGENTS.md` (project root or `~/.grok/`) | File / Orchestrator | Project conventions, build commands, architecture decisions, memory references |
+| Custom Instructions + Memory toggle    | Platform feature | User-level persistent preferences and facts across chats                 |
+| Skills                                 | Modular instruction sets | Reusable workflows, context bundles, or rule sets                        |
+| Large context window (1M–2M tokens)    | Model capability | Reducing need for external memory in complex sessions                    |
+| Stateful Responses API                 | API feature      | Server-side conversation memory tied to response IDs                     |
+| Multi-agent encrypted state            | System feature   | Persisted sub-agent context across turns                                 |
 
-**Reach for:** `.claude/rules/<category>.md` with `paths:` frontmatter. The rule loads only when matching files are touched, keeping CLAUDE.md lean while preserving the guidance.
+Grok currently relies primarily on `AGENTS.md`, large context windows, and its built-in Memory feature for persistent context. It has fewer dedicated file-based memory primitives compared with some other platforms.
 
-```markdown
+<!-- /agent:include grok -->
+
+<!-- agent:include factory -->
+
+### Factory Droid Primitives
+
+Factory’s memory system is deliberately file-based and human-maintained. The main primitives are:
+
+| Primitive                              | Type             | Use when                                                                 |
+|----------------------------------------|------------------|--------------------------------------------------------------------------|
+| `.factory/memories.md`                 | Project memory   | Architecture decisions, domain knowledge, technical debt, project history |
+| `~/.factory/memories.md`               | Personal memory  | Individual preferences, style, tooling choices, communication patterns    |
+| `.factory/rules/*.md`                  | Project rules    | Prescriptive standards (TypeScript, testing, security, etc.)              |
+| `~/.factory/rules/`                    | Personal rules   | Cross-project personal conventions                                        |
+| `AGENTS.md` (project + personal)       | Orchestrator     | Central file that tells Droid to consult memories and rules               |
+| Memory capture hooks                   | Automation       | Automatically save entries triggered by `#`, `##`, or “remember this”     |
+| Memory skills or `/remember` commands  | Interactive      | Help Droid capture, categorize, and format new memories                   |
+
+Factory makes a clear distinction between **Memory** (what was decided + reasoning) and **Rules** (how things must be done going forward).
+
+<!-- /agent:include factory -->
+
 ---
-paths:
-  - "src/migrations/**"
-  - "*.sql"
+
+## Patterns: Prefer the Primitive
+
+These patterns are intended to be useful regardless of which agent you use.
+
+### Pattern 1 — Externalize Categories of Guidance
+
+**Smell**: A single memory file is becoming bloated because many unrelated rules have accumulated.
+
+**Reach for**: Any path-scoped or category-based primitive the agent supports so that rules only load when relevant.
+
+<!-- agent:include claude -->
+
+**Claude example**: Use `.claude/rules/<category>.md` with a `paths:` frontmatter matcher instead of putting everything in `CLAUDE.md`.
+
+<!-- /agent:include claude -->
+
+<!-- agent:include grok -->
+
+**Grok example**: Use `AGENTS.md` (or a dedicated skills file) to externalize rules so they are loaded only when relevant, combined with Grok’s large context window and Skills feature for modular context.
+
+<!-- /agent:include grok -->
+
+<!-- agent:include factory -->
+
+**Factory example**: Store category-specific guidance in `.factory/rules/<category>.md` (or the appropriate layer) and reference the file from `AGENTS.md`. Droid will then automatically load the rules when working in the relevant context.
+
+<!-- /agent:include factory -->
+
+### Pattern 2 — Personal vs Shared Rules
+
+**Smell**: You want personal preferences to follow you across projects without polluting the team repo.
+
+**Reach for**: A local-only or user-scoped primitive.
+
+<!-- agent:include claude -->
+
+**Claude example**: `CLAUDE.local.md` (gitignored) for project-specific personal rules, or `~/.claude/<file>.md` + `@` import for cross-project personal rules.
+
+<!-- /agent:include claude -->
+
+<!-- agent:include grok -->
+
+**Grok example**: Use `AGENTS.md` (or a dedicated skills file) to externalize rules so they are loaded only when relevant, combined with Grok’s large context window and Skills feature for modular context.
+
+<!-- /agent:include grok -->
+
+<!-- agent:include factory -->
+
+**Factory example**: Store personal preferences and style in `~/.factory/memories.md` and reference the file from `~/.factory/AGENTS.md`. This keeps personal conventions available in every project without polluting any repo.
+
+<!-- /agent:include factory -->
+
+### Pattern 3 — Convert Prose to Enforcement
+
+**Smell**: Important rules are frequently missed even though they are written in memory.
+
+**Reach for**: Any hook, required artifact, or tooling primitive that can enforce the behavior instead of documenting it.
+
+<!-- agent:include claude -->
+
+**Claude example**: Use hooks (`PostToolUse`, `InstructionsLoaded`, etc.) or pre-commit hooks rather than writing “always run the linter.”
+
+<!-- /agent:include claude -->
+
+<!-- agent:include grok -->
+
+**Grok example**: Use `AGENTS.md` (or a dedicated skills file) to externalize rules so they are loaded only when relevant, combined with Grok’s large context window and Skills feature for modular context.
+
+<!-- /agent:include grok -->
+
+<!-- agent:include factory -->
+
+**Factory example**: Use PostToolUse hooks or custom skills to automatically enforce rules (e.g., linting, formatting, security checks) rather than relying only on documentation in prose.
+
+<!-- /agent:include factory -->
+
+### Pattern 4 — Prune Transient Context
+
+**Smell**: Old, one-off context (e.g., debugging details from a specific task) lingers and creates noise.
+
+**Reach for**: Any deletion, archiving, or compaction primitive the agent supports.
+
+<!-- agent:include claude -->
+
+**Claude example**: Use `/memory` to review and delete entries, or `/workflow:compound --maintain --focus staleness`.
+
+<!-- /agent:include claude -->
+
+<!-- agent:include grok -->
+
+**Grok example**: Use the Memory viewer to review and delete individual memories. Leverage compaction features when available.
+
+<!-- /agent:include grok -->
+
+<!-- agent:include factory -->
+
+**Factory example**: Periodically review and prune `memories.md` entries. Archive old decisions using `<details>` blocks.
+
+<!-- /agent:include factory -->
+
+### Pattern 5 — Archive on Project End or Handoff
+
+**Smell**: A project is winding down or being handed off, and you want to preserve useful history without loading it every session.
+
+**Reach for**: Archival or purge primitives.
+
+<!-- agent:include claude -->
+
+**Claude example**: Use `claude project purge` for full handoff, or manually move topic files into an archive folder and remove their references from `MEMORY.md`.
+
+<!-- /agent:include claude -->
+
+<!-- agent:include grok -->
+
+**Grok example**: Use the Memory management tools to archive or delete project-related memories. Consider exporting key decisions before closing the project.
+
+<!-- /agent:include grok -->
+
+<!-- agent:include factory -->
+
+**Factory example**: Archive or move old entries in `.factory/memories.md`. Use `<details>` blocks for historical decisions that no longer need to load by default.
+
+<!-- /agent:include factory -->
+
 ---
-# Migration Rules
-- Run `pnpm db:dry-run` before applying
-- Never reorder columns in production schemas
-```
 
-This is the primitive Hiroyuki's "categorized failure logs in 5 separate files" pattern was reinventing. With `paths:`, the routing is automatic — no "check the failure log before this task" preamble needed.
+## Hygiene Practices
 
-### Pattern 2 — Personal rules in a shared repo
+**General principle**: Treat memory like code. Review it when things go wrong, prune regularly, and prefer enforcement over documentation.
 
-**Smell:** "I want my CLAUDE.md preferences across all my project copies but I can't commit them to the team repo."
+<!-- agent:include claude -->
 
-**Reach for:** `CLAUDE.local.md` (auto-gitignored) for project-specific personal preferences. For cross-project personal rules, write them once at `~/.claude/<file>.md` and `@~/.claude/<file>.md` from your project CLAUDE.md.
+### Claude-Specific Hygiene
 
-### Pattern 3 — Behavior enforced by tooling, not by prose
+- Per-line audit (“Would removing this cause mistakes?”)
+- Convert prose to hooks where possible
+- Check `CLAUDE.md` into git
+- Periodic contradiction checks across all layers
 
-**Smell:** CLAUDE.md says "always run the linter before committing" — and the user reads it, the agent reads it, but it's still missed sometimes.
+(For sources and known limitations, see the Sources section inside the Claude block below.)
 
-**Reach for:** a hook (e.g., `PostToolUse` matching write/edit operations) or a pre-commit hook in the repo. Anthropic best-practices: *"If a tool can enforce it, don't write prose about it. Convert prose to hooks where possible."*
+<!-- /agent:include claude -->
 
-### Pattern 4 — One-time context, not durable rule
+<!-- agent:include grok -->
 
-**Smell:** Auto-memory captured something that was relevant to one task — e.g., "user is debugging the OAuth flow today". Now it's permanent noise.
+**Grok example**: Use the Memory toggle + periodic review of Custom Instructions and `AGENTS.md`. Leverage large context and Skills for hygiene. Review memories for accuracy and prune when context pressure appears.
 
-**Reach for:** `/memory` to view and delete the entry, or `/workflow:compound --maintain --focus staleness` to surface and prune the class systematically. Don't wait for the 200-line cutoff to silently drop it.
+<!-- /agent:include grok -->
 
-### Pattern 5 — Project ending, content worth retaining
+<!-- agent:include factory -->
 
-**Smell:** A long-running project is winding down. You want to keep memory accessible but stop loading it on every session.
+**Factory example**: Follow the Power User checklist. Conduct quarterly reviews of `memories.md` and rules files. Prune or archive old entries (using `<details>` blocks for historical decisions). Combine with Droid Shield and automation hooks for ongoing enforcement. Teams are encouraged to maintain project-level memory and rules.
 
-**Reach for:** `claude project purge` for full handoff (deletes everything under `~/.claude/projects/<hash>/`). For partial archival, manually move topic files out of `memory/` into a sibling `memory-archive/` and remove their references from `MEMORY.md` — they remain on disk and grep-able, but no longer load.
+<!-- /agent:include factory -->
 
-## Anthropic-Endorsed Hygiene Practices
+---
 
-From https://code.claude.com/docs/en/best-practices and https://code.claude.com/docs/en/memory:
+## When to Audit Memory
 
-- **Per-line audit.** "For each line, ask: 'Would removing this cause Claude to make mistakes?' If not, cut it."
-- **Treat memory like code.** Review when things go wrong, prune regularly, test changes by observing whether behavior actually shifts.
-- **Convert prose to enforcement.** "If Claude already does something correctly without the instruction, delete it or convert it to a hook."
-- **Bloat is a behavior bug.** "Bloated CLAUDE.md files cause Claude to ignore your actual instructions."
-- **Check CLAUDE.md into git.** "The file compounds in value over time" — and git is the recovery layer if pruning goes too far.
-- **Periodic contradiction check.** Across CLAUDE.md, nested CLAUDE.md, `.claude/rules/`, and auto-memory.
+Use a deliberate memory maintenance workflow when:
 
-## When to Run `/workflow:compound --maintain`
+- Memory files or context are approaching practical limits (bloat, truncation, or degraded agent performance)
+- New contributors or team members are onboarding
+- The project has undergone significant changes that may have invalidated previous decisions or context
+- Before sharing memory/rules with a wider team or repository
 
-Compound's maintain mode is the deliberate alternative to `/dream`'s autonomous consolidation. Use it when:
+The specific triggers and tools vary by agent platform.
 
-- `MEMORY.md` index is approaching the 200-line / 25 KB cutoff (run with `--level memory`)
-- A new contributor reads `CLAUDE.md` and finds rules that contradict actual code (run with `--focus accuracy`)
-- After significant codebase changes that may have invalidated memory (run with `--focus staleness`)
-- Periodic hygiene — quarterly or after major project milestones (run unscoped for full hierarchy)
-- Before wider sharing of `<repo>/CLAUDE.md` with the team
+<!-- agent:include claude -->
 
-Compound and `/dream` are complementary, not competing: `/dream` is autonomous and runs between sessions; `compound --maintain` is user-invoked and produces a Quality Report with selective approval. When `/dream` is unavailable in your install (it's still rolling out), `compound --maintain --level memory` covers the same ground deliberately.
+For Claude Code, common triggers include `MEMORY.md` approaching the 200-line / 25 KB cutoff, or noticing the agent ignoring instructions that previously worked reliably.
 
-## Sources
+<!-- /agent:include claude -->
 
-Primary (Anthropic):
-- https://code.claude.com/docs/en/memory — memory file layout, 200-line cutoff, scopes
-- https://code.claude.com/docs/en/best-practices — hygiene guidance, "convert prose to hooks"
-- https://code.claude.com/docs/en/commands — slash command reference
-- https://code.claude.com/docs/en/hooks — hook event taxonomy
-- https://code.claude.com/docs/en/settings — `autoMemoryEnabled`, `claudeMdExcludes`, etc.
+<!-- agent:include grok -->
 
-Issues tracking known limitations:
-- anthropics/claude-code#44820 — `PreMemoryWrite` / `PostMemoryWrite` hooks (open feature request)
-- anthropics/claude-code#39135 — `/dream` UI hint vs. "Unknown skill" rollout state
-- anthropics/claude-code#40210 — `MEMORY.md` truncates from bottom (newest first)
-- anthropics/claude-code#56786 — silent-truncation warning easy to miss
+For Grok, common triggers include Custom Instructions or `AGENTS.md` growing large, before major refactors, or when the agent begins ignoring previously established patterns. Use the built-in Memory viewer plus periodic review of project files.
+
+<!-- /agent:include grok -->
+
+<!-- agent:include factory -->
+
+For Factory Droid, common triggers include `memories.md` files growing large, before onboarding new team members, after major refactors, or before sharing the project with others. Use skills or hooks for maintenance.
+
+<!-- /agent:include factory -->
+
+---
+
+## Sources & Further Reading
+
+<!-- agent:include claude -->
+
+**Primary (Anthropic)**:
+- https://code.claude.com/docs/en/memory
+- https://code.claude.com/docs/en/best-practices
+- https://code.claude.com/docs/en/hooks
+- https://code.claude.com/docs/en/settings
+
+Known limitations and feature requests are tracked in the Anthropic Claude Code repository.
+
+<!-- /agent:include claude -->
+
+<!-- agent:include grok -->
+
+**Primary (xAI / Grok)**:
+- Grok Build documentation and release notes (memory, Skills, AGENTS.md support)
+- https://x.ai (for latest on Grok Build, Memory features, and context capabilities)
+- AGENTS.md is treated as the primary long-term project context mechanism (with strong Claude compatibility)
+
+<!-- /agent:include grok -->
+
+<!-- agent:include factory -->
+
+**Primary (Factory.ai)**:
+- https://docs.factory.ai/guides/power-user/memory-management
+- https://docs.factory.ai/guides/power-user/rules-conventions
+- https://docs.factory.ai/guides/power-user/setup-checklist
+
+<!-- /agent:include factory -->
