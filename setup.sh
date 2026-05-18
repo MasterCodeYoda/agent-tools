@@ -178,6 +178,18 @@ install_skills_for_agent() {
 
     echo "Installing skills for ${agent}..."
 
+    # Handle legacy installation where ~/.${agent}/skills was a symlink to an entire
+    # old skills tree. The new model uses a real directory containing one symlink
+    # per skill (pointing into dist/<agent>/skills/<skill>/). Remove the old symlink
+    # so we can create a proper directory.
+    if [ "$agent" != "factory" ]; then
+        local user_skills_dir="${HOME}/.${agent}/skills"
+        if [ -L "$user_skills_dir" ]; then
+            echo -e "${YELLOW}⚠${NC}  Replacing legacy whole-skills symlink: ${user_skills_dir} (migrating to per-skill layout)"
+            rm -f "$user_skills_dir"
+        fi
+    fi
+
     for skill_dir in "${dist_agent_dir}"/*/; do
         [ -d "$skill_dir" ] || continue
         local skill_name

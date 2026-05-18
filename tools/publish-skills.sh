@@ -154,7 +154,8 @@ filter_for_agent() {
         function extract_list(line,   tag, list) {
             # Remove everything up to and including "agent:include" or "agent:exclude"
             sub(/.*agent:(include|exclude)[ \t]*/, "", line)
-            # Remove everything from the first > onward
+            # Remove from HTML comment closer "-->" or ">" onward (tags end with " -->")
+            sub(/[ \t]*-->.*/, "", line)
             sub(/[ \t]*>.*/, "", line)
             gsub(/[ \t]/, "", line)
             return line
