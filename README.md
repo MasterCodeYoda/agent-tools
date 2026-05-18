@@ -1,6 +1,8 @@
 # Agent Tools
 
-Shared skills and commands for Claude Code (and Factory.ai) that bring consistent, opinionated workflows to every project. Clone once, symlink everywhere — every repo gets the same architecture guidance, workflow commands, and language patterns without copy-pasting.
+A canonical, portable skill corpus for modern coding agents (Claude Code, Grok, Factory Droid, etc.).
+
+Clone once, run `./setup.sh`, and get a consistent set of high-quality skills across all your projects and agents. The system automatically publishes the canonical source (`src/`) into agent-specific trees (`dist/<agent>/skills/`) and installs them in the right places (global profile vs local project).
 
 ## Quick Start
 
@@ -10,16 +12,61 @@ cd ~/Source/agent-tools
 ./setup.sh
 ```
 
-`setup.sh` creates symlinks so your tools can find these files:
+`setup.sh` does the following automatically:
 
-| Target | Skills | Commands |
-|--------|--------|----------|
-| `~/.claude/` | `src/` (via symlink) | (merged into skills) |
-| `~/.factory/` | `src/` (copied) | (merged into skills) |
+1. Publishes the canonical skills from `src/` into `dist/<agent>/skills/` (resolving any agent-specific markup).
+2. Installs the appropriate skills into your environment:
+   - Most skills go into your user profile (`~/.claude/skills/`, `~/.grok/skills/`, `~/.factory/skills/`).
+   - Project-scoped skills (currently just the `skills` meta-skill) go into the local project directory (`.claude/skills/`, `.grok/skills/`, `.factory/skills/`).
 
-Re-run `setup.sh` after pulling new changes — it's idempotent.
+| Target                  | Behavior                                      |
+|-------------------------|-----------------------------------------------|
+| `~/.claude/skills/`     | Symlinked from `dist/claude/skills/`          |
+| `~/.grok/skills/`       | Symlinked from `dist/grok/skills/`            |
+| `~/.factory/skills/`    | Copied from `dist/factory/skills/`            |
+| `./.claude/skills/` etc.| Local project copy of project-scoped skills   |
 
-For details on how we express agent-specific content in the canonical skills, see [MARKUP.md](src/skills/references/MARKUP.md).
+Re-run `./setup.sh` after pulling changes. The publisher runs on every invocation.
+
+### Publishing Model
+
+The system is built around a clean separation:
+
+- `src/` — The single source of truth. All skill development happens here. Skills may contain lightweight embedded markup (`<!-- agent:include claude --> ... <!-- /agent:include claude -->`) when behavior must differ between agents.
+- `tools/publish-skills.sh` — A thin, mechanical publisher (pure bash + portable awk). It walks `src/`, resolves the markup for each target agent, strips all HTML comments, and writes clean trees to `dist/<agent>/skills/`.
+- `setup.sh` — Runs the publisher, then installs the resulting skills into the right locations based on a `publish-target` field in each skill’s frontmatter:
+  - `publish-target: user-profile` (default) → installed into your global `~/.claude/skills/`, `~/.grok/skills/`, or `~/.factory/skills/`.
+  - `publish-target: project` → installed only into the local project directory (`.claude/skills/`, `.grok/skills/`, `.factory/skills/`). Currently only the `skills` meta-skill uses this.
+
+This design keeps the canonical corpus maintainable while letting each agent receive the cleanest possible version of the skills.
+
+Grok is treated as a first-class target alongside Claude and Factory. Detection for Grok is intentionally a bit more permissive (`~/.grok` or `~/.grok/skills`) because its directory layout is newer.
+
+### Marking Skills as Project-Scoped
+
+Most skills should use the default `publish-target: user-profile`.
+
+Use `publish-target: project` only when a skill is tightly coupled to the agent-tools repository itself (for example, the `skills` meta-skill that provides `/skills:import` and `/skills:evolve`).
+
+Example frontmatter:
+
+```yaml
+---
+name: skills
+description: Meta-skill for importing and evolving the canonical skill corpus.
+publish-target: project
+---
+```
+
+### Inspecting What Would Be Published
+
+You can preview the output of the publishing step without modifying anything:
+
+```bash
+tools/publish-skills.sh --dry-run --agents grok
+```
+
+For the full markup specification, see [src/skills/references/MARKUP.md](src/skills/references/MARKUP.md).
 
 ## What's Included
 
@@ -29,7 +76,7 @@ Skills are context-aware reference material that Claude loads on demand via `@sk
 
 | Skill | Purpose |
 |-------|---------|
-| **workflow-guide** | Core philosophy — decomposition modes (vertical-slice + deliverable-partition), session continuity, P1/P2/P3 prioritization, and the workflow command set |
+| **workflow** | Core philosophy — decomposition modes (vertical-slice + deliverable-partition), session continuity, P1/P2/P3 prioritization, and the workflow command set |
 | **clean-architecture** | Language-agnostic Clean Architecture with the Dependency Rule, layer patterns, and per-language guides (Python, TypeScript, C#, Rust) |
 | **code-patterns** | Language-specific best practices — type safety, error handling, testing idioms, and framework conventions |
 | **test-strategy** | Strategy selection (TDD, spec-first, property-based, contract, characterization), Red-Green-Refactor, and AI-specific anti-patterns |
@@ -84,25 +131,23 @@ Commands are invoked with `/command-name` in Claude Code (or Factory.ai).
 
 ```
 agent-tools/
-├── skills/                          # Reusable knowledge modules (@skill-name)
-│   ├── workflow-guide/              # Core workflow philosophy + planning templates
-│   ├── clean-architecture/          # CA principles, language guides, examples
-│   ├── code-patterns/               # Language-specific patterns (Python, TS, C#, Rust)
-│   ├── test-strategy/               # Strategy selection + reference material
-│   ├── audit/                       # Domain definitions for unified /workflow:audit
-│   ├── product/                     # Product strategy + positioning frameworks
-│   ├── use-browser/                 # Browser automation (Chrome DevTools MCP + agent-browser)
-│   ├── visual-design/              # 73 visual design micro-patterns (detail.design)
-│   └── qa/                          # QA workflows — NL spec authoring + visual inspection tools
-├── commands/                        # Executable workflows (/command-name)
-│   ├── workflow/                    # 6 workflow commands (refine, plan, execute, review, compound, audit)
-│   ├── product/                     # 3 product commands (audit, position, brief)
-│   ├── qa/                          # 3 QA commands (setup, discover, audit)
-│   └── git/                         # 5 git commands
-├── tests/scenarios/                 # Synthetic test scenarios for /evolve effectiveness validation
-├── factory-commands/                # Auto-generated flattened commands for Factory.ai
-├── setup.sh                         # Symlink installer
+├── src/                             # Canonical source (the truth)
+│   ├── workflow/
+│   ├── clean-architecture/
+│   ├── visual-design/
+│   ├── skills/                      # Meta-skill (import + evolve) — deployed to local project only
+│   └── ...
+├── dist/                            # Generated output (gitignored)
+│   ├── claude/skills/
+│   ├── grok/skills/
+│   └── factory/skills/
+├── tools/
+│   └── publish-skills.sh            # Thin mechanical publisher (bash + awk)
+├── setup.sh                         # Publishes + installs for your agents
 └── README.md
+```
+
+All development happens under `src/`. `setup.sh` runs the publisher to produce clean per-agent trees under `dist/`.
 ```
 
 ## Design Principles
