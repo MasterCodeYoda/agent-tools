@@ -61,13 +61,13 @@ Check that `<REPO_ROOT>/.claude/worktrees/<name>/` does not already exist. If it
 
 <!-- agent:include grok -->
 
-**TODO (Grok)**: Define the canonical location pattern for worktrees when using Grok (e.g. `.grok/worktrees/<name>` or another convention).
+Check that `<REPO_ROOT>/.grok/worktrees/<name>/` does not already exist. If it does, error: "A worktree named '<name>' already exists."
 
 <!-- /agent:include grok -->
 
 <!-- agent:include factory -->
 
-**TODO (Factory)**: Define the canonical location pattern for worktrees when using Factory Droid.
+Check that `<REPO_ROOT>/.factory/worktrees/<name>/` does not already exist. If it does, error: "A worktree named '<name>' already exists."
 
 <!-- /agent:include factory -->
 
@@ -89,13 +89,13 @@ Use `<REPO_ROOT>/.claude/worktrees/<name>` as the target path.
 
 <!-- agent:include grok -->
 
-**TODO (Grok)**: Define the target path pattern for Grok.
+Use `<REPO_ROOT>/.grok/worktrees/<name>` as the target path.
 
 <!-- /agent:include grok -->
 
 <!-- agent:include factory -->
 
-**TODO (Factory)**: Define the target path pattern for Factory.
+Use `<REPO_ROOT>/.factory/worktrees/<name>` as the target path.
 
 <!-- /agent:include factory -->
 
@@ -115,19 +115,19 @@ Use `<REPO_ROOT>/.claude/worktrees/<name>` as the path.
 
 <!-- agent:include grok -->
 
-**TODO (Grok)**: Define the worktree path for Grok.
+Use `<REPO_ROOT>/.grok/worktrees/<name>` as the path.
 
 <!-- /agent:include grok -->
 
 <!-- agent:include factory -->
 
-**TODO (Factory)**: Define the worktree path for Factory.
+Use `<REPO_ROOT>/.factory/worktrees/<name>` as the path.
 
 <!-- /agent:include factory -->
 
 This is the same pattern used by `workflow/execute.md` for entering existing worktrees. It switches the Bash working directory for subsequent commands without disrupting other sessions.
 
-**Do NOT use `EnterWorktree()`** — that tool creates a new worktree from HEAD and cannot target a specific base ref or enter an existing worktree.
+**Do not use any agent-specific "enter worktree" tool** that auto-creates from HEAD — always use explicit `git worktree` commands so you can control the base ref and target directory (see the agent blocks above for the correct path pattern).
 
 ## Phase 3 — Establish Dependencies
 
@@ -144,7 +144,7 @@ Restore project dependencies so the worktree is ready to work immediately. Follo
 Confirm the following to the user:
 
 - **Worktree name**: `<name>`
-- **Path**: `<REPO_ROOT>/.claude/worktrees/<name>/`
+- **Path**: The agent-specific worktree directory (see the blocks above for the exact path pattern per agent)
 - **Branch**: `<type>/<name>` (or the `--branch` override)
 - **Base ref**: `<base-ref>`
 - **Status**: Session CWD is now inside the worktree, ready to work.

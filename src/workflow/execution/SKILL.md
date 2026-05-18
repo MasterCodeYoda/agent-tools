@@ -167,16 +167,16 @@ REPO_ROOT=$(git rev-parse --show-toplevel)
 **Create worktree**:
 
 ```
-EnterWorktree(name: "<worktree-name>")
+Use the agent's worktree creation mechanism (see @git (worktree-create))
 ```
 
-This creates a worktree at `.claude/worktrees/<worktree-name>/` and switches CWD to it.
+This creates a worktree using the agent's worktree naming convention (see @git (worktree-create) for agent-specific path details) and switches CWD to it.
 
-**EnterWorktree exit prompt**: Respect your agent's worktree exit prompt behavior (see @git worktree skills). In parallel workflows, prefer keeping the worktree until after merging. Worktree removal is a user-initiated action after all sessions complete and branches are merged. See Worktree Safety Rules in @workflow.
+**Worktree exit prompt**: Respect your agent's worktree exit prompt behavior (see @git (worktree-create) and @git (worktree-delete)). In parallel workflows, prefer keeping the worktree until after merging. Worktree removal is a user-initiated action after all sessions complete and branches are merged. See Worktree Safety Rules in @workflow.
 
 **Rename branch** to match naming convention:
 
-The `EnterWorktree` tool auto-generates a branch name that doesn't follow the `<type>/<identifier>` convention. Rename it immediately:
+The worktree creation mechanism (see @git (worktree-create)) may auto-generate a branch name. Rename it immediately to follow the standard naming convention:
 
 ```bash
 # Determine the correct branch name using Branch Naming Convention from @workflow
@@ -581,7 +581,7 @@ git merge <branch-name>
 git worktree list
 
 # 5. Remove ONLY your own worktrees, ONLY after merging
-git worktree remove .claude/worktrees/<worktree-name>
+git worktree remove <worktree-path>   # see @git (worktree-delete) for agent-specific path resolution
 git worktree prune
 ```
 

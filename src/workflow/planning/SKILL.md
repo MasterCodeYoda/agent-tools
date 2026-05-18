@@ -507,7 +507,7 @@ Create an isolated worktree before saving planning docs:
    ```
 3. **Create worktree**:
    ```
-   EnterWorktree(name: "<worktree-name>")
+   Use the agent's worktree creation mechanism (see @git (worktree-create))
    ```
 4. **Rename branch** to match naming convention:
    ```bash
@@ -517,7 +517,7 @@ Create an isolated worktree before saving planning docs:
 5. **Establish dependencies** — follow @workflow (dependency establishment) to restore `node_modules/` and/or Python deps. `REPO_ROOT` is already captured; CWD is inside the worktree. Warn on failure, never block.
 6. **Set `WORKTREE_PATH`** to the current working directory for use in session-state.md.
 
-**EnterWorktree exit prompt**: Respect your agent's worktree exit behavior (see @git worktree skills). In parallel workflows, prefer keeping the worktree until after merging. See Worktree Safety Rules in @workflow.
+**Worktree exit prompt**: Respect your agent's worktree exit behavior (see @git (worktree-create) and @git (worktree-delete)). In parallel workflows, prefer keeping the worktree until after merging. See Worktree Safety Rules in @workflow.
 
 #### Step 2: Create Working Branch (if `WORKTREE_MODE=false`)
 

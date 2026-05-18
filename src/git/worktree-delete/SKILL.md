@@ -39,13 +39,13 @@ Resolve bare names to `<REPO_ROOT>/.claude/worktrees/<name>/`
 
 <!-- agent:include grok -->
 
-**TODO (Grok)**: Define how bare worktree names resolve for Grok.
+Resolve bare names to `<REPO_ROOT>/.grok/worktrees/<name>/`
 
 <!-- /agent:include grok -->
 
 <!-- agent:include factory -->
 
-**TODO (Factory)**: Define how bare worktree names resolve for Factory.
+Resolve bare names to `<REPO_ROOT>/.factory/worktrees/<name>/`
 
 <!-- /agent:include factory -->
 - **No identifier**: List worktrees with `git worktree list` and ask the user which to remove

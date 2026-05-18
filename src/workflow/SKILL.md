@@ -339,8 +339,8 @@ At session boundaries:
    git merge feat/<slice-b-key>    # Run full test suite again
 6. USER cleans up worktrees (only after all merges succeed):
    git worktree list               # Verify no sessions are still active
-   git worktree remove .claude/worktrees/<name-a>
-   git worktree remove .claude/worktrees/<name-b>
+   git worktree remove <worktree-path-a>   # see @git (worktree-delete) for agent-specific resolution
+   git worktree remove <worktree-path-b>
    git worktree prune
 ```
 
@@ -356,14 +356,17 @@ Merge branches **one at a time**, running the full test suite after each merge. 
 
 ### Worktree Safety Rules
 
-These rules prevent data loss in multi-session parallel workflows:
+Use the dedicated git worktree skills (`git:worktree-create` and `git:worktree-delete`) for creating, entering, and safely removing worktrees. These skills contain the concrete, agent-aware implementation details.
+
+General safety principles (apply across agents):
 
 1. **Sessions never remove worktrees** — Handoff documents the worktree path but does NOT delete it. Cleanup is always a separate, user-initiated action.
 2. **Only remove worktrees you created** — Never clean up another session's worktree.
 3. **Check `git worktree list` before removal** — Verify no other worktrees are still active.
 4. **Never remove a worktree while CWD is inside it** — The shell will break irrecoverably.
-5. **EnterWorktree exit prompt** — When Claude Code asks "keep or remove?" on session exit, **always choose "keep"** in parallel workflows. Remove only manually after merging.
-6. **Session-state tracks ownership** — The `worktree:` field in `session-state.md` records which worktree belongs to each session.
+5. **Session-state tracks ownership** — The `worktree:` field in `session-state.md` records which worktree belongs to each session.
+
+See @git (worktree-create) and @git (worktree-delete) for agent-specific behavior, directory conventions, and commands.
 
 ## Common Pitfalls
 
