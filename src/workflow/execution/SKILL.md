@@ -172,7 +172,7 @@ EnterWorktree(name: "<worktree-name>")
 
 This creates a worktree at `.claude/worktrees/<worktree-name>/` and switches CWD to it.
 
-**EnterWorktree exit prompt**: When the session ends, Claude Code will ask "keep or remove this worktree?" — **always choose "keep"** in parallel workflows. Worktree removal is a user-initiated action after all sessions complete and branches are merged. See Worktree Safety Rules in @workflow.
+**EnterWorktree exit prompt**: Respect your agent's worktree exit prompt behavior (see @git worktree skills). In parallel workflows, prefer keeping the worktree until after merging. Worktree removal is a user-initiated action after all sessions complete and branches are merged. See Worktree Safety Rules in @workflow.
 
 **Rename branch** to match naming convention:
 
@@ -562,7 +562,7 @@ Document the session's worktree for reference:
 **Branch**: `<branch-name>`
 ```
 
-**EnterWorktree exit prompt**: When Claude Code asks "keep or remove this worktree?" on session exit, **always choose "keep"** in parallel workflows.
+**EnterWorktree exit prompt**: Respect your agent's worktree exit prompt behavior (see @git worktree skills). In parallel workflows, prefer keeping the worktree until after merging.
 
 **User-initiated merge and cleanup** (after ALL parallel sessions complete):
 

@@ -234,7 +234,7 @@ Identify which stories can be worked on concurrently in separate worktrees.
 
 **Worktree safety**:
 - Sessions NEVER remove worktrees — cleanup is a separate, user-initiated action after all sessions complete
-- When Claude Code asks "keep or remove?" on session exit, always choose "keep" in parallel workflows
+- Respect the worktree exit prompt behavior of your agent (see @git (worktree-create) and @git (worktree-delete) for agent-specific guidance). In parallel workflows, prefer keeping the worktree until after merging.
 - Only the user removes worktrees, after all branches are merged
 
 ## Success Metrics
