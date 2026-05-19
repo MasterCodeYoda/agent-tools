@@ -317,7 +317,13 @@ publish_for_agent() {
 
         # Emit flattened top-level versions for any sub-skills that use colon namespacing
         # (e.g. src/git/commit/SKILL.md with name: git:commit  →  dist/.../skills/git-commit/)
-        emit_flattened_leaves "$agent" "$skill_name" "$dest_skill_dir"
+        #
+        # For Grok we currently skip this because the plugin/raw indexer does not
+        # promote the hyphenated siblings as first-class top-level commands the way
+        # Claude does. We emit them only for agents where they improve discoverability.
+        if [[ "$agent" != "grok" ]]; then
+            emit_flattened_leaves "$agent" "$skill_name" "$dest_skill_dir"
+        fi
     done
 
     if [[ "$DRY_RUN" != true ]]; then
