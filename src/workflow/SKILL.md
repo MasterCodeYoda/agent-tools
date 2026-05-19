@@ -1,12 +1,25 @@
 ---
 name: workflow
 description: Parent skill for the workflow family — planning, execution, review, audit, compound, and knowledge capture. Supports vertical-slice and deliverable-partition decomposition modes.
-user-invocable: false
+user-invocable: true
 ---
 
 # Workflow
 
 This is the parent skill for the `workflow` family. It contains high-level philosophy, decomposition guidance, and navigation to the functional areas below (planning, execution, audit, review, compound, and refine). The functional areas contain the detailed processes and artifacts.
+
+## Commands in This Family
+
+| Command | Purpose |
+|---------|---------|
+| `/workflow:refine` | Discover and refine requirements through guided conversation |
+| `/workflow:plan` | Create detailed implementation plans from requirements |
+| `/workflow:execute` | Run planned work with progress tracking, todos, and quality gates |
+| `/workflow:review` | Flexible code review (PRs, ranges, files, or uncommitted changes) |
+| `/workflow:audit` | Comprehensive multi-domain project audit |
+| `/workflow:compound` | Capture solutions and maintain knowledge compounding |
+
+See the individual sub-skills for full details, argument hints, and procedures.
 
 ## Philosophy
 

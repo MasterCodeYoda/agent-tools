@@ -115,6 +115,51 @@ require_tool mkdir
 require_tool cp
 require_tool rm
 
+# Extract the declared "name:" from a SKILL.md (used for colon-name flattening)
+get_declared_name() {
+    local file="$1"
+    if [ -f "$file" ]; then
+        grep -m1 '^name:' "$file" | cut -d: -f2- | tr -d ' \t\r\n'
+    fi
+}
+
+# After a grouped package has been published (e.g. dist/.../skills/git/),
+# look for any leaf sub-skills whose name contains a colon (git:commit, workflow:refine, etc.)
+# and also publish them as top-level skills using hyphen as separator (git-commit, workflow-refine).
+# This allows both the group overview (/git) and direct sub-commands (/git-commit) to appear.
+emit_flattened_leaves() {
+    local agent="$1"
+    local package="$2"          # e.g. "git", "workflow"
+    local group_dir="$3"        # e.g. dist/claude/skills/git
+
+    for leaf_dir in "$group_dir"/*/; do
+        [ -d "$leaf_dir" ] || continue
+        local leaf_name
+        leaf_name=$(basename "$leaf_dir")
+
+        local skill_md="$leaf_dir/SKILL.md"
+        [ -f "$skill_md" ] || continue
+
+        local declared_name
+        declared_name=$(get_declared_name "$skill_md")
+
+        if [[ "$declared_name" == *:* ]]; then
+            local flat_name="${declared_name//:/-}"     # git:commit → git-commit
+            local flat_dest="${DIST_ROOT}/${agent}/skills/${flat_name}"
+
+            if [[ "$DRY_RUN" == true ]]; then
+                echo "    [dry] ${agent}/${flat_name}/ (flattened from ${package}/${leaf_name})"
+                continue
+            fi
+
+            rm -rf "$flat_dest"
+            mkdir -p "$flat_dest"
+            cp -a "$leaf_dir"/* "$flat_dest"/ 2>/dev/null || true
+            log "  → Also published flattened leaf: ${flat_name}/"
+        fi
+    done
+}
+
 # ── Core filtering logic (awk) ───────────────────────────────────────
 #
 # For each target agent we run the source files through this filter.
@@ -269,6 +314,10 @@ publish_for_agent() {
             fi
 
         done < <(find "$skill_dir" -print0)
+
+        # Emit flattened top-level versions for any sub-skills that use colon namespacing
+        # (e.g. src/git/commit/SKILL.md with name: git:commit  →  dist/.../skills/git-commit/)
+        emit_flattened_leaves "$agent" "$skill_name" "$dest_skill_dir"
     done
 
     if [[ "$DRY_RUN" != true ]]; then

@@ -1,7 +1,7 @@
 ---
 name: skills
 description: Meta-skill responsible for the health, growth, and portability of the canonical skill corpus. Provides capabilities for importing skills from other agent platforms and evolving existing skills over time.
-user-invocable: false
+user-invocable: true
 publish-target: project
 ---
 

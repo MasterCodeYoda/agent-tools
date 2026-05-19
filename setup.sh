@@ -45,6 +45,10 @@ YELLOW='\033[1;33m'
 RED='\033[0;31m'
 NC='\033[0m' # No Color
 
+# Marker file placed inside every skill installed by this repo.
+# Used to safely identify and prune stale skills on future runs.
+MANAGED_MARKER=".agent-tools"
+
 # ── Helpers ─────────────────────────────────────────────────────────
 
 # Create a symlink with proper error handling (used for ~/.claude only)
@@ -164,6 +168,58 @@ install_skill() {
         # Symlink, replacing if needed (non-interactive for normal setup flow)
         ln -sfn "$source_skill_dir" "$target"
     fi
+
+    # Mark this skill as managed by agent-tools so future runs can safely prune it if removed.
+    touch "${target}/${MANAGED_MARKER}"
+}
+
+# Prune skills that were previously installed by this repo (have the marker)
+# but no longer exist in the current published set for this agent.
+prune_stale_skills() {
+    local agent="$1"
+    local target_base="$2"          # e.g. ~/.claude/skills or ./.claude/skills
+    local dist_agent_dir="$3"       # e.g. dist/claude/skills
+
+    [ -d "$target_base" ] || return
+
+    local current_published=()
+    if [ -d "$dist_agent_dir" ]; then
+        for d in "$dist_agent_dir"/*/; do
+            [ -d "$d" ] && current_published+=("$(basename "$d")")
+        done
+    fi
+
+    local removed=0
+    for entry in "$target_base"/*; do
+        [ -e "$entry" ] || continue
+        local name
+        name=$(basename "$entry")
+
+        # Only consider directories or symlinks that look like skills
+        if [ -d "$entry" ] || [ -L "$entry" ]; then
+            local marker="${entry}/${MANAGED_MARKER}"
+            if [ -e "$marker" ]; then
+                # Check if still published
+                local still_published=false
+                for pub in "${current_published[@]}"; do
+                    if [ "$pub" = "$name" ]; then
+                        still_published=true
+                        break
+                    fi
+                done
+
+                if [ "$still_published" = false ]; then
+                    echo -e "  ${YELLOW}→${NC} Removing stale managed skill: ${name}"
+                    rm -rf "$entry"
+                    ((removed++))
+                fi
+            fi
+        fi
+    done
+
+    if [ "$removed" -gt 0 ]; then
+        echo -e "  ${GREEN}✓${NC} Pruned ${removed} stale skill(s) from ${target_base}"
+    fi
 }
 
 # Install all skills for one agent from dist/
@@ -197,6 +253,16 @@ install_skills_for_agent() {
 
         install_skill "$agent" "$skill_name" "$skill_dir"
     done
+
+    # Prune any previously managed skills that are no longer published.
+    # This safely removes old entries (including legacy flat skills and
+    # any renamed/removed grouped or flattened skills) without touching
+    # third-party skills.
+    local user_target="${HOME}/.${agent}/skills"
+    local project_target="${SCRIPT_DIR}/.${agent}/skills"
+
+    prune_stale_skills "$agent" "$user_target" "$dist_agent_dir"
+    prune_stale_skills "$agent" "$project_target" "$dist_agent_dir"
 
     echo
 }

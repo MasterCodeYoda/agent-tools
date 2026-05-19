@@ -1,11 +1,22 @@
 ---
 name: product
 description: Product strategy skill covering positioning frameworks, competitive research methodology, messaging principles, and go-to-market patterns. Research-first — agents conduct extensive primary web research before analysis.
+user-invocable: true
 ---
 
 # Product Strategy
 
 A research-driven skill for product positioning, competitive analysis, messaging, and go-to-market strategy. Every assessment and recommendation must be grounded in primary research, not assumptions.
+
+## Commands in This Family
+
+| Command | Purpose |
+|---------|---------|
+| `/product:position` | Guided positioning exercise with competitive research |
+| `/product:audit` | Research-driven assessment of product positioning and readiness |
+| `/product:brief` | Generate product one-pagers, pitch content, and messaging from research + positioning |
+
+See the individual sub-skills for full details and research protocols.
 
 ## When to Use This Skill
 
