@@ -4,16 +4,16 @@
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
 # ── Argument parsing ────────────────────────────────────────────────
-FACTORY_ONLY=false
-
 for arg in "$@"; do
     case "$arg" in
-        --factory-only) FACTORY_ONLY=true ;;
         --help|-h)
-            echo "Usage: setup.sh [OPTIONS]"
+            echo "Usage: setup.sh"
+            echo ""
+            echo "  Re-publishes skills from src/ into dist/<agent>/skills/,"
+            echo "  then installs (symlinks) them into your user profile for any"
+            echo "  detected agents (Claude, Grok, Factory)."
             echo ""
             echo "Options:"
-            echo "  --factory-only   Only copy skills to ~/.factory (no symlinks, no banners)"
             echo "  --help, -h       Show this help message"
             exit 0
             ;;
@@ -152,22 +152,21 @@ install_skill() {
 
     local target="${target_base}/${skill_name}"
 
-    # Print clean one-line status
-    if [ "$agent" = "factory" ]; then
-        echo -e "  ${scope_label} ${skill_name}  (copied to)  ${target}"
-    else
-        echo -e "  ${scope_label} ${skill_name}  →  ${target}"
-    fi
+    # Print clean one-line status (consistent across all agents)
+    echo -e "  ${scope_label} ${skill_name}  →  ${target}"
 
     mkdir -p "$(dirname "$target")"
 
-    if [ "$agent" = "factory" ]; then
-        mkdir -p "$target_base"
-        rsync -a --delete "${source_skill_dir}/" "${target}/" 2>/dev/null || rsync -a "${source_skill_dir}/" "${target}/"
-    else
-        # Symlink, replacing if needed (non-interactive for normal setup flow)
-        ln -sfn "$source_skill_dir" "$target"
+    # If a real directory exists at the target (e.g. old rsync copies for Factory),
+    # remove it so we can install a clean symlink. This is the one-time migration path.
+    if [ -e "$target" ] && [ ! -L "$target" ]; then
+        echo -e "  ${YELLOW}⚠${NC}  Replacing real directory at ${target} with symlink (migrating from previous copy)"
+        rm -rf "$target"
     fi
+
+    # Symlink, replacing if needed (non-interactive for normal setup flow)
+    # All agents (Claude, Grok, Factory) now use the same symlink model from dist/<agent>/skills/
+    ln -sfn "$source_skill_dir" "$target"
 
     # Mark this skill as managed by agent-tools so future runs can safely prune it if removed.
     touch "${target}/${MANAGED_MARKER}"
@@ -238,12 +237,10 @@ install_skills_for_agent() {
     # old skills tree. The new model uses a real directory containing one symlink
     # per skill (pointing into dist/<agent>/skills/<skill>/). Remove the old symlink
     # so we can create a proper directory.
-    if [ "$agent" != "factory" ]; then
-        local user_skills_dir="${HOME}/.${agent}/skills"
-        if [ -L "$user_skills_dir" ]; then
-            echo -e "${YELLOW}⚠${NC}  Replacing legacy whole-skills symlink: ${user_skills_dir} (migrating to per-skill layout)"
-            rm -f "$user_skills_dir"
-        fi
+    local user_skills_dir="${HOME}/.${agent}/skills"
+    if [ -L "$user_skills_dir" ]; then
+        echo -e "${YELLOW}⚠${NC}  Replacing legacy whole-skills symlink: ${user_skills_dir} (migrating to per-skill layout)"
+        rm -f "$user_skills_dir"
     fi
 
     for skill_dir in "${dist_agent_dir}"/*/; do
@@ -265,32 +262,6 @@ install_skills_for_agent() {
     prune_stale_skills "$agent" "$project_target" "$dist_agent_dir"
 
     echo
-}
-
-# ── Droid shell function injection ──────────────────────────────────
-
-setup_droid_function() {
-    local marker="# agent-tools: droid wrapper"
-    local zshrc="${HOME}/.zshrc"
-
-    if grep -qF "$marker" "$zshrc" 2>/dev/null; then
-        echo -e "${GREEN}✓${NC} Droid wrapper already in ~/.zshrc"
-        return
-    fi
-
-    cat >> "$zshrc" <<'DROID_EOF'
-
-# agent-tools: droid wrapper
-droid() {
-    AGENT_TOOLS_DIR="${AGENT_TOOLS_DIR:-$HOME/Source/OMG/agent-tools}"
-    if [ -f "$AGENT_TOOLS_DIR/setup.sh" ]; then
-        "$AGENT_TOOLS_DIR/setup.sh" --factory-only
-    fi
-    command droid "$@"
-}
-DROID_EOF
-
-    echo -e "${GREEN}✓${NC} Added droid wrapper function to ~/.zshrc"
 }
 
 # ── Main execution ──────────────────────────────────────────────────
@@ -321,73 +292,61 @@ run_publisher() {
     echo
 }
 
-if [ "$FACTORY_ONLY" = true ]; then
-    # Fast path: publish + copy only for Factory
-    validate_sources
-    run_publisher
+# Full setup for all present agents
+validate_sources
+run_publisher
 
-    echo "Factory-only mode: installing skills for factory..."
-    install_skills_for_agent "factory"
+echo "========================================="
+echo "Setting up agent-tools"
+echo "========================================="
+echo
 
-    echo -e "${GREEN}✓${NC} Factory setup complete (using dist/factory/skills/)"
-else
-    # Full setup for all present agents
-    validate_sources
-    run_publisher
-
-    echo "========================================="
-    echo "Setting up agent-tools"
-    echo "========================================="
-    echo
-
-    # Agent detection is based *only* on the user's global settings directories.
-    # If an agent is installed globally, we deploy both user-profile skills
-    # (to ~/.agent/skills) and project-scoped skills (to ./.agent/skills in this repo),
-    # creating the local project directory if it doesn't exist yet.
-    if [ -d "$CLAUDE_DIR" ]; then
-        install_skills_for_agent "claude"
-    fi
-
-    # Grok detection is slightly more lenient because the .grok directory
-    # layout is newer and some users have ~/.grok/skills directly.
-    if [ -d "$GROK_DIR" ] || [ -d "$GROK_SKILLS_DIR" ]; then
-        install_skills_for_agent "grok"
-    fi
-
-    if [ -d "$FACTORY_DIR" ]; then
-        install_skills_for_agent "factory"
-    fi
-
-    # Clean up legacy factory-commands/ directory in the repo
-    if [ -d "${SCRIPT_DIR}/factory-commands" ]; then
-        rm -rf "${SCRIPT_DIR}/factory-commands"
-        echo -e "${GREEN}✓${NC} Removed legacy factory-commands/ directory"
-    fi
-
-    setup_droid_function
-    echo
-
-    echo "========================================="
-    echo -e "${GREEN}Setup complete!${NC}"
-    echo "========================================="
-    echo
-    echo "Configured (from dist/<agent>/skills/):"
-    echo
-    if [ -d "$CLAUDE_DIR" ]; then
-        echo "  Claude:"
-        echo "    - User profile : ~/.claude/skills/"
-        echo "    - This project : ./.claude/skills/   (project-scoped skills only)"
-    fi
-    if [ -d "$GROK_DIR" ] || [ -d "$GROK_SKILLS_DIR" ]; then
-        echo "  Grok:"
-        echo "    - User profile : ~/.grok/skills/"
-        echo "    - This project : ./.grok/skills/     (project-scoped skills only)"
-    fi
-    if [ -d "$FACTORY_DIR" ]; then
-        echo "  Factory:"
-        echo "    - User profile : ~/.factory/skills/"
-        echo "    - This project : ./.factory/skills/  (project-scoped skills only)"
-    fi
-    echo
-    echo "  (Most skills → user profile. The 'skills' meta-skill → local project only.)"
+# Agent detection is based *only* on the user's global settings directories.
+# If an agent is installed globally, we deploy both user-profile skills
+# (to ~/.agent/skills) and project-scoped skills (to ./.agent/skills in this repo),
+# creating the local project directory if it doesn't exist yet.
+if [ -d "$CLAUDE_DIR" ]; then
+    install_skills_for_agent "claude"
 fi
+
+# Grok detection is slightly more lenient because the .grok directory
+# layout is newer and some users have ~/.grok/skills directly.
+if [ -d "$GROK_DIR" ] || [ -d "$GROK_SKILLS_DIR" ]; then
+    install_skills_for_agent "grok"
+fi
+
+if [ -d "$FACTORY_DIR" ]; then
+    install_skills_for_agent "factory"
+fi
+
+# Clean up legacy factory-commands/ directory in the repo (one-time)
+if [ -d "${SCRIPT_DIR}/factory-commands" ]; then
+    rm -rf "${SCRIPT_DIR}/factory-commands"
+    echo -e "${GREEN}✓${NC} Removed legacy factory-commands/ directory"
+fi
+
+echo
+
+echo "========================================="
+echo -e "${GREEN}Setup complete!${NC}"
+echo "========================================="
+echo
+echo "Configured (from dist/<agent>/skills/):"
+echo
+if [ -d "$CLAUDE_DIR" ]; then
+    echo "  Claude:"
+    echo "    - User profile : ~/.claude/skills/"
+    echo "    - This project : ./.claude/skills/   (project-scoped skills only)"
+fi
+if [ -d "$GROK_DIR" ] || [ -d "$GROK_SKILLS_DIR" ]; then
+    echo "  Grok:"
+    echo "    - User profile : ~/.grok/skills/"
+    echo "    - This project : ./.grok/skills/     (project-scoped skills only)"
+fi
+if [ -d "$FACTORY_DIR" ]; then
+    echo "  Factory:"
+    echo "    - User profile : ~/.factory/skills/"
+    echo "    - This project : ./.factory/skills/  (project-scoped skills only)"
+fi
+echo
+echo "  (Most skills → user profile. The 'skills' meta-skill → local project only.)"

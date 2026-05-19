@@ -23,8 +23,8 @@ cd ~/Source/agent-tools
 |-------------------------|-----------------------------------------------|
 | `~/.claude/skills/`     | Symlinked from `dist/claude/skills/`          |
 | `~/.grok/skills/`       | Symlinked from `dist/grok/skills/`            |
-| `~/.factory/skills/`    | Copied (rsync --delete) from `dist/factory/skills/` |
-| `./.claude/skills/` etc.| Per-skill symlink (Claude/Grok) or copy (Factory) of project-scoped skills only |
+| `~/.factory/skills/`    | Symlinked from `dist/factory/skills/`         |
+| `./.claude/skills/` etc.| Per-skill symlink (all agents) of project-scoped skills only |
 
 Re-run `./setup.sh` after pulling changes. The publisher runs on every invocation.
 
@@ -35,7 +35,7 @@ The system is built around a clean separation:
 - `src/` — The single source of truth. All skill development happens here. Skills may contain lightweight embedded markup (`<!-- agent:include claude --> ... <!-- /agent:include claude -->`) when behavior must differ between agents.
 - `tools/publish-skills.sh` — A thin, mechanical publisher (pure bash + portable awk). It walks `src/`, resolves the `agent:include` / `agent:exclude` markup for each target agent, strips all HTML comments, and writes clean trees to `dist/<agent>/skills/`. For any sub-skill whose `name:` frontmatter contains a colon (e.g. `git:commit`, `workflow:refine`), it also emits a top-level hyphenated sibling (e.g. `git-commit/`, `workflow-refine/`) so that both family overviews (`/git`) and direct sub-commands (`/git-commit`) appear in agent slash menus.
 - `setup.sh` — Runs the publisher on every invocation, then installs skills from `dist/<agent>/skills/` into the right locations based on each skill’s `publish-target` frontmatter:
-  - `publish-target: user-profile` (default) → installed (symlinked for Claude/Grok, copied for Factory) into your global `~/.claude/skills/`, `~/.grok/skills/`, or `~/.factory/skills/`.
+  - `publish-target: user-profile` (default) → installed (symlinked) into your global `~/.claude/skills/`, `~/.grok/skills/`, or `~/.factory/skills/`.
   - `publish-target: project` → installed only into the local project directory (`.claude/skills/`, `.grok/skills/`, `.factory/skills/`). Currently only the `skills` meta-skill group uses this.
   - Every installed skill receives a `.agent-tools` marker file. On subsequent runs, `setup.sh` automatically prunes any previously-managed skills that no longer exist in the current published set (safe cleanup after renames, refactors, or removals without touching third-party skills).
 
