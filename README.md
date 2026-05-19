@@ -23,8 +23,8 @@ cd ~/Source/agent-tools
 |-------------------------|-----------------------------------------------|
 | `~/.claude/skills/`     | Symlinked from `dist/claude/skills/`          |
 | `~/.grok/skills/`       | Symlinked from `dist/grok/skills/`            |
-| `~/.factory/skills/`    | Copied from `dist/factory/skills/`            |
-| `./.claude/skills/` etc.| Local project copy of project-scoped skills   |
+| `~/.factory/skills/`    | Copied (rsync --delete) from `dist/factory/skills/` |
+| `./.claude/skills/` etc.| Per-skill symlink (Claude/Grok) or copy (Factory) of project-scoped skills only |
 
 Re-run `./setup.sh` after pulling changes. The publisher runs on every invocation.
 
@@ -33,10 +33,11 @@ Re-run `./setup.sh` after pulling changes. The publisher runs on every invocatio
 The system is built around a clean separation:
 
 - `src/` — The single source of truth. All skill development happens here. Skills may contain lightweight embedded markup (`<!-- agent:include claude --> ... <!-- /agent:include claude -->`) when behavior must differ between agents.
-- `tools/publish-skills.sh` — A thin, mechanical publisher (pure bash + portable awk). It walks `src/`, resolves the markup for each target agent, strips all HTML comments, and writes clean trees to `dist/<agent>/skills/`.
-- `setup.sh` — Runs the publisher, then installs the resulting skills into the right locations based on a `publish-target` field in each skill’s frontmatter:
-  - `publish-target: user-profile` (default) → installed into your global `~/.claude/skills/`, `~/.grok/skills/`, or `~/.factory/skills/`.
-  - `publish-target: project` → installed only into the local project directory (`.claude/skills/`, `.grok/skills/`, `.factory/skills/`). Currently only the `skills` meta-skill uses this.
+- `tools/publish-skills.sh` — A thin, mechanical publisher (pure bash + portable awk). It walks `src/`, resolves the `agent:include` / `agent:exclude` markup for each target agent, strips all HTML comments, and writes clean trees to `dist/<agent>/skills/`. For any sub-skill whose `name:` frontmatter contains a colon (e.g. `git:commit`, `workflow:refine`), it also emits a top-level hyphenated sibling (e.g. `git-commit/`, `workflow-refine/`) so that both family overviews (`/git`) and direct sub-commands (`/git-commit`) appear in agent slash menus.
+- `setup.sh` — Runs the publisher on every invocation, then installs skills from `dist/<agent>/skills/` into the right locations based on each skill’s `publish-target` frontmatter:
+  - `publish-target: user-profile` (default) → installed (symlinked for Claude/Grok, copied for Factory) into your global `~/.claude/skills/`, `~/.grok/skills/`, or `~/.factory/skills/`.
+  - `publish-target: project` → installed only into the local project directory (`.claude/skills/`, `.grok/skills/`, `.factory/skills/`). Currently only the `skills` meta-skill group uses this.
+  - Every installed skill receives a `.agent-tools` marker file. On subsequent runs, `setup.sh` automatically prunes any previously-managed skills that no longer exist in the current published set (safe cleanup after renames, refactors, or removals without touching third-party skills).
 
 This design keeps the canonical corpus maintainable while letting each agent receive the cleanest possible version of the skills.
 
@@ -48,15 +49,18 @@ Most skills should use the default `publish-target: user-profile`.
 
 Use `publish-target: project` only when a skill is tightly coupled to the agent-tools repository itself (for example, the `skills` meta-skill that provides `/skills:import` and `/skills:evolve`).
 
-Example frontmatter:
+Example frontmatter (for the project-scoped meta-skill):
 
 ```yaml
 ---
 name: skills
 description: Meta-skill for importing and evolving the canonical skill corpus.
 publish-target: project
+user-invocable: true
 ---
 ```
+
+Most skills (especially family overviews and command leaves) also declare `user-invocable: true` so they appear in agent slash/autocomplete menus. The publisher preserves this field.
 
 ### Inspecting What Would Be Published
 
@@ -76,19 +80,20 @@ Skills are context-aware reference material that Claude loads on demand via `@sk
 
 | Skill | Purpose |
 |-------|---------|
-| **workflow** | Core philosophy — decomposition modes (vertical-slice + deliverable-partition), session continuity, P1/P2/P3 prioritization, and the workflow command set |
+| **workflow** | Parent for the workflow family — decomposition modes (vertical-slice + deliverable-partition), session continuity, P1/P2/P3 prioritization, knowledge compounding, and commands (`:plan`, `:execute`, `:review`, `:audit`, `:compound`, `:refine`) |
+| **git** | Family of safe, conventional git skills — commits, push/PR flows, and worktree-based parallel development (includes both `/git` overview and direct `/git-commit` etc.) |
+| **product** | Parent for the product family — positioning frameworks, competitive research, messaging, go-to-market patterns, briefs, and audits |
+| **qa** | Parent for the QA family — NL spec authoring for Playwright Test Agents, visual inspection tools, discovery, and coverage auditing |
+| **skills** | Meta-skill (project-scoped only) for importing skills from other agents and iteratively evolving the canonical corpus |
 | **clean-architecture** | Language-agnostic Clean Architecture with the Dependency Rule, layer patterns, and per-language guides (Python, TypeScript, C#, Rust) |
 | **code-patterns** | Language-specific best practices — type safety, error handling, testing idioms, and framework conventions |
-| **test-strategy** | Strategy selection (TDD, spec-first, property-based, contract, characterization), Red-Green-Refactor, and AI-specific anti-patterns |
-| **audit** | Domain definitions for the unified audit command — code, tests, API, frontend, docs, repo, and QA coverage agents |
-| **product** | Product strategy — positioning frameworks, competitive research methodology, messaging principles, and go-to-market patterns |
+| **test-strategy** | Strategy selection (TDD, spec-first, property-based, contract, characterization), Red-Green-Refactor, SCRAP quality scoring, and AI-specific anti-patterns |
 | **use-browser** | Browser automation via Chrome DevTools MCP and agent-browser CLI |
 | **visual-design** | 73 visual design micro-patterns from [detail.design](https://detail.design) — motion, accessibility, typography, and interaction details |
-| **qa** | QA workflows — NL spec authoring for Playwright Test Agents and visual inspection tools |
 
 ### Commands — Executable Workflows
 
-Commands are invoked with `/command-name` in Claude Code (or Factory.ai).
+Commands are invoked with `/command-name` (or the hyphenated equivalents produced by the publisher for sub-commands) in supported agents. Each family also provides an invocable overview skill (e.g. `/workflow`, `/git`) that surfaces the full command table and guidance.
 
 #### Workflow Commands
 
@@ -131,19 +136,25 @@ Commands are invoked with `/command-name` in Claude Code (or Factory.ai).
 
 ```
 agent-tools/
-├── src/                             # Canonical source (the truth)
-│   ├── workflow/
+├── src/                             # Canonical source of truth (agent-agnostic + embedded markup)
+│   ├── workflow/                    # + planning/, execution/, audit/, review/, compound/, refine/, references/
+│   ├── git/                         # + commit/, worktree-create/, ... (family overview + subs)
+│   ├── product/                     # + position/, brief/, audit/
+│   ├── qa/                          # + setup/, discover/, tools/, templates/, references/
+│   ├── skills/                      # Meta-skill (import + evolve) — publish-target: project
 │   ├── clean-architecture/
+│   ├── code-patterns/
+│   ├── test-strategy/
+│   ├── use-browser/
 │   ├── visual-design/
-│   ├── skills/                      # Meta-skill (import + evolve) — deployed to local project only
 │   └── ...
-├── dist/                            # Generated output (gitignored)
-│   ├── claude/skills/
+├── dist/                            # Generated per-agent trees (gitignored)
+│   ├── claude/skills/               # includes family/ + flattened command/ (e.g. git-commit/)
 │   ├── grok/skills/
 │   └── factory/skills/
 ├── tools/
-│   └── publish-skills.sh            # Thin mechanical publisher (bash + awk)
-├── setup.sh                         # Publishes + installs for your agents
+│   └── publish-skills.sh            # Mechanical publisher (bash + awk): markup resolution + flattening
+├── setup.sh                         # Runs publisher + installs (user profile vs project) + prunes stale
 └── README.md
 ```
 
@@ -156,7 +167,7 @@ All development happens under `src/`. `setup.sh` runs the publisher to produce c
 - *Vertical-slice* (default for incremental feature work, especially user-facing): build complete features end-to-end through all layers, not layer by layer.
 - *Deliverable-partition* (for foundation, cross-cutting, or large-effort work where vertical slicing risks process-induced slowdown or gaps in requirements / Definition of Done conformance): decompose by deliverable with verbatim parent-AC ownership in each sub-issue, AC traceability matrix in the parent.
 
-See `skills/workflow-guide/SKILL.md` for full mode-selection criteria.
+See `src/workflow/SKILL.md` for full mode-selection criteria.
 
 **Bottom-Up Implementation (within a vertical slice)** — Domain first, then Application, Infrastructure, and finally Framework. Pure business logic before I/O. In deliverable-partition mode, plan deliverables in their dependency order instead (e.g., contracts before consumers).
 
