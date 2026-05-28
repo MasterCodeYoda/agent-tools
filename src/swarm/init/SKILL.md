@@ -12,7 +12,7 @@ bootstrapping. It is interactive, **evidence-grounded** (it infers from the proj
 asking), and **idempotent** (re-running detects existing state and reconciles section by
 section). It is the only owner of charter authoring — there is no `/workflow:init`.
 
-What it produces (Phase 1):
+What it produces:
 
 ```
 <target-project>/
@@ -24,16 +24,22 @@ What it produces (Phase 1):
       workflow.md        ← how we MOVE
     swarm/
       config.yml         ← orchestrator preferences (committed); schema_version: 1
+      roles/             ← role templates copied from the canonical set (committed, editable)
+        worker-contract.md
+        planner.md
+        implementer.md
+        reviewer.md
+        conflict-resolver.md
+        integration-fixer.md
     .gitignore           ← umbrella gitignore (add-don't-remove policy)
   AGENTS.md              ← marker-bounded charter-link block (created or refreshed)
   CLAUDE.md → AGENTS.md  ← symlink if .claude/ present
   GEMINI.md → AGENTS.md  ← symlink if .gemini/ present AND user confirmed
 ```
 
-> **Phase note.** The swarm orchestrator and the `.agent-tools/swarm/roles/` templates ship
-> in **Phase 2**. Phase 1 `/swarm:init` writes the charter, the umbrella, and
-> `swarm/config.yml`; it does **not** copy role templates (they don't exist yet) and does
-> **not** create `sessions/` or `active-run`.
+> **Note.** `/swarm:init` does **not** create `sessions/` or `active-run` — those are
+> per-run transient state created by the orchestrator (`/swarm <goal>`) at runtime and are
+> gitignored.
 
 ## Critical Rules
 
@@ -176,8 +182,7 @@ Write `.agent-tools/swarm/config.yml`:
 ```yaml
 schema_version: 1
 
-# NOTE: the orchestrator that consumes most of these settings ships in Phase 2.
-# In Phase 1 this file records project-stable preferences; it is safe to edit by hand.
+# Project-stable orchestrator preferences. Safe to edit by hand.
 
 # Concurrency cap for parallel dispatch waves
 concurrency_cap: 5
@@ -229,6 +234,24 @@ output:
 ```
 
 Set `backlog.default_source` from the detected PM tool (fall back to `file` if none).
+
+### 4.2b Role templates
+
+Copy the six canonical role templates into `.agent-tools/swarm/roles/` so the orchestrator
+(`/swarm <goal>`) and the project can use and customize them:
+
+```
+worker-contract.md   planner.md   implementer.md
+reviewer.md          conflict-resolver.md   integration-fixer.md
+```
+
+Source them from the installed `swarm` skill's `roles/` directory (the canonical set shipped
+with agent-tools). These files are **committed** and **editable per project**.
+
+**On re-init**, never silently overwrite a locally-edited role file. For each role file that
+differs from the canonical version, present the diff and offer:
+`keep-local` / `replace-with-canonical` / `merge` / `show-diff` (§7.9). Only copy files that
+are missing or that the user chooses to replace.
 
 ### 4.3 Umbrella gitignore
 
@@ -317,6 +340,10 @@ non-destructive:
    `AGENTS.md`; if broken or replaced by a regular file, surface and ask.
 6. **`config.yml`** — if present, leave user edits intact; only add newly-introduced keys
    with documented defaults (never overwrite existing values).
+7. **Role templates** — for each role file, diff the project copy against the canonical
+   version; for any that differ, offer `keep-local / replace-with-canonical / merge /
+   show-diff` (§7.9). Copy only missing files or those the user chooses to replace; never
+   silently overwrite a customized role file.
 
 ## Safety / Failure Modes
 
@@ -334,10 +361,12 @@ Report what was written/changed:
 
 - charter files created or updated (with which sections changed in re-init);
 - `.agent-tools/swarm/config.yml` written;
+- `.agent-tools/swarm/roles/` copied (and any locally-edited files preserved on re-init);
 - `.agent-tools/.gitignore` created/updated;
 - `AGENTS.md` charter-link block inserted/refreshed;
 - which symlinks were created (and any skipped pending confirmation);
 - a reminder to **commit** the new/changed files (no push — that's always user-initiated).
 
 Then note: the charter now loads automatically for any agent that reads `AGENTS.md`,
-including single-agent `/workflow` runs. The `/swarm` orchestrator itself arrives in Phase 2.
+including single-agent `/workflow` runs. With the charter and role templates in place, the
+project is ready for `/swarm <goal>`.
