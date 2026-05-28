@@ -81,6 +81,7 @@ Skills are context-aware reference material that Claude loads on demand via `@sk
 | Skill | Purpose |
 |-------|---------|
 | **workflow** | Parent for the workflow family — decomposition modes (vertical-slice + deliverable-partition), session continuity, P1/P2/P3 prioritization, knowledge compounding, and commands (`:plan`, `:execute`, `:review`, `:audit`, `:compound`, `:refine`) |
+| **swarm** | Parent for the swarm family — backlog-scale orchestration on top of `/workflow`. Phase 1 ships `/swarm:init` (project charter authoring + `.agent-tools/` umbrella bootstrapping); the multi-role orchestrator (`/swarm <goal>`, `/swarm:continue`) is a later phase |
 | **git** | Family of safe, conventional git skills — commits, push/PR flows, and worktree-based parallel development (includes `/git` overview + sub-commands reachable via the parent or exact name) |
 | **product** | Parent for the product family — positioning frameworks, competitive research, messaging, go-to-market patterns, briefs, and audits |
 | **qa** | Parent for the QA family — NL spec authoring for Playwright Test Agents, visual inspection tools, discovery, and coverage auditing |
@@ -105,6 +106,17 @@ Commands are invoked with `/command-name` (or the hyphenated equivalents for sub
 | `/workflow:review` | Code review for PRs, git ranges, files, or uncommitted changes |
 | `/workflow:compound` | Capture knowledge from solved problems + maintain memory quality |
 | `/workflow:audit` | Unified project audit — 7 domains (code, tests, API, frontend, docs, repo, QA) with cross-domain deduplication |
+
+#### Swarm Commands
+
+| Command | Purpose |
+|---------|---------|
+| `/swarm` | Summarize a project's swarm state and suggest a next step |
+| `/swarm:init` | Author the project charter and bootstrap the `.agent-tools/` umbrella (idempotent, evidence-grounded) |
+
+> The multi-role orchestrator — `/swarm <goal>` and `/swarm:continue` — is a later phase. In
+> the current build those invocations return a not-yet-implemented message and point you at
+> `/workflow` for single-agent work.
 
 #### Product Commands
 
@@ -160,6 +172,27 @@ agent-tools/
 
 All development happens under `src/`. `setup.sh` runs the publisher to produce clean per-agent trees under `dist/`.
 ```
+
+### The `.agent-tools/` Umbrella (in target projects)
+
+The structure above is the **agent-tools repo itself**. Separately, when you run `/swarm:init`
+in one of *your* projects, it creates a small `.agent-tools/` umbrella there to hold
+agent-tools meta-artifacts:
+
+```
+<your-project>/
+├── .agent-tools/
+│   ├── charter/                # project charter (charter/project/engineering/workflow.md)
+│   ├── swarm/config.yml        # swarm orchestrator preferences (committed)
+│   └── .gitignore              # umbrella gitignore (add-don't-remove)
+├── AGENTS.md                   # charter-link block (CLAUDE.md/GEMINI.md may symlink to it)
+└── planning/                   # stays at the project root (intentional carve-out)
+```
+
+The umbrella deliberately covers **charter + swarm only**. `./planning/` and QA test
+artifacts (e.g. `sentinel.config.yaml`, NL specs, Playwright config) are explicit carve-outs
+— they stay in their natural, high-traffic locations rather than being buried under a hidden
+directory.
 
 ## Design Principles
 
