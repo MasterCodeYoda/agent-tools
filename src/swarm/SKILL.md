@@ -53,8 +53,8 @@ Inspect the project from disk only (no run/session machinery — that is Phase 2
 
 1. **Charter present?** Check for `.agent-tools/charter/charter.md`.
 2. **Swarm config present?** Check for `.agent-tools/swarm/config.yml`.
-3. **Agent-memory linked?** Check that `AGENTS.md` exists and contains the
-   `<!-- agent-tools:charter-link begin -->` marker block.
+3. **Agent-memory linked?** Check that `AGENTS.md` exists and contains the charter-link
+   marker block — an HTML comment whose content is `agent-tools:charter-link begin`.
 4. **Backlog detectable?** Note whether a PM tool (Linear/Jira MCP) is available or a
    local `./planning/` backlog exists — informational only.
 

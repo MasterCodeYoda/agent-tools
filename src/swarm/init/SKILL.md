@@ -248,13 +248,23 @@ repo-root `.gitignore`.
 
 ### 4.4 AGENTS.md charter-link block
 
-`AGENTS.md` is the **single canonical** agent-memory file. Insert (or refresh) this
+`AGENTS.md` is the **single canonical** agent-memory file. Insert (or refresh) a
 marker-bounded block. If `AGENTS.md` doesn't exist, create it with this block. If it exists,
 insert the block (typically near the top) or refresh the existing one in place — never
 duplicate it.
 
+The block is wrapped in two **HTML-comment markers** so re-init can find and refresh it
+later. Emit each marker as a standard HTML comment (open with `<!` `--`, close with `--` `>`)
+whose inner content is exactly:
+
+- **opening marker** — content: `agent-tools:charter-link begin`
+- **closing marker** — content: `agent-tools:charter-link end`
+
+Write the block below into `AGENTS.md`, replacing `[[BEGIN-MARKER]]` / `[[END-MARKER]]` with
+those two HTML comments:
+
 ```markdown
-<!-- agent-tools:charter-link begin -->
+[[BEGIN-MARKER]]
 ## Project Charter
 
 This project uses a structured charter at `.agent-tools/charter/`.
@@ -268,11 +278,12 @@ Load these files in order before acting; earlier files take precedence on confli
    `@.agent-tools/charter/engineering.md`
 4. [`.agent-tools/charter/workflow.md`](.agent-tools/charter/workflow.md) — workflow conventions
    `@.agent-tools/charter/workflow.md`
-<!-- agent-tools:charter-link end -->
+[[END-MARKER]]
 ```
 
-The block uses both plain markdown links (universally readable) and `@`-paths (Claude
-auto-imports; other agents read them as informational text).
+So the first line written to `AGENTS.md` is the opening HTML comment, and the last is the
+closing HTML comment. The block uses both plain markdown links (universally readable) and
+`@`-paths (Claude auto-imports; other agents read them as informational text).
 
 ### 4.5 Conditional agent-memory symlinks
 
