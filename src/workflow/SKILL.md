@@ -172,7 +172,10 @@ The agent states its determination and lets the user course-correct.
 **Purpose**: Create implementation plans from requirements
 
 **Outputs**:
-- `./planning/<project>/implementation-plan.md` - How to build it
+- `./planning/<project>/implementation-plan.md` - How to build it. Opens with YAML
+  frontmatter carrying `blocks` / `blocked_by` / `parallelizable_with` dependency metadata
+  (sourced from `/workflow:refine` and confirmed during planning), which downstream
+  orchestration (`/swarm`) uses to schedule parallel waves.
 - `./planning/<project>/session-state.md` - Continuity tracking
 
 **Flags**:

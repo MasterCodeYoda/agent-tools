@@ -145,6 +145,9 @@ If requirements source is file mode:
     - Must-have vs nice-to-have requirements
     - Success criteria
     - Related issue IDs
+    - **Dependency metadata** — any per-item `blocks` / `blocked_by` /
+      `parallelizable_with` from the requirements' `Dependencies` section (written by
+      `/workflow:refine` Phase 3.5)
 
 ### From Work Item (PM mode)
 
@@ -153,7 +156,9 @@ If requirements source is PM mode:
 1. Fetch issue details using the Issue Retrieval Strategy from @workflow (PM integration)
 2. Extract requirements from title, description, and acceptance criteria
 3. Note the issue ID for linking
-4. Do not look for or warn about missing `requirements.md`
+4. **Read issue relations** — capture native "blocks" / "blocked by" links and any
+   `parallelizable_with` note/label as dependency metadata
+5. Do not look for or warn about missing `requirements.md`
 
 ### Review with User
 
@@ -162,6 +167,11 @@ Present requirements summary and ask:
 1. "Do these requirements look complete for planning?"
 2. "Any clarifications needed before creating the implementation plan?"
 3. "Should we run `/workflow:refine` first to clarify requirements?"
+
+**Surface dependency declarations.** Echo back the `blocks` / `blocked_by` /
+`parallelizable_with` relationships found (or note their absence) and let the user confirm or
+adjust. These are written to the plan's frontmatter (below) so downstream orchestration
+(`/swarm`) can schedule parallel waves safely.
 
 Proceed to implementation planning once requirements are confirmed.
 
@@ -176,7 +186,19 @@ for approval first (see §Plan Approval Gate).
 
 Target file: `./planning/<project>/implementation-plan.md`
 
+The plan opens with YAML frontmatter carrying dependency metadata (from the requirements /
+issue relations, confirmed with the user above). Downstream orchestration (`/swarm`) reads
+this frontmatter to schedule parallel waves; for single-agent work it documents sequencing.
+Use empty lists when there are no dependencies.
+
 ```markdown
+---
+project: [project-name]
+work_item: [ISSUE-ID or null]
+blocks: []                  # items this work blocks (issue keys or item names)
+blocked_by: []              # items that must complete before this work starts
+parallelizable_with: []     # peer items safe to run concurrently (no shared files/ordering)
+---
 # Implementation Plan: [Feature Title]
 
 ## Approach
