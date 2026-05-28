@@ -5,14 +5,14 @@ requirements_source: file
 requirements_doc: ./planning/swarm/design.md
 work_item: null
 pm_tool: manual
-session_count: 0
-status: in_progress
+session_count: 1
+status: complete
 decomposition_mode: deliverable-partition
 progress:
   total_deliverables: 5
-  completed: 0
-  percent: 0%
-current_layer: not_started
+  completed: 5
+  percent: 100%
+current_layer: complete
 branch: feat/swarm-phase-1
 worktree: null
 created: 2026-05-28
@@ -20,23 +20,37 @@ created: 2026-05-28
 
 ## Current Focus
 
-Phase 1 foundation. Starting with D1 (`/swarm` family skeleton).
+Phase 1 complete. All five deliverables shipped and verified. Awaiting user review +
+decision on integration (merge to `main`) and `git push` (user-initiated only).
 
 ## Deliverable Status
 
-- [ ] D1 — `/swarm` family skeleton (`src/swarm/SKILL.md`) — AC3, AC4
-- [ ] D2 — `/swarm:init` (`src/swarm/init/SKILL.md`) — AC5, AC6
-- [ ] D3 — `/workflow:refine` dependency metadata — AC8
-- [ ] D4 — `/workflow:plan` dependency frontmatter — AC9
-- [ ] D5 — docs + publish verification — AC1, AC2
+- [x] D1 — `/swarm` family skeleton (`src/swarm/SKILL.md`) — AC3, AC4
+- [x] D2 — `/swarm:init` (`src/swarm/init/SKILL.md`) — AC5, AC6
+- [x] D3 — `/workflow:refine` dependency metadata — AC8
+- [x] D4 — `/workflow:plan` dependency frontmatter — AC9
+- [x] D5 — docs + publish verification — AC1, AC2
 
-## Last Session Summary
+## Acceptance verification
 
-Plan approved (Approve & Execute) on a feature branch (no worktree). Design corrected to
-record the QA carve-out (§9.3) and the `/swarm:init` `roles/` deferral. Branch
-`feat/swarm-phase-1` created off `main`; `planning/` is untracked and will land in the
-first commit alongside the design correction.
+- AC1 — `setup.sh` runs clean ✓
+- AC2 — publisher: `swarm/` + `swarm-init/` for claude+factory, `swarm/` only for grok, no
+  `swarm-continue/` ✓
+- AC3/AC4 — bare `/swarm` state summary + `<goal>` not-implemented message present ✓
+- AC5/AC6 — `/swarm:init` fresh + idempotent re-init flows authored per design §4–§5, §8 ✓
+- AC8/AC9 — dependency metadata in refine + plan-frontmatter published ✓
+- Scope constraint — `src/swarm/` contains only `SKILL.md` + `init/SKILL.md` ✓
 
 ## Session History
 
-[Append-only log — populated during execution]
+### Session 1 (2026-05-28)
+- Confirmed scope (Phase 1), QA carve-out, and `/swarm:init` roles/ deferral with user.
+- Corrected `design.md`: QA is now an explicit carve-out (§9.3); umbrella covers
+  charter + swarm only.
+- Shipped D1–D5 across 6 feature commits on `feat/swarm-phase-1`.
+- **Publisher finding:** the awk filter strips every complete `<!-- ... -->` line
+  (MARKUP.md), which erased the literal charter-link markers from the published
+  `/swarm:init`. Fixed by describing markers via inner content + `[[BEGIN/END-MARKER]]`
+  placeholders so real HTML comments form at runtime without source matching the strip
+  regex. Verified survival across all three agents.
+- No push (user-initiated only).
