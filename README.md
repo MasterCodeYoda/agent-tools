@@ -81,7 +81,7 @@ Skills are context-aware reference material that Claude loads on demand via `@sk
 | Skill | Purpose |
 |-------|---------|
 | **workflow** | Parent for the workflow family — decomposition modes (vertical-slice + deliverable-partition), session continuity, P1/P2/P3 prioritization, knowledge compounding, and commands (`:plan`, `:execute`, `:review`, `:audit`, `:compound`, `:refine`) |
-| **swarm** | Parent for the swarm family — backlog-scale orchestration on top of `/workflow`. Phase 1 ships `/swarm:init` (project charter authoring + `.agent-tools/` umbrella bootstrapping); the multi-role orchestrator (`/swarm <goal>`, `/swarm:continue`) is a later phase |
+| **swarm** | Parent for the swarm family — backlog-scale orchestration on top of `/workflow`. `/swarm:init` authors a project charter + bootstraps the `.agent-tools/` umbrella; `/swarm <goal>` runs a host-session orchestrator that drives backlog items through plan → implement → review → local-merge via role-specialized sub-agents in per-item worktrees; `/swarm:continue` resumes a paused run |
 | **git** | Family of safe, conventional git skills — commits, push/PR flows, and worktree-based parallel development (includes `/git` overview + sub-commands reachable via the parent or exact name) |
 | **product** | Parent for the product family — positioning frameworks, competitive research, messaging, go-to-market patterns, briefs, and audits |
 | **qa** | Parent for the QA family — NL spec authoring for Playwright Test Agents, visual inspection tools, discovery, and coverage auditing |
@@ -111,12 +111,15 @@ Commands are invoked with `/command-name` (or the hyphenated equivalents for sub
 
 | Command | Purpose |
 |---------|---------|
-| `/swarm` | Summarize a project's swarm state and suggest a next step |
+| `/swarm` | Summarize a project's swarm state (active run, item stages, or whether it's initialized) |
+| `/swarm <goal>` | Run the orchestrator on a goal (milestone, issue list, or backlog file) — classifies items, dispatches role-specialized sub-agents in parallel waves, merges approved work locally with test gates |
 | `/swarm:init` | Author the project charter and bootstrap the `.agent-tools/` umbrella (idempotent, evidence-grounded) |
+| `/swarm:continue` | Resume the most recent paused run, reconciling saved state against disk + PM ground truth |
 
-> The multi-role orchestrator — `/swarm <goal>` and `/swarm:continue` — is a later phase. In
-> the current build those invocations return a not-yet-implemented message and point you at
-> `/workflow` for single-agent work.
+> The orchestrator runs in your session (no tmux/daemon), **never pushes to remote**, and
+> merges to `main` locally with the full test suite between merges. Per-item work is isolated
+> in git worktrees and each worker runs an ordinary `/workflow` command. Cross-CLI worker
+> dispatch is a later phase.
 
 #### Product Commands
 
@@ -183,7 +186,11 @@ agent-tools meta-artifacts:
 <your-project>/
 ├── .agent-tools/
 │   ├── charter/                # project charter (charter/project/engineering/workflow.md)
-│   ├── swarm/config.yml        # swarm orchestrator preferences (committed)
+│   ├── swarm/
+│   │   ├── config.yml          # orchestrator preferences (committed)
+│   │   ├── roles/              # role templates, editable per project (committed)
+│   │   ├── active-run          # pointer to the current run (gitignored)
+│   │   └── sessions/<run-id>/  # per-run state.yml + logs (gitignored)
 │   └── .gitignore              # umbrella gitignore (add-don't-remove)
 ├── AGENTS.md                   # charter-link block (CLAUDE.md/GEMINI.md may symlink to it)
 └── planning/                   # stays at the project root (intentional carve-out)
