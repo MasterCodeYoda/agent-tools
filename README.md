@@ -33,7 +33,7 @@ Re-run `./setup.sh` after pulling changes. The publisher runs on every invocatio
 The system is built around a clean separation:
 
 - `src/` — The single source of truth. All skill development happens here. Skills may contain lightweight embedded markup (`<!-- agent:include claude --> ... <!-- /agent:include claude -->`) when behavior must differ between agents.
-- `tools/publish-skills.sh` — A thin, mechanical publisher (pure bash + portable awk). It walks `src/`, resolves the `agent:include` / `agent:exclude` markup for each target agent, strips all HTML comments, and writes clean trees to `dist/<agent>/skills/`. For Claude and Factory, it also emits top-level hyphenated siblings (e.g. `git-commit/`) for any sub-skill whose `name:` frontmatter contains a colon, so both family overviews and direct sub-commands appear in slash menus. For Grok it intentionally skips this step — the family overview skills are the primary surface and document the available sub-commands.
+- `tools/publish-skills.sh` — A thin, mechanical publisher (pure bash + portable awk). It walks `src/`, resolves the `agent:include` / `agent:exclude` markup for each target agent, strips all HTML comments, and writes clean trees to `dist/<agent>/skills/`. For every agent it also emits top-level hyphenated siblings (e.g. `git-commit/`) for any sub-skill whose `name:` frontmatter contains a colon, so both family overviews and direct sub-commands appear in slash menus. (Grok's loader does not yet promote invocable sub-skills as first-class top-level commands, so these siblings are currently inert there — but they are published uniformly so they "just work" the moment that limitation is fixed upstream.)
 - `setup.sh` — Runs the publisher on every invocation, then installs skills from `dist/<agent>/skills/` into the right locations based on each skill’s `publish-target` frontmatter:
   - `publish-target: user-profile` (default) → installed (symlinked) into your global `~/.claude/skills/`, `~/.grok/skills/`, or `~/.factory/skills/`.
   - `publish-target: project` → installed only into the local project directory (`.claude/skills/`, `.grok/skills/`, `.factory/skills/`). Currently only the `skills` meta-skill group uses this.
@@ -41,7 +41,7 @@ The system is built around a clean separation:
 
 This design keeps the canonical corpus maintainable while letting each agent receive the cleanest possible version of the skills.
 
-Grok is treated as a first-class target alongside Claude and Factory. Detection for Grok is intentionally a bit more permissive (`~/.grok` or `~/.grok/skills`) because its directory layout is newer. For Grok the publisher deliberately omits the flattened command siblings — the family overview skills serve as the primary surface and document the sub-commands.
+Grok is treated as a first-class target alongside Claude and Factory. Detection for Grok is intentionally a bit more permissive (`~/.grok` or `~/.grok/skills`) because its directory layout is newer. The publisher emits the flattened command siblings for Grok too; until Grok's loader promotes invocable sub-skills as top-level commands, the family overview skills remain the practical surface (and document the sub-commands), but the flattened entries are already in place for when that lands.
 
 ### Marking Skills as Project-Scoped
 
@@ -93,7 +93,7 @@ Skills are context-aware reference material that Claude loads on demand via `@sk
 
 ### Commands — Executable Workflows
 
-Commands are invoked with `/command-name` (or the hyphenated equivalents for sub-commands) in supported agents. For Claude and Factory both the family overview and direct sub-commands appear in slash menus. For Grok the family overview skills (`/git`, `/workflow`, etc.) are the primary surface; they document the available sub-commands, which remain reachable by exact name. Each family also provides an invocable overview skill that surfaces the full command table and guidance.
+Commands are invoked with `/command-name` (or the hyphenated equivalents for sub-commands) in supported agents. For Claude and Factory both the family overview and direct sub-commands appear in slash menus. The same flattened siblings are published for Grok, but until its loader promotes invocable sub-skills the family overview skills (`/git`, `/workflow`, etc.) remain the practical surface — they document the available sub-commands, which remain reachable by exact name. Each family also provides an invocable overview skill that surfaces the full command table and guidance.
 
 #### Workflow Commands
 
@@ -150,10 +150,10 @@ agent-tools/
 │   └── ...
 ├── dist/                            # Generated per-agent trees (gitignored)
 │   ├── claude/skills/               # family/ + flattened command siblings (e.g. git-commit/)
-│   ├── grok/skills/                 # family directories only (flattened siblings intentionally omitted)
+│   ├── grok/skills/                 # family/ + flattened command siblings (inert until Grok's loader supports them)
 │   └── factory/skills/              # family/ + flattened command siblings
 ├── tools/
-│   └── publish-skills.sh            # Mechanical publisher (bash + awk): markup resolution + selective flattening (skipped for Grok)
+│   └── publish-skills.sh            # Mechanical publisher (bash + awk): markup resolution + uniform flattening (all agents)
 ├── setup.sh                         # Runs publisher + installs (user profile vs project) + prunes stale
 └── README.md
 ```
