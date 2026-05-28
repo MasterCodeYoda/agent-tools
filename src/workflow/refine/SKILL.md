@@ -218,7 +218,8 @@ For each deliverable, draft a sub-issue body containing:
 - Deliverable name + scope
 - **Inherited parent ACs (verbatim, no paraphrasing)** — verified at this sub-issue's close
 - Sub-issue-specific tasks
-- Dependencies on other sub-issues
+- Dependencies on other sub-issues — captured as `blocks` / `blocked_by` /
+  `parallelizable_with` (see Phase 3.5)
 - Per-deliverable Definition of Done (per @workflow `implementation/quality-checkpoints.md`)
 
 The full Deliverable-Partition Template lives in @workflow (`planning/templates.md`).
@@ -232,6 +233,41 @@ Before completing this phase, confirm:
 - [ ] Sub-issue dependency order is recorded.
 
 Ask: "Any deferred AC needs a tracking issue + explicit approval. Any in this epic, or are all parent ACs covered?"
+
+## Phase 3.5: Dependency Metadata
+
+When refinement produces **more than one item** (multiple user stories in vertical-slice
+mode, or multiple sub-issues in deliverable-partition mode), capture the dependency
+relationships between them. This metadata lets downstream orchestration (`/swarm`) schedule
+items in parallel waves safely; for single-agent `/workflow` it documents sequencing.
+
+For each produced item, capture three fields:
+
+| Field | Meaning |
+|-------|---------|
+| `blocks` | Items that cannot start until **this** item completes |
+| `blocked_by` | Items that must complete before **this** item can start |
+| `parallelizable_with` | Peer items that can safely run **concurrently** with this one (no shared files / no ordering constraint) |
+
+Guidance:
+
+- `blocks` / `blocked_by` are inverses — if A blocks B, then B is blocked_by A. Record both
+  directions for clarity; keep them consistent.
+- `parallelizable_with` is an explicit safety signal: only list peers when you're confident
+  they don't touch the same files and have no ordering dependency.
+- If an item is independent, `blocks`/`blocked_by` are empty and it is parallelizable with
+  any other independent item.
+
+Ask only what isn't already implied by the decomposition (deliverable-partition sub-issues
+often already state their dependency order in Phase 3-D — reuse it). Skip this phase entirely
+for a single-item refinement.
+
+**Where this metadata is written** (see the output sections below):
+
+- **File mode** → a per-item `Dependencies` block inside `requirements.md`.
+- **PM mode** → native issue relations (Linear/Jira "blocks" / "blocked by") where the tool
+  supports them; record `parallelizable_with` as an issue note/label since most PM tools
+  have no native field for it.
 
 ## Phase 4: Requirements Organization
 
@@ -380,6 +416,16 @@ requirements source.
 
 - [ ] [Unresolved items needing input]
 
+## Dependencies
+
+_Per-item dependency metadata (omit this section for a single-item refinement). One entry
+per produced item — story or sub-issue. See Phase 3.5._
+
+- **[Item name or key]**
+  - blocks: [items this one blocks, or none]
+  - blocked_by: [items that must finish first, or none]
+  - parallelizable_with: [peer items safe to run concurrently, or none]
+
 ## Success Criteria
 
 - [ ] [Measurable outcome]
@@ -404,6 +450,12 @@ For issue creation and update MCP calls and field mappings, reference @workflow 
 
 Write the structured description to the issue using the description structure defined in @workflow
 (`planning/pm-integration.md` — Issue Update section).
+
+**Dependency metadata (PM mode).** When the refinement produced multiple items, record the
+Phase 3.5 dependencies as native issue relations — set "blocks" / "blocked by" links between
+the issues where the PM tool supports them (Linear and Jira both do). Capture
+`parallelizable_with` as an issue note or label, since most PM tools have no native field for
+it.
 
 ## PM Tool Integration (file mode only)
 
