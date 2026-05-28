@@ -5,23 +5,31 @@ requirements_source: file
 requirements_doc: ./planning/swarm/design.md
 work_item: null
 pm_tool: manual
-session_count: 1
-status: complete
+session_count: 2
+phase: 2
+status: in_progress
 decomposition_mode: deliverable-partition
 progress:
-  total_deliverables: 5
-  completed: 5
-  percent: 100%
-current_layer: complete
-branch: feat/swarm-phase-1
+  total_deliverables: 6
+  completed: 0
+  percent: 0%
+current_layer: in_progress
+branch: feat/swarm-phase-2
 worktree: null
 created: 2026-05-28
 ---
 
 ## Current Focus
 
-Phase 1 complete. All five deliverables shipped and verified. Awaiting user review +
-decision on integration (merge to `main`) and `git push` (user-initiated only).
+Phase 2 (Orchestrator MVP) in progress on `feat/swarm-phase-2` (branched off
+`feat/swarm-phase-1`, which is complete but unmerged). Plan:
+`./planning/swarm/implementation-plan-phase2.md`. Contracts-first order: D1 roles → D2
+schemas → D3 orchestrator → D4 continue → D5 init roles/ copy → D6 docs. Dogfood run
+deferred to a post-completion session.
+
+## Phase 1 (complete)
+
+All five Phase 1 deliverables shipped + verified on `feat/swarm-phase-1` (unmerged).
 
 ## Deliverable Status
 
