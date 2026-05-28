@@ -7,13 +7,13 @@ work_item: null
 pm_tool: manual
 session_count: 2
 phase: 2
-status: in_progress
+status: complete
 decomposition_mode: deliverable-partition
 progress:
   total_deliverables: 6
-  completed: 0
-  percent: 0%
-current_layer: in_progress
+  completed: 6
+  percent: 100%
+current_layer: complete
 branch: feat/swarm-phase-2
 worktree: null
 created: 2026-05-28
@@ -21,15 +21,33 @@ created: 2026-05-28
 
 ## Current Focus
 
-Phase 2 (Orchestrator MVP) in progress on `feat/swarm-phase-2` (branched off
-`feat/swarm-phase-1`, which is complete but unmerged). Plan:
-`./planning/swarm/implementation-plan-phase2.md`. Contracts-first order: D1 roles → D2
-schemas → D3 orchestrator → D4 continue → D5 init roles/ copy → D6 docs. Dogfood run
-deferred to a post-completion session.
+Phase 2 (Orchestrator MVP) complete on `feat/swarm-phase-2` (off `feat/swarm-phase-1`, both
+unmerged). All six deliverables shipped + verified. **Deferred:** a post-completion dogfood
+run on a 2–3 item test backlog (expanded from the plan's proposal) to exercise AC10/AC12
+end-to-end. Awaiting user review + integration decision (no push — user-initiated).
+
+## Phase 2 acceptance verification
+
+- P2-AC-PUB — `setup.sh` clean; `swarm`+`swarm-init`+`swarm-continue` for claude+factory,
+  `swarm` only for grok ✓
+- P2-AC10/12/13/14 — orchestrator loop, merge sweep w/ one-shot fix-it, session logs,
+  active-run lifecycle authored per design §6–§8 (full behavioral proof pending dogfood) ✓
+- P2-AC11 — `/swarm:continue` reconciliation authored per §6.9 ✓
+- P2-AC-ROLES — `/swarm:init` copies roles/ with local-edit detection ✓
+- Scope — `src/swarm/` = design's exact 14-file set; no Phase 3 files ✓
 
 ## Phase 1 (complete)
 
 All five Phase 1 deliverables shipped + verified on `feat/swarm-phase-1` (unmerged).
+
+## Phase 2 deliverables (complete)
+
+- [x] D1 — six role templates (`src/swarm/roles/`)
+- [x] D2 — five reference schemas (`src/swarm/references/`)
+- [x] D3 — orchestrator loop (full `src/swarm/SKILL.md`)
+- [x] D4 — `/swarm:continue` (`src/swarm/continue/SKILL.md`)
+- [x] D5 — `/swarm:init` roles/ copy + local-edit detection
+- [x] D6 — README + publish verification
 
 ## Deliverable Status
 
