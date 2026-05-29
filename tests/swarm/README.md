@@ -66,6 +66,17 @@ tests/swarm/
   runs/                 GITIGNORED — generated repos + analysis outputs
 ```
 
+## Running the harness unit tests
+
+The deterministic tooling (`generate`, `ingest`) is covered by stdlib `unittest` tests — no
+pip install required:
+
+```bash
+python -m unittest discover -s tests/swarm/harness/tests -t .
+```
+
+(They are also discovered by `pytest` if you have it installed.)
+
 ## Authoring a new scenario
 
 Create `tests/swarm/scenarios/<name>/` with:
