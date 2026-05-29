@@ -110,6 +110,19 @@ class GenerateTests(unittest.TestCase):
         run = generate("demo", root=self.tmp, now=FIXED)
         self.assertNotIn("/swarm:init", format_next_step(run))
 
+    def test_next_step_exposes_parse_anchors(self):
+        # The /swarm:test skill parses this output: the `Generated:` line gives the
+        # run-dir, and the indented block gives the agent-agnostic `cd` + slash command(s).
+        # Guard those anchors so a wording change can't silently break the skill.
+        from tests.swarm.harness.generate import format_next_step
+        _make_fake_repo(self.tmp)
+        run = generate("demo", root=self.tmp, now=FIXED)
+        out = format_next_step(run)
+        self.assertIn(f"Generated: {run}", out)
+        self.assertIn(f"cd {run}", out)
+        self.assertIn("/swarm backlog.md", out)
+        self.assertNotIn("  claude", out)  # block must stay agent-agnostic — no launcher binary
+
     def test_seedless_scenario_ok(self):
         _make_fake_repo(self.tmp, with_seed=False)
         run = generate("demo", root=self.tmp, now=FIXED)
