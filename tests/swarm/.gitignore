@@ -1,0 +1,7 @@
+# Generated throwaway repos + per-run analysis outputs. Never committed.
+runs/
+
+# Python artifacts from the harness tooling
+__pycache__/
+*.pyc
+.pytest_cache/
