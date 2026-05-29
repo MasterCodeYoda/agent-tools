@@ -42,7 +42,7 @@ per-role/status tallies. It is ordered before the skill that consumes it.
   logs; invokable as `python -m tests.swarm.harness ingest <run>`.
 - [ ] **AC4** — Deterministic `generate` + `ingest` are covered by passing `pytest` unit
   tests.
-- [ ] **AC5** — `src/swarm/test/SKILL.md` (`name: swarm:test`, `publish-target: project`)
+- [ ] **AC5** — `src/swarm-test/SKILL.md` (`name: swarm:test`, `publish-target: project`)
   drives analyze per §5.2: check hard invariants (loud fail), judge checklist items with
   citations, cluster issues, propose evolve-style minimal diffs (one file / one gap / ≤40
   lines / evidence-linked), present for approval, write `analysis.md`.
@@ -99,7 +99,7 @@ per-role/status tallies. It is ordered before the skill that consumes it.
   malformed/missing/partial logs; flags a seeded safety violation.
 
 ### D4 — `swarm:test` analyze skill
-**Files:** `src/swarm/test/SKILL.md` (`name: swarm:test`, `publish-target: project`)
+**Files:** `src/swarm-test/SKILL.md` (`name: swarm:test`, `publish-target: project`)
 **Inherited ACs:** AC5
 - [ ] Procedure: run `ingest` → read `scenario.yml` + `observations.json` + spot-read logs →
   check hard invariants (loud FAIL) → judge checklist (cited) → cluster issues → propose
@@ -129,8 +129,9 @@ per-role/status tallies. It is ordered before the skill that consumes it.
 
 #### Gap-prevention check
 - [ ] Every AC owned by exactly one deliverable; matrix zero orphans.
-- [ ] `src/swarm/` gains only `test/SKILL.md` (no other swarm files); no Phase-3 or
-  evolve-mode files.
+- [ ] The analyze skill is a **top-level** `src/swarm-test/` (project-scoped), NOT nested in
+  the user-profile `swarm` family — so it never leaks into user profiles. `src/swarm/` itself
+  gains nothing. No Phase-3 or evolve-mode files.
 
 ## Out of Scope (per spec §8)
 - The first real orchestrator dogfood run (deferred session).

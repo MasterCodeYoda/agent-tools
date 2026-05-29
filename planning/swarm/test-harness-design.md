@@ -63,7 +63,7 @@ tests/
       cli.py                   #     `python -m tests.swarm.harness generate|ingest <scenario>`
     runs/                      #   GITIGNORED — generated repos + analysis outputs
   skill-eval/scenarios/<name>/ # pre-existing static skill-eval fixtures (moved here in a precursor commit)
-src/swarm/test/SKILL.md        # name: swarm:test, publish-target: project — the analyze driver
+src/swarm-test/SKILL.md        # name: swarm:test, publish-target: project — the analyze driver
 ```
 
 **Precursor (already done):** the previously-flat `tests/scenarios/*` static fixtures were
@@ -71,7 +71,7 @@ moved to `tests/skill-eval/scenarios/*` via `git mv` (history preserved) so the 
 gets its own `tests/swarm/` grouping. No functional references broke; the only mention is a
 dated historical entry in `src/skills/evolve/history.md`, intentionally left intact.
 
-**Skill location:** `src/swarm/test/SKILL.md`, `name: swarm:test`, `publish-target: project`.
+**Skill location:** `src/swarm-test/SKILL.md`, `name: swarm:test`, `publish-target: project`.
 It is invocable as `/swarm:test` **only** inside the agent-tools repo (project-scoped, like
 `skills`), and is kept out of the end-user swarm command table. Because it is project-scoped,
 it may reference repo-root paths (`tests/swarm/...`, `src/swarm/roles/...`) directly — it only
