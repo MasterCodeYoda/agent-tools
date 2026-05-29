@@ -106,12 +106,16 @@ def generate(
     run_dir.mkdir(parents=True)
 
     # 1. Seed application sources at the repo root (optional dir).
+    #    Skip Python bytecode caches so generated repos stay clean.
+    _ignore = shutil.ignore_patterns("__pycache__", "*.pyc", ".pytest_cache")
     seed_src = scenario_dir / "seed"
     if seed_src.is_dir():
         for item in sorted(seed_src.iterdir()):
+            if item.name in ("__pycache__", ".pytest_cache") or item.suffix == ".pyc":
+                continue
             dest = run_dir / item.name
             if item.is_dir():
-                shutil.copytree(item, dest)
+                shutil.copytree(item, dest, ignore=_ignore)
             else:
                 shutil.copy2(item, dest)
 

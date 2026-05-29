@@ -1,0 +1,15 @@
+[project]
+name = "taskcli"
+version = "0.0.1"
+description = "Tiny CLI task manager (swarm test-harness scenario)"
+requires-python = ">=3.10"
+
+[build-system]
+requires = ["setuptools>=61"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools]
+packages = ["taskcli"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
