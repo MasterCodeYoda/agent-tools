@@ -6,13 +6,13 @@ requirements_doc: ./planning/swarm/test-harness-design.md
 work_item: null
 pm_tool: manual
 session_count: 3
-status: in_progress
+status: complete
 decomposition_mode: deliverable-partition
 progress:
-  total_deliverables: 6
-  completed: 0
-  percent: 0%
-current_layer: in_progress
+  total_deliverables: 7
+  completed: 7
+  percent: 100%
+current_layer: complete
 branch: feat/swarm-test-harness
 worktree: null
 created: 2026-05-28
@@ -20,21 +20,34 @@ created: 2026-05-28
 
 ## Current Focus
 
-**Test harness** (`/swarm` E2E + log-driven role evolution) on `feat/swarm-test-harness`
-(stacked on `chore/regroup-test-scenarios`). Spec: `test-harness-design.md`; plan:
-`implementation-plan-test-harness.md`. Order: D6 gitignore → D1 generate → D2 ingest →
-D3 tests → D5 scenario → D4 swarm:test skill. The first real orchestrator dogfood run is a
-deferred separate session.
+**Test harness COMPLETE** on `feat/swarm-test-harness` (stacked on
+`chore/regroup-test-scenarios`; both unmerged). Spec: `test-harness-design.md`; plan:
+`implementation-plan-test-harness.md`. All deliverables shipped + verified (21 unit tests
+green; both scenarios generate correctly; `swarm-test` installs project-scoped only).
+
+**Deferred (separate session):** the first real orchestrator dogfood — run `/swarm` against
+`cli-task-manager` (and `/swarm:init`+`/swarm` against `greenfield-init`), then `/swarm:test`
+the run to exercise the analyze loop end-to-end.
 
 Phases 1 + 2 of `/swarm` are merged to `main` (with the uniform-flatten publisher change).
 
 ### Test-harness deliverables
-- [ ] D6 — gitignore (tests/swarm/runs/) + tests/swarm/README.md
-- [ ] D1 — harness package + generate
-- [ ] D2 — ingest
-- [ ] D3 — pytest unit tests
-- [ ] D5 — cli-task-manager scenario
-- [ ] D4 — swarm:test analyze skill
+- [x] D6 — gitignore (tests/swarm/runs/) + tests/swarm/README.md
+- [x] D1 — harness package + generate
+- [x] D2 — ingest
+- [x] D3 — unit tests (21, stdlib unittest)
+- [x] D5 — cli-task-manager scenario (seeded)
+- [x] D5b — generate init-first mode + greenfield-init scenario
+- [x] D4 — swarm:test analyze skill (project-scoped, top-level)
+
+### Harness acceptance verification
+- AC1/AC2 — generate builds throwaway repo (seeded + init-first modes); `python -m tests.swarm.harness` CLI ✓
+- AC3 — ingest → observations.json (counts, tallies, malformed, sizes, safety signals); tolerant ✓
+- AC4 — 21 unit tests green via `python -m unittest` ✓
+- AC5 — swarm:test skill; installs project-scoped only (absent from user profile) ✓
+- AC6 — cli-task-manager scenario engineered for conflict + integration-break + refinement ✓
+- AC7 — tests/swarm/runs/ gitignored; tests/swarm/README.md present ✓
+- Scope — analyze skill top-level (no user-profile leak); src/swarm/ unchanged ✓
 
 ## Phase 2 acceptance verification
 
