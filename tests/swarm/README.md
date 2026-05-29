@@ -25,8 +25,13 @@ generate  →  [agent runs /swarm]  →  analyze
 1. **Generate a throwaway repo from a scenario:**
 
    ```bash
+   tests/swarm/new-run.sh cli-task-manager      # convenience wrapper (default scenario if omitted)
+   # or, equivalently:
    python -m tests.swarm.harness generate cli-task-manager
    ```
+
+   `new-run.sh` runs from anywhere, lists scenarios (`--list`), and has a `--path` mode that
+   prints only the run dir — handy for `cd "$(tests/swarm/new-run.sh --path cli-task-manager)"`.
 
    Builds `tests/swarm/runs/<name>-<timestamp>/` — a real git repo seeded with the scenario's
    sources, a charter, swarm `config.yml`, the **current** `src/swarm/roles/*` (so you always
