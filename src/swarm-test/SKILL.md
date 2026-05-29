@@ -211,6 +211,21 @@ competing approaches become **recommendations**, not auto-applied changes.
 Observed exit_state vs expected_exit; notes.
 ```
 
+4. **Offer to archive a history entry (opt-in).** The run dir is gitignored and throwaway —
+   its session logs are also gitignored inside the run repo, and the orchestrator transcript
+   lives under `~/.claude/` on a retention clock — so the committed summary is the only durable
+   record. If this run drove a change to `src/swarm/...` or surfaced a finding worth revisiting,
+   offer to copy `analysis.md`, `observations.json`, and the run's `orchestrator.md` into
+   `tests/swarm/history/<run-id>/` (a tracked sibling of `runs/`, since git cannot re-include a
+   file inside the ignored `runs/` tree). Most runs need no entry — do not archive a clean,
+   uneventful run by default. See `tests/swarm/history/README.md`.
+
+   Once an entry is archived, offer to delete the run directory (`rm -rf <run-dir>`) — its
+   durable signal now lives in `history/`, and the rest (the ~28 MB throwaway repo, `.venv`,
+   nested `.git`) is regenerable from the committed scenario. Only offer this **after** the
+   history entry is written, and confirm the run is finished and analyzed first. If the user
+   declined the history entry, do not offer deletion — there would be no surviving record.
+
 ## Notes
 
 - Role decision logs are **best-effort** (workers may not write them). The

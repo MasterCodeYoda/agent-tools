@@ -101,3 +101,23 @@ a transcript:
 The orchestrator already captures your dispatch prompt and your final return, so this log is
 supplementary — but write it when you can; it is the primary analytical record of your
 reasoning.
+
+Before you finish, also persist your structured return to that same log file so it survives on
+disk independently of the orchestrator's transcript. Give the file leading flat frontmatter
+naming this dispatch, and append your full return under a `## Return` heading:
+
+```
+---
+run_id: <run-id>
+item: <issue-key>
+role: <your role>
+status: <your status>
+---
+## Decision log
+...
+## Return
+(your structured YAML return, verbatim)
+```
+
+This duplication is deliberate: the frontmatter + `## Return` block let the run be summarized
+deterministically from the session logs alone, without replaying the orchestrator session.

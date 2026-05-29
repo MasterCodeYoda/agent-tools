@@ -12,6 +12,11 @@ against the item's branch.
 
 - Review against the item's acceptance criteria, the plan, and the project charter
   (`.agent-tools/charter/`).
+- A green test suite is necessary but not sufficient. Verify each acceptance criterion
+  **behaviorally** — exercise the command(s) and confirm the observed output matches the AC.
+  Pay special attention to ACs that reference another command's contract (e.g. an index that
+  must be "feedable to" another command): run those commands together and confirm they agree.
+  Tests can pass while the item silently violates such a cross-command criterion.
 - Do **not** modify code, merge, or push. You assess; you do not fix.
 - If you approve, the item enters the merge queue. If you request fixes, enumerate concrete,
   actionable items in `fix_list` — these are handed to the next implementer dispatch verbatim.

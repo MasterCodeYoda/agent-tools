@@ -113,6 +113,119 @@ def _sessions_root(run_dir: Path) -> Path | None:
     return runs[0] if runs else None
 
 
+_KNOWN_ROLES = {"planner", "implementer", "reviewer", "conflict-resolver", "integration-fixer"}
+_KNOWN_STATUSES = {
+    "DONE", "DONE_WITH_CONCERNS", "NEEDS_CONTEXT", "BLOCKED",
+    "APPROVED", "FIX_REQUESTED", "FAILED",
+}
+# description verb -> role, for transcripts where the dispatch is a generic agent
+_DESC_ROLE = [
+    ("plan", "planner"), ("implement", "implementer"), ("review", "reviewer"),
+    ("resolve", "conflict-resolver"), ("conflict", "conflict-resolver"),
+    ("integration", "integration-fixer"),
+]
+
+
+def _project_dir(run_dir: Path) -> Path | None:
+    """The ``~/.claude/projects`` dir for this run's cwd, if present.
+
+    Claude Code names that dir after the cwd with every non-alphanumeric char (slashes, dots,
+    etc.) collapsed to ``-``.
+    """
+    proj = Path.home() / ".claude" / "projects"
+    if not proj.is_dir():
+        return None
+    pdir = proj / re.sub(r"[^A-Za-z0-9]", "-", str(run_dir.resolve()))
+    return pdir if pdir.is_dir() else None
+
+
+def _find_transcript(run_dir: Path) -> Path | None:
+    """Locate the orchestrator transcript for this run dir, if present.
+
+    The orchestrator session is the one whose ``tool_result`` blocks carry the workers'
+    structured returns; we pick the project transcript that yields the most of them. Reviewer
+    sub-sessions and worker sidechains carry none, so they self-exclude.
+    """
+    pdir = _project_dir(run_dir)
+    if pdir is None:
+        return None
+    best, best_n = None, 0
+    for p in sorted(pdir.glob("*.jsonl")):
+        if not p.is_file():
+            continue
+        n = len(transcript_dispatches(p))
+        if n > best_n:
+            best, best_n = p, n
+    return best
+
+
+def _parse_swarm_return(text: str) -> dict | None:
+    """If ``text`` contains a swarm structured return, extract {role, status, item}."""
+    if not text:
+        return None
+    role = re.search(r"^\s*role:\s*([\w-]+)", text, re.MULTILINE)
+    status = re.search(r"^\s*status:\s*([\w]+)", text, re.MULTILINE)
+    item = re.search(r"^\s*item:\s*([^\s#]+)", text, re.MULTILINE)
+    if not (role and status):
+        return None
+    r = role.group(1)
+    s = status.group(1)
+    if r not in _KNOWN_ROLES or s not in _KNOWN_STATUSES:
+        return None
+    return {"role": r, "status": s, "item": item.group(1).strip("'\"") if item else "unknown"}
+
+
+def _result_text(block: dict) -> str:
+    content = block.get("content")
+    if isinstance(content, str):
+        return content
+    if isinstance(content, list):
+        return "\n".join(p.get("text", "") for p in content if isinstance(p, dict))
+    return ""
+
+
+def transcript_dispatches(transcript: Path) -> list[dict]:
+    """Recover {role, status, item} per dispatch from an orchestrator transcript.
+
+    Workers return their structured YAML to the orchestrator via the Task tool; that return
+    lands in a ``tool_result`` block in the transcript. We pair each result to its dispatch by
+    ``tool_use_id`` and parse the swarm return out of it.
+    """
+    desc_by_id: dict[str, str] = {}
+    out: list[dict] = []
+    for line in transcript.open(encoding="utf-8", errors="replace"):
+        line = line.strip()
+        if not line:
+            continue
+        try:
+            obj = json.loads(line)
+        except json.JSONDecodeError:
+            continue
+        msg = obj.get("message")
+        content = msg.get("content") if isinstance(msg, dict) else None
+        if not isinstance(content, list):
+            continue
+        for block in content:
+            if not isinstance(block, dict):
+                continue
+            btype = block.get("type")
+            if btype == "tool_use" and block.get("name") in ("Task", "Agent"):
+                inp = block.get("input") or {}
+                desc_by_id[block.get("id", "")] = str(inp.get("description") or "")
+            elif btype == "tool_result":
+                ret = _parse_swarm_return(_result_text(block))
+                if ret is None:
+                    continue
+                if ret["role"] == "unknown" or ret["role"] not in _KNOWN_ROLES:
+                    desc = desc_by_id.get(block.get("tool_use_id", ""), "").lower()
+                    for needle, role in _DESC_ROLE:
+                        if needle in desc:
+                            ret["role"] = role
+                            break
+                out.append(ret)
+    return out
+
+
 def ingest(run_dir: Path) -> dict:
     """Walk a run's session logs and return a structured observations dict."""
     run_dir = Path(run_dir)
@@ -126,6 +239,7 @@ def ingest(run_dir: Path) -> dict:
         "return_sizes": [],
         "missing_decision_logs": [],
         "items": {},
+        "transcript_source": None,
         "safety": {"remotes": _git_remotes(run_dir), "push_mentions": [], "out_of_scope_writes": []},
         "warnings": [],
     }
@@ -184,6 +298,28 @@ def ingest(run_dir: Path) -> dict:
 
         if re.search(r"git\s+push|\bpush to (origin|remote)", text, re.IGNORECASE):
             obs["safety"]["push_mentions"].append({"file": rel})
+
+    # Fallback: if no on-disk log carried a parseable return, the structured returns live only
+    # in the orchestrator's Claude Code transcript. Recover dispatch counts from there.
+    if obs["dispatch_count"] == 0:
+        transcript = _find_transcript(run_dir)
+        if transcript is not None:
+            dispatches = transcript_dispatches(transcript)
+            if dispatches:
+                obs["transcript_source"] = str(transcript)
+                obs["warnings"].append(
+                    f"session logs carried no parseable returns; "
+                    f"recovered {len(dispatches)} dispatch(es) from transcript {transcript.name}"
+                )
+                for d in dispatches:
+                    role, status, item = d["role"], d["status"], d["item"]
+                    obs["dispatch_count"] += 1
+                    by_role[role]["dispatches"] += 1
+                    by_role[role]["statuses"][status] += 1
+                    obs["status_tally"][status] += 1
+                    if role not in items[item]["roles_seen"]:
+                        items[item]["roles_seen"].append(role)
+                    items[item]["last_status"] = status
 
     # finalize (convert defaultdicts to plain dicts for JSON)
     obs["by_role"] = {

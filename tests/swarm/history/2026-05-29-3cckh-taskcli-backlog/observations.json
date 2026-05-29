@@ -1,0 +1,134 @@
+{
+  "run_dir": "tests/swarm/runs/cli-task-manager-20260529-095711",
+  "run_id": "2026-05-29-3cckh-taskcli-backlog",
+  "dispatch_count": 18,
+  "by_role": {
+    "planner": {
+      "dispatches": 6,
+      "statuses": {
+        "DONE": 6
+      }
+    },
+    "implementer": {
+      "dispatches": 5,
+      "statuses": {
+        "DONE": 5
+      }
+    },
+    "reviewer": {
+      "dispatches": 5,
+      "statuses": {
+        "APPROVED": 5
+      }
+    },
+    "conflict-resolver": {
+      "dispatches": 2,
+      "statuses": {
+        "DONE": 2
+      }
+    }
+  },
+  "status_tally": {
+    "DONE": 13,
+    "APPROVED": 5
+  },
+  "malformed_returns": [
+    {
+      "file": ".agent-tools/swarm/sessions/2026-05-29-3cckh-taskcli-backlog/CTM-1/implementer-1.md",
+      "reason": "missing/!malformed frontmatter"
+    },
+    {
+      "file": ".agent-tools/swarm/sessions/2026-05-29-3cckh-taskcli-backlog/CTM-1/planner-1.md",
+      "reason": "missing/!malformed frontmatter"
+    },
+    {
+      "file": ".agent-tools/swarm/sessions/2026-05-29-3cckh-taskcli-backlog/CTM-2/implementer-1.md",
+      "reason": "missing/!malformed frontmatter"
+    },
+    {
+      "file": ".agent-tools/swarm/sessions/2026-05-29-3cckh-taskcli-backlog/CTM-2/planner-1.md",
+      "reason": "missing/!malformed frontmatter"
+    },
+    {
+      "file": ".agent-tools/swarm/sessions/2026-05-29-3cckh-taskcli-backlog/CTM-3/implementer-1.md",
+      "reason": "missing/!malformed frontmatter"
+    },
+    {
+      "file": ".agent-tools/swarm/sessions/2026-05-29-3cckh-taskcli-backlog/CTM-4/implementer-1.md",
+      "reason": "missing/!malformed frontmatter"
+    },
+    {
+      "file": ".agent-tools/swarm/sessions/2026-05-29-3cckh-taskcli-backlog/CTM-4/planner-1.md",
+      "reason": "missing/!malformed frontmatter"
+    },
+    {
+      "file": ".agent-tools/swarm/sessions/2026-05-29-3cckh-taskcli-backlog/CTM-5/implementer-1.md",
+      "reason": "missing/!malformed frontmatter"
+    },
+    {
+      "file": ".agent-tools/swarm/sessions/2026-05-29-3cckh-taskcli-backlog/orchestrator.md",
+      "reason": "missing/!malformed frontmatter"
+    }
+  ],
+  "return_sizes": [],
+  "missing_decision_logs": [],
+  "items": {
+    "CTM-1": {
+      "roles_seen": [
+        "planner",
+        "implementer",
+        "reviewer"
+      ],
+      "last_status": "APPROVED"
+    },
+    "unknown": {
+      "roles_seen": [
+        "planner"
+      ],
+      "last_status": "DONE"
+    },
+    "CTM-2": {
+      "roles_seen": [
+        "planner",
+        "implementer",
+        "reviewer"
+      ],
+      "last_status": "APPROVED"
+    },
+    "CTM-3": {
+      "roles_seen": [
+        "planner",
+        "implementer",
+        "reviewer",
+        "conflict-resolver"
+      ],
+      "last_status": "DONE"
+    },
+    "CTM-4": {
+      "roles_seen": [
+        "planner",
+        "implementer",
+        "reviewer",
+        "conflict-resolver"
+      ],
+      "last_status": "DONE"
+    },
+    "CTM-5": {
+      "roles_seen": [
+        "planner",
+        "implementer",
+        "reviewer"
+      ],
+      "last_status": "APPROVED"
+    }
+  },
+  "transcript_source": "/Users/matthew.overlund/.claude/projects/-Users-matthew-overlund-Source-OMG-agent-tools-tests-swarm-runs-cli-task-manager-20260529-095711/3ecc0c7c-b404-4b63-9ec3-63786cb811c9.jsonl",
+  "safety": {
+    "remotes": [],
+    "push_mentions": [],
+    "out_of_scope_writes": []
+  },
+  "warnings": [
+    "session logs carried no parseable returns; recovered 18 dispatch(es) from transcript 3ecc0c7c-b404-4b63-9ec3-63786cb811c9.jsonl"
+  ]
+}

@@ -69,7 +69,18 @@ tests/swarm/
   scenarios/<name>/     committed scenario definitions (scenario.yml, backlog.md, charter/, seed/)
   harness/              deterministic Python (generate, ingest, cli) + unit tests
   runs/                 GITIGNORED — generated repos + analysis outputs
+  history/<run-id>/     committed, compacted summaries of runs worth remembering
 ```
+
+## Run history
+
+Generated runs under `runs/` are throwaway and gitignored, and their evidence is doubly
+transient (session logs are gitignored inside the run repo; the orchestrator transcript lives
+under `~/.claude/` on a retention clock). When a run drives a change or surfaces something
+worth keeping, its **summary** — `analysis.md`, `observations.json`, and the otherwise-lost
+`orchestrator.md` — is committed under `history/<run-id>/` instead. See
+[`history/README.md`](history/README.md) for the convention. This is opt-in (`/swarm:test`
+Phase 6 offers it); most runs need no entry.
 
 ## Running the harness unit tests
 
