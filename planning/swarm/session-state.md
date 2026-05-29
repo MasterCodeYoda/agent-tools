@@ -1,30 +1,40 @@
 ---
 project: swarm
-phase: 1
+phase: test-harness
 requirements_source: file
-requirements_doc: ./planning/swarm/design.md
+requirements_doc: ./planning/swarm/test-harness-design.md
 work_item: null
 pm_tool: manual
-session_count: 2
-phase: 2
-status: complete
+session_count: 3
+status: in_progress
 decomposition_mode: deliverable-partition
 progress:
   total_deliverables: 6
-  completed: 6
-  percent: 100%
-current_layer: complete
-branch: feat/swarm-phase-2
+  completed: 0
+  percent: 0%
+current_layer: in_progress
+branch: feat/swarm-test-harness
 worktree: null
 created: 2026-05-28
 ---
 
 ## Current Focus
 
-Phase 2 (Orchestrator MVP) complete on `feat/swarm-phase-2` (off `feat/swarm-phase-1`, both
-unmerged). All six deliverables shipped + verified. **Deferred:** a post-completion dogfood
-run on a 2–3 item test backlog (expanded from the plan's proposal) to exercise AC10/AC12
-end-to-end. Awaiting user review + integration decision (no push — user-initiated).
+**Test harness** (`/swarm` E2E + log-driven role evolution) on `feat/swarm-test-harness`
+(stacked on `chore/regroup-test-scenarios`). Spec: `test-harness-design.md`; plan:
+`implementation-plan-test-harness.md`. Order: D6 gitignore → D1 generate → D2 ingest →
+D3 tests → D5 scenario → D4 swarm:test skill. The first real orchestrator dogfood run is a
+deferred separate session.
+
+Phases 1 + 2 of `/swarm` are merged to `main` (with the uniform-flatten publisher change).
+
+### Test-harness deliverables
+- [ ] D6 — gitignore (tests/swarm/runs/) + tests/swarm/README.md
+- [ ] D1 — harness package + generate
+- [ ] D2 — ingest
+- [ ] D3 — pytest unit tests
+- [ ] D5 — cli-task-manager scenario
+- [ ] D4 — swarm:test analyze skill
 
 ## Phase 2 acceptance verification
 
