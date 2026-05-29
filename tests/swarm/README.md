@@ -86,8 +86,16 @@ Create `tests/swarm/scenarios/<name>/` with:
   provoke). See `cli-task-manager/scenario.yml` for the schema.
 - `backlog.md` — the local backlog the orchestrator ingests (items + `blocks` / `blocked_by`
   / `parallelizable_with` dependency metadata).
-- `charter/` — a seed charter (`charter.md`, `project.md`, `engineering.md`, `workflow.md`)
-  so the generated repo is ready without an interactive `/swarm:init`.
+- `charter/` — **optional**, and it toggles the bootstrap mode:
+  - **present → seeded:** `generate` writes the full `.agent-tools/` umbrella (charter +
+    `config.yml` + current roles). The run starts directly at `/swarm backlog.md`. Use this
+    when you want a *controlled, repeatable* orchestrator input (the common case — e.g.
+    `cli-task-manager`).
+  - **absent → init-first:** `generate` produces a **bare** repo (no `.agent-tools/`). The run
+    begins with `/swarm:init`, which detects the stack, authors the charter, and bootstraps
+    the umbrella itself. Use this to exercise `/swarm:init` (e.g. `greenfield-init`). Note the
+    charter then varies run-to-run, so it's a less controlled input — keep these scenarios
+    focused on init + a simple orchestrator pass.
 - `seed/` — initial application sources, including any files deliberately engineered to force
   a merge conflict or a post-merge integration-test failure.
 

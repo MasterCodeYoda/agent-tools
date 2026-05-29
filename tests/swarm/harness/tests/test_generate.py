@@ -86,10 +86,29 @@ class GenerateTests(unittest.TestCase):
         with self.assertRaises(GenerateError):
             generate("demo", root=self.tmp, now=FIXED)
 
-    def test_missing_charter_raises(self):
+    def test_charter_absent_is_init_mode(self):
+        # No charter/ → init-first mode: bare repo, no .agent-tools/ umbrella.
         _make_fake_repo(self.tmp, with_charter=False)
-        with self.assertRaises(GenerateError):
-            generate("demo", root=self.tmp, now=FIXED)
+        run = generate("demo", root=self.tmp, now=FIXED)
+        self.assertTrue((run / "backlog.md").is_file())
+        self.assertFalse((run / ".agent-tools").exists())
+        # still a real git repo with main + initial commit
+        branch = subprocess.run(
+            ["git", "branch", "--show-current"], cwd=run, capture_output=True, text=True
+        ).stdout.strip()
+        self.assertEqual(branch, "main")
+
+    def test_init_mode_next_step_mentions_init(self):
+        from tests.swarm.harness.generate import format_next_step
+        _make_fake_repo(self.tmp, with_charter=False)
+        run = generate("demo", root=self.tmp, now=FIXED)
+        self.assertIn("/swarm:init", format_next_step(run))
+
+    def test_seeded_next_step_omits_init(self):
+        from tests.swarm.harness.generate import format_next_step
+        _make_fake_repo(self.tmp)
+        run = generate("demo", root=self.tmp, now=FIXED)
+        self.assertNotIn("/swarm:init", format_next_step(run))
 
     def test_seedless_scenario_ok(self):
         _make_fake_repo(self.tmp, with_seed=False)

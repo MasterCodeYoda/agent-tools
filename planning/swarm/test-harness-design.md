@@ -117,10 +117,26 @@ observation_checklist:         # soft intent — seeds analyze's automated asses
 ### Roles & charter are not frozen
 
 `generate` copies the **current** `src/swarm/roles/*` into the generated repo's
-`.agent-tools/swarm/roles/` on every run. The harness therefore always tests live role
-content — and re-running a scenario after an `analyze` pass tests the improved versions. The
-`charter/` seed is committed per-scenario so the run is deterministic and skips agent-driven
-`/swarm:init`.
+`.agent-tools/swarm/roles/` on every run (seeded mode). The harness therefore always tests
+live role content — and re-running a scenario after an `analyze` pass tests the improved
+versions.
+
+### Bootstrap mode (charter presence toggles it)
+
+A scenario's `charter/` directory is **optional**, and its presence selects the bootstrap
+mode (no extra config field — keeps `generate` dependency-free):
+
+- **`charter/` present → seeded:** `generate` writes the full `.agent-tools/` umbrella
+  (charter + `config.yml` + current roles); the run starts at `/swarm backlog.md`. This is
+  the controlled, repeatable input used by orchestrator/role-focused scenarios
+  (`cli-task-manager`). `/swarm:init` is *not* exercised — and deliberately so: init produces
+  no role logs, and a fixed charter keeps the orchestrator's input constant when comparing
+  role behavior across runs.
+- **`charter/` absent → init-first:** `generate` produces a **bare** repo; the run begins with
+  `/swarm:init`, which detects the stack, authors the charter, and bootstraps the umbrella.
+  This exercises init itself (`greenfield-init`). The trade-off: the charter varies run-to-run,
+  so these scenarios stay focused on init + a simple orchestrator pass rather than fine-grained
+  role-behavior comparison.
 
 ---
 

@@ -91,12 +91,16 @@ def generate(
     backlog_src = scenario_dir / "backlog.md"
     if not backlog_src.is_file():
         raise GenerateError(f"Scenario missing backlog.md: {backlog_src}")
+
+    # Bootstrap mode is keyed on whether the scenario ships a charter:
+    #   charter/ present  → SEEDED: generate writes the full .agent-tools/ umbrella.
+    #   charter/ absent   → INIT-FIRST: bare repo; the run begins with /swarm:init, which
+    #                       authors the charter + umbrella + roles itself.
     charter_src = scenario_dir / "charter"
-    if not charter_src.is_dir():
-        raise GenerateError(f"Scenario missing charter/: {charter_src}")
+    seeded = charter_src.is_dir()
 
     roles_src = root / "src" / "swarm" / "roles"
-    if not roles_src.is_dir():
+    if seeded and not roles_src.is_dir():
         raise GenerateError(f"Canonical roles not found: {roles_src}")
 
     stamp = now.strftime("%Y%m%d-%H%M%S")
@@ -122,18 +126,20 @@ def generate(
     # 2. Backlog at the repo root.
     shutil.copy2(backlog_src, run_dir / "backlog.md")
 
-    # 3. .agent-tools umbrella: charter, config, current roles, gitignore.
-    agent_tools = run_dir / ".agent-tools"
-    shutil.copytree(charter_src, agent_tools / "charter")
-    swarm_dir = agent_tools / "swarm"
-    swarm_dir.mkdir(parents=True)
-    config_src = scenario_dir / "config.yml"
-    if config_src.is_file():
-        shutil.copy2(config_src, swarm_dir / "config.yml")
-    else:
-        (swarm_dir / "config.yml").write_text(DEFAULT_CONFIG_YML)
-    shutil.copytree(roles_src, swarm_dir / "roles")
-    (agent_tools / ".gitignore").write_text(UMBRELLA_GITIGNORE)
+    # 3. .agent-tools umbrella — only in SEEDED mode. In init-first mode the repo is left
+    #    bare; /swarm:init authors the umbrella when the run begins.
+    if seeded:
+        agent_tools = run_dir / ".agent-tools"
+        shutil.copytree(charter_src, agent_tools / "charter")
+        swarm_dir = agent_tools / "swarm"
+        swarm_dir.mkdir(parents=True)
+        config_src = scenario_dir / "config.yml"
+        if config_src.is_file():
+            shutil.copy2(config_src, swarm_dir / "config.yml")
+        else:
+            (swarm_dir / "config.yml").write_text(DEFAULT_CONFIG_YML)
+        shutil.copytree(roles_src, swarm_dir / "roles")
+        (agent_tools / ".gitignore").write_text(UMBRELLA_GITIGNORE)
 
     # 4. Real git repo with a `main` branch + initial commit.
     _git(["-c", "init.defaultBranch=main", "init"], cwd=run_dir)
@@ -148,11 +154,19 @@ def generate(
 
 
 def format_next_step(run_dir: Path) -> str:
+    init_first = not (run_dir / ".agent-tools" / "charter").is_dir()
+    run_steps = f"  cd {run_dir}\n"
+    if init_first:
+        run_steps += (
+            "  /swarm:init          # bare repo: author the charter + umbrella first\n"
+            "  /swarm backlog.md\n"
+        )
+    else:
+        run_steps += "  /swarm backlog.md\n"
     return (
         f"Generated: {run_dir}\n\n"
-        f"Next: run the orchestrator from the generated repo:\n"
-        f"  cd {run_dir}\n"
-        f"  /swarm backlog.md\n\n"
+        f"Next: run from the generated repo:\n"
+        f"{run_steps}\n"
         f"Then analyze the run:\n"
         f"  /swarm:test {run_dir}\n"
     )

@@ -1,0 +1,26 @@
+name: greenfield-init
+purpose: >
+  Exercise /swarm:init end-to-end (detection → charter authoring → .agent-tools/ umbrella)
+  on a charter-less greenfield repo, followed by a clean two-item parallel orchestrator pass.
+  Complements cli-task-manager (which seeds the charter and stresses the fix-it paths).
+stack: python                   # generate produces a BARE repo (no charter); init bootstraps it
+
+bootstrap: swarm-init            # informational: this scenario ships no charter/, so the run
+                                 # begins with /swarm:init (generate keys off charter absence)
+
+expected_exit: GOAL_COMPLETE
+
+hard_invariants:
+  - no_remote_push
+  - run_terminates
+  - every_item_terminal
+
+observation_checklist:
+  - id: init-authored-charter
+    expect: after the run, .agent-tools/charter/{charter,project,engineering,workflow}.md exist (authored by /swarm:init)
+  - id: init-bootstrapped-umbrella
+    expect: .agent-tools/swarm/config.yml and .agent-tools/swarm/roles/ exist after init
+  - id: parallel-wave
+    expect: GI-1 and GI-2 dispatched in the same wave (both independent, parallelizable)
+  - id: clean-exit
+    expect: both items reach stage=merged; run ends GOAL_COMPLETE; no fix-it dispatches needed

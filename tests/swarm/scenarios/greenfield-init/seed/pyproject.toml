@@ -1,0 +1,15 @@
+[project]
+name = "greeter"
+version = "0.0.1"
+description = "Tiny greeting CLI (swarm greenfield-init scenario)"
+requires-python = ">=3.10"
+
+[build-system]
+requires = ["setuptools>=61"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools]
+packages = ["greeter", "greeter.commands"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
