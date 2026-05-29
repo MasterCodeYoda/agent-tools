@@ -22,45 +22,45 @@ generate  →  [agent runs /swarm]  →  analyze
 
 ## The loop
 
-1. **Generate a throwaway repo from a scenario:**
+`/swarm:test` front-ends the whole loop. Give it a **scenario name** to start a run, or a
+**run dir** to analyze a finished one.
 
-   ```bash
-   tests/swarm/new-run.sh cli-task-manager      # convenience wrapper (default scenario if omitted)
-   # or, equivalently:
-   python -m tests.swarm.harness generate cli-task-manager
-   ```
+1. **Start a run** — `/swarm:test <scenario>` (e.g. `/swarm:test cli-task-manager`):
 
-   `new-run.sh` runs from anywhere, lists scenarios (`--list`), and has a `--path` mode that
-   prints only the run dir — handy for `cd "$(tests/swarm/new-run.sh --path cli-task-manager)"`.
-
-   Builds `tests/swarm/runs/<name>-<timestamp>/` — a real git repo seeded with the scenario's
+   It runs `tests/swarm/new-run.sh <scenario>` under the hood to build
+   `tests/swarm/runs/<name>-<timestamp>/` — a real git repo seeded with the scenario's
    sources, a charter, swarm `config.yml`, the **current** `src/swarm/roles/*` (so you always
-   test live role content), and the backlog. It prints the exact next step.
+   test live role content), and the backlog. It then hands you a copy-paste block for a new
+   terminal and waits.
 
-2. **Run the orchestrator** (in an agent session), from the generated repo:
+   (The wrapper is still usable directly — `tests/swarm/new-run.sh --list`,
+   `tests/swarm/new-run.sh <scenario>`, or `python -m tests.swarm.harness generate <scenario>`
+   — if you prefer to drive the bookends by hand.)
+
+2. **Run the orchestrator** in a separate agent session, from the generated repo:
 
    ```
    cd tests/swarm/runs/<name>-<timestamp>
    /swarm backlog.md
    ```
 
-   This produces per-dispatch session logs under
+   A separate session is required: `/swarm` is agent-driven — it interprets the skill,
+   dispatches sub-agents, and makes in-flight decisions — so it can't be run or backgrounded
+   from the analysis session, and it must run in the generated repo's working directory.
+   Init-first scenarios begin with `/swarm:init` before `/swarm backlog.md`. This produces
+   per-dispatch session logs under
    `.agent-tools/swarm/sessions/<run-id>/<item>/<role>-<n>.md`.
 
-3. **Analyze the run** with the project-scoped skill:
+3. **Analyze** — tell the conversation the run is done (or, in a fresh session, run
+   `/swarm:test <run-dir>`). Either way `/swarm:test` confirms the run finished, then runs the
+   deterministic `ingest` (logs → `observations.json`), checks the scenario's hard invariants
+   (loud fail on violation), judges the observation checklist with citations, clusters issues,
+   and proposes minimal, evidence-linked evolve-style diffs to `src/swarm/roles/*.md` (and
+   `SKILL.md` / `references/`) for your review. The run report is written to
+   `tests/swarm/runs/<run-dir>/analysis.md`.
 
-   ```
-   /swarm:test <run-dir>
-   ```
-
-   It runs the deterministic `ingest` (logs → `observations.json`), checks the scenario's
-   hard invariants (loud fail on violation), judges the observation checklist with citations,
-   clusters issues, and proposes minimal, evidence-linked evolve-style diffs to
-   `src/swarm/roles/*.md` (and `SKILL.md` / `references/`) for your review. The run report is
-   written to `tests/swarm/runs/<run-dir>/analysis.md`.
-
-Re-running `generate` after applying analyze's diffs tests the **improved** role content,
-closing the loop.
+Re-running a fresh `/swarm:test <scenario>` after applying analyze's diffs tests the
+**improved** role content, closing the loop.
 
 ## Layout
 

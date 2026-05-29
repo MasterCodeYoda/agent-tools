@@ -1,9 +1,9 @@
 ---
 name: swarm:test
-description: Analyze a /swarm test-harness run — check the scenario's hard invariants, judge its observation checklist against the role logs, cluster recurring issues, and propose evidence-linked evolve-style improvements to the swarm role templates and skills. Project-scoped repo-development tool for agent-tools.
+description: Drive or analyze a /swarm test-harness run. Given a scenario name, generate a fresh run and hand off the orchestrator step; given a completed run-dir, check the scenario's hard invariants, judge its observation checklist against the role logs, cluster recurring issues, and propose evidence-linked evolve-style improvements to the swarm role templates and skills. Project-scoped repo-development tool for agent-tools.
 publish-target: project
 user-invocable: true
-argument-hint: "<run-dir under tests/swarm/runs/>"
+argument-hint: "<scenario to start a run, or run-dir to analyze>"
 ---
 
 # Analyze a Swarm Test Run (`/swarm:test`)
@@ -26,8 +26,69 @@ change.
 $ARGUMENTS
 ```
 
-`$ARGUMENTS` is the run directory, e.g. `tests/swarm/runs/cli-task-manager-20260528-215259`.
-If absent, list the directories under `tests/swarm/runs/` and ask which to analyze.
+`$ARGUMENTS` is a single token — either a **scenario** name (start a fresh run) or a **run
+directory** (analyze a completed run). Phase 0a resolves which.
+
+## Phase 0a — Resolve mode
+
+Infer the mode from `$ARGUMENTS`, checking in this order. The namespaces are disjoint — run
+dirs are always `<scenario>-<YYYYMMDD>-<HHMMSS>`; scenario names never carry a timestamp — so a
+bare scenario name can never collide with a run dir.
+
+| `$ARGUMENTS` resolves to…                                         | Mode    | Action |
+|-------------------------------------------------------------------|---------|--------|
+| an existing dir under `tests/swarm/runs/` (full path or basename) | analyze | go to Phase 0 |
+| a name under `tests/swarm/scenarios/`                             | start   | run "Start mode" below |
+| neither                                                           | error   | print the scenario list and the run-dir list, then stop |
+| absent                                                            | choose  | list run dirs (analyze candidates) and scenarios (start candidates) and ask which |
+
+### Start mode — generate, hand off, wait
+
+1. Generate the throwaway repo by running the existing wrapper (never duplicate generate
+   logic):
+
+   ```bash
+   tests/swarm/new-run.sh <scenario>
+   ```
+
+   Capture its stdout. The generator prints, verbatim:
+
+   ```
+   Generated: <run-dir>
+
+   Next: run from the generated repo:
+     cd <run-dir>
+     /swarm backlog.md
+
+   Then analyze the run:
+     /swarm:test <run-dir>
+   ```
+
+   For **init-first** scenarios the middle block lists two prompts (`/swarm:init`, then
+   `/swarm backlog.md`). Parse the run-dir from the `Generated:` line and keep it in context.
+
+2. Hand off to the user. The generator's block is **already agent-agnostic** (just `cd` +
+   slash commands — no launcher binary like `claude`), matching the convention in other `src/`
+   skills. Surface it as a copyable directory line (with `<run-dir>` replaced by the path you captured in step 1) and a copyable prompt:
+
+   > Run this in a **new terminal**:
+   > ```
+   > cd <run-dir>
+   > ```
+   > Start your agent there and send this prompt:
+   > ```
+   > /swarm backlog.md
+   > ```
+   > (init-first scenarios: send `/swarm:init` first, let it finish, then `/swarm backlog.md`.)
+
+   Explain why a separate terminal: `/swarm` is an interactive agent session that dispatches
+   sub-agents — this conversation can't run it or background it, and running it here would
+   anchor it in the wrong working directory. Ask the user to come back and say when the run is
+   done.
+
+3. When the user says it's done, **converge to analyze mode** for the captured run-dir: proceed
+   to Phase 0 exactly as if invoked with that run-dir. Phase 0's checks (run happened + run
+   finished) are the readiness gate — if they fail, the run is unfinished and analysis stops.
 
 ## Phase 0 — Resolve run + scenario
 
@@ -35,6 +96,11 @@ If absent, list the directories under `tests/swarm/runs/` and ask which to analy
    `-<YYYYMMDD>-<HHMMSS>`) and load `tests/swarm/scenarios/<scenario>/scenario.yml`.
 2. Confirm the run actually happened: it must contain `.agent-tools/swarm/sessions/<run-id>/`.
    If not, report that the orchestrator hasn't been run yet and stop.
+3. Confirm the run actually **finished**: the `exit_state` field in `.agent-tools/swarm/sessions/<run-id>/state.yml` must be a terminal value
+   (`GOAL_COMPLETE` or `TERMINAL_PAUSE`). If it is null, missing, or non-terminal, report that
+   the run looks unfinished or hung — cite the observed `exit_state` — and stop. Do not analyze
+   a mid-flight run on the user's word alone. (This is the same condition Phase 2 checks as the
+   `run_terminates` invariant; checking it up front avoids ingesting a partial run.)
 
 ## Phase 1 — Ingest (deterministic)
 
