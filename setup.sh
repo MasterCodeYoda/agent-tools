@@ -38,6 +38,7 @@ GROK_DIR="${HOME}/.grok"
 # Grok also supports ~/.grok/skills directly in some installations
 GROK_SKILLS_DIR="${HOME}/.grok/skills"
 FACTORY_DIR="${HOME}/.factory"
+CODEX_DIR="${HOME}/.codex"
 
 # Colors for output
 GREEN='\033[0;32m'
@@ -122,7 +123,7 @@ get_publish_target() {
 
 # Install a single skill directory for a given agent
 install_skill() {
-    local agent="$1"               # claude, grok, factory
+    local agent="$1"               # claude, grok, factory, codex
     local skill_name="$2"          # e.g. "workflow", "skills"
     local source_skill_dir="$3"    # e.g. dist/claude/skills/workflow
 
@@ -282,7 +283,7 @@ validate_sources() {
 run_publisher() {
     local publisher="${SCRIPT_DIR}/tools/publish-skills.sh"
 
-    echo "Publishing skills for all agents (claude, grok, factory)..."
+    echo "Publishing skills for all agents (claude, grok, factory, codex)..."
     if "$publisher" --quiet; then
         echo -e "${GREEN}✓${NC} Publishing complete → dist/<agent>/skills/"
     else
@@ -305,6 +306,7 @@ echo
 # If an agent is installed globally, we deploy both user-profile skills
 # (to ~/.agent/skills) and project-scoped skills (to ./.agent/skills in this repo),
 # creating the local project directory if it doesn't exist yet.
+# Codex detection uses ~/.codex (its home for AGENTS.md/config; skills install to ~/.codex/skills/ per current support choice).
 if [ -d "$CLAUDE_DIR" ]; then
     install_skills_for_agent "claude"
 fi
@@ -317,6 +319,10 @@ fi
 
 if [ -d "$FACTORY_DIR" ]; then
     install_skills_for_agent "factory"
+fi
+
+if [ -d "$CODEX_DIR" ]; then
+    install_skills_for_agent "codex"
 fi
 
 # Clean up legacy factory-commands/ directory in the repo (one-time)
@@ -347,6 +353,11 @@ if [ -d "$FACTORY_DIR" ]; then
     echo "  Factory:"
     echo "    - User profile : ~/.factory/skills/"
     echo "    - This project : ./.factory/skills/  (project-scoped skills only)"
+fi
+if [ -d "$CODEX_DIR" ]; then
+    echo "  Codex:"
+    echo "    - User profile : ~/.codex/skills/"
+    echo "    - This project : ./.codex/skills/  (project-scoped skills only)"
 fi
 echo
 echo "  (Most skills → user profile. The 'skills' meta-skill → local project only.)"

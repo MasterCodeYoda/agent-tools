@@ -316,7 +316,7 @@ Picky-named files are **symlinks to `AGENTS.md`**, never separate content:
 |-----------|--------|
 | `.claude/` present | Create `CLAUDE.md → AGENTS.md` symlink automatically (Claude is known-picky) |
 | `.gemini/` present | **Ask** before creating `GEMINI.md → AGENTS.md` symlink |
-| `.factory/`, `.grok/`, `.codex/`, … | No symlink by default; create only if the user explicitly opts in |
+| `.factory/`, `.grok/`, `.codex/`, `.agents/`, … | No symlink by default; create only if the user explicitly opts in. (Codex loads AGENTS.md natively from `~/.codex/` global + project root; CODEX.md symlink is rarely needed.) |
 
 Create symlinks with a relative target from the repo root, e.g. `ln -s AGENTS.md CLAUDE.md`.
 If a picky-named file already exists as a **regular file** (not a symlink), do not clobber

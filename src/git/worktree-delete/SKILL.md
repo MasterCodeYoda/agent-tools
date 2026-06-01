@@ -48,6 +48,12 @@ Resolve bare names to `<REPO_ROOT>/.grok/worktrees/<name>/`
 Resolve bare names to `<REPO_ROOT>/.factory/worktrees/<name>/`
 
 <!-- /agent:include factory -->
+
+<!-- agent:include codex -->
+
+Resolve bare names to `<REPO_ROOT>/.codex/worktrees/<name>/`
+
+<!-- /agent:include codex -->
 - **No identifier**: List worktrees with `git worktree list` and ask the user which to remove
 
 ## Phase 1 — Validate

@@ -10,9 +10,9 @@
 # It is designed to be called by setup.sh on every run.
 #
 # Usage:
-#   tools/publish-skills.sh [--agents claude,grok,factory] [--quiet]
+#   tools/publish-skills.sh [--agents claude,grok,factory,codex] [--quiet]
 #
-#   --agents   Comma-separated list of target agents (default: claude,grok,factory)
+#   --agents   Comma-separated list of target agents (default: claude,grok,factory,codex)
 #   --quiet    Reduce output (only errors and warnings)
 #
 # Exit codes:
@@ -32,7 +32,7 @@ DIST_ROOT="${REPO_ROOT}/dist"
 # Directories under src/ that are not skills and should be ignored during publishing
 SKIP_DIRS="pdf-build"
 
-DEFAULT_AGENTS="claude,grok,factory"
+DEFAULT_AGENTS="claude,grok,factory,codex"
 QUIET=false
 DRY_RUN=false
 

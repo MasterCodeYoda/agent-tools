@@ -71,6 +71,12 @@ Check that `<REPO_ROOT>/.factory/worktrees/<name>/` does not already exist. If i
 
 <!-- /agent:include factory -->
 
+<!-- agent:include codex -->
+
+Check that `<REPO_ROOT>/.codex/worktrees/<name>/` does not already exist. If it does, error: "A worktree named '<name>' already exists."
+
+<!-- /agent:include codex -->
+
 5. **Branch name not in use** — Check:
    ```bash
    git branch --list <type>/<name>
@@ -99,6 +105,12 @@ Use `<REPO_ROOT>/.factory/worktrees/<name>` as the target path.
 
 <!-- /agent:include factory -->
 
+<!-- agent:include codex -->
+
+Use `<REPO_ROOT>/.codex/worktrees/<name>` as the target path.
+
+<!-- /agent:include codex -->
+
 If `--branch` was provided, use that as the full branch name instead of `<type>/<name>`.
 
 ## Phase 2 — Enter the worktree
@@ -124,6 +136,12 @@ Use `<REPO_ROOT>/.grok/worktrees/<name>` as the path.
 Use `<REPO_ROOT>/.factory/worktrees/<name>` as the path.
 
 <!-- /agent:include factory -->
+
+<!-- agent:include codex -->
+
+Use `<REPO_ROOT>/.codex/worktrees/<name>` as the path.
+
+<!-- /agent:include codex -->
 
 This is the same pattern used by `workflow/execute.md` for entering existing worktrees. It switches the Bash working directory for subsequent commands without disrupting other sessions.
 

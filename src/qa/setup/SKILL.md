@@ -223,6 +223,16 @@ There is currently no official `--loop=factory` option. The command above will a
 
 <!-- /agent:include factory -->
 
+<!-- agent:include codex -->
+
+```bash
+npx playwright init-agents
+```
+
+There is currently no official `--loop=codex` option (Codex relies on its skills + AGENTS.md + MCP integration for Playwright/Test Agents workflows). The command above will attempt auto-detect or manual role configuration. Use Codex skills for Planner/Generator/Healer equivalents where available.
+
+<!-- /agent:include codex -->
+
 If this command is not available (older Playwright version or the command is not recognized), manually scaffold the agent configuration:
 
 1. Inform the user: "Playwright init-agents not available. Scaffolding manually."
