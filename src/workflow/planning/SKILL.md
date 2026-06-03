@@ -132,6 +132,24 @@ Run parallel exploration using sub-agents to understand context:
 - Security considerations
 - Performance implications
 
+### 3. Prefactoring Assessment
+
+Using the **Codebase Analysis** output above, ask one question before breaking down the
+change: *given the current shape of the code, is the change hard?* If a behavior-preserving
+structural refactor would make the upcoming change small and safe, that refactor is
+**prefactoring** — "make the change easy, then make the easy change" (Kent Beck, *Tidy First*).
+
+When prefactoring applies, capture it as **enabling work** that runs first (see Implementation
+Order). Hold it to these guardrails:
+
+- **Behavior-preserving** — no functional change; existing tests stay green and no new
+  behavioral tests are needed (add characterization tests first only if coverage is missing).
+- **Separately committed** — structural changes never share a commit with behavioral changes.
+- **Justified by this change** — the refactor must make *this* upcoming work easier. No
+  speculative cleanup of code the change doesn't touch.
+- **Off-ramp** — if the change is already easy against the current code, skip this; there is no
+  prefactoring step by default.
+
 ## Load Requirements
 
 ### From requirements.md (file mode)
@@ -350,6 +368,9 @@ Items not required by acceptance criteria but worth noting for future iterations
 
 ## Implementation Order
 
+0. [Prefactoring / enabling work, if any] - behavior-preserving, committed separately before
+   feature work begins (omit this step entirely when the change is already easy — see
+   §Prefactoring Assessment)
 1. [First task/slice] - [Why first]
 2. [Second task/slice] - [Dependencies]
 3. [Continue...]
