@@ -150,6 +150,7 @@ NOT building yet:
 | Password too weak | Medium | High | Enforce complexity rules |
 
 ## Implementation Order
+0. Prefactoring — none needed; this is additive greenfield work
 1. Domain layer (User, Email, Password) - Foundation
 2. Infrastructure (Repository, migration) - Persistence
 3. Application (UseCase) - Business logic

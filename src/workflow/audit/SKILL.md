@@ -168,6 +168,19 @@ After all agents report, the orchestrator deduplicates cross-domain findings:
 4. If findings from different domains describe the **same root cause** but in different files, group them under a root cause heading
 5. Cross-domain references use format: `[domain] #ID`
 
+### Blind-Spot & Refutation Pass
+
+After deduplication, run the Critic Pass over the merged findings — see @workflow
+(`references/critic-pass.md`):
+
+- **Blind-spot pass** — one agent reads the full deduplicated finding set across all domains and
+  asks what category of risk no domain surfaced. Emitted gaps are tagged `[blind-spot]` and feed
+  the Findings list (and, where they span domains, Cross-Domain Insights below).
+- **Refutation pass** — each P1 is handed to a skeptic that tries to refute it; P1s refuted on
+  the evidence are downgraded or retracted before the health score is computed.
+
+Skip this pass at `quick` depth.
+
 ### Weighting
 
 Adjust domain importance based on project shape:

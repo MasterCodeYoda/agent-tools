@@ -144,6 +144,7 @@ Every parent AC must appear in exactly one row. Audit-on-close: zero orphans bef
 
 ### Implementation Order
 
+0. [Prefactoring / enabling work, if any] — behavior-preserving, committed separately before feature work (omit when the change is already easy)
 1. Sub-issue 1 — [dependency rationale]
 2. Sub-issue 2 — [dependencies on 1, if any]
 3. Continue...
@@ -213,6 +214,7 @@ For larger features composed of multiple stories in vertical-slice mode. For del
 - **Dependencies**: Story 1
 
 ## Implementation Order
+0. [Prefactoring / enabling work, if any] - behavior-preserving, committed separately before feature work (omit when the change is already easy)
 1. Story 1 - [Reason]
 2. Story 2 - [Reason]
 3. Story 3 - [Reason]

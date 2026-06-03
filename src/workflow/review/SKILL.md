@@ -210,6 +210,18 @@ Standard agents (including acceptance-criteria-verifier when plan available) plu
 - Monitoring hooks
 - Debug-ability
 
+### Synthesis Pass (Standard and Deep)
+
+After the parallel agents report and findings are drafted, run the Critic Pass — see @workflow
+(`references/critic-pass.md`) — before producing the verdict:
+
+- **Blind-spot pass** — one agent asks what category of risk none of the reviewers raised;
+  emits any concrete gaps tagged `[blind-spot]`.
+- **Refutation pass** — each P1 is handed to a skeptic that tries to refute it; P1s refuted on
+  the evidence are downgraded or retracted, so a false positive cannot block the merge.
+
+Skip this pass for Quick reviews.
+
 ## Findings Structure
 
 ### Priority Classification
