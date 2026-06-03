@@ -22,6 +22,7 @@ Parse input to determine discovery mode:
 | Input Pattern                          | Interpretation                       |
 |----------------------------------------|--------------------------------------|
 | Empty                                  | Prompt for initial description       |
+| `./planning/<project>/brainstorm.md`   | Start from a brainstorm seed concept (see `/workflow:brainstorm`) |
 | `./planning/<project>/requirements.md` | Refine existing requirements (file mode) |
 | `continue`                             | Resume in-progress refinement        |
 | `LIN-[0-9]+` or `[A-Z]+-[0-9]+`       | Refine existing PM issue (PM mode)   |
@@ -32,6 +33,10 @@ Parse input to determine discovery mode:
 you're trying to solve."
 
 **If path to existing requirements.md**, load and review for refinement.
+
+**If a `brainstorm.md` exists** for the project (or is passed explicitly), use its Seed Concept and
+Open Questions for Refinement as the starting context for Phase 1 — the fuzzy framing is already
+done, so begin discovery from the chosen direction rather than from scratch.
 
 **If `continue`**, check for `./planning/*/requirements.md` with `Status: Draft` (file mode) or in-progress PM issues
 (PM mode) and resume.
