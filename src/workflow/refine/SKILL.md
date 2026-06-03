@@ -312,6 +312,32 @@ Ask: "Before we finalize, I noticed a potential high-leverage opportunity: [desc
 
 If nothing surfaces, proceed without comment — this step should add signal, not noise.
 
+## Phase 4.6: Pressure-Test (optional)
+
+**Gate**: run this only when the cost of being wrong is high *and* the requirements have been
+contested or circled — an irreversible choice, a disputed scope, an expensive bet. Skip routine
+refinements; like the Leverage Check, this step adds signal, not noise. Requirements shaped by
+guided conversation tend to inherit the user's framing, so this is the cheapest point in the
+pipeline to catch a flawed assumption before it propagates into the plan.
+
+When the gate is met, pressure-test the draft requirements (must-haves, scope, success
+direction) with a small panel of advisor sub-agents, each applying one distinct lens:
+
+- **First-Principles** — are we solving the right problem, or optimizing the wrong variable?
+- **Contrarian** — what failure mode or fatal flaw does this scope miss?
+- **Outsider** — with no shared context, what won't land or doesn't make sense?
+
+(Expansionist and Executor lenses are already covered by Phase 4.5 and Phase 5 respectively — do
+not duplicate them here.)
+
+Then run **Pass 1 (Blind-Spot)** of the Critic Pass — see @workflow
+(`references/critic-pass.md`) — over the panel's responses to surface what *all* the advisors
+missed. Do not anonymize: a single model role-playing the lenses gains little from a shuffle, so
+the value is in the lenses and the blind-spot round, not in hiding their authorship.
+
+Fold what survives into the must-haves (Phase 4) and Open Questions (Phase 6); present any
+high-impact reframe to the user the way the Leverage Check does, then let them decide.
+
 ## Phase 5: Success Criteria
 
 ### Define Measurable Outcomes
