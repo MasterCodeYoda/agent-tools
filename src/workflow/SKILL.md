@@ -12,6 +12,7 @@ This is the parent skill for the `workflow` family. It contains high-level philo
 
 | Command | Purpose |
 |---------|---------|
+| `/workflow:setup` | Initialize/maintain the `planning/` docs and collaboratively define project-local conventions (tracks, gates, integration policy) |
 | `/workflow:brainstorm` | Explore a fuzzy idea into a framed concept ready for refinement |
 | `/workflow:refine` | Discover and refine requirements through guided conversation |
 | `/workflow:plan` | Create detailed implementation plans from requirements |
@@ -159,7 +160,43 @@ Mode is determined at the start of each workflow command:
 
 The agent states its determination and lets the user course-correct.
 
+## Project-Local Conventions
+
+Some projects layer **local process on top of the generic workflow** — an extra work track, gates
+beyond code review, or a specific integration policy. The generic `/workflow:*` skills can't infer
+these, so they live as **data** in `planning/conventions.md`, authored and maintained by
+`/workflow:setup`. Every phase honors them; nothing is hard-coded into a project-local command.
+
+A project's `conventions.md` may declare:
+
+- **Additional work tracks.** Beyond the default feature track
+  (`brainstorm → refine → plan → execute → review → finish → compound`), a project may define a
+  track that **overrides** the phase table for the units it governs — e.g. a research/discovery
+  loop, a data-labeling cycle, or a release checklist — each following its own process doc and its
+  own review-equivalent. `/workflow:continue` classifies each slice into its track before routing.
+- **Project-specific gates.** Checks **additive to** the standard review gate (cross-cutting
+  safety, regression/holdout adoption, schema/contract lockstep). Applied before a slice is done.
+- **Integration / merge policy.** Local vs remote, merge style, banking/versioning, push policy
+  (default: local-only; pushing and PRs are user-initiated).
+
+The top-level handoff (`planning/session-state.md`) carries a durable **Project orientation**
+pointer block listing these references, so a fresh session orients from a small, stable list while
+the dated status churns below it. Run `/workflow:setup` to create or refresh all of this.
+
 ## Functional Areas & Commands
+
+### /workflow:setup
+**Purpose**: Initialize/maintain project workflow scaffolding and capture project-local conventions
+
+**Behavior**: Idempotent and non-destructive. Surveys existing `planning/` state, then collaborates with the user to record — in `planning/conventions.md` — the requirements-source mode, any **additional work tracks** (e.g. a discovery loop that overrides the default phase table), **project-specific gates** (additive to the review gate), and the **integration/merge policy**. Also ensures the top-level handoff carries a durable *Project orientation* pointer block. Run anytime to refresh.
+
+**Outputs**:
+- `./planning/conventions.md` — project-local conventions honored by all phases
+- `./planning/session-state.md` — handoff scaffold with a durable orientation block (created if absent)
+
+**Boundary**: `planning/`-scoped and swarm-independent — never touches `.agent-tools/`. Complementary to `/swarm:init` (which owns the swarm charter).
+
+**When to use**: Onboarding a project to `/workflow`, or whenever the project's tracks/gates/policy change
 
 ### /workflow:refine
 **Purpose**: Discover and refine requirements through conversation

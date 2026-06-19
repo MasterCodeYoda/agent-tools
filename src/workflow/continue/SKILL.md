@@ -52,6 +52,16 @@ skills — let each run its own structure.
 Keep handoffs **light** — orient by scanning current state, not by reading a heavyweight
 narrative block.
 
+0. **Load project conventions.** If `planning/conventions.md` exists (or the handoff's *Project
+   orientation* block points to convention docs), read it first. It is authored/maintained by
+   `@workflow:setup` and may define:
+   - **Additional work tracks** — a project unit may belong to a non-feature track (a discovery
+     loop, a labeling cycle, a release checklist) that **overrides** the default phase table below
+     and follows its own process doc. Classify the slice into the right track *before* routing.
+   - **Project-specific gates** — checks **additive to** the review gate (cross-cutting safety,
+     regression/holdout adoption, contract lockstep). Apply them before treating a slice as done.
+   - **Integration / merge policy** — honor the project's recorded policy.
+   Absent → use the defaults in this skill as-is.
 1. **Scan** `planning/*/session-state.md` frontmatter (the schema in `@workflow`). Find the
    active slice:
    - A slice with `status: in_progress` (and a live `branch`) is already claimed — resume it
@@ -80,6 +90,10 @@ swarm run is actively driving:
    finish, or `/swarm:continue`). Never grab an item out from under an active swarm worker.
 
 ## Stage → next phase (each row is a gate)
+
+**First, classify the slice's track** (Orientation step 0). If project conventions assign it to a
+non-feature track, follow **that track's process doc** instead of this table — it carries its own
+structure and its own review-equivalent. The table below is the **default feature track**.
 
 Classify the slice's stage from what's on disk (artifacts, branch, commits, review state) —
 the same artifact-driven classification `/swarm` uses — then route:
@@ -163,6 +177,9 @@ state, the next pickup is wrong.
 
 - **`@workflow`** — the parent: session-state schema, branch naming, decomposition modes, phase
   set. `/continue` routes over these; it doesn't restate them.
+- **`@workflow:setup`** — authors/maintains `planning/conventions.md` (the project tracks, gates,
+  and integration policy this skill loads in Orientation step 0). Run it to teach a project's local
+  process to `/continue`.
 - **`/swarm`** — parallel, backlog-scale orchestration. `/continue` is its sequential counterpart.
 - **`@superpowers:finishing-a-development-branch`** — the integration decision point routed to
   after a clean review.
