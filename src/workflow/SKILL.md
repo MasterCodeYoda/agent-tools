@@ -19,6 +19,7 @@ This is the parent skill for the `workflow` family. It contains high-level philo
 | `/workflow:review` | Flexible code review (PRs, ranges, files, or uncommitted changes) |
 | `/workflow:audit` | Comprehensive multi-domain project audit |
 | `/workflow:compound` | Capture solutions and maintain knowledge compounding |
+| `/workflow:continue` | Resume the next slice — orient from `planning/`, drive one slice through the full loop, stopping only at user-input gates |
 
 See the individual sub-skills for full details, argument hints, and procedures.
 
@@ -239,6 +240,18 @@ execution. After approval, the user chooses: save the plan only, or save and pro
 **Creates**: `docs/solutions/<category>/<slug>.md`
 
 **When to use**: After solving non-trivial problems
+
+### /workflow:continue
+**Purpose**: Sequential orchestrator — resume the next slice of work and drive it through the full workflow loop
+
+**Behavior**: Orients by scanning `planning/*/session-state.md`, picks **one** PM-defined value slice (or an explicitly named target), classifies its stage from disk, and routes it through refine → plan → execute → review → finish → compound — auto-advancing through phases that need no input and stopping only at genuine user-input gates (plan approval, review-findings triage, merge confirmation). Tracks a light handoff on completion (compress/archive history, refresh the next-phase pointer).
+
+**Flags**:
+- `--worktree` — run the slice in an isolated worktree (new or existing match) so other, non-workflow sessions can run in parallel in the same repo. Defaults to the main workspace.
+
+**Coexistence**: The sequential counterpart to `/swarm`. Keeps a separate state store (`planning/` only, never `.agent-tools/swarm/`); when a swarm run is active it warns and picks only items swarm isn't driving.
+
+**When to use**: Resuming multi-session work — "pick up where I left off" — one slice at a time. For parallel backlog-scale execution, use `/swarm`.
 
 ## Task Planning
 
