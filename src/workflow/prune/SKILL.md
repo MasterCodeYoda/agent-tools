@@ -66,13 +66,32 @@ Collect prune **candidates** — never the protected set:
 - **Loose `planning*` meta files** corresponding to completed work (a finished feature's design/spec
   doc, an orphaned plan file, a superseded tracker).
 
+**Not everything under `planning/` is a prunable work item.** A candidate is a *work item* only if
+it carries work-tracking state — a `session-state.md`, a `pass-log.md`, a plan/requirements file. A
+subdirectory that holds **raw data / fixtures** (e.g. source PDFs, a golden set) or **shared tooling**
+(scripts used by several items) is **out of scope** — treat it as keep, and surface it as "not a work
+item" rather than proposing deletion. Also check **inter-candidate dependencies**: don't propose
+purging a directory that other (kept) items still depend on — e.g. shared discovery tooling consumed
+by passes you're keeping.
+
 ### 3. Verify completion (evidence, not just a status field)
+
+**The definition of "complete" can be track-specific.** When a non-feature track governs the item
+(per `conventions.md` — e.g. a discovery loop, a labeling cycle), read **that track's process doc**
+for what *done* means and which artifact records it. A feature-track slice is done when its branch
+merges to main; a **discovery pass** is done when its candidate is **adopted (banked into the
+canonical bundle) or characterized**, with its `pass-log.md` findings **migrated** to the durable
+record — *not* when a branch merges. Verify against the track's terminal definition, not a generic
+merge-commit check.
 
 For each candidate, gather **multiple signals** — a `status:` field alone is not proof:
 
-- **Status** — the item's `session-state.md` frontmatter reads terminal in the project's vocabulary.
+- **Status** — the item's tracking artifact (`session-state.md` frontmatter, or a `pass-log.md`
+  outcome) reads terminal in the project's / track's vocabulary.
 - **Git** — referenced merge commit(s) are present on the main branch; the item's branch is merged
-  / deleted; no uncommitted work references the item.
+  / deleted; no uncommitted work references the item. (For tracks where completion isn't a merge —
+  e.g. discovery — substitute the track's terminal evidence: adoption into the bundle, a recorded
+  characterization.)
 - **PM (if PM mode)** — the item's issue (e.g. `SPEC-###`, `LIN-###`) is **Closed/Done** in the
   tracker. Use the available PM tools; note when the tracker can't be reached.
 - **Not active** — the handoff does **not** name the item as the active slice or the next step.
