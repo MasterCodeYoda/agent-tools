@@ -61,6 +61,11 @@ narrative block.
    - **Project-specific gates** — checks **additive to** the review gate (cross-cutting safety,
      regression/holdout adoption, contract lockstep). Apply them before treating a slice as done.
    - **Integration / merge policy** — honor the project's recorded policy.
+   - **Orientation entrypoint & queue location** — conventions may redirect *where* to orient and
+     *what* the queue is (e.g. a milestone handoff at a non-default path like
+     `planning/<milestone>/SESSION-HANDOFF.md`, with per-item state nested deeper than the default
+     `planning/*/session-state.md` glob in step 1). When conventions specify an orientation method,
+     follow it over the default scan below.
    Absent → use the defaults in this skill as-is.
 1. **Scan** `planning/*/session-state.md` frontmatter (the schema in `@workflow`). Find the
    active slice:
