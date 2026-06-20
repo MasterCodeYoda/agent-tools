@@ -103,7 +103,7 @@ the same artifact-driven classification `/swarm` uses — then route:
 | Idea still fuzzy, direction unchosen | `/workflow:brainstorm` |
 | Direction chosen, requirements ambiguous or have TBDs | `/workflow:refine` |
 | Requirements clear, no implementation plan | `/workflow:plan` |
-| Plan approved, work not started | `/workflow:execute` |
+| Plan approved, work not started **or in progress** | `/workflow:execute` (resume where the plan left off) |
 | Code exists, not reviewed | `/workflow:review` (or `/code-review`) — fix every finding |
 | Reviewed clean, not integrated | Finish the branch (see `@superpowers:finishing-a-development-branch`) |
 | Integrated / merged | `/workflow:compound`, then update the handoff |
