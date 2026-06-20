@@ -13,6 +13,7 @@ This is the parent skill for the `workflow` family. It contains high-level philo
 | Command | Purpose |
 |---------|---------|
 | `/workflow:setup` | Initialize/maintain the `planning/` docs and collaboratively define project-local conventions (tracks, gates, integration policy) |
+| `/workflow:prune` | Sweep `planning/` for fully-completed work, verify against git + PM, and purge confirmed-complete dirs/meta files on approval |
 | `/workflow:brainstorm` | Explore a fuzzy idea into a framed concept ready for refinement |
 | `/workflow:refine` | Discover and refine requirements through guided conversation |
 | `/workflow:plan` | Create detailed implementation plans from requirements |
@@ -197,6 +198,17 @@ the dated status churns below it. Run `/workflow:setup` to create or refresh all
 **Boundary**: `planning/`-scoped and swarm-independent — never touches `.agent-tools/`. Complementary to `/swarm:init` (which owns the swarm charter).
 
 **When to use**: Onboarding a project to `/workflow`, or whenever the project's tracks/gates/policy change
+
+### /workflow:prune
+**Purpose**: Reclaim `planning/` by purging fully-completed work — the corollary to `/workflow:setup`
+
+**Behavior**: Conservative and confirmation-gated. Loads `conventions.md` to learn the project's status vocabulary, PM mode, and which files are **live orchestration** (never prune targets). Enumerates work-item dirs + loose `planning*` meta files, then verifies completion against **multiple signals** — terminal status, the referenced merge commit present on main, the PM issue Closed/Done (PM mode), not named as active/next in the handoff, and durable knowledge already migrated. Only **CONFIRMED-COMPLETE** items are proposed; anything done-but-unmigrated is flagged for `/workflow:compound` first. Presents a per-item evidence summary, requires explicit approval, then `git rm`s the approved items (recoverable via history).
+
+**Outputs**: A removal summary; the approved deletions staged (committed only if the user asks).
+
+**Protects**: The handoff (`session-state.md` / `SESSION-HANDOFF.md`), `conventions.md`, the queue (`work-streams.md`), track process docs, and referenced archives — never proposed for deletion.
+
+**When to use**: Periodically as completed work accumulates, or at a milestone close (after durable knowledge is migrated to ADRs / Codex / runbooks / memory)
 
 ### /workflow:refine
 **Purpose**: Discover and refine requirements through conversation
