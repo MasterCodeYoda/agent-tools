@@ -87,6 +87,7 @@ Skills are context-aware reference material that Claude loads on demand via `@sk
 | **product** | Parent for the product family — positioning frameworks, competitive research, messaging, go-to-market patterns, briefs, and audits |
 | **qa** | Parent for the QA family — NL spec authoring for Playwright Test Agents, visual inspection tools, discovery; drift detection via `/workflow:audit` |
 | **skills** | Meta-skill (project-scoped only) for importing skills from other agents and iteratively evolving the canonical corpus |
+| **personify** | Project-specific agent personality, voice guidance, and communication facts stored in `.agent-tools/personify.md`. Invocable as `/personify` for interactive management |
 | **swarm-test** | (project-scoped) Drives and analyzes `/swarm` test-harness runs (repo-development tool) |
 | **clean-architecture** | Language-agnostic Clean Architecture with the Dependency Rule, layer patterns, and per-language guides (Python, TypeScript, C#, Rust) |
 | **code-patterns** | Language-specific best practices — type safety, error handling, testing idioms, and framework conventions |
@@ -144,6 +145,12 @@ Commands are invoked with `/command-name` (or the hyphenated equivalents for sub
 
 Drift detection between specs, generated tests, and app behavior is available via `/workflow:audit` (qa domain). A dedicated `/qa:audit` leaf is planned but not yet implemented as a standalone command.
 
+#### Personify Commands
+
+| Command | Purpose |
+|---------|---------|
+| `/personify` | Initialize or edit the project agent personality/voice profile (interactive) |
+
 #### Git Commands
 
 | Command | Purpose |
@@ -164,6 +171,7 @@ agent-tools/
 │   ├── product/                     # + position/, brief/, audit/
 │   ├── qa/                          # + setup/, discover/, tools/, templates/, references/
 │   ├── skills/                      # Meta-skill (import + evolve) — publish-target: project
+│   ├── personify/                   # Agent personality, voice, and comms facts skill
 │   ├── clean-architecture/
 │   ├── code-patterns/
 │   ├── test-strategy/
@@ -198,6 +206,7 @@ agent-tools meta-artifacts:
 │   │   ├── project.md          # what the project is
 │   │   ├── engineering.md      # how we build
 │   │   └── workflow.md         # how we move
+│   ├── personify.md            # agent personality, voice guidance, interpersonal facts (single file)
 │   ├── swarm/
 │   │   ├── config.yml          # orchestrator preferences (committed)
 │   │   ├── roles/              # role templates, editable per project (committed)
