@@ -87,7 +87,7 @@ Skills are context-aware reference material that Claude loads on demand via `@sk
 | **product** | Parent for the product family — positioning frameworks, competitive research, messaging, go-to-market patterns, briefs, and audits |
 | **qa** | Parent for the QA family — NL spec authoring for Playwright Test Agents, visual inspection tools, discovery; drift detection via `/workflow:audit` |
 | **skills** | Meta-skill (project-scoped only) for importing skills from other agents and iteratively evolving the canonical corpus |
-| **personify** | Project-specific agent personality, voice guidance, and communication facts stored in `.agent-tools/personify.md`. Invocable as `/personify` for interactive management |
+| **personify** | Project-specific agent personality, voice guidance, and communication facts stored in bounded `.agent-tools/personify.md` (token limits + proactive maintenance). Invocable as `/personify` for interactive management |
 | **swarm-test** | (project-scoped) Drives and analyzes `/swarm` test-harness runs (repo-development tool) |
 | **clean-architecture** | Language-agnostic Clean Architecture with the Dependency Rule, layer patterns, and per-language guides (Python, TypeScript, C#, Rust) |
 | **code-patterns** | Language-specific best practices — type safety, error handling, testing idioms, and framework conventions |
@@ -149,7 +149,7 @@ Drift detection between specs, generated tests, and app behavior is available vi
 
 | Command | Purpose |
 |---------|---------|
-| `/personify` | Initialize or edit the project agent personality/voice profile (interactive) |
+| `/personify` | Initialize or review/edit + maintain (with token limits and cleanup guidance) the project agent personality/voice profile (interactive) |
 
 #### Git Commands
 
@@ -206,7 +206,7 @@ agent-tools meta-artifacts:
 │   │   ├── project.md          # what the project is
 │   │   ├── engineering.md      # how we build
 │   │   └── workflow.md         # how we move
-│   ├── personify.md            # agent personality, voice guidance, interpersonal facts (single file)
+│   ├── personify.md            # agent personality, voice guidance, interpersonal facts (single bounded file with token limits)
 │   ├── swarm/
 │   │   ├── config.yml          # orchestrator preferences (committed)
 │   │   ├── roles/              # role templates, editable per project (committed)

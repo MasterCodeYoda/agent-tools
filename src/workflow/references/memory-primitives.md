@@ -81,6 +81,45 @@ Factory strongly distinguishes between **Memory** (descriptive records of decisi
 
 <!-- /agent:include factory -->
 
+### Personify Profile (cross-cutting, from agent-tools skills)
+
+The `personify` skill provides a specialized, narrow-scope durable profile for **agent personality, voice, and interpersonal communication facts only**.
+
+- Location: `.agent-tools/personify.md` (single file; travels with the project or lives in user home for personal)
+- Loading: Explicitly referenced from `AGENTS.md` (after any charter block) so agents load it automatically:
+  ```markdown
+  ## Agent Personify Profile
+
+  This project uses a personify profile for consistent agent personality, voice, and interpersonal style.
+
+  @.agent-tools/personify.md
+  ```
+- Scope (strict): Only personality traits & behaviors, speaking/writing voice guidance, and persistent interpersonal facts. **No technical decisions, code patterns, architecture, or project history.**
+- Bounded with token limits (enforced via the `/personify` skill):
+  - Warn at 800 tokens
+  - Stronger warning at 1,000 tokens
+  - Forced maintenance at 1,200 tokens
+- On every `/personify` run after init: displays the full current content + live token usage, proposes specific cleanups/consolidations (merges, prunes, rephrasings), and guides the user through the process collaboratively (agent suggests; user directs priorities and approvals).
+- Format example (with explanatory header not required in live use):
+  ```markdown
+  # Agent Personify Profile
+
+  > Size: 720 / 1,200 tokens (60%) | Last maintained: 2026-06-23
+
+  ## Personality & Behaviors
+  ...
+
+  ## Voice Guidance (speaking and writing)
+  ...
+
+  ## Persistent Facts
+  ...
+  ```
+- Maintenance is built-in: the skill surfaces bloat signals and walks through review. Prefer this over letting the file grow.
+- Distinction from other memory: This is **not** general project memory or rules (use charter/AGENTS.md, memories.md, etc.). It is narrowly for how the *agent* should present itself and communicate with humans.
+
+<!-- /agent:include personify -->
+
 ---
 
 ## Concrete Primitives
@@ -317,7 +356,7 @@ These patterns are intended to be useful regardless of which agent you use.
 
 Use a deliberate memory maintenance workflow when:
 
-- Memory files or context are approaching practical limits (bloat, truncation, or degraded agent performance)
+- Memory files or context are approaching practical limits (bloat, truncation, or degraded agent performance) — including the personify profile approaching 800+ tokens
 - New contributors or team members are onboarding
 - The project has undergone significant changes that may have invalidated previous decisions or context
 - Before sharing memory/rules with a wider team or repository
@@ -341,6 +380,12 @@ For Grok, common triggers include Custom Instructions or `AGENTS.md` growing lar
 For Factory Droid, common triggers include `memories.md` files growing large, before onboarding new team members, after major refactors, or before sharing the project with others. Use skills or hooks for maintenance.
 
 <!-- /agent:include factory -->
+
+<!-- agent:include personify -->
+
+For the personify profile, common triggers include approaching the 800-token warning threshold, the agent drifting in voice/tone/consistency, or low-signal facts accumulating. Use `/personify` — it will display the current full memory + token usage and guide proactive cleanup/maintenance.
+
+<!-- /agent:include personify -->
 
 ---
 

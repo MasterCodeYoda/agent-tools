@@ -38,7 +38,7 @@ through to maintain if docs already exist).
 
 - **`/swarm:setup`** — complementary, not overlapping. `/workflow:setup` is **swarm-independent**
   and writes only under `planning/`; it may reference or contribute to `.agent-tools/` for other
-  durable agent configuration (e.g. personify). If you also use `/swarm`, run `/swarm:setup` for
+  durable agent configuration (e.g. bounded personify profile). If you also use `/swarm`, run `/swarm:setup` for
   the shared charter (`.agent-tools/charter/`). Different primary scopes, no collision.
 - **`/workflow:continue`** — the primary consumer of `planning/conventions.md`. It classifies the
   next slice into the right track, routes per the conventions, and applies the project gates.
