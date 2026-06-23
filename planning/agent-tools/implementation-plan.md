@@ -235,4 +235,3 @@ This epic produces several distinct, reusable artifacts (the skill definition, t
 1. User explicitly approves.
 2. Documents are saved and branch created.
 3. Proceed to `/workflow:execute ./planning/agent-tools/` (or `/workflow:execute --worktree` if desired for isolation).
-PLANEOF
