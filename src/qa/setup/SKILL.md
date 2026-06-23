@@ -363,7 +363,7 @@ Write a `README.md` in the Sentinel project root as a practical quick-reference 
 8. **NL Spec Format** — Brief description with a frontmatter example, point to `specs/` for full examples
 9. **Common Workflows** — Adding a new test, investigating a failure, converting a fixme
 10. **Troubleshooting** — Common issues: overlay blocking, infrastructure port conflicts, stale bridge state
-11. **Sentinel Skills** — Table of `/qa:setup`, `/qa:discover`, `/qa:audit`
+11. **Sentinel Skills** — Table of `/qa:setup`, `/qa:discover` (drift via `/workflow:audit`)
 
 Tailor the content to the project — use actual port numbers, actual directory paths, and actual fixture names from the generated config. If bridge partitions were not configured, omit the partitions table and simplify to a single bridge instance.
 
@@ -388,7 +388,7 @@ This project uses Sentinel for NL spec-driven QA testing with Playwright Test Ag
 
 - `/qa:setup` — Initialize Sentinel (already done)
 - `/qa:discover` — Scan app and author NL specs
-- `/qa:audit` — Detect drift between NL specs, generated tests, and app behavior
+- Drift detection via `/workflow:audit` (qa domain)
 
 ### Running Tests
 
@@ -427,7 +427,7 @@ README.md       <- quick-reference guide
 1. **Discover features** — Run `/qa:discover` to create NL specs
 2. **Generate tests** — Use Playwright Planner/Generator to convert NL specs to .spec.ts
 3. **Run tests** — `npx playwright test` to execute generated tests
-4. **Audit drift** — Run `/qa:audit` to check spec-test-app alignment
+4. **Audit drift** — Run `/workflow:audit` (qa domain) to check spec-test-app alignment (planned dedicated `/qa:audit`)
 ```
 
 Ask the user: "Would you like to run `/qa:discover` now to scan your application and generate initial NL specs?"

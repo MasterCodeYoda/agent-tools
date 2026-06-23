@@ -121,8 +121,7 @@ Initialize Sentinel in a project. Creates directory structure, config file, Play
 ### `/qa:discover`
 Author NL specs by scanning the app, importing existing docs, or guided interactive conversation. Outputs structured markdown NL specs ready for Playwright's Planner.
 
-### `/qa:audit`
-Detect drift between NL specs, generated `.spec.ts` tests, and app behavior. Reports uncovered specs, orphaned tests, and behavioral regressions.
+**Drift detection** (specs vs. generated tests vs. app behavior) is performed by `/workflow:audit` (qa domain). A dedicated `/qa:audit` command is referenced in some docs but is not yet implemented as a standalone leaf skill.
 
 ## Related Skills
 

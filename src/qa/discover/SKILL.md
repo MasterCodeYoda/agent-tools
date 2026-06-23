@@ -216,7 +216,7 @@ NL specs generated in specs/. Next steps:
 2. Run Playwright Planner — the Planner reads your NL specs and creates a test plan
 3. Run Playwright Generator — converts the plan into .spec.ts files in tests/
 4. Run tests — `npx playwright test` to execute
-5. Audit drift — `/qa:audit` to keep specs and tests aligned
+5. Audit drift — `/workflow:audit` (qa domain) to keep specs and tests aligned (planned dedicated `/qa:audit`)
 ```
 
 ---
@@ -352,7 +352,7 @@ When in doubt, ask the user rather than guess. A spec based on real knowledge is
 
 Discover depends on `sentinel.config.yaml` produced by setup. If config is missing, direct user to run `/qa:setup` first. Config provides `base_url`, `specs.nl_dir`, and auth settings.
 
-### With /qa:audit
+### With /workflow:audit (qa domain) and planned `/qa:audit`
 
 Discover produces NL specs. Audit evaluates them for drift against the app. When audit finds gaps, it recommends discover to author new specs.
 

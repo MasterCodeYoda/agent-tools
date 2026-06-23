@@ -114,9 +114,9 @@ When run via `--focus qa`:
 
 If spec coverage is low, recommend running `/qa:discover` to author NL specs for uncovered flows.
 
-### With /qa:audit
+### With QA drift detection
 
-The qa:audit command performs live drift detection by actually running tests. This domain performs static drift analysis by reading specs and app code. They complement — static analysis catches obvious mismatches, live execution catches behavioral regressions.
+`/workflow:audit` (this domain) performs static drift analysis by reading specs and app code. Live drift detection (by actually running tests) is referenced elsewhere as `/qa:audit` (or planned as a dedicated command). They complement each other.
 
 ### With @test-strategy
 

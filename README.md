@@ -17,7 +17,7 @@ cd ~/Source/agent-tools
 1. Publishes the canonical skills from `src/` into `dist/<agent>/skills/` (resolving any agent-specific markup).
 2. Installs the appropriate skills into your environment:
    - Most skills go into your user profile (`~/.claude/skills/`, `~/.grok/skills/`, `~/.factory/skills/`, `~/.codex/skills/`).
-   - Project-scoped skills (currently just the `skills` meta-skill) go into the local project directory (`.claude/skills/`, `.grok/skills/`, `.factory/skills/`).
+   - Project-scoped skills (the `skills` meta-skill and `swarm-test`) go into the local project directory (`.claude/skills/`, `.grok/skills/`, `.factory/skills/`).
 
 | Target                  | Behavior                                      |
 |-------------------------|-----------------------------------------------|
@@ -37,7 +37,7 @@ The system is built around a clean separation:
 - `tools/publish-skills.sh` — A thin, mechanical publisher (pure bash + portable awk). It walks `src/`, resolves the `agent:include` / `agent:exclude` markup for each target agent, strips all HTML comments, and writes clean trees to `dist/<agent>/skills/`. For every agent it also emits top-level hyphenated siblings (e.g. `git-commit/`) for any sub-skill whose `name:` frontmatter contains a colon, so both family overviews and direct sub-commands appear in slash menus. (Grok's loader does not yet promote invocable sub-skills as first-class top-level commands, so these siblings are currently inert there — but they are published uniformly so they "just work" the moment that limitation is fixed upstream.)
 - `setup.sh` — Runs the publisher on every invocation, then installs skills from `dist/<agent>/skills/` into the right locations based on each skill’s `publish-target` frontmatter:
   - `publish-target: user-profile` (default) → installed (symlinked) into your global `~/.claude/skills/`, `~/.grok/skills/`, `~/.factory/skills/`, or `~/.codex/skills/`.
-  - `publish-target: project` → installed only into the local project directory (`.claude/skills/`, `.grok/skills/`, `.factory/skills/`). Currently only the `skills` meta-skill group uses this.
+  - `publish-target: project` → installed only into the local project directory (`.claude/skills/`, `.grok/skills/`, `.factory/skills/`). Currently used by the `skills` meta-skill and `swarm-test`.
   - Every installed skill receives a `.agent-tools` marker file. On subsequent runs, `setup.sh` automatically prunes any previously-managed skills that no longer exist in the current published set (safe cleanup after renames, refactors, or removals without touching third-party skills).
 
 This design keeps the canonical corpus maintainable while letting each agent receive the cleanest possible version of the skills.
@@ -81,12 +81,13 @@ Skills are context-aware reference material that Claude loads on demand via `@sk
 
 | Skill | Purpose |
 |-------|---------|
-| **workflow** | Parent for the workflow family — decomposition modes (vertical-slice + deliverable-partition), session continuity, P1/P2/P3 prioritization, knowledge compounding, and commands (`:plan`, `:execute`, `:review`, `:audit`, `:compound`, `:refine`) |
-| **swarm** | Parent for the swarm family — backlog-scale orchestration on top of `/workflow`. `/swarm:init` authors a project charter + bootstraps the `.agent-tools/` umbrella; `/swarm <goal>` runs a host-session orchestrator that drives backlog items through plan → implement → review → local-merge via role-specialized sub-agents in per-item worktrees; `/swarm:continue` resumes a paused run |
+| **workflow** | Parent for the workflow family — decomposition modes (vertical-slice + deliverable-partition), session continuity, P1/P2/P3 prioritization, knowledge compounding, and commands (`:setup`, `:prune`, `:brainstorm`, `:refine`, `:plan`, `:execute`, `:review`, `:audit`, `:compound`, `:continue`) |
+| **swarm** | Parent for the swarm family — backlog-scale orchestration on top of `/workflow`. `/swarm:init` authors a project charter + bootstraps the `.agent-tools/` umbrella; `/swarm <goal>` runs a host-session orchestrator that drives backlog items through refine (host-side) → plan → implement → review → local-merge via role-specialized sub-agents in per-item worktrees; `/swarm:continue` resumes a paused run |
 | **git** | Family of safe, conventional git skills — commits, push/PR flows, and worktree-based parallel development (includes `/git` overview + sub-commands reachable via the parent or exact name) |
 | **product** | Parent for the product family — positioning frameworks, competitive research, messaging, go-to-market patterns, briefs, and audits |
-| **qa** | Parent for the QA family — NL spec authoring for Playwright Test Agents, visual inspection tools, discovery, and coverage auditing |
+| **qa** | Parent for the QA family — NL spec authoring for Playwright Test Agents, visual inspection tools, discovery; drift detection via `/workflow:audit` |
 | **skills** | Meta-skill (project-scoped only) for importing skills from other agents and iteratively evolving the canonical corpus |
+| **swarm-test** | (project-scoped) Drives and analyzes `/swarm` test-harness runs (repo-development tool) |
 | **clean-architecture** | Language-agnostic Clean Architecture with the Dependency Rule, layer patterns, and per-language guides (Python, TypeScript, C#, Rust) |
 | **code-patterns** | Language-specific best practices — type safety, error handling, testing idioms, and framework conventions |
 | **test-strategy** | Strategy selection (TDD, spec-first, property-based, contract, characterization), Red-Green-Refactor, SCRAP quality scoring, and AI-specific anti-patterns |
@@ -101,19 +102,23 @@ Commands are invoked with `/command-name` (or the hyphenated equivalents for sub
 
 | Command | Purpose |
 |---------|---------|
+| `/workflow:setup` | Initialize/maintain `planning/` docs and define project-local conventions (tracks, gates, policy) |
+| `/workflow:prune` | Sweep `planning/` for completed work, verify against git + PM, and purge on approval |
+| `/workflow:brainstorm` | Explore a fuzzy idea into a framed concept ready for refinement |
 | `/workflow:refine` | Discover and refine requirements through guided conversation |
 | `/workflow:plan` | Create implementation plans from requirements with approval gates |
 | `/workflow:execute` | Session-based work execution with progress tracking |
 | `/workflow:review` | Code review for PRs, git ranges, files, or uncommitted changes |
-| `/workflow:compound` | Capture knowledge from solved problems + maintain memory quality |
 | `/workflow:audit` | Unified project audit — 7 domains (code, tests, API, frontend, docs, repo, QA) with cross-domain deduplication |
+| `/workflow:compound` | Capture knowledge from solved problems + maintain memory quality |
+| `/workflow:continue` | Resume the next slice — orient from `planning/`, drive one slice through the full loop |
 
 #### Swarm Commands
 
 | Command | Purpose |
 |---------|---------|
 | `/swarm` | Summarize a project's swarm state (active run, item stages, or whether it's initialized) |
-| `/swarm <goal>` | Run the orchestrator on a goal (milestone, issue list, or backlog file) — classifies items, dispatches role-specialized sub-agents in parallel waves, merges approved work locally with test gates |
+| `/swarm <goal>` | Run the orchestrator on a goal (milestone, issue list, or backlog file) — classifies items, drives through refine (host) → plan → implement → review → local-merge via role-specialized sub-agents in parallel waves, merges with test gates |
 | `/swarm:init` | Author the project charter and bootstrap the `.agent-tools/` umbrella (idempotent, evidence-grounded) |
 | `/swarm:continue` | Resume the most recent paused run, reconciling saved state against disk + PM ground truth |
 
@@ -136,7 +141,8 @@ Commands are invoked with `/command-name` (or the hyphenated equivalents for sub
 |---------|---------|
 | `/qa:setup` | Initialize NL spec-driven QA testing with Playwright Test Agents |
 | `/qa:discover` | Scan app, import docs, or guided conversation to author NL test specs |
-| `/qa:audit` | Detect drift between NL specs, generated tests, and app behavior |
+
+Drift detection between specs, generated tests, and app behavior is available via `/workflow:audit` (qa domain). A dedicated `/qa:audit` leaf is planned but not yet implemented as a standalone command.
 
 #### Git Commands
 
@@ -153,7 +159,7 @@ Commands are invoked with `/command-name` (or the hyphenated equivalents for sub
 ```
 agent-tools/
 ├── src/                             # Canonical source of truth (agent-agnostic + embedded markup)
-│   ├── workflow/                    # + planning/, execution/, audit/, review/, compound/, refine/, references/
+│   ├── workflow/                    # + setup/, prune/, brainstorm/, planning/, execution/, review/, audit/, compound/, continue/, references/
 │   ├── git/                         # + commit/, worktree-create/, ... (family overview + subs)
 │   ├── product/                     # + position/, brief/, audit/
 │   ├── qa/                          # + setup/, discover/, tools/, templates/, references/
@@ -167,7 +173,8 @@ agent-tools/
 ├── dist/                            # Generated per-agent trees (gitignored)
 │   ├── claude/skills/               # family/ + flattened command siblings (e.g. git-commit/)
 │   ├── grok/skills/                 # family/ + flattened command siblings (inert until Grok's loader supports them)
-│   └── factory/skills/              # family/ + flattened command siblings
+│   ├── factory/skills/              # family/ + flattened command siblings
+│   └── codex/skills/                # family/ + flattened command siblings
 ├── tools/
 │   └── publish-skills.sh            # Mechanical publisher (bash + awk): markup resolution + uniform flattening (all agents)
 ├── setup.sh                         # Runs publisher + installs (user profile vs project) + prunes stale
@@ -186,7 +193,11 @@ agent-tools meta-artifacts:
 ```
 <your-project>/
 ├── .agent-tools/
-│   ├── charter/                # project charter (charter/project/engineering/workflow.md)
+│   ├── charter/
+│   │   ├── charter.md          # entry + precedence + file index
+│   │   ├── project.md          # what the project is
+│   │   ├── engineering.md      # how we build
+│   │   └── workflow.md         # how we move
 │   ├── swarm/
 │   │   ├── config.yml          # orchestrator preferences (committed)
 │   │   ├── roles/              # role templates, editable per project (committed)
