@@ -49,7 +49,7 @@ output:
 """
 
 UMBRELLA_GITIGNORE = """\
-# Managed by /swarm:init. User edits respected on re-run.
+# Managed by Agent Tools. User edits respected on re-run.
 swarm/active-run
 swarm/sessions/
 """

@@ -259,9 +259,9 @@ Create or update `.agent-tools/.gitignore` with the **add-don't-remove** policy 
 entries; never delete user-added ones):
 
 ```
-# Managed by /swarm:init. User edits respected on re-run.
+# Managed by Agent Tools. User edits respected on re-run.
 
-# Swarm transient state (per-run; not project source)
+# Swarm transient state, managed by /swarm:init (per-run; not project source)
 swarm/active-run
 swarm/sessions/
 ```
