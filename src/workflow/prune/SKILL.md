@@ -32,9 +32,7 @@ deletion.
 
 ## Relationship to other skills
 
-- **`/workflow:setup`** — the inverse. Setup authors `planning/conventions.md` + the handoff
-  scaffold; prune reads the same conventions to know each project's status vocabulary, PM
-  mode, and which files are **live orchestration** (permanent ones like conventions.md/.gitkeep/.gitignore never pruned; queue/work-streams.md, handoff, and session-state are pruned once complete).
+- **`/workflow:setup`** — the inverse. Setup ensures hygiene and authors `planning/conventions.md` (only when non-default) + optional top-level handoff; prune reads conventions (if present) to know status vocabulary / PM mode / structure. Permanent keepers when present: conventions.md + .gitkeep + .gitignore. Queue/handoff/session-state files are pruned once their work is complete.
 - **`/workflow:compound`** — capture durable knowledge **before** purging. Prune checks that a
   completed item's hard-won insight is already migrated (compound doc / ADR / runbook / memory) and
   **flags** any that isn't, rather than silently deleting the only record.

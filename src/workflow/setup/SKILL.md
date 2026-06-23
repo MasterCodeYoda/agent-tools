@@ -10,16 +10,20 @@ user-invocable: true
 `/workflow:setup` is the **idempotent initializer and maintainer** for a project's `/workflow`
 scaffolding. Run it once to bootstrap, and any time afterward to refresh. It does two things:
 
-1. **Ensures the `planning/` docs** the workflow family depends on exist (the handoff scaffold
-   with a durable orientation block; the conventions doc). It also enforces git hygiene: `.gitkeep`
-   and directory-local `.gitignore` in `planning/` and each work-item subdir (so transients are
-   ignored by default; only `conventions.md` and structure markers are explicitly allowed).
-2. **Collaborates with you** to capture **project-local conventions** the generic `/workflow:*`
-   skills can't infer — additional work tracks, project-specific gates, and integration/merge
-   policy — and writes them to `planning/conventions.md`, which every phase honors.
+1. **Ensures `planning/` git hygiene** (`.gitkeep` + directory-local `.gitignore` in `planning/`
+   and work-item subdirs) so the area stays low-churn. It creates `conventions.md` *only when*
+   the project has actual custom conventions (extra tracks, gates, or non-default policy). It
+   creates a top-level `session-state.md` *only when* there is an active cross-project handoff
+   or open slice to track at the root. Per-item state lives under `planning/<item>/` and is
+   created by plan/execute when work begins.
+2. **Collaborates with you** to capture **project-local conventions** (only when they differ
+   from the built-in defaults) — additional work tracks, project-specific gates, and integration/merge
+   policy. When real content exists it writes `planning/conventions.md`; otherwise phases simply use
+   the documented defaults.
 
-It is **non-destructive**: it never clobbers existing content. In maintain mode it diffs detected
-reality against what's recorded and offers targeted updates.
+It is **non-destructive** and **minimalist**: it never creates empty or default-only scaffolding.
+It never clobbers existing real content. In maintain mode it diffs detected reality against
+what's recorded (and removes default-only files if the user approves).
 
 ## User Input
 
@@ -47,8 +51,8 @@ through to maintain if docs already exist).
 Survey what already exists; **read before writing**:
 
 - `planning/` directory and any work-item subdirs (`planning/<project>/session-state.md`).
-- `planning/conventions.md` — present → maintain mode; absent → initialize.
-- `planning/session-state.md` (top-level handoff) and whether it has a durable orientation block.
+- `planning/conventions.md` — present → maintain (diff for drift). Absent or only-defaults → no file (defaults are implicit).
+- Top-level `planning/session-state.md` — present with live pointer → maintain. Otherwise do not create/maintain one (per-item `planning/<item>/session-state.md` is the normal location; top-level is only a light optional pointer for cross-slice coordination).
 - `AGENTS.md` / `CLAUDE.md` / `CONTRIBUTING.md` and any PM/MCP signals — to pre-fill defaults and
   avoid re-asking what the project already states.
 
@@ -77,9 +81,17 @@ re-asking. Capture, into `planning/conventions.md`:
   push policy. Default and recommended: **local integration only; pushing and PRs are
   user-initiated** (never autonomous).
 
-### 3. Write `planning/conventions.md`
+### 3. Write `planning/conventions.md` (only when it has real content)
 
-Create or update it. Suggested shape (adapt to the project; omit empty sections):
+Create (or update) it **only if** the project has non-default conventions:
+- Custom requirements source (e.g. `pm (linear)`)
+- One or more additional work tracks that override the default phase table
+- Project-specific gates beyond the standard review gate
+- Non-default integration / merge policy
+
+If everything is default (file mode + the standard feature track + standard local-only policy), **do not create** the file. All `/workflow:*` phases already assume the defaults when `conventions.md` is absent.
+
+When content *does* exist, use this shape (omit empty sections):
 
 ```markdown
 # Project Workflow Conventions
@@ -116,6 +128,7 @@ For the top-level `planning/`:
 *
 !.gitkeep
 !conventions.md
+!session-state.md
 ```
 
 For each work-item subdirectory (`planning/<item>/`):
@@ -126,24 +139,27 @@ For each work-item subdirectory (`planning/<item>/`):
 
 These rules are **directory-local** inside `planning/.gitignore` and per-item `.gitignore` (no planning/ exceptions are placed in the project root `.gitignore`).
 
-In initialize mode: create `planning/` (with `.gitkeep` + `.gitignore`), the conventions file, and the handoff.
+In initialize mode: ensure `planning/` hygiene (`.gitkeep` + `.gitignore`). Create `conventions.md` or a top-level `session-state.md` **only when there is actual content to record** (see rules above). Per-item state and handoffs are created later by the phases that need them.
 
-### 4. Ensure the handoff scaffold + durable orientation block
+### 4. Handoff scaffold (top-level `session-state.md`) — optional
 
-If `planning/session-state.md` is absent, scaffold a minimal one. If present but missing a durable
-orientation block, **insert one near the top** (above the volatile dated status). The orientation
-block is the stable "read these to orient" pointer list — it survives across sessions while the
-status below it churns:
+A top-level `planning/session-state.md` is a **light optional pointer**, not a requirement.
+
+- Create or maintain it **only when** there is an active cross-project handoff, an open root-level slice, or a need to point at a non-default queue location.
+- Per-item state is created under `planning/<item>/session-state.md` by `/workflow:plan` and `/workflow:execute` when real work on a slice begins.
+- `/workflow:continue` already treats a top-level pointer as optional: "honor it — but do not require one. The scan of `planning/*/session-state.md` is the source of truth."
+
+If a top-level file exists but is empty or has no live status, remove it in maintain mode (or let the user prune it).
+
+When a top-level handoff *is* present and useful, include a durable orientation block near the top:
 
 ```markdown
 ## Project orientation  (durable — read these first)
-- `planning/conventions.md` — work tracks, project gates, integration policy.
-- <each track's process doc, e.g. `planning/discovery-loop.md`>
+- `planning/conventions.md` — work tracks, project gates, integration policy. (May be absent when only defaults apply.)
 - `AGENTS.md` / `CONTRIBUTING.md` — general collaboration rules and gates.
 ```
 
-Keep the handoff **light**: the durable block points at references; the dated status carries only
-current state. Compress/archive verbose history per `@workflow:continue`.
+Keep any handoff **light**. Compress history per `@workflow:continue`.
 
 ### 5. Maintain mode
 
@@ -152,14 +168,16 @@ When conventions already exist: show the current conventions, diff against detec
 Never silently overwrite the user's recorded intent — confirm each change.
 
 Also evaluate the planning/ structure:
-- Check for `planning/.gitkeep` and `planning/.gitignore` (with the canonical content above).
+- Check for `planning/.gitkeep` and `planning/.gitignore` (with the canonical content above, including `!session-state.md` at top level).
 - For every work-item subdirectory (detected via session-state.md, implementation-plan.md, etc.): check for `.gitkeep` and `.gitignore` (with `* \n !.gitkeep`).
 - If the root `.gitignore` has any planning/ lines, note them (they are not required; hygiene is directory-local).
-- If anything is missing or incorrect: propose creating or fixing the files (idempotent, non-destructive). This keeps the "everything not explicitly allowed is ignored" contract.
+- If `conventions.md` exists but contains only defaults (no extra tracks/gates/policy), offer to delete it.
+- If a top-level `session-state.md` exists but has no active content, offer to delete it.
+- If anything structural is missing or incorrect: propose creating or fixing (idempotent, non-destructive). This keeps the "everything not explicitly allowed is ignored" contract and avoids empty scaffolding.
 
 ## What `/workflow:setup` does not do
 
 - Does **not** plan, refine, or execute work — it sets up the scaffolding those phases use.
 - Does **not** author the swarm charter (that's `/swarm:setup`); it may interact with `.agent-tools/` for other durable config.
-- Does **not** invent conventions the project doesn't have — absent extra tracks/gates, the
-  conventions doc simply records the default feature track and the integration policy.
+- Does **not** invent conventions the project doesn't have. If only defaults apply, no `conventions.md` is created (phases fall back to built-in defaults).
+- Does **not** create empty top-level `session-state.md` scaffolding. Top-level handoff is created only for a live cross-project pointer; normal per-item state is created under `planning/<item>/` by plan/execute.

@@ -180,9 +180,9 @@ A project's `conventions.md` may declare:
 - **Integration / merge policy.** Local vs remote, merge style, banking/versioning, push policy
   (default: local-only; pushing and PRs are user-initiated).
 
-The top-level handoff (`planning/session-state.md`) carries a durable **Project orientation**
-pointer block listing these references, so a fresh session orients from a small, stable list while
-the dated status churns below it. Run `/workflow:setup` to create or refresh all of this.
+When present, the top-level handoff (`planning/session-state.md`) can carry a durable **Project orientation**
+pointer block. Per-item handoffs under `planning/<item>/` are the common case. Run `/workflow:setup`
+to set up hygiene and record any real custom conventions (it will not create empty/default-only files).
 
 ## Functional Areas & Commands
 
@@ -192,8 +192,8 @@ the dated status churns below it. Run `/workflow:setup` to create or refresh all
 **Behavior**: Idempotent and non-destructive. Surveys existing `planning/` state, then collaborates with the user to record — in `planning/conventions.md` — the requirements-source mode, any **additional work tracks** (e.g. a discovery loop that overrides the default phase table), **project-specific gates** (additive to the review gate), and the **integration/merge policy**. Also ensures the top-level handoff carries a durable *Project orientation* pointer block. Run anytime to refresh.
 
 **Outputs**:
-- `./planning/conventions.md` — project-local conventions honored by all phases
-- `./planning/session-state.md` — handoff scaffold with a durable orientation block (created if absent)
+- `./planning/conventions.md` — only when the project has non-default tracks, gates, or policy (absent = use built-in defaults)
+- Top-level `./planning/session-state.md` — only when a live cross-project handoff/pointer exists (optional; normal per-item state lives in `planning/<item>/session-state.md` and is created by plan/execute)
 
 **Boundary**: `planning/`-scoped for transient work and conventions; may reference `.agent-tools/` for other durable config. Complementary to `/swarm:setup` (which owns the swarm charter and umbrella bootstrap).
 
