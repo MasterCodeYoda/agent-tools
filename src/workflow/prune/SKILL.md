@@ -33,8 +33,8 @@ deletion.
 ## Relationship to other skills
 
 - **`/workflow:setup`** — the inverse. Setup authors `planning/conventions.md` + the handoff
-  scaffold; prune reads the same conventions to know each project's status vocabulary, queue, PM
-  mode, and which files are **live orchestration** (never prune targets).
+  scaffold; prune reads the same conventions to know each project's status vocabulary, PM
+  mode, and which files are **live orchestration** (permanent ones like conventions.md/.gitkeep/.gitignore never pruned; queue/work-streams.md, handoff, and session-state are pruned once complete).
 - **`/workflow:compound`** — capture durable knowledge **before** purging. Prune checks that a
   completed item's hard-won insight is already migrated (compound doc / ADR / runbook / memory) and
   **flags** any that isn't, rather than silently deleting the only record.
@@ -52,23 +52,26 @@ Read `planning/conventions.md` (if present) to learn:
 - The **orientation/queue + structure** (flat `planning/<item>/` vs milestone-nested
   `planning/<milestone>/<stream>/`).
 
-**Protect the live orchestration set — never prune targets:** the handoff
-(`session-state.md` / `SESSION-HANDOFF.md`), `conventions.md`, the queue (`work-streams.md`), any
-**track process doc** (e.g. `discovery-loop.md`), and history archives still referenced by the
-handoff. When in doubt about a meta file, protect it and surface it rather than proposing deletion.
+**Protect the live orchestration set — never prune targets:** `conventions.md`, the `.gitkeep` and `.gitignore` files (for directory structure), any **track process doc** (e.g. `discovery-loop.md`), and history archives still referenced by the handoff. 
+
+The queue (`work-streams.md`), handoff (`session-state.md` / `SESSION-HANDOFF.md`), and `session-state.md` files are protected *only while active or incomplete*. Once the associated (cross-project) work is classified as CONFIRMED-COMPLETE, they become eligible for purge (the only permanent keepers are the structural `.gitkeep`/`.gitignore` and `conventions.md` when present). When in doubt about a meta file, protect it and surface it rather than proposing deletion.
 
 ### 2. Enumerate candidates
 
-Collect prune **candidates** — never the protected set:
+Collect prune **candidates** — never the protected set (structural .gitkeep/.gitignore, conventions.md, track process docs, referenced archives):
 
 - **Work-item directories** (`planning/<item>/`, or `planning/<milestone>/<stream>/` for nested
-  layouts), and entire **completed-milestone** dirs when scoped to one.
+  layouts), and entire **completed-milestone** dirs when scoped to one. This includes the `session-state.md`, handoff, and queue (`work-streams.md`) files inside/associated once classified as complete.
 - **Loose `planning*` meta files** corresponding to completed work (a finished feature's design/spec
-  doc, an orphaned plan file, a superseded tracker).
+  doc, an orphaned plan file, a superseded tracker, or completed session-state/handoff/queue files).
 
 **Not everything under `planning/` is a prunable work item.** A candidate is a *work item* only if
-it carries work-tracking state — a `session-state.md`, a `pass-log.md`, a plan/requirements file. A
-subdirectory that holds **raw data / fixtures** (e.g. source PDFs, a golden set) or **shared tooling**
+it carries work-tracking state — a `session-state.md`, a `pass-log.md`, a plan/requirements file, 
+handoff files, or the queue (`work-streams.md`) once the (cross-project) work is complete. 
+
+The structural `.gitkeep` and `.gitignore` files, `conventions.md`, track process docs, and referenced archives are **never** candidates. The queue (`work-streams.md`), handoff, and session-state are cross-project or item orchestration artifacts and become candidates once complete.
+
+A subdirectory that holds **raw data / fixtures** (e.g. source PDFs, a golden set) or **shared tooling**
 (scripts used by several items) is **out of scope** — treat it as keep, and surface it as "not a work
 item" rather than proposing deletion. Also check **inter-candidate dependencies**: don't propose
 purging a directory that other (kept) items still depend on — e.g. shared discovery tooling consumed
@@ -117,7 +120,7 @@ PM status / handoff-referenced / knowledge-captured), and the recommendation. Ex
 - **Will purge** (CONFIRMED-COMPLETE) — the exact dirs/files.
 - **Migrate first** (NEEDS-MIGRATION) — what durable knowledge to capture before it's safe.
 - **Keeping** (ACTIVE / UNCERTAIN) — and why.
-- **Protected** — the live orchestration files, for transparency.
+- **Protected** — the permanent live orchestration files (conventions.md, .gitkeep, .gitignore, track process docs, referenced archives), for transparency. (Note: queue (`work-streams.md`), session-state.md, and handoff files are purged when their work is complete.)
 
 ### 5. Confirmation gate
 
@@ -138,8 +141,7 @@ or cancel. Never purge on implicit assent.
 
 - Does **not** delete the **active slice**, anything **in progress**, or anything the handoff names
   as **next**.
-- Does **not** delete **live orchestration** docs (handoff, `conventions.md`, `work-streams.md`,
-  track process docs, referenced archives).
+- Does **not** delete **permanent live orchestration** docs (`conventions.md`, `.gitkeep`, `.gitignore`, track process docs, referenced archives). The queue (`work-streams.md`), handoff (`session-state.md` / `SESSION-HANDOFF.md`), and `session-state.md` may be purged once their (cross-project) work is complete.
 - Does **not** purge without an explicit confirmation gate.
 - Does **not** delete an item with **unmigrated durable knowledge** — it flags it for
   `/workflow:compound` first.

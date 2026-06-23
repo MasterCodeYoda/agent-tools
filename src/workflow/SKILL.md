@@ -202,11 +202,11 @@ the dated status churns below it. Run `/workflow:setup` to create or refresh all
 ### /workflow:prune
 **Purpose**: Reclaim `planning/` by purging fully-completed work — the corollary to `/workflow:setup`
 
-**Behavior**: Conservative and confirmation-gated. Loads `conventions.md` to learn the project's status vocabulary, PM mode, and which files are **live orchestration** (never prune targets). Enumerates work-item dirs + loose `planning*` meta files, then verifies completion against **multiple signals** — terminal status, the referenced merge commit present on main, the PM issue Closed/Done (PM mode), not named as active/next in the handoff, and durable knowledge already migrated. Only **CONFIRMED-COMPLETE** items are proposed; anything done-but-unmigrated is flagged for `/workflow:compound` first. Presents a per-item evidence summary, requires explicit approval, then `git rm`s the approved items (recoverable via history).
+**Behavior**: Conservative and confirmation-gated. Loads `conventions.md` to learn the project's status vocabulary, PM mode, and which files are **live orchestration**. Enumerates work-item dirs + loose `planning*` meta files, then verifies completion against **multiple signals** — terminal status, the referenced merge commit present on main, the PM issue Closed/Done (PM mode), not named as active/next in the handoff, and durable knowledge already migrated. Only **CONFIRMED-COMPLETE** items are proposed; anything done-but-unmigrated is flagged for `/workflow:compound` first. Presents a per-item evidence summary, requires explicit approval, then `git rm`s the approved items (recoverable via history).
 
 **Outputs**: A removal summary; the approved deletions staged (committed only if the user asks).
 
-**Protects**: The handoff (`session-state.md` / `SESSION-HANDOFF.md`), `conventions.md`, the queue (`work-streams.md`), track process docs, and referenced archives — never proposed for deletion.
+**Protects**: Permanent structural files (`conventions.md`, `.gitkeep`, `.gitignore`), track process docs, and referenced archives — never proposed for deletion. The handoff (`session-state.md` / `SESSION-HANDOFF.md`), `session-state.md` files, and queue (`work-streams.md`) are protected only while active or incomplete; they are pruned once the associated work is classified CONFIRMED-COMPLETE (cross-project orchestration artifacts that eventually complete and remove, just like session-state).
 
 **When to use**: Periodically as completed work accumulates, or at a milestone close (after durable knowledge is migrated to ADRs / Codex / runbooks / memory)
 
