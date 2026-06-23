@@ -1,6 +1,6 @@
 ---
 name: swarm
-description: Backlog-scale orchestration on top of /workflow — drives PM items through refine → plan → implement → review → local-merge via role-specialized sub-agents dispatched in parallel waves, each item isolated in its own git worktree. Bare /swarm summarizes state; /swarm <goal> runs the orchestrator; /swarm:init bootstraps the charter; /swarm:continue resumes a paused run.
+description: Backlog-scale orchestration on top of /workflow — drives PM items through refine → plan → implement → review → local-merge via role-specialized sub-agents dispatched in parallel waves, each item isolated in its own git worktree. Bare /swarm summarizes state; /swarm <goal> runs the orchestrator; /swarm:setup sets up the charter and .agent-tools/ umbrella; /swarm:continue resumes a paused run.
 user-invocable: true
 argument-hint: "[no args for state summary | <goal> e.g. a milestone, issue list, or backlog file]"
 ---
@@ -23,7 +23,7 @@ git worktrees per item and (b) the host's native sub-agent dispatch. It stays re
 |---------|---------|
 | `/swarm` (no args) | Summarize swarm state — active run, item stages, or whether the project is initialized |
 | `/swarm <goal>` | Run the orchestrator on a goal (milestone, issue list, backlog file) |
-| `/swarm:init` | Author the project charter + bootstrap the `.agent-tools/` umbrella |
+| `/swarm:setup` | Author the project charter + setup the `.agent-tools/` umbrella |
 | `/swarm:continue` | Resume the most recent paused run, reconciling state against ground truth |
 
 ## Relationship to `/workflow`
@@ -34,7 +34,7 @@ git worktrees per item and (b) the host's native sub-agent dispatch. It stays re
 - **Refinement is host-side.** The orchestrator runs `/workflow:refine` itself, in the main
   session, conversationally with you — it is not a sub-agent role.
 - **Charter is shared ground truth.** Workers and the orchestrator read
-  `.agent-tools/charter/` (loaded via `AGENTS.md`). Run `/swarm:init` first if absent.
+  `.agent-tools/charter/` (loaded via `AGENTS.md`). Run `/swarm:setup` first if absent.
 
 ## Safety (non-negotiable)
 
@@ -73,16 +73,16 @@ $ARGUMENTS
    - **Absent** → check for charter (`.agent-tools/charter/charter.md`) and
      `.agent-tools/swarm/config.yml`. If present, report initialized + idle and suggest
      `/swarm <goal>`. If `sessions/` has past runs, list the last few by run-id.
-   - **Not initialized** (no charter) → summarize what's missing and offer to run `/swarm:init`.
+   - **Not initialized** (no charter) → summarize what's missing and offer to run `/swarm:setup`.
 2. Handle a malformed/orphaned `active-run` per `references/state-yml-schema.md` (surface and
    offer to clear).
 
 ### `<goal>` provided → Orchestrator
 
 **Precondition:** if `.agent-tools/charter/charter.md` is absent, stop: "No charter found.
-Run `/swarm:init` first." Also confirm `roles/` and `references/` exist under
-`.agent-tools/swarm/` (written by `/swarm:init`); if missing, direct the user to re-run
-`/swarm:init`.
+Run `/swarm:setup` first." Also confirm `roles/` and `references/` exist under
+`.agent-tools/swarm/` (written by `/swarm:setup`); if missing, direct the user to re-run
+`/swarm:setup`.
 
 Then run the orchestration loop:
 
@@ -160,7 +160,7 @@ Created when the run starts; **cleared on GOAL_COMPLETE**; **preserved on TERMIN
 
 ## Phase status
 
-- **Phase 1:** `/swarm` state summary + `/swarm:init`. ✓
+- **Phase 1:** `/swarm` state summary + `/swarm:setup`. ✓
 - **Phase 2 (this build):** `/swarm <goal>` orchestrator loop, `/swarm:continue`, six role
   templates, reference schemas, session logs, `active-run`. ✓
 - **Phase 3:** cross-CLI worker dispatch via shell-out (per-role CLI selection). Not yet.

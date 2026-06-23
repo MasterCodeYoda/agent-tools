@@ -11,7 +11,9 @@ user-invocable: true
 scaffolding. Run it once to bootstrap, and any time afterward to refresh. It does two things:
 
 1. **Ensures the `planning/` docs** the workflow family depends on exist (the handoff scaffold
-   with a durable orientation block; the conventions doc).
+   with a durable orientation block; the conventions doc). It also enforces git hygiene: `.gitkeep`
+   and directory-local `.gitignore` in `planning/` and each work-item subdir (so transients are
+   ignored by default; only `conventions.md` and structure markers are explicitly allowed).
 2. **Collaborates with you** to capture **project-local conventions** the generic `/workflow:*`
    skills can't infer — additional work tracks, project-specific gates, and integration/merge
    policy — and writes them to `planning/conventions.md`, which every phase honors.
@@ -30,10 +32,10 @@ through to maintain if docs already exist).
 
 ## Relationship to other skills
 
-- **`/swarm:init`** — complementary, not overlapping. `/workflow:setup` is **swarm-independent**
-  and writes only under `planning/`; it **never touches `.agent-tools/`**. If you also use
-  `/swarm`, run `/swarm:init` for the shared charter (`.agent-tools/charter/`). Different files,
-  no collision.
+- **`/swarm:setup`** — complementary, not overlapping. `/workflow:setup` is **swarm-independent**
+  and writes only under `planning/`; it may reference or contribute to `.agent-tools/` for other
+  durable agent configuration (e.g. personify). If you also use `/swarm`, run `/swarm:setup` for
+  the shared charter (`.agent-tools/charter/`). Different primary scopes, no collision.
 - **`/workflow:continue`** — the primary consumer of `planning/conventions.md`. It classifies the
   next slice into the right track, routes per the conventions, and applies the project gates.
 - **All `/workflow:*` phases** honor the project gates and integration policy recorded here.
@@ -102,6 +104,30 @@ brainstorm → refine → plan → execute → review → finish → compound  (
 <local-only / merge style / banking / push policy>
 ```
 
+### 3.5 Ensure planning/ git hygiene (directory-local)
+
+To keep `planning/` as a high-traffic but mostly transient area (reducing history churn), every planning directory must have:
+
+- A `.gitkeep` (to preserve empty directory structure in the repo).
+- A `.gitignore` that ignores everything by default, with explicit exceptions only for allowed files.
+
+For the top-level `planning/`:
+```gitignore
+*
+!.gitkeep
+!conventions.md
+```
+
+For each work-item subdirectory (`planning/<item>/`):
+```gitignore
+*
+!.gitkeep
+```
+
+These rules are **directory-local** inside `planning/.gitignore` and per-item `.gitignore` (no planning/ exceptions are placed in the project root `.gitignore`).
+
+In initialize mode: create `planning/` (with `.gitkeep` + `.gitignore`), the conventions file, and the handoff.
+
 ### 4. Ensure the handoff scaffold + durable orientation block
 
 If `planning/session-state.md` is absent, scaffold a minimal one. If present but missing a durable
@@ -125,9 +151,15 @@ When conventions already exist: show the current conventions, diff against detec
 (new work-item dirs, a PM tool now present, a track doc that moved), and offer **targeted** edits.
 Never silently overwrite the user's recorded intent — confirm each change.
 
+Also evaluate the planning/ structure:
+- Check for `planning/.gitkeep` and `planning/.gitignore` (with the canonical content above).
+- For every work-item subdirectory (detected via session-state.md, implementation-plan.md, etc.): check for `.gitkeep` and `.gitignore` (with `* \n !.gitkeep`).
+- If the root `.gitignore` has any planning/ lines, note them (they are not required; hygiene is directory-local).
+- If anything is missing or incorrect: propose creating or fixing the files (idempotent, non-destructive). This keeps the "everything not explicitly allowed is ignored" contract.
+
 ## What `/workflow:setup` does not do
 
 - Does **not** plan, refine, or execute work — it sets up the scaffolding those phases use.
-- Does **not** touch `.agent-tools/` or author a swarm charter — that's `/swarm:init`.
+- Does **not** author the swarm charter (that's `/swarm:setup`); it may interact with `.agent-tools/` for other durable config.
 - Does **not** invent conventions the project doesn't have — absent extra tracks/gates, the
   conventions doc simply records the default feature track and the integration policy.

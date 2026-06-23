@@ -1,16 +1,16 @@
 ---
-name: swarm:init
-description: Initialize (or re-initialize) a project for swarm + workflow — author the project charter from detected evidence, link it from AGENTS.md (with conditional CLAUDE.md/GEMINI.md symlinks), and write the .agent-tools/ umbrella with swarm config. Idempotent and never destructive.
+name: swarm:setup
+description: Setup (or re-setup) a project for swarm + workflow — author the project charter from detected evidence, link it from AGENTS.md (with conditional CLAUDE.md/GEMINI.md symlinks), and write the .agent-tools/ umbrella with swarm config. Idempotent and never destructive.
 user-invocable: true
-argument-hint: "[no args — interactive; runs re-init mode automatically if a charter already exists]"
+argument-hint: "[no args — interactive; runs re-setup mode automatically if a charter already exists]"
 ---
 
-# Initialize Swarm (`/swarm:init`)
+# Setup Swarm (`/swarm:setup`)
 
-`/swarm:init` is the single entry point for **charter authoring** and project
+`/swarm:setup` is the single entry point for **charter authoring** and project
 bootstrapping. It is interactive, **evidence-grounded** (it infers from the project before
 asking), and **idempotent** (re-running detects existing state and reconciles section by
-section). It is the only owner of charter authoring — there is no `/workflow:init`.
+section). It is the only owner of charter authoring — there is no `/workflow:setup` for the charter.
 
 What it produces:
 
@@ -37,7 +37,7 @@ What it produces:
   GEMINI.md → AGENTS.md  ← symlink if .gemini/ present AND user confirmed
 ```
 
-> **Note.** `/swarm:init` does **not** create `sessions/` or `active-run` — those are
+> **Note.** `/swarm:setup` does **not** create `sessions/` or `active-run` — those are
 > per-run transient state created by the orchestrator (`/swarm <goal>`) at runtime and are
 > gitignored.
 
@@ -57,15 +57,15 @@ What it produces:
 $ARGUMENTS
 ```
 
-`/swarm:init` is interactive and ignores positional arguments; any input is treated as
+`/swarm:setup` is interactive and ignores positional arguments; any input is treated as
 informal context for the dialogue.
 
-## Phase 0 — Mode Detection (fresh vs. re-init)
+## Phase 0 — Mode Detection (fresh vs. re-setup)
 
 Check whether `.agent-tools/charter/` already exists:
 
-- **Absent** → **fresh init**. Proceed through Phases 1–4.
-- **Present** → **re-init mode**. Jump to [Re-Init Flow](#re-init-flow) after running the
+- **Absent** → **fresh setup**. Proceed through Phases 1–4.
+- **Present** → **re-setup mode**. Jump to [Re-Setup Flow](#re-setup-flow) after running the
   detection phase (you still re-detect to compute drift).
 
 Before any writes in either mode, check `git status`. If there are uncommitted changes in
@@ -85,7 +85,7 @@ Scan the project to build a grounded picture **before** asking anything. Gather 
 | Formatter config (`.prettierrc`, `pyproject.toml [tool.black]`) | Style enforcement |
 | CI config (`.github/workflows/*`, `.gitlab-ci.yml`, `circle.yml`) | Release process, required gates |
 | Existing `AGENTS.md` / `CLAUDE.md` / `GEMINI.md` | Conventions already documented |
-| Existing `.agent-tools/charter/` | Triggers re-init mode (Phase 0) |
+| Existing `.agent-tools/charter/` | Triggers re-setup mode (Phase 0) |
 | Git remote (`git remote -v`) + recent commits (`git log --oneline -20`) | Deploy hints, commit-message style |
 | `README.md` (top of file) | Product context, audience |
 | `./planning/` directory | Active or past `/workflow` usage |
@@ -109,7 +109,7 @@ Principles (design §4.2):
 
 - **Infer from evidence wherever possible**; ask only when ambiguity is real.
 - **Pre-fill smart defaults**; the user confirms with Enter or edits.
-- **Target < 8 questions** for a typical fresh init.
+- **Target < 8 questions** for a typical fresh setup.
 
 Use `AskUserQuestion` when available; otherwise ask in small, related groups.
 
@@ -126,7 +126,7 @@ Write everything under the `.agent-tools/` umbrella plus the agent-memory link. 
 
 ### 4.1 Charter files
 
-Each file has stable headers (so re-init can diff section by section) and an
+Each file has stable headers (so re-setup can diff section by section) and an
 evidence-grounded body filled from detection + dialogue. Keep them **sparse** — the charter
 loads into every agent's context. Empty sections are explicit:
 `_No project-specific rules; standard practices apply._`
@@ -157,7 +157,7 @@ conflict-resolution only; most content is additive.
 - `workflow.md` — how we move (PM, branching, commits, merge, review, release, docs).
 
 ## Maintenance
-Authored by `/swarm:init`. Re-run `/swarm:init` to update; it reconciles section by section.
+Authored by `/swarm:setup`. Re-run `/swarm:setup` to update; it reconciles section by section.
 ```
 
 **`charter/project.md`** (~120 lines) — headers: `# Project: <name>`, `## Identity`,
@@ -248,7 +248,7 @@ reviewer.md          conflict-resolver.md   integration-fixer.md
 Source them from the installed `swarm` skill's `roles/` directory (the canonical set shipped
 with agent-tools). These files are **committed** and **editable per project**.
 
-**On re-init**, never silently overwrite a locally-edited role file. For each role file that
+**On re-setup**, never silently overwrite a locally-edited role file. For each role file that
 differs from the canonical version, present the diff and offer:
 `keep-local` / `replace-with-canonical` / `merge` / `show-diff` (§7.9). Only copy files that
 are missing or that the user chooses to replace.
@@ -261,7 +261,7 @@ entries; never delete user-added ones):
 ```
 # Managed by Agent Tools. User edits respected on re-run.
 
-# Swarm transient state, managed by /swarm:init (per-run; not project source)
+# Swarm transient state, managed by /swarm:setup (per-run; not project source)
 swarm/active-run
 swarm/sessions/
 ```
@@ -276,7 +276,7 @@ marker-bounded block. If `AGENTS.md` doesn't exist, create it with this block. I
 insert the block (typically near the top) or refresh the existing one in place — never
 duplicate it.
 
-The block is wrapped in two **HTML-comment markers** so re-init can find and refresh it
+The block is wrapped in two **HTML-comment markers** so re-setup can find and refresh it
 later. Emit each marker as a standard HTML comment (open with `<!` `--`, close with `--` `>`)
 whose inner content is exactly:
 
@@ -323,7 +323,7 @@ If a picky-named file already exists as a **regular file** (not a symlink), do n
 it — surface it and ask how to proceed (it may contain real content to fold into
 `AGENTS.md`).
 
-## Re-Init Flow
+## Re-Setup Flow
 
 Triggered when `.agent-tools/charter/` already exists (Phase 0). Idempotent and
 non-destructive:
@@ -348,7 +348,7 @@ non-destructive:
 ## Safety / Failure Modes
 
 - **Uncommitted changes before write** → warn + ask; never silently overwrite working tree.
-- **Markers missing or malformed** in `AGENTS.md` on re-init → stop and ask; never
+- **Markers missing or malformed** in `AGENTS.md` on re-setup → stop and ask; never
   speculatively rewrite an agent-memory file.
 - **Broken symlink** (doesn't resolve to `AGENTS.md`) → surface and ask.
 - **Locally-edited charter content** with unfamiliar structure → preserve; offer to refactor
@@ -359,9 +359,9 @@ non-destructive:
 
 Report what was written/changed:
 
-- charter files created or updated (with which sections changed in re-init);
+- charter files created or updated (with which sections changed in re-setup);
 - `.agent-tools/swarm/config.yml` written;
-- `.agent-tools/swarm/roles/` copied (and any locally-edited files preserved on re-init);
+- `.agent-tools/swarm/roles/` copied (and any locally-edited files preserved on re-setup);
 - `.agent-tools/.gitignore` created/updated;
 - `AGENTS.md` charter-link block inserted/refreshed;
 - which symlinks were created (and any skipped pending confirmation);

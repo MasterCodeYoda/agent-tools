@@ -106,7 +106,7 @@ Example application:
 ## Related Skills
 
 - **workflow** — Personify complements session continuity and conventions.
-- **swarm** — Use after `/swarm:init` to add communication preferences.
+- **swarm** — Use after `/swarm:setup` to add communication preferences.
 - **skills** — The personify skill itself can be evolved like other skills.
 
 ## References

@@ -82,7 +82,7 @@ Skills are context-aware reference material that Claude loads on demand via `@sk
 | Skill | Purpose |
 |-------|---------|
 | **workflow** | Parent for the workflow family — decomposition modes (vertical-slice + deliverable-partition), session continuity, P1/P2/P3 prioritization, knowledge compounding, and commands (`:setup`, `:prune`, `:brainstorm`, `:refine`, `:plan`, `:execute`, `:review`, `:audit`, `:compound`, `:continue`) |
-| **swarm** | Parent for the swarm family — backlog-scale orchestration on top of `/workflow`. `/swarm:init` authors a project charter + bootstraps the `.agent-tools/` umbrella; `/swarm <goal>` runs a host-session orchestrator that drives backlog items through refine (host-side) → plan → implement → review → local-merge via role-specialized sub-agents in per-item worktrees; `/swarm:continue` resumes a paused run |
+| **swarm** | Parent for the swarm family — backlog-scale orchestration on top of `/workflow`. `/swarm:setup` authors a project charter + sets up the `.agent-tools/` umbrella; `/swarm <goal>` runs a host-session orchestrator that drives backlog items through refine (host-side) → plan → implement → review → local-merge via role-specialized sub-agents in per-item worktrees; `/swarm:continue` resumes a paused run |
 | **git** | Family of safe, conventional git skills — commits, push/PR flows, and worktree-based parallel development (includes `/git` overview + sub-commands reachable via the parent or exact name) |
 | **product** | Parent for the product family — positioning frameworks, competitive research, messaging, go-to-market patterns, briefs, and audits |
 | **qa** | Parent for the QA family — NL spec authoring for Playwright Test Agents, visual inspection tools, discovery; drift detection via `/workflow:audit` |
@@ -120,7 +120,7 @@ Commands are invoked with `/command-name` (or the hyphenated equivalents for sub
 |---------|---------|
 | `/swarm` | Summarize a project's swarm state (active run, item stages, or whether it's initialized) |
 | `/swarm <goal>` | Run the orchestrator on a goal (milestone, issue list, or backlog file) — classifies items, drives through refine (host) → plan → implement → review → local-merge via role-specialized sub-agents in parallel waves, merges with test gates |
-| `/swarm:init` | Author the project charter and bootstrap the `.agent-tools/` umbrella (idempotent, evidence-grounded) |
+| `/swarm:setup` | Author the project charter and set up the `.agent-tools/` umbrella (idempotent, evidence-grounded) |
 | `/swarm:continue` | Resume the most recent paused run, reconciling saved state against disk + PM ground truth |
 
 > The orchestrator runs in your session (no tmux/daemon), **never pushes to remote**, and
@@ -194,7 +194,7 @@ All development happens under `src/`. `setup.sh` runs the publisher to produce c
 
 ### The `.agent-tools/` Umbrella (in target projects)
 
-The structure above is the **agent-tools repo itself**. Separately, when you run `/swarm:init`
+The structure above is the **agent-tools repo itself**. Separately, when you run `/swarm:setup`
 in one of *your* projects, it creates a small `.agent-tools/` umbrella there to hold
 agent-tools meta-artifacts:
 
@@ -217,10 +217,7 @@ agent-tools meta-artifacts:
 └── planning/                   # stays at the project root (intentional carve-out)
 ```
 
-The umbrella deliberately covers **charter + swarm only**. `./planning/` and QA test
-artifacts (e.g. `sentinel.config.yaml`, NL specs, Playwright config) are explicit carve-outs
-— they stay in their natural, high-traffic locations rather than being buried under a hidden
-directory.
+The umbrella primarily covers **charter + swarm + other durable agent configuration** (e.g. personify). `./planning/` is an explicit carve-out for transient work artifacts — it stays at the project root for high-traffic daily use. It uses directory-local `.gitkeep` and `.gitignore` rules (top-level and per-item: ignore everything except `.gitkeep` and `conventions.md` at top level). `/workflow:setup` enforces this structure idempotently. Workflow may reference `.agent-tools/` for durable items.
 
 ## Design Principles
 

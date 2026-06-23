@@ -195,7 +195,7 @@ the dated status churns below it. Run `/workflow:setup` to create or refresh all
 - `./planning/conventions.md` — project-local conventions honored by all phases
 - `./planning/session-state.md` — handoff scaffold with a durable orientation block (created if absent)
 
-**Boundary**: `planning/`-scoped and swarm-independent — never touches `.agent-tools/`. Complementary to `/swarm:init` (which owns the swarm charter).
+**Boundary**: `planning/`-scoped for transient work and conventions; may reference `.agent-tools/` for other durable config. Complementary to `/swarm:setup` (which owns the swarm charter and umbrella bootstrap).
 
 **When to use**: Onboarding a project to `/workflow`, or whenever the project's tracks/gates/policy change
 
