@@ -1,15 +1,17 @@
 ---
 name: workflow:compound
-description: Capture knowledge from solved problems and maintain memory quality to compound your team's effectiveness
+description: Capture durable knowledge from any engineering work — debugging solutions, refactors, features, design decisions, reusable patterns — and maintain memory quality so each unit of work compounds the next
 argument-hint: "[context about what was solved] | --maintain [--level global|project|memory] [--focus staleness|accuracy|scope|gaps]"
 user-invocable: true
 ---
 
 # Knowledge Capture and Compounding
 
+Compounding is about making **every unit of engineering work make subsequent work easier** — not just debugging. A solved bug, a refactor that revealed a cleaner structure, a feature that established a reusable pattern, a hard-won design decision: all of it is durable knowledge worth capturing. Debugging solutions are one important case, not the whole job. Whenever you finish non-trivial work and think "the next person (or the next me) would save real time knowing this," compound applies — regardless of whether anything was ever broken.
+
 Two modes for managing your team's accumulated intelligence:
 
-- **Capture mode** (default): Document recently solved problems to build a searchable knowledge base
+- **Capture mode** (default): Capture durable knowledge from recently completed work — a solved bug, a refactor, a new feature pattern, a design decision — and route it to the right home (a solution doc, project memory, an ADR, or AGENTS.md).
 - **Maintain mode** (`--maintain`): Audit and refine agent memory quality across the full hierarchy
 
 ## Mode Detection
@@ -26,7 +28,7 @@ Parse `$ARGUMENTS` to determine mode:
 | `--maintain --focus accuracy` | Maintain (focused) | Accuracy verification across all levels |
 | `--maintain --focus scope` | Maintain (focused) | Scope placement analysis |
 | `--maintain --focus gaps` | Maintain (focused) | Gap analysis against codebase |
-| Any other input or empty | Capture | Document a solved problem (default behavior) |
+| Any other input or empty | Capture | Capture durable knowledge from recent work (default behavior) |
 
 ---
 
@@ -34,12 +36,31 @@ Parse `$ARGUMENTS` to determine mode:
 
 ## Purpose
 
-**Why "compound"?** Each documented solution compounds your team's knowledge:
-- First time solving a problem: Research (30+ minutes)
-- After documenting: Quick lookup (2-3 minutes)
+**Why "compound"?** Each captured insight compounds your team's knowledge:
+- First time working it out: Research / design / debugging (30+ minutes)
+- After capturing: Quick lookup or reuse (2-3 minutes)
 - Knowledge compounds over time
 
-Each unit of engineering work should make subsequent units of work easier, not harder.
+Each unit of engineering work should make subsequent units of work easier, not harder. That applies to a refactor that clarified a structure or a design decision settled after weighing trade-offs just as much as to a bug that got root-caused.
+
+## What You're Capturing — and Where It Lives
+
+Compound covers durable knowledge from **any** engineering work, not only debugging. Different shapes of knowledge have different natural homes. Classify the knowledge first, then capture it to the right place. The failure mode to avoid is capturing **nothing** because "this wasn't a bug, so compound doesn't apply" — that is exactly the perception this section exists to correct.
+
+| Knowledge shape | Examples | Durable home |
+|---|---|---|
+| Debugging solution | Root-caused bug; build / test / runtime failure; performance or security fix | `docs/solutions/<category>/<slug>.md` (template below) |
+| Reusable pattern or technique | A refactor that revealed a cleaner structure; an idiom now applied project-wide; a feature that established a repeatable approach | Project memory (Level 3) and/or AGENTS.md |
+| Architecture / design decision | A trade-off chosen and why; a convention now in force; an approach rejected and the reason | ADR (`docs/adr/`) and/or project memory |
+| Cross-cutting gotcha or constraint | "Module X must initialize before Y"; an environment quirk; a non-obvious invariant | Project memory; AGENTS.md if every contributor needs it |
+
+Notes on routing:
+
+- **A single piece of work can produce more than one artifact.** A refactor+feature can both establish a reusable pattern (→ memory) *and* fix a latent bug found along the way (→ solution doc). Capture each to its home rather than forcing everything into one shape.
+- **When the home is memory, write the memory file directly** using the project's memory conventions (frontmatter with `name` / `description` / `type`, plus a one-line pointer in `MEMORY.md`) — do **not** bend a refactor or design decision into a debugging-shaped `docs/solutions/` post-mortem with empty "Symptoms" and "Root Cause" sections. The `Problem → Investigation → Root Cause → Solution` template below is the right shape **only** for debugging solutions.
+- **Capture and maintenance are two halves of one lifecycle.** `--maintain` audits exactly the memory surface that pattern/decision/gotcha captures write to. If you're unsure whether memory already covers something, that's a signal to run `--maintain --focus gaps` afterward.
+
+The rest of Capture mode below details the **debugging-solution** path (categories, analysis agents, the solution-doc template) because that path has the most structure. For the memory / ADR / AGENTS.md paths, the routing table above plus the project's memory conventions are the procedure — capture the insight, its rationale, and when it applies, then link it from the relevant index.
 
 ## User Input
 
@@ -69,7 +90,7 @@ User provides brief description:
 
 ## Undocumented Solution Surfacing
 
-Before starting capture, check conversation history for solved problems in this project that were never documented. References: @workflow (`references/conversation-analysis.md`)
+Before starting capture, check conversation history for completed work in this project — solved bugs, but also landed refactors, features, and settled decisions — that was never captured. References: @workflow (`references/conversation-analysis.md`)
 
 ```
 1. Get project root: git rev-parse --show-toplevel
@@ -83,8 +104,8 @@ Before starting capture, check conversation history for solved problems in this 
 
 If undocumented solutions are found:
 ```markdown
-Before we capture your current problem, I found [N] prior sessions
-that solved problems in this project but were never documented:
+Before we capture your current work, I found [N] prior sessions
+that completed meaningful work in this project but never captured it:
 
 1. [date] — [brief_summary from facet]
 2. [date] — [brief_summary from facet]
@@ -105,13 +126,15 @@ If no undocumented solutions found, proceed directly to capture.
 
 Before documenting, verify:
 
-- [ ] **Problem is solved** - Not in-progress
-- [ ] **Solution is verified** - Confirmed working
-- [ ] **Non-trivial** - Worth documenting (not typos or obvious fixes)
+- [ ] **Work is settled** - The bug is fixed, the refactor is landed, or the decision is made — not in-progress
+- [ ] **It holds up** - The solution is confirmed working, or the pattern/decision is one you'd actually stand behind reusing
+- [ ] **Non-trivial** - Worth documenting (not typos, obvious fixes, or restating what the code already makes plain)
 
-If conditions not met, ask: "Is this problem fully resolved and worth documenting?"
+If conditions not met, ask: "Is this work settled and worth capturing for next time?"
 
 ## Parallel Analysis
+
+This multi-agent analysis is tuned for the **debugging-solution** path — its agents extract symptoms, root cause, and recurrence prevention. For a pattern, decision, or gotcha headed to memory / ADR / AGENTS.md, you don't need this fan-out: capture the insight, the alternatives weighed, and when it applies, then link it from the relevant index. Use the agents below when the artifact is a `docs/solutions/` entry.
 
 Launch specialized agents simultaneously for efficient analysis:
 
@@ -160,9 +183,9 @@ Determines organization:
 
 **Returns**: File path and metadata
 
-## Document Categories
+## Debugging-Solution Categories (for `docs/solutions/`)
 
-Auto-classify into appropriate category:
+These categories apply when the artifact is a debugging-solution doc. Auto-classify into the appropriate one. (Pattern / decision / gotcha captures route to memory, ADR, or AGENTS.md instead — see *What You're Capturing* above.)
 
 | Category | When to Use |
 |----------|-------------|
@@ -176,9 +199,9 @@ Auto-classify into appropriate category:
 | `integration-issues/` | API failures, service communication |
 | `logic-errors/` | Incorrect behavior, edge cases |
 
-## Output Document
+## Output Document (debugging-solution path)
 
-Create `docs/solutions/<category>/<slug>.md`:
+For a debugging solution, create `docs/solutions/<category>/<slug>.md`. (Pattern / decision / gotcha captures use the project's memory / ADR / AGENTS.md conventions instead — capture the insight, its rationale, and when it applies, then link it from the relevant index.)
 
 ```markdown
 ---
@@ -341,17 +364,17 @@ Build -> Test -> Find Issue -> Research -> Improve -> Document -> Deploy
 
 ### When to Compound
 
-**Always document:**
-- Non-obvious solutions
-- Environment-specific issues
-- Integration problems
-- Performance optimizations
-- Security fixes
+**Always capture:**
+- Non-obvious solutions (debugging)
+- Environment-specific issues, integration problems, performance optimizations, security fixes
+- Reusable patterns or techniques a refactor or feature established
+- Non-obvious design decisions and the rationale / alternatives behind them
+- Cross-cutting gotchas, invariants, or constraints future work must respect
 
-**Skip documenting:**
+**Skip capturing:**
 - Typos and obvious fixes
-- One-off issues
-- Already well-documented problems
+- One-off issues unlikely to recur
+- Knowledge already well-documented or that the code makes plain on its own
 - Trivial configuration changes
 
 ## Quality Checklist
@@ -370,7 +393,7 @@ Before completing documentation:
 ## Commands to Remember
 
 ```bash
-# After solving a problem
+# After completing non-trivial work (a fix, refactor, feature, or decision)
 /workflow:compound "brief context"
 
 # Audit and maintain memory quality

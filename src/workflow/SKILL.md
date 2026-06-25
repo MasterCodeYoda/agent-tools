@@ -20,7 +20,7 @@ This is the parent skill for the `workflow` family. It contains high-level philo
 | `/workflow:execute` | Run planned work with progress tracking, todos, and quality gates |
 | `/workflow:review` | Flexible code review (PRs, ranges, files, or uncommitted changes) |
 | `/workflow:audit` | Comprehensive multi-domain project audit |
-| `/workflow:compound` | Capture solutions and maintain knowledge compounding |
+| `/workflow:compound` | Capture durable knowledge from any work (solutions, patterns, decisions) and maintain knowledge compounding |
 | `/workflow:continue` | Resume the next slice — orient from `planning/`, drive one slice through the full loop, stopping only at user-input gates |
 
 See the individual sub-skills for full details, argument hints, and procedures.
@@ -32,7 +32,7 @@ See the individual sub-skills for full details, argument hints, and procedures.
 1. **Do what works, don't overcomplicate** - Simple processes that get results beat complex frameworks
 2. **Work spans multiple sessions** - Structure for continuity without loss of fidelity
 3. **Speed + quality + attention to detail wins** - Fast execution with high standards
-4. **Knowledge compounds** - Each solved problem makes future work easier
+4. **Knowledge compounds** - Each unit of work — a solved bug, a refactor, a feature pattern, a design decision — makes future work easier when its insight is captured
 5. **User approves before action** - Plans require explicit user approval before saving or executing
 
 ### Decomposition Modes
@@ -284,11 +284,11 @@ execution. After approval, the user chooses: save the plan only, or save and pro
 **When to use**: Onboarding to a codebase, periodic health check, pre-release quality gate
 
 ### /workflow:compound
-**Purpose**: Capture knowledge from solved problems
+**Purpose**: Capture durable knowledge from any engineering work — debugging solutions, refactors, features, design decisions, reusable patterns — and route each to its right home
 
-**Creates**: `docs/solutions/<category>/<slug>.md`
+**Creates**: a debugging-solution doc at `docs/solutions/<category>/<slug>.md`, or — for reusable patterns, decisions, and gotchas — a project-memory entry, an ADR, or an AGENTS.md note (the skill classifies and routes)
 
-**When to use**: After solving non-trivial problems
+**When to use**: After any non-trivial work whose insight would save the next person (or the next you) real time — not only after fixing bugs
 
 ### /workflow:continue
 **Purpose**: Sequential orchestrator — resume the next slice of work and drive it through the full workflow loop
