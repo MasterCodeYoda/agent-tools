@@ -141,6 +141,22 @@ If refining a new idea (no existing issue), create the issue first, then populat
 2. Record the new issue ID
 3. Use the issue ID for all subsequent workflow commands
 
+## Backlog Resize (when the underlying decision changes)
+
+Issue *create* and *refine-requirements* (above) grow and update a backlog. They have no inverse — so when a decision changes, the cheap move is to annotate stale issues ("Reality:", "Model update:") instead of re-shaping them, and old phasing/ceremony rides forward. **Re-size the backlog to the current decision instead.** This is gated on a *recorded* decision change (a decision-record edit), not on taste — don't churn the backlog on every wobble.
+
+For each affected issue, choose exactly one:
+
+- **Rewrite** — the deliverable still exists but its target moved. Replace the body with the *current* target state. Do **not** append "Reality:" / "Model update:" notes over stale ACs — edit the ACs themselves.
+- **Cancel-and-fold** — the work now belongs inside another issue (e.g. two "tier" issues that are really one deployable). Move any still-live AC into the surviving issue, set the cancelled issue's state to **Canceled** with a one-line reason naming the survivor (`Folded into LIN-x: collapsed to single container per the hosting decision`). A cancel *reason* is fine; a spec tombstone left in the body is not.
+- **Delete** — the issue describes work that no longer exists at all (a corpse — e.g. a migration that was never real). Delete it; don't keep it as a "won't do" record with its old AC text intact.
+
+**Collapsing inherited ACs.** When a parent's AC set shrinks, the verbatim-inheritance contract is *re-derived*, not patched: rebuild the AC traceability matrix from the **current** parent ACs, re-point survivors, and drop inherited copies of any parent AC the decision retired. An inherited AC has no independent life — if the parent dropped it, the child drops it.
+
+**AC-count honesty (a smell, not a cap).** After resize, the parent AC count should match the current decision's surface, not its history. A pre-launch / no-deployed-surface epic carrying many ACs, or any AC naming a process the system has no surface to run (soak / promote / blue-green / parallel-run / rollback-drill), is a resize smell — re-size before planning consumes it.
+
+The decision layer is rewritten in place; the tracker is the realization layer; the cancel/fold *reason* (not a body tombstone) is what preserves provenance in the tracker's state history. See @workflow (`references/decision-records.md`).
+
 ## Requirements Source Mode
 
 ### Overview

@@ -97,7 +97,10 @@ For each candidate, gather **multiple signals** — a `status:` field alone is n
   tracker. Use the available PM tools; note when the tracker can't be reached.
 - **Not active** — the handoff does **not** name the item as the active slice or the next step.
 - **Knowledge migrated** — the item's durable insight is captured outside `planning/` (a compound
-  doc, ADR, runbook, memory), or it had none worth keeping.
+  doc, decision record, runbook, memory), or it had none worth keeping. When migrating insight into
+  the decision layer, **rewrite the governing record to current state** — do not append the item's
+  decision as a new dated entry beside an older one. Pruning planning archaeology while letting
+  decision-record archaeology accrete just relocates the rot. See @workflow (`references/decision-records.md`).
 
 Classify each candidate:
 

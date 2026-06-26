@@ -651,6 +651,7 @@ git worktree prune
 - [ ] No introduced regressions
 - [ ] Mutation survivors analyzed (domain logic only, if mutation tool available)
 - [ ] Committed (if completing a story/slice)
+- [ ] Decision-reconciliation at close — governing decision record + touched docs/ACs reconciled against the built code, recorded as evidence (see @workflow (`execution/quality-checkpoints.md`) › Decision-Reconciliation at Close)
 - [ ] PM tool updated (story marked Done)
 
 ## Definition of Done (Per Session)

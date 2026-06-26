@@ -99,7 +99,7 @@ Spawn 4 parallel agents that examine repository configuration:
 - CLAUDE.md symlink or agent configuration documented
 - README has quickstart, architecture overview, and development setup
 - Architecture documentation exists (diagrams, decision records)
-- ADR directory present with at least initial decisions
+- ADR / decision-record directory present (`docs/decisions/`) with at least initial decisions — but **presence is necessary, not sufficient**: a corpus thick with supersession chains, tombstones, or "Retired / folded into" rows scores *worse*, not better (it is a re-import hazard). Cross-reference the `--focus docs` decision-record-rot findings before scoring this positive.
 - MCP configuration (`mcp.json` or `.mcp/`) documented if applicable
 - CONTRIBUTING.md or equivalent exists
 - Skill/command definitions present (if using agent-tools pattern)

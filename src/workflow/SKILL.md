@@ -34,6 +34,7 @@ See the individual sub-skills for full details, argument hints, and procedures.
 3. **Speed + quality + attention to detail wins** - Fast execution with high standards
 4. **Knowledge compounds** - Each unit of work — a solved bug, a refactor, a feature pattern, a design decision — makes future work easier when its insight is captured
 5. **User approves before action** - Plans require explicit user approval before saving or executing
+6. **Artifacts state the current target, not their own history** - Decision records, domain docs, and acceptance criteria describe what is true/intended *now*. When a decision changes, re-derive the dependent artifacts from the new target — don't edit in place to preserve old structure (find-replace) or old history (supersession notes, tombstones, status fields). Git holds the past. Keep the rationale and rejected alternatives (they stop re-litigation); drop the change-narrative. See @workflow (`references/decision-records.md`)
 
 ### Decomposition Modes
 
@@ -122,6 +123,14 @@ These benefits assume a deployed surface and observers. Pre-first-release work, 
 - **No fictional value-delivery framing** — foundation / scaffolding work doesn't pretend each artifact is a user-visible increment.
 - **Sequencing matches the work shape** — contracts before consumers; validators before the rules they enforce; CI before the gates it runs.
 - **No "minimal X, full X later" temptation** — each sub-issue ships its deliverable comprehensively, not a partial first pass to be ratcheted in subsequent stories.
+
+### Issues state the current target, not a migration narrative
+
+An issue (and each AC) describes **what the system is when the work is done**, not the process of getting there — unless that process *is* the deliverable (a runbook, a migration tool, a cutover the issue exists to perform). Cutover ceremony — soak, promote, blue-green, parallel-run, rollback-drill — is admissible only when there's a production surface to cut over *from*; on a pre-launch system, an AC prescribing "soak before promoting" is dead ceremony, not a requirement. When a vendor or technology name changes in an issue, **do not find-replace and move on** — re-read every AC against the current target; phasing and ceremony rarely survive a decision that collapses the architecture.
+
+**Verbatim AC inheritance binds a child to the *current* parent AC, not the original text.** When the parent *decision* changes, re-size the parent AC set first, then children re-inherit. Fidelity is to the current decision, never to superseded AC text — editing a stale AC down to match the new decision is correctness, not a fidelity violation. (The strict no-drop ratchet is correct for compliance/contract work; resize is the explicit escape hatch for everything else, gated on a recorded decision change.) When a decision changes, re-size the backlog rather than annotating it — see @workflow (`planning/pm-integration.md`) › Backlog Resize.
+
+A smell to act on, not a hard cap: a pre-launch epic carrying many ACs — or any AC naming a process the system has no surface to run — is a signal to re-size before planning consumes it. Count ACs against the current decision's surface, not against what was previously written.
 
 ### Bottom-Up Implementation (within a vertical slice)
 

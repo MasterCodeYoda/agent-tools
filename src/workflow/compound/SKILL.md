@@ -51,7 +51,7 @@ Compound covers durable knowledge from **any** engineering work, not only debugg
 |---|---|---|
 | Debugging solution | Root-caused bug; build / test / runtime failure; performance or security fix | `docs/solutions/<category>/<slug>.md` (template below) |
 | Reusable pattern or technique | A refactor that revealed a cleaner structure; an idiom now applied project-wide; a feature that established a repeatable approach | Project memory (Level 3) and/or AGENTS.md |
-| Architecture / design decision | A trade-off chosen and why; a convention now in force; an approach rejected and the reason | ADR (`docs/adr/`) and/or project memory |
+| Architecture / design decision | A trade-off chosen and why; a convention now in force; an approach rejected and the reason | Decision record (`docs/decisions/`) and/or project memory |
 | Cross-cutting gotcha or constraint | "Module X must initialize before Y"; an environment quirk; a non-obvious invariant | Project memory; AGENTS.md if every contributor needs it |
 
 Notes on routing:
@@ -59,6 +59,7 @@ Notes on routing:
 - **A single piece of work can produce more than one artifact.** A refactor+feature can both establish a reusable pattern (→ memory) *and* fix a latent bug found along the way (→ solution doc). Capture each to its home rather than forcing everything into one shape.
 - **When the home is memory, write the memory file directly** using the project's memory conventions (frontmatter with `name` / `description` / `type`, plus a one-line pointer in `MEMORY.md`) — do **not** bend a refactor or design decision into a debugging-shaped `docs/solutions/` post-mortem with empty "Symptoms" and "Root Cause" sections. The `Problem → Investigation → Root Cause → Solution` template below is the right shape **only** for debugging solutions.
 - **Capture and maintenance are two halves of one lifecycle.** `--maintain` audits exactly the memory surface that pattern/decision/gotcha captures write to. If you're unsure whether memory already covers something, that's a signal to run `--maintain --focus gaps` afterward.
+- **Maintain decision records in place.** When a captured decision changes one already recorded, **rewrite the existing record** to current state — do not append a supersession note, a tombstone, or a "previously we said X" block, and do not leave the old decision standing beside the new one. Keep the rationale and rejected alternatives; drop the change history. If the *reason it changed* is itself a durable, reusable lesson, that routes to memory — not back into the record as a changelog. See @workflow (`references/decision-records.md`). (Skip when the project elected `classic-immutable` in `planning/conventions.md`.)
 
 The rest of Capture mode below details the **debugging-solution** path (categories, analysis agents, the solution-doc template) because that path has the most structure. For the memory / ADR / AGENTS.md paths, the routing table above plus the project's memory conventions are the procedure — capture the insight, its rationale, and when it applies, then link it from the relevant index.
 

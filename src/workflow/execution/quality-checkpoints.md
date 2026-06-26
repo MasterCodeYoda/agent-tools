@@ -148,6 +148,7 @@ Per-deliverable gates replace per-layer gates. Each deliverable's shape determin
 **Gap-prevention (project-level audit):**
 - [ ] No parent AC has been silently weakened during decomposition
 - [ ] If any AC could not be met, a tracking issue exists with explicit approval to defer
+- [ ] Verbatim fidelity is to the **current** parent AC, not the original text — if the governing decision changed, the parent AC set was re-sized first and children re-inherited (a resized AC is not a "silently weakened" one; see @workflow (`planning/pm-integration.md`) › Backlog Resize)
 
 ## Slice / Sub-issue Completion Protocol
 
@@ -164,9 +165,21 @@ Before moving to the next slice or sub-issue:
 
 - [ ] All acceptance criteria for THIS slice/sub-issue met (in deliverable-partition mode: every inherited verbatim parent AC verified)
 - [ ] Tests pass for THIS slice/sub-issue
+- [ ] **Decision-reconciliation at close** (see below)
 - [ ] Code committed with descriptive message and issue ID
 - [ ] PM tool updated (issue marked Done)
 - [ ] Session state updated (if tracking)
+
+#### Decision-Reconciliation at Close
+
+Before marking the work done, reconcile the **governing decision record + any docs/ACs this change touched** against the **code as built**. This is the forcing function that keeps docs and code from drifting (and it applies whatever decision-record genre the project uses — see @workflow (`references/decision-records.md`)):
+
+- [ ] Each touched decision record / domain doc still describes what the code now does. Where the build taught better → **rewrite the doc to the new target** (in place, per the project's convention); where the doc named a real constraint the code dropped → **fix the code**.
+- [ ] No closed AC references a surface, vendor, or ceremony the built system doesn't have.
+- [ ] The reconciliation is recorded as **evidence** — name the doc and the line(s) changed, or assert "no drift" against the diff. A bare checkbox is not evidence.
+- [ ] Scope is the change's **blast radius**, never a corpus sweep.
+
+Docs may legitimately run *ahead* of code during a build window; they may not run *stale behind* a closed issue. An issue does not close while its governing decision doc and its built code disagree.
 
 ### Commit Command Template
 

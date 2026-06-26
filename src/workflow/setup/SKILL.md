@@ -80,6 +80,15 @@ re-asking. Capture, into `planning/conventions.md`:
 - **Integration / merge policy** — local vs remote, merge style, any banking/versioning, and the
   push policy. Default and recommended: **local integration only; pushing and PRs are
   user-initiated** (never autonomous).
+- **Decision-record layers + genre.** Confirm (detect, don't over-ask) the file that plays each of
+  the three doc roles, and the genre. **Decision layer** (researched decisions — default
+  `docs/decisions/`, or a README `## Decisions` section), **domain layer** (how the system is
+  designed/behaves — a docs site / `docs/` / README), **realization layer** (how much is built — the
+  PM tracker / a milestone). **Genre:** the decisive default is `current-state` (records rewritten in
+  place; no supersession/tombstones — see @workflow (`references/decision-records.md`)). Elect
+  `classic-immutable` (append-only, superseded-not-rewritten) **only** for a regulated/contractual
+  project where an immutable audit trail is itself a deliverable — the unlikely exception, not a
+  co-equal option.
 
 ### 3. Write `planning/conventions.md` (only when it has real content)
 
@@ -88,6 +97,7 @@ Create (or update) it **only if** the project has non-default conventions:
 - One or more additional work tracks that override the default phase table
 - Project-specific gates beyond the standard review gate
 - Non-default integration / merge policy
+- Non-default decision-record layers (a decision/domain layer that isn't `docs/decisions/` + the obvious docs home) or the `classic-immutable` genre
 
 If everything is default (file mode + the standard feature track + standard local-only policy), **do not create** the file. All `/workflow:*` phases already assume the defaults when `conventions.md` is absent.
 
@@ -100,6 +110,12 @@ When content *does* exist, use this shape (omit empty sections):
 
 ## Requirements source
 <file | pm (tool)>
+
+## Decision records   (only if non-default — else the current-state defaults apply implicitly)
+- Genre: current-state | classic-immutable   (default: current-state — rewrite in place, no supersession/tombstones)
+- Decision layer: <docs/decisions/ | README §Decisions | …>
+- Domain layer:   <docs site | docs/ | README>
+- Realization layer: <Linear | Jira | milestone>
 
 ## Work tracks
 ### Default feature track

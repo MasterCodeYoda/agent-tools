@@ -114,9 +114,15 @@ the same artifact-driven classification `/swarm` uses — then route:
 | Integrated / merged | `/workflow:compound`, then update the handoff |
 
 **Each row is a gate, not a suggestion.** Don't jump from "code exists" to "merged" without the
-review pass — that's a process bug, not a shortcut. **Brainstorm and refine are skip-by-default**
-when a `brainstorm.md` / `requirements.md` already exists for the slice — don't re-run a phase
-that already produced its artifact.
+review pass — that's a process bug, not a shortcut. **Brainstorm and refine are skip-by-default
+only when the existing artifact is consistent with the current governing decision.** When a
+`brainstorm.md` / `requirements.md` / issue already exists for the slice, first check it against the
+decision record / domain doc it realizes. If the decision has moved since the artifact was written —
+stale phasing, a renamed vendor with intact old ceremony, ACs the current decision no longer supports
+— **re-enter `/workflow:refine` in resize mode** (see @workflow (`planning/pm-integration.md`) ›
+Backlog Resize) before planning or executing. The most-detailed written artifact is not the
+authority; the current decision is. Only when the artifact already matches the current decision do you
+skip the phase that produced it.
 
 Within one `/continue` invocation, walk this table for the chosen slice, advancing through
 phases automatically **until you hit a user-input gate or the slice completes**.

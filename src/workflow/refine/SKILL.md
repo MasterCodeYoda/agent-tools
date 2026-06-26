@@ -157,6 +157,10 @@ Discuss possible solutions:
 
 Confirm: "Does this approach feel right for solving the problem?"
 
+### Coherence check against the decision corpus
+
+Before finalizing, scan the project's decision records (the decision layer — `docs/decisions/`, a README `## Decisions` section, or wherever `planning/conventions.md` maps it) for any record this requirement contradicts or duplicates. If it **changes** an existing decision, plan to **rewrite that record** at close — not to add a competing one — and surface the conflict to the user now. The rationale + rejected alternatives captured above are what the rewritten record needs: capture "the why" here or nowhere. See @workflow (`references/decision-records.md`).
+
 ## Phase 3: User Stories (vertical-slice mode)
 
 ### Extract Key User Needs

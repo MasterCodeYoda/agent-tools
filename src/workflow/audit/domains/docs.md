@@ -99,6 +99,13 @@ Spawn 2 parallel agents:
 - Issue key validity
 - Checklist completeness vs. actual status
 
+**decision-record-rot-detector** — audits the decision layer (`docs/decisions/`, a README `## Decisions` section, or wherever `planning/conventions.md` maps it). **Skip if the project elected `classic-immutable`.** Each finding below is a re-import hazard (stale-but-authoritative content that humans and agents trust as current) — see @workflow (`references/decision-records.md`):
+- **Supersession archaeology** — `superseded by`, `folded into`, `Retired`, `amends`, "previously we said", "historical", or "Reality:/Model update:" correction blocks in a decision record. Each is a P1: rewrite the record to current state and delete the history.
+- **Smear** — more than one live record describing the same subject (grep for overlapping subjects). One subject = one current record.
+- **Status fields on decision/domain docs** — `Proposed`/`Implemented`/`Superseded` status belongs to the realization layer (the tracker), not the doc.
+- **Missing rationale** — a decision record without its rationale + rejected-alternatives (P2). Rewrite-in-place makes losing "the why" a one-keystroke accident; the required-shape check is the backstop against re-litigation.
+- **Stale acceptance criteria** — issues/ACs carrying ceremony the current decision dropped (phased cutover, blue-green, parallel-run, soak/promote on a pre-launch system). Cross-domain with the tracker; flag for backlog resize.
+
 ### Tier 3 — Quality, Completeness & Onboarding Load (AI judgment)
 
 Spawn 4 parallel agents:
