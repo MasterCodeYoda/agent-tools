@@ -110,7 +110,7 @@ the same artifact-driven classification `/swarm` uses — then route:
 | Requirements clear, no implementation plan | `/workflow:plan` |
 | Plan approved, work not started **or in progress** | `/workflow:execute` (resume where the plan left off) |
 | Code exists, not reviewed | `/workflow:review` (or `/code-review`) — fix every finding |
-| Reviewed clean, not integrated | Finish the branch (see `@superpowers:finishing-a-development-branch`) |
+| Reviewed clean, not integrated | Merge the branch to `main` locally (no push) — **autonomous when all gates pass cleanly and constraints are met**; stop to confirm only on genuine doubt (see `@superpowers:finishing-a-development-branch`) |
 | Integrated / merged | `/workflow:compound`, then update the handoff |
 
 **Each row is a gate, not a suggestion.** Don't jump from "code exists" to "merged" without the
@@ -135,12 +135,19 @@ Auto-advance only where no human decision is owed. **Stop and hand back** at any
 - A plan is ready for **approval** (`/workflow:plan` approval gate — never save/execute a plan
   without it).
 - Review surfaced findings that need a **triage decision**.
-- Integration/merge needs **confirmation** (and pushing/PR is always user-initiated — never push
-  or open a PR autonomously).
+- Integration/merge **only when there is genuine doubt** — a validation that didn't pass cleanly,
+  an unmet task requirement or project constraint, or a real judgment call the slice can't resolve.
+  **A clean local merge is NOT a stop gate.** When every project gate passes cleanly and objectively
+  *and* all task requirements + constraints are met, **merge the branch to `main` locally without
+  asking**, flip the issue status, write the handoff, and *then* summarize what was done. Pushing and
+  PRs stay user-initiated — never push or open a PR autonomously — but the local merge is part of
+  completing the slice, not a confirmation gate.
 - Any `AskUserQuestion`-class decision the slice can't resolve on its own.
 
-A stop is a feature: it returns control with state saved, so the next `/continue` (or you)
-resumes cleanly.
+The goal in a `/continue` loop is to complete the assigned slice with **as little assistance as
+possible** while honoring every project constraint and task requirement. Stop only at the genuine
+gates above. A stop is a feature: it returns control with state saved, so the next `/continue` (or
+you) resumes cleanly — but a clean, objective pass should run start-to-merge without a needless pause.
 
 ## Workspace
 
