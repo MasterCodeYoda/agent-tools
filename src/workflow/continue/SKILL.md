@@ -110,7 +110,7 @@ the same artifact-driven classification `/swarm` uses — then route:
 | Requirements clear, no implementation plan | `/workflow:plan` |
 | Plan approved, work not started **or in progress** | `/workflow:execute` (resume where the plan left off) |
 | Code exists, not reviewed | `/workflow:review` (or `/code-review`) — fix every finding |
-| Reviewed clean, not integrated | Merge the branch to `main` locally (no push) — **autonomous when all gates pass cleanly and constraints are met**; stop to confirm only on genuine doubt (see `@superpowers:finishing-a-development-branch`) |
+| Reviewed clean, not integrated | Finish the branch (see `@superpowers:finishing-a-development-branch`) — **stop to confirm the merge by default**, unless the project's Integration / merge policy (Orientation step 0) authorizes an autonomous local merge on a clean validation pass |
 | Integrated / merged | `/workflow:compound`, then update the handoff |
 
 **Each row is a gate, not a suggestion.** Don't jump from "code exists" to "merged" without the
@@ -135,19 +135,27 @@ Auto-advance only where no human decision is owed. **Stop and hand back** at any
 - A plan is ready for **approval** (`/workflow:plan` approval gate — never save/execute a plan
   without it).
 - Review surfaced findings that need a **triage decision**.
-- Integration/merge **only when there is genuine doubt** — a validation that didn't pass cleanly,
-  an unmet task requirement or project constraint, or a real judgment call the slice can't resolve.
-  **A clean local merge is NOT a stop gate.** When every project gate passes cleanly and objectively
-  *and* all task requirements + constraints are met, **merge the branch to `main` locally without
-  asking**, flip the issue status, write the handoff, and *then* summarize what was done. Pushing and
-  PRs stay user-initiated — never push or open a PR autonomously — but the local merge is part of
-  completing the slice, not a confirmation gate.
+- **Integration/merge needs confirmation — by default.** Stop and hand back before merging the slice
+  to `main`. **Exception:** if the project's recorded **Integration / merge policy** (loaded in
+  Orientation step 0 from `planning/conventions.md`) authorizes an autonomous local merge on a clean
+  validation pass, follow it — merge to `main` locally **without asking** when every project gate
+  passes cleanly and objectively *and* all task requirements + constraints are met, then flip the
+  issue status, write the handoff, and summarize. Absent such a convention, treat the merge as a stop
+  gate. Either way: stop on **genuine doubt** (a validation that didn't pass cleanly, an unmet
+  constraint, a real judgment call), and **pushing/PRs are always user-initiated** — never push or
+  open a PR autonomously, regardless of conventions.
+- **Auto-invoked after a slice already completed this session.** If this `/continue` was triggered
+  **automatically** (e.g. a scheduled wakeup you set to keep the loop alive across a long-running
+  slice) rather than by the user, *and* a full slice has **already completed** in this session, do
+  **not** silently pick up a new slice — **ask the user** whether to start another slice or stop.
+  Scheduled wakeups exist to keep one slice's work moving, not to chain into fresh slices unattended;
+  a wakeup that lands after the original slice finished should check in, not self-extend the backlog.
 - Any `AskUserQuestion`-class decision the slice can't resolve on its own.
 
 The goal in a `/continue` loop is to complete the assigned slice with **as little assistance as
 possible** while honoring every project constraint and task requirement. Stop only at the genuine
 gates above. A stop is a feature: it returns control with state saved, so the next `/continue` (or
-you) resumes cleanly — but a clean, objective pass should run start-to-merge without a needless pause.
+you) resumes cleanly.
 
 ## Workspace
 
