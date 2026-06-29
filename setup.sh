@@ -50,6 +50,20 @@ NC='\033[0m' # No Color
 # Used to safely identify and prune stale skills on future runs.
 MANAGED_MARKER=".agent-tools"
 
+# Agents whose slash-command name is derived from the installed skill's
+# directory name. For these, a sibling symlink named after a skill's
+# `command-alias` frontmatter creates a working command alias (e.g. /wf -> /workflow).
+# Agents not listed here simply ignore `command-alias`.
+ALIAS_SUPPORTED_AGENTS="claude"
+
+agent_supports_aliases() {
+    local agent="$1"
+    case " ${ALIAS_SUPPORTED_AGENTS} " in
+        *" ${agent} "*) return 0 ;;
+        *) return 1 ;;
+    esac
+}
+
 # ── Helpers ─────────────────────────────────────────────────────────
 
 # Create a symlink with proper error handling (used for ~/.claude only)
@@ -121,6 +135,17 @@ get_publish_target() {
     echo "user-profile"
 }
 
+# Extract command-alias from a skill's SKILL.md (empty if none declared).
+# This frontmatter key is harness-neutral and inert to agents that don't read it.
+get_command_alias() {
+    local skill_path="$1"          # e.g. dist/claude/skills/workflow
+    local skill_md="${skill_path}/SKILL.md"
+
+    if [ -f "$skill_md" ]; then
+        grep -iE '^command-alias:' "$skill_md" | head -1 | cut -d: -f2- | tr -d ' \t\r\n'
+    fi
+}
+
 # Install a single skill directory for a given agent
 install_skill() {
     local agent="$1"               # claude, grok, factory, codex
@@ -171,6 +196,24 @@ install_skill() {
 
     # Mark this skill as managed by agent-tools so future runs can safely prune it if removed.
     touch "${target}/${MANAGED_MARKER}"
+
+    # Create a command alias for harnesses whose slash-command name derives from the
+    # installed directory name. The alias is a relative, sibling symlink to this skill
+    # (e.g. ~/.claude/skills/wf -> workflow), so it shares the single canonical SKILL.md.
+    # It resolves the managed marker through the chain, so prune treats it as managed too.
+    if agent_supports_aliases "$agent"; then
+        local alias
+        alias=$(get_command_alias "$source_skill_dir")
+        if [ -n "$alias" ]; then
+            local alias_target="${target_base}/${alias}"
+            if [ -e "$alias_target" ] && [ ! -L "$alias_target" ]; then
+                echo -e "  ${YELLOW}⚠${NC}  Alias path exists and is not a symlink, skipping: ${alias_target}"
+            else
+                ln -sfn "$skill_name" "$alias_target"
+                echo -e "  ${scope_label} ${alias}  →  ${alias_target}  (alias of ${skill_name})"
+            fi
+        fi
+    fi
 }
 
 # Prune skills that were previously installed by this repo (have the marker)
@@ -185,7 +228,12 @@ prune_stale_skills() {
     local current_published=()
     if [ -d "$dist_agent_dir" ]; then
         for d in "$dist_agent_dir"/*/; do
-            [ -d "$d" ] && current_published+=("$(basename "$d")")
+            [ -d "$d" ] || continue
+            current_published+=("$(basename "$d")")
+            # Protect declared command aliases so the alias symlink isn't reaped as stale.
+            local alias
+            alias=$(get_command_alias "$d")
+            [ -n "$alias" ] && current_published+=("$alias")
         done
     fi
 

@@ -2,6 +2,7 @@
 name: workflow
 description: Parent skill for the workflow family — brainstorming, refinement, planning, execution, review, audit, compound, and knowledge capture. Supports vertical-slice and deliverable-partition decomposition modes.
 user-invocable: true
+command-alias: wf
 ---
 
 # Workflow
