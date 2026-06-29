@@ -11,7 +11,8 @@ for arg in "$@"; do
             echo ""
             echo "  Re-publishes skills from src/ into dist/<agent>/skills/,"
             echo "  then installs (symlinks) them into your user profile for any"
-            echo "  detected agents (Claude, Grok, Factory)."
+            echo "  detected agents (Claude, Grok, Factory, OpenCode)."
+            echo "  For OpenCode, sub-skills are also emitted as native commands."
             echo ""
             echo "Options:"
             echo "  --help, -h       Show this help message"
@@ -40,6 +41,10 @@ GROK_SKILLS_DIR="${HOME}/.grok/skills"
 FACTORY_DIR="${HOME}/.factory"
 CODEX_DIR="${HOME}/.codex"
 
+# OpenCode uses XDG-style config for global files. Project layout is .opencode/
+# We support both skills (for the native `skill` tool) and commands (for direct /slash).
+OPENCODE_CONFIG_DIR="${HOME}/.config/opencode"
+
 # Colors for output
 GREEN='\033[0;32m'
 YELLOW='\033[1;33m'
@@ -49,6 +54,26 @@ NC='\033[0m' # No Color
 # Marker file placed inside every skill installed by this repo.
 # Used to safely identify and prune stale skills on future runs.
 MANAGED_MARKER=".agent-tools"
+
+# Compute the correct skills directory for an agent (user vs project).
+# OpenCode is special: global uses ~/.config/opencode/skills (XDG), project uses .opencode/skills
+get_agent_skills_dir() {
+    local agent="$1"
+    local scope="$2"   # "user" or "project"
+    if [ "$agent" = "opencode" ]; then
+        if [ "$scope" = "project" ]; then
+            echo "${SCRIPT_DIR}/.opencode/skills"
+        else
+            echo "${HOME}/.config/opencode/skills"
+        fi
+    else
+        if [ "$scope" = "project" ]; then
+            echo "${SCRIPT_DIR}/.${agent}/skills"
+        else
+            echo "${HOME}/.${agent}/skills"
+        fi
+    fi
+}
 
 # ── Helpers ─────────────────────────────────────────────────────────
 
@@ -123,31 +148,33 @@ get_publish_target() {
 
 # Install a single skill directory for a given agent
 install_skill() {
-    local agent="$1"               # claude, grok, factory, codex
+    local agent="$1"               # claude, grok, factory, codex, opencode
     local skill_name="$2"          # e.g. "workflow", "skills"
     local source_skill_dir="$3"    # e.g. dist/claude/skills/workflow
 
-    local target_base
     local publish_target
     publish_target=$(get_publish_target "$source_skill_dir")
-
-    local target_base
-    local scope_label
 
     local target_base
     local scope_label
     local created_local_dir=false
 
     if [ "$publish_target" = "project" ]; then
-        target_base="${SCRIPT_DIR}/.${agent}/skills"
+        target_base=$(get_agent_skills_dir "$agent" "project")
         scope_label="${YELLOW}[project]${NC}"
 
         if [ ! -d "$target_base" ]; then
             mkdir -p "$target_base"
-            echo -e "  ${YELLOW}→${NC} Created local project directory: .${agent}/skills/ (for project-scoped skills)"
+            local pretty
+            if [ "$agent" = "opencode" ]; then
+                pretty=".opencode/skills/"
+            else
+                pretty=".${agent}/skills/"
+            fi
+            echo -e "  ${YELLOW}→${NC} Created local project directory: ${pretty} (for project-scoped skills)"
         fi
     else
-        target_base="${HOME}/.${agent}/skills"
+        target_base=$(get_agent_skills_dir "$agent" "user")
         scope_label="[user]"
     fi
 
@@ -238,8 +265,10 @@ install_skills_for_agent() {
     # old skills tree. The new model uses a real directory containing one symlink
     # per skill (pointing into dist/<agent>/skills/<skill>/). Remove the old symlink
     # so we can create a proper directory.
-    local user_skills_dir="${HOME}/.${agent}/skills"
-    if [ -L "$user_skills_dir" ]; then
+    # OpenCode uses ~/.config/opencode/skills so we only do the legacy .${agent} cleanup for non-opencode.
+    local user_skills_dir
+    user_skills_dir=$(get_agent_skills_dir "$agent" "user")
+    if [ "$agent" != "opencode" ] && [ -L "$user_skills_dir" ]; then
         echo -e "${YELLOW}⚠${NC}  Replacing legacy whole-skills symlink: ${user_skills_dir} (migrating to per-skill layout)"
         rm -f "$user_skills_dir"
     fi
@@ -256,11 +285,98 @@ install_skills_for_agent() {
     # This safely removes old entries (including legacy flat skills and
     # any renamed/removed grouped or flattened skills) without touching
     # third-party skills.
-    local user_target="${HOME}/.${agent}/skills"
-    local project_target="${SCRIPT_DIR}/.${agent}/skills"
+    local user_target
+    user_target=$(get_agent_skills_dir "$agent" "user")
+    local project_target
+    project_target=$(get_agent_skills_dir "$agent" "project")
 
     prune_stale_skills "$agent" "$user_target" "$dist_agent_dir"
     prune_stale_skills "$agent" "$project_target" "$dist_agent_dir"
+
+    echo
+}
+
+# Install OpenCode command definitions (flat .md files for direct /command invocation).
+# Commands are emitted by the publisher only for the "opencode" target.
+# We respect publish-target the same way as skills (most go to user global;
+# the project-scoped meta skills go to the local .opencode/commands/).
+install_commands_for_agent() {
+    local agent="$1"
+    [[ "$agent" == "opencode" ]] || return
+
+    local dist_cmds_dir="${DIST_BASE}/${agent}/commands"
+    if [ ! -d "$dist_cmds_dir" ]; then
+        echo -e "${YELLOW}No commands published for ${agent}${NC}"
+        return
+    fi
+
+    echo "Installing commands for ${agent}..."
+
+    for cmd_file in "${dist_cmds_dir}"/*.md; do
+        [ -f "$cmd_file" ] || continue
+        local cmd_name
+        cmd_name=$(basename "$cmd_file" .md)
+
+        # Determine scope from the matching published skill (if present)
+        local corresponding_skill="${DIST_BASE}/${agent}/skills/${cmd_name}"
+        local publish_target
+        publish_target=$(get_publish_target "$corresponding_skill")
+
+        if [ "$agent" = "opencode" ] && [ "$publish_target" = "user-profile" ]; then
+            # For opencode we intentionally don't create flat sub-skill dirs in skills/
+            # (to avoid duplicating subs as skills). Fall back to the containing family
+            # or the original source SKILL.md (which may carry the publish-target).
+            if [[ "$cmd_name" == *-* ]]; then
+                local family="${cmd_name%%-*}"
+                local family_skill="${DIST_BASE}/${agent}/skills/${family}"
+                if [ -d "$family_skill" ]; then
+                    local pt
+                    pt=$(get_publish_target "$family_skill")
+                    if [ "$pt" != "user-profile" ]; then
+                        publish_target="$pt"
+                    fi
+                fi
+            fi
+            if [ "$publish_target" = "user-profile" ]; then
+                # Search src/ tree for matching sub (by name with :) and inherit target
+                # from its dir or its parent family dir.
+                local src_name="${cmd_name//-/:}"
+                for src_md in $(find src -name SKILL.md 2>/dev/null); do
+                    if grep -q "name:.*${src_name}" "$src_md" 2>/dev/null; then
+                        local src_dir
+                        src_dir=$(dirname "$src_md")
+                        local pt
+                        pt=$(get_publish_target "$src_dir")
+                        if [ "$pt" != "user-profile" ]; then
+                            publish_target="$pt"
+                            break
+                        fi
+                        # try parent (e.g. for skills subs, the skills/ family declares it)
+                        local parent_dir
+                        parent_dir=$(dirname "$src_dir")
+                        pt=$(get_publish_target "$parent_dir")
+                        if [ "$pt" != "user-profile" ]; then
+                            publish_target="$pt"
+                            break
+                        fi
+                    fi
+                done
+            fi
+        fi
+
+        local target_base
+        if [ "$publish_target" = "project" ]; then
+            target_base="${SCRIPT_DIR}/.opencode/commands"
+        else
+            target_base="${HOME}/.config/opencode/commands"
+        fi
+
+        mkdir -p "$target_base"
+        local target="${target_base}/${cmd_name}.md"
+
+        echo "  ${cmd_name} → ${target}"
+        ln -sfn "$cmd_file" "$target"
+    done
 
     echo
 }
@@ -283,7 +399,7 @@ validate_sources() {
 run_publisher() {
     local publisher="${SCRIPT_DIR}/tools/publish-skills.sh"
 
-    echo "Publishing skills for all agents (claude, grok, factory, codex)..."
+    echo "Publishing skills for all agents (claude, grok, factory, codex, opencode)..."
     if "$publisher" --quiet; then
         echo -e "${GREEN}✓${NC} Publishing complete → dist/<agent>/skills/"
     else
@@ -325,6 +441,13 @@ if [ -d "$CODEX_DIR" ]; then
     install_skills_for_agent "codex"
 fi
 
+# OpenCode detection: look for the global config dir or a local .opencode project dir.
+# We also install commands (in addition to skills) for direct /slash support.
+if [ -d "$OPENCODE_CONFIG_DIR" ] || [ -d "${SCRIPT_DIR}/.opencode" ]; then
+    install_skills_for_agent "opencode"
+    install_commands_for_agent "opencode"
+fi
+
 # Clean up legacy factory-commands/ directory in the repo (one-time)
 if [ -d "${SCRIPT_DIR}/factory-commands" ]; then
     rm -rf "${SCRIPT_DIR}/factory-commands"
@@ -358,6 +481,15 @@ if [ -d "$CODEX_DIR" ]; then
     echo "  Codex:"
     echo "    - User profile : ~/.codex/skills/"
     echo "    - This project : ./.codex/skills/  (project-scoped skills only)"
+fi
+if [ -d "$OPENCODE_CONFIG_DIR" ] || [ -d "${SCRIPT_DIR}/.opencode" ]; then
+    echo "  OpenCode:"
+    echo "    - Skills (user)    : ~/.config/opencode/skills/"
+    echo "    - Skills (project) : .opencode/skills/   (project-scoped only)"
+    echo "    - Commands (user)  : ~/.config/opencode/commands/"
+    echo "    - Commands (project): .opencode/commands/ (project-scoped only)"
+    echo "    Note: OpenCode sub-skills are published both as loadable skills (skill tool)"
+    echo "          and as native commands (for direct /name slash triggers)."
 fi
 echo
 echo "  (Most skills → user profile. The 'skills' meta-skill → local project only.)"

@@ -32,7 +32,11 @@ DIST_ROOT="${REPO_ROOT}/dist"
 # Directories under src/ that are not skills and should be ignored during publishing
 SKIP_DIRS="pdf-build"
 
-DEFAULT_AGENTS="claude,grok,factory,codex"
+DEFAULT_AGENTS="claude,grok,factory,codex,opencode"
+
+# Leaf skills (no sub-skills) that should be emitted only as direct commands for OpenCode
+# (not as loadable skills). These are single-purpose invocables like /personify.
+OPENCODE_LEAF_AS_COMMANDS="personify use-browser"
 QUIET=false
 DRY_RUN=false
 
@@ -61,6 +65,7 @@ Usage: $(basename "$0") [options]
 
 Options:
   --agents LIST    Comma-separated list of agents (default: $DEFAULT_AGENTS)
+                   (opencode receives both skills/ and commands/ output)
   --quiet          Suppress non-error output
   --dry-run        Show what would be published without writing files
   -h, --help       Show this help message
@@ -127,6 +132,11 @@ get_declared_name() {
 # look for any leaf sub-skills whose name contains a colon (git:commit, workflow:refine, etc.)
 # and also publish them as top-level skills using hyphen as separator (git-commit, workflow-refine).
 # This allows both the group overview (/git) and direct sub-commands (/git-commit) to appear.
+#
+# For OpenCode, we additionally emit the corresponding invocable sub-skills (and top-level
+# invocables) as native *commands* (in dist/opencode/commands/) because OpenCode treats
+# skills and commands as distinct concepts. Commands provide the direct `/name` slash UX
+# that our sub-skill families are designed to deliver.
 emit_flattened_leaves() {
     local agent="$1"
     local package="$2"          # e.g. "git", "workflow"
@@ -158,6 +168,179 @@ emit_flattened_leaves() {
             log "  → Also published flattened leaf: ${flat_name}/"
         fi
     done
+}
+
+# Emit native command definitions for OpenCode.
+# OpenCode keeps "skills" (on-demand via the skill tool) and "commands" (explicit /slash triggers)
+# as separate things. We only emit the *sub-skills* (the colon-namespaced ones like
+# workflow:continue -> workflow-continue command) as commands. Top-level family
+# overviews (workflow, git, etc.) are not mirrored as commands; they exist for
+# sub-skill discovery in other harnesses and don't map well to OpenCode's command model.
+emit_commands_for_opencode() {
+    local agent="$1"
+    local skills_dir="$2"   # e.g. dist/opencode/skills (populated only in real runs)
+
+    [[ "$agent" == "opencode" ]] || return
+
+    local cmds_dir="${DIST_ROOT}/${agent}/commands"
+
+    if [[ "$DRY_RUN" != true ]]; then
+        rm -rf "$cmds_dir"
+        mkdir -p "$cmds_dir"
+    fi
+
+    log "  Emitting OpenCode commands (sub-skills only) for direct / invocation..."
+
+    # In dry-run the dist trees are not created, so derive the list of sub-skill
+    # commands from src/ (only the flattened colon sub-skills).
+    if [[ "$DRY_RUN" == true ]]; then
+        for top in "$SRC_ROOT"/*/ ; do
+            [[ -d "$top" ]] || continue
+            local top_name
+            top_name=$(basename "$top")
+            [[ ",$SKIP_DIRS," == *",$top_name,"* ]] && continue
+
+            # Only the colon sub-skills (not the top-level family)
+            for sub in "$top"/*/; do
+                [[ -d "$sub" ]] || continue
+                local sub_md="${sub}/SKILL.md"
+                [[ -f "$sub_md" ]] || continue
+                local declared
+                declared=$(get_declared_name "$sub_md")
+                if [[ "$declared" == *:* ]]; then
+                    local flat="${declared//:/-}"
+                    echo "    [dry] ${agent}/commands/${flat}.md"
+                fi
+            done
+        done
+
+        # Special leaf commands (personify, use-browser) - no subskills, direct invocables
+        for leaf in $OPENCODE_LEAF_AS_COMMANDS; do
+            echo "    [dry] ${agent}/commands/${leaf}.md"
+        done
+        return
+    fi
+
+    # Real run: scan top-level published skill dirs (families and standalone).
+    # For each, check its own SKILL.md (catches top-level subs like swarm-test).
+    # Also scan direct subdirs inside families (catches nested like workflow/continue).
+    # Emit command only for those whose declared name contains ":" , using the hyphenated flat name.
+    for top_dir in "$skills_dir"/*/; do
+        [ -d "$top_dir" ] || continue
+        local top_name
+        top_name=$(basename "$top_dir")
+
+        # Check the top-level dir itself (for standalone sub-skills like swarm-test)
+        local top_md="${top_dir}/SKILL.md"
+        if [ -f "$top_md" ]; then
+            local declared
+            declared=$(get_declared_name "$top_md")
+            if [[ "$declared" == *:* ]]; then
+                local flat="${declared//:/-}"
+                local desc
+                desc=$(grep -m1 -i '^description:' "$top_md" | cut -d: -f2- | sed 's/^[[:space:]]*//;s/[[:space:]]*$//')
+                [ -z "$desc" ] && desc="Agent skill: ${flat}"
+                local cmd_file="${cmds_dir}/${flat}.md"
+                {
+                    echo "---"
+                    echo "description: ${desc}"
+                    echo "---"
+                    echo ""
+                    awk '
+                        BEGIN { seen_first = 0; in_frontmatter = 0 }
+                        /^---[ \t]*$/ {
+                            if (seen_first == 0) {
+                                seen_first = 1
+                                in_frontmatter = 1
+                                next
+                            } else if (in_frontmatter) {
+                                in_frontmatter = 0
+                                next
+                            }
+                        }
+                        !in_frontmatter { print }
+                    ' "$top_md"
+                } > "$cmd_file"
+                log "  → Emitted command: commands/${flat}.md"
+            fi
+        fi
+
+        # Check direct children (for subs nested inside family dirs, e.g. workflow/continue)
+        for sub_dir in "$top_dir"/*/; do
+            [ -d "$sub_dir" ] || continue
+            local sub_md="${sub_dir}/SKILL.md"
+            [ -f "$sub_md" ] || continue
+            local declared
+            declared=$(get_declared_name "$sub_md")
+            if [[ "$declared" == *:* ]]; then
+                local flat="${declared//:/-}"
+                local desc
+                desc=$(grep -m1 -i '^description:' "$sub_md" | cut -d: -f2- | sed 's/^[[:space:]]*//;s/[[:space:]]*$//')
+                [ -z "$desc" ] && desc="Agent skill: ${flat}"
+                local cmd_file="${cmds_dir}/${flat}.md"
+                {
+                    echo "---"
+                    echo "description: ${desc}"
+                    echo "---"
+                    echo ""
+                    awk '
+                        BEGIN { seen_first = 0; in_frontmatter = 0 }
+                        /^---[ \t]*$/ {
+                            if (seen_first == 0) {
+                                seen_first = 1
+                                in_frontmatter = 1
+                                next
+                            } else if (in_frontmatter) {
+                                in_frontmatter = 0
+                                next
+                            }
+                        }
+                        !in_frontmatter { print }
+                    ' "$sub_md"
+                } > "$cmd_file"
+                log "  → Emitted command: commands/${flat}.md"
+            fi
+        done
+    done
+
+    # Special leaf commands for opencode (e.g. personify, use-browser).
+    # These are top-level skills with no sub-skills. Emit them as commands (using
+    # their own name) and they will be removed from skills/ below to avoid duplication.
+    if [[ "$agent" == "opencode" ]]; then
+        for leaf in $OPENCODE_LEAF_AS_COMMANDS; do
+            local leaf_dir="${skills_dir}/${leaf}"
+            if [ -d "$leaf_dir" ]; then
+                local leaf_md="${leaf_dir}/SKILL.md"
+                if [ -f "$leaf_md" ]; then
+                    local desc
+                    desc=$(grep -m1 -i '^description:' "$leaf_md" | cut -d: -f2- | sed 's/^[[:space:]]*//;s/[[:space:]]*$//')
+                    [ -z "$desc" ] && desc="Agent skill: ${leaf}"
+                    local cmd_file="${cmds_dir}/${leaf}.md"
+                    {
+                        echo "---"
+                        echo "description: ${desc}"
+                        echo "---"
+                        echo ""
+                        awk '
+                            BEGIN { seen_first = 0; in_frontmatter = 0 }
+                            /^---[ \t]*$/ {
+                                if (seen_first == 0) {
+                                    seen_first = 1
+                                    in_frontmatter = 1
+                                    next
+                                } else if (in_frontmatter) {
+                                    in_frontmatter = 0
+                                    next
+                                }
+                            }
+                            !in_frontmatter { print }
+                        ' "$leaf_md"
+                    } > "$cmd_file"
+                    log "  → Emitted leaf command: commands/${leaf}.md"
+                fi
+            fi
+        done
+    fi
 }
 
 # ── Core filtering logic (awk) ───────────────────────────────────────
@@ -318,12 +501,49 @@ publish_for_agent() {
         # Emit flattened top-level versions for any sub-skills that use colon namespacing
         # (e.g. src/git/commit/SKILL.md with name: git:commit  →  dist/.../skills/git-commit/).
         #
-        # Emitted uniformly for ALL agents. Grok's loader does not yet promote invocable
-        # sub-skills as first-class top-level commands, so today these siblings are inert
-        # there — but publishing them anyway means that the moment that limitation is fixed
-        # upstream, the hyphenated commands "just work" with no publisher change required.
-        emit_flattened_leaves "$agent" "$skill_name" "$dest_skill_dir"
+        # For most agents this enables direct /git-commit etc. For opencode we skip this:
+        # sub-skills are only emitted as native commands (see emit_commands_for_opencode),
+        # so we do not want them also present as top-level skills (avoids duplication).
+        if [[ "$agent" != "opencode" ]]; then
+            emit_flattened_leaves "$agent" "$skill_name" "$dest_skill_dir"
+        fi
     done
+
+    # For OpenCode, also emit the (flattened + top-level) invocables as native commands.
+    # See emit_commands_for_opencode for rationale.
+    if [[ "$agent" == "opencode" ]]; then
+        emit_commands_for_opencode "$agent" "$dest_dir"
+
+        # After emitting commands, remove any top-level dirs in skills/ that we want
+        # only as commands for opencode (prevents duplication):
+        # - Colon-named sub-skills (e.g. swarm-test, workflow-continue)
+        # - Special leaf commands without sub-skills (personify, use-browser)
+        for d in "$dest_dir"/*/; do
+            [ -d "$d" ] || continue
+            local nm
+            nm=$(basename "$d")
+            local md="$d/SKILL.md"
+            local should_remove=false
+            if [ -f "$md" ]; then
+                local decl
+                decl=$(get_declared_name "$md")
+                if [[ "$decl" == *:* ]]; then
+                    should_remove=true
+                fi
+            fi
+            # Check against the explicit leaf command list
+            for leaf in $OPENCODE_LEAF_AS_COMMANDS; do
+                if [[ "$nm" == "$leaf" ]]; then
+                    should_remove=true
+                    break
+                fi
+            done
+            if $should_remove; then
+                rm -rf "$d"
+                log "  → Removed ${nm}/ from opencode skills (only as command)"
+            fi
+        done
+    fi
 
     if [[ "$DRY_RUN" != true ]]; then
         local count
@@ -340,7 +560,7 @@ fi
 
 log "Agent-tools skill publisher"
 log "Source: $SRC_ROOT"
-log "Output: $DIST_ROOT"
+log "Output: $DIST_ROOT (commands/ also emitted for opencode)"
 log ""
 
 IFS=',' read -ra AGENT_LIST <<< "$AGENTS"
