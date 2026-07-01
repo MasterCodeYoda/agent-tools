@@ -73,7 +73,15 @@ not silently overwrite their intent.
 ### 6. Persist & resume
 
 Write the reconciled classification to `state.yml` (atomically — temp + rename). Clear any
-stale `last_handoff`. Then re-enter the orchestrator main loop **at the between-wave merge
+stale `last_handoff`. 
+
+**Explicit charter load (resuming swarm run):** Read the charter files before re-entering:
+- Read `.agent-tools/charter/charter.md`
+- Read `.agent-tools/charter/project.md`
+- Read `.agent-tools/charter/engineering.md`
+- Read `.agent-tools/charter/workflow.md`
+
+Then re-enter the orchestrator main loop **at the between-wave merge
 sweep** (Phase 3(A) of `/swarm`), which is the safe re-entry point.
 
 ## Notes

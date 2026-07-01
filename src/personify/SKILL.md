@@ -120,7 +120,7 @@ Run `/personify` in your project root.
 
 The skill will create `.agent-tools/personify.md` (with token-based size tracking) if missing and guide you. On every future run it will show the live memory + usage (in tokens) and drive any needed maintenance.
 
-To make agents load it automatically, add this block to your project's `AGENTS.md` (after the charter block):
+To make agents load it automatically, add this block to your project's `AGENTS.md` (after the Project Charter section if present):
 
 ```markdown
 ## Agent Personify Profile

@@ -35,7 +35,10 @@ per item-stage transition). Each dispatch prompt is assembled by the orchestrato
 ```
 prompt = worker-contract.md content                      (prepended mechanically)
        + roles/<role>.md content
-       + charter reference (same-CLI: pointer; cross-CLI Phase 3: inline content)
+       + charter load instruction (same-CLI or cross: "Read the project charter files under
+         .agent-tools/charter/ at the start of your work: charter.md, then the relevant
+         sections of project.md / engineering.md / workflow.md for your role. Do not assume
+         they are pre-loaded from AGENTS.md.")
        + item context (issue key, title, refined ACs, planning-doc path, worktree, branch)
        + resume context (if re-dispatch — e.g. fix_list)
 ```
@@ -43,6 +46,9 @@ prompt = worker-contract.md content                      (prepended mechanically
 Pass the per-role **model** (from `config.models`, mapped to a concrete ID). Workers operate
 in the item's worktree; entering an existing worktree is done via `cd <worktree-path>` in the
 worker prompt.
+
+This ensures charter content is loaded only inside active swarm worker sessions (when needed),
+never as an unconditional cost for other sessions.
 
 **Worktree handling — strict deferral to git skills:**
 

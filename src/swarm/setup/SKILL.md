@@ -127,8 +127,7 @@ Write everything under the `.agent-tools/` umbrella plus the agent-memory link. 
 ### 4.1 Charter files
 
 Each file has stable headers (so re-setup can diff section by section) and an
-evidence-grounded body filled from detection + dialogue. Keep them **sparse** — the charter
-loads into every agent's context. Empty sections are explicit:
+evidence-grounded body filled from detection + dialogue. Keep them **sparse** — the charter is loaded on demand by swarm commands (and any other sessions that need project conventions). Empty sections are explicit:
 `_No project-specific rules; standard practices apply._`
 
 Each file carries frontmatter:
@@ -276,6 +275,8 @@ marker-bounded block. If `AGENTS.md` doesn't exist, create it with this block. I
 insert the block (typically near the top) or refresh the existing one in place — never
 duplicate it.
 
+The block is a *pointer for discoverability*, not an auto-load trigger for the charter content. Swarm commands are responsible for reading the charter files when relevant.
+
 The block is wrapped in two **HTML-comment markers** so re-setup can find and refresh it
 later. Emit each marker as a standard HTML comment (open with `<!` `--`, close with `--` `>`)
 whose inner content is exactly:
@@ -291,22 +292,22 @@ those two HTML comments:
 ## Project Charter
 
 This project uses a structured charter at `.agent-tools/charter/`.
-Load these files in order before acting; earlier files take precedence on conflict:
 
-1. [`.agent-tools/charter/charter.md`](.agent-tools/charter/charter.md) — entry + precedence rules
-   `@.agent-tools/charter/charter.md`
-2. [`.agent-tools/charter/project.md`](.agent-tools/charter/project.md) — project identity
-   `@.agent-tools/charter/project.md`
-3. [`.agent-tools/charter/engineering.md`](.agent-tools/charter/engineering.md) — engineering non-negotiables
-   `@.agent-tools/charter/engineering.md`
-4. [`.agent-tools/charter/workflow.md`](.agent-tools/charter/workflow.md) — workflow conventions
-   `@.agent-tools/charter/workflow.md`
+The charter captures durable project identity, engineering standards, and workflow conventions. It is shared ground truth for swarm-orchestrated work.
+
+Files (load in order when swarm or project conventions are active; earlier take precedence on conflict):
+
+1. [`.agent-tools/charter/charter.md`](.agent-tools/charter/charter.md) — entry + precedence rules + file index
+2. [`.agent-tools/charter/project.md`](.agent-tools/charter/project.md) — project identity, stack, surfaces, stakeholders
+3. [`.agent-tools/charter/engineering.md`](.agent-tools/charter/engineering.md) — engineering standards, testing, types, architecture, DoD, security
+4. [`.agent-tools/charter/workflow.md`](.agent-tools/charter/workflow.md) — workflow conventions (PM integration, branching, commits, merge, review, release, docs)
+
+**Loading policy**: `/swarm`, `/swarm:continue`, and swarm roles explicitly read the needed charter files during orientation. Pure `/workflow:*` sessions (including `/workflow-continue`) do **not** auto-load the full charter set. Use textual references only — no `@` auto-import directives.
 [[END-MARKER]]
 ```
 
 So the first line written to `AGENTS.md` is the opening HTML comment, and the last is the
-closing HTML comment. The block uses both plain markdown links (universally readable) and
-`@`-paths (Claude auto-imports; other agents read them as informational text).
+closing HTML comment. The block uses plain markdown links (universally readable) for discoverability. Swarm skills perform explicit reads when the charter is relevant to the session.
 
 ### 4.5 Conditional agent-memory symlinks
 
@@ -334,8 +335,9 @@ non-destructive:
    changes, new ADRs since the charter's `last_updated`, changed CI gates.
 3. **Per charter section**, present *current* vs. *proposed* and ask `keep / replace / edit`.
    Default to **keep** on no response.
-4. **Refresh the AGENTS.md marker block** only if the charter file set or paths changed;
-   otherwise leave it untouched.
+4. **Refresh the AGENTS.md marker block** on every re-setup (the canonical block text
+   may have evolved for loading policy). This is safe; only the marked block is replaced.
+   Also force-refresh if the existing block still contains old `@.agent-tools/charter/` directives.
 5. **Symlink integrity check** — verify each picky-named symlink still points at the real
    `AGENTS.md`; if broken or replaced by a regular file, surface and ask.
 6. **`config.yml`** — if present, leave user edits intact; only add newly-introduced keys
@@ -367,6 +369,6 @@ Report what was written/changed:
 - which symlinks were created (and any skipped pending confirmation);
 - a reminder to **commit** the new/changed files (no push — that's always user-initiated).
 
-Then note: the charter now loads automatically for any agent that reads `AGENTS.md`,
-including single-agent `/workflow` runs. With the charter and role templates in place, the
-project is ready for `/swarm <goal>`.
+Then note: the charter and swarm umbrella are installed under `.agent-tools/`. The AGENTS.md block documents the location for discoverability. `/swarm*` skills explicitly load charter files on demand (no unconditional preload into every session). 
+
+**For projects that ran setup before this change**: re-run `/swarm:setup` to refresh the AGENTS.md block (removes the old `@` auto-loads so `/workflow-continue` and similar no longer preload the full charter set). With the charter and role templates in place, the project is ready for `/swarm <goal>`.

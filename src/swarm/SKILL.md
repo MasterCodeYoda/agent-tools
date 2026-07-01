@@ -33,8 +33,10 @@ git worktrees per item and (b) the host's native sub-agent dispatch. It stays re
   worktree. `/workflow` behavior is unchanged.
 - **Refinement is host-side.** The orchestrator runs `/workflow:refine` itself, in the main
   session, conversationally with you — it is not a sub-agent role.
-- **Charter is shared ground truth.** Workers and the orchestrator read
-  `.agent-tools/charter/` (loaded via `AGENTS.md`). Run `/swarm:setup` first if absent.
+- **Charter is shared ground truth.** Workers and the orchestrator explicitly read the
+  relevant files from `.agent-tools/charter/` (charter.md first, then project/engineering/workflow
+  as needed for the phase). Run `/swarm:setup` first if absent. Charters are no longer auto-loaded
+  into every session via AGENTS.md (keeps pure `/workflow-continue` sessions lightweight).
 
 ## Safety (non-negotiable)
 
@@ -73,6 +75,7 @@ $ARGUMENTS
    - **Absent** → check for charter (`.agent-tools/charter/charter.md`) and
      `.agent-tools/swarm/config.yml`. If present, report initialized + idle and suggest
      `/swarm <goal>`. If `sessions/` has past runs, list the last few by run-id.
+     (For the check, explicitly `read .agent-tools/charter/charter.md [offset=1, limit=100]` to confirm without loading full content unless a swarm run starts.)
    - **Not initialized** (no charter) → summarize what's missing and offer to run `/swarm:setup`.
 2. Handle a malformed/orphaned `active-run` per `references/state-yml-schema.md` (surface and
    offer to clear).
@@ -83,6 +86,14 @@ $ARGUMENTS
 Run `/swarm:setup` first." Also confirm `roles/` and `references/` exist under
 `.agent-tools/swarm/` (written by `/swarm:setup`); if missing, direct the user to re-run
 `/swarm:setup`.
+
+**Explicit charter load (this session is swarm-driven):** Read the charter files now:
+- Read `.agent-tools/charter/charter.md`
+- Read `.agent-tools/charter/project.md`
+- Read `.agent-tools/charter/engineering.md`
+- Read `.agent-tools/charter/workflow.md`
+
+(These are the full source of truth for identity, standards, and conventions during swarm work.)
 
 Then run the orchestration loop:
 

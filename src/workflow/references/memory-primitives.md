@@ -86,7 +86,7 @@ Factory strongly distinguishes between **Memory** (descriptive records of decisi
 The `personify` skill provides a specialized, narrow-scope durable profile for **agent personality, voice, and interpersonal communication facts only**.
 
 - Location: `.agent-tools/personify.md` (single file; travels with the project or lives in user home for personal)
-- Loading: Explicitly referenced from `AGENTS.md` (after any charter block) so agents load it automatically:
+- Loading: Explicitly referenced from `AGENTS.md` (after the Project Charter section if present) so agents load it automatically:
   ```markdown
   ## Agent Personify Profile
 

@@ -11,7 +11,7 @@ against the item's branch.
 ## Scope notes
 
 - Review against the item's acceptance criteria, the plan, and the project charter
-  (`.agent-tools/charter/`).
+  (explicitly read `.agent-tools/charter/*.md` as needed for standards and conventions).
 - A green test suite is necessary but not sufficient. Verify each acceptance criterion
   **behaviorally** — exercise the command(s) and confirm the observed output matches the AC.
   Pay special attention to ACs that reference another command's contract (e.g. an index that
