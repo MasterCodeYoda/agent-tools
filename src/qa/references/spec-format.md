@@ -4,7 +4,7 @@ NL specs are structured markdown files that define what to test and what to expe
 
 ## File Location and Naming
 
-Specs live in the configured `specs_dir` (default: `./specs` relative to sentinel config).
+Specs live in the configured `specs.nl_dir` (default: `./specs` relative to `sentinel.config.yaml`).
 
 Naming convention: `{area}-{feature}.md`
 Examples: `checkout-payment.md`, `auth-login.md`, `dashboard-widgets.md`
@@ -35,7 +35,7 @@ seed: tests/seed.spec.ts
 | `priority` | Yes | `P0` (data-loss-prevention), `P1` (core-flow), `P2` (advanced), or `P3` (edge-case). |
 | `persona` | Yes | Target user type: `new-user`, `power-user`, or `returning-user`. |
 | `tags` | No | Array of free-form tags for filtering and cross-referencing. |
-| `seed` | No | Path to the seed spec file (e.g., `tests/seed.spec.ts`). Generated tests import fixtures from the seed. |
+| `seed` | No | Path to the seed spec file. Use `specs.seed` from `sentinel.config.yaml` when present. Generated tests import fixtures from the seed. |
 
 ### Priority Definitions
 

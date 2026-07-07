@@ -28,7 +28,7 @@ Parse input to determine discovery mode:
 
 ## Load Configuration
 
-Read `sentinel.config.yaml` and extract `app.base_url`, `specs.nl_dir`, and `auth` settings. If no config exists, tell the user to run `qa:setup` first and stop.
+Read `sentinel.config.yaml` and extract `app.base_url`, `specs.nl_dir`, `specs.seed`, and `auth` settings. If no config exists, tell the user to run `qa:setup` first and stop.
 
 ---
 
@@ -171,7 +171,7 @@ For each distinct feature found, generate a spec file:
 3. Assign `priority` — P0 for data-loss risk, P1 for core flows mentioned as critical, P2 for standard features, P3 for edge cases
 4. Assign `persona` based on who the feature serves: `new-user`, `power-user`, or `returning-user`
 5. Set `tags` based on classification (e.g., `[core-flow, data-loss-prevention]`)
-6. Set `seed` to `tests/seed.spec.ts`
+6. Set `seed` to `specs.seed` from `sentinel.config.yaml`
 7. Write an Overview section explaining why the feature matters
 8. Write numbered H3 scenarios with step-by-step actions and **Expected:** lines
 9. Extract test data into the Test Data table
@@ -350,7 +350,7 @@ When in doubt, ask the user rather than guess. A spec based on real knowledge is
 
 ### With /qa:setup
 
-Discover depends on `sentinel.config.yaml` produced by setup. If config is missing, direct user to run `/qa:setup` first. Config provides `base_url`, `specs.nl_dir`, and auth settings.
+Discover depends on `sentinel.config.yaml` produced by setup. If config is missing, direct user to run `/qa:setup` first. Config provides `app.base_url`, `specs.nl_dir`, `specs.seed`, and auth settings.
 
 ### With /workflow:audit (qa domain) and planned `/qa:audit`
 

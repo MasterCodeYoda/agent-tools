@@ -96,6 +96,7 @@ Factory Droid approaches NL-driven testing differently from the dedicated Playwr
 - Manage evidence/screenshots (Playwright captures via `playwright.config.ts`)
 - Generate reports (Playwright HTML reporter handles this)
 - Fix broken selectors (Healer does this)
+- Store project facts in client-specific adapter prompts (those belong in `sentinel.config.yaml`)
 
 ### NL Spec Format
 
@@ -116,7 +117,7 @@ See `tools/SKILL.md` for tool documentation.
 ## Command Set
 
 ### `/qa:setup`
-Initialize Sentinel in a project. Creates directory structure, config file, Playwright config, and seed test file.
+Initialize Sentinel in a project. Creates directory structure, config file, Playwright config, seed test file, and generated authoring adapters for the selected client(s). Adapter files are boilerplate; project facts live in `sentinel.config.yaml`.
 
 ### `/qa:discover`
 Author NL specs by scanning the app, importing existing docs, or guided interactive conversation. Outputs structured markdown NL specs ready for Playwright's Planner.
@@ -132,6 +133,7 @@ Author NL specs by scanning the app, importing existing docs, or guided interact
 ## References
 
 - `references/spec-format.md` — NL spec format: frontmatter fields, scenario structure, examples
+- `references/authoring-adapters.md` — Contract for generated Claude/OpenCode adapter files vs. project-specific Sentinel config
 
 ## Templates
 
