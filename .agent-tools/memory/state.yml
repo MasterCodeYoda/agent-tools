@@ -1,0 +1,13 @@
+schema_version: 1
+interval_days: 7
+last_maintain_at: "2026-07-08T22:29:35Z"
+snooze_until: null
+last_maintain_result:
+  p1: 2
+  p2: 4
+  p3: 2
+  promoted: 4
+  retired: 0
+  thinned_local: 4
+  migrated_solutions: 0
+solutions_migrated_from_docs: false
