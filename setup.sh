@@ -218,28 +218,44 @@ prune_stale_skills() {
 
     local removed=0
     for entry in "$target_base"/*; do
-        [ -e "$entry" ] || continue
+        [ -e "$entry" ] || [ -L "$entry" ] || continue
         local name
         name=$(basename "$entry")
 
         # Only consider directories or symlinks that look like skills
         if [ -d "$entry" ] || [ -L "$entry" ]; then
             local marker="${entry}/${MANAGED_MARKER}"
+            local still_published=false
+            local is_ours=false
+
             if [ -e "$marker" ]; then
-                # Check if still published
-                local still_published=false
+                is_ours=true
                 for pub in "${current_published[@]}"; do
                     if [ "$pub" = "$name" ]; then
                         still_published=true
                         break
                     fi
                 done
-
-                if [ "$still_published" = false ]; then
-                    echo -e "  ${YELLOW}→${NC} Removing stale managed skill: ${name}"
-                    rm -rf "$entry"
-                    ((removed++))
+            elif [ -L "$entry" ]; then
+                # Dangling (or target-missing) symlink. Check if it pointed into our
+                # dist tree for this agent (covers removed flats, legacy layouts, etc.).
+                local link_target
+                link_target=$(readlink "$entry" 2>/dev/null || true)
+                if [[ -n "$link_target" && "$link_target" == *"/dist/${agent}/skills/"* ]]; then
+                    is_ours=true
+                    for pub in "${current_published[@]}"; do
+                        if [ "$pub" = "$name" ]; then
+                            still_published=true
+                            break
+                        fi
+                    done
                 fi
+            fi
+
+            if [ "$is_ours" = true ] && [ "$still_published" = false ]; then
+                echo -e "  ${YELLOW}→${NC} Removing stale managed skill: ${name}"
+                rm -rf "$entry"
+                ((removed++))
             fi
         fi
     done
@@ -282,9 +298,9 @@ install_skills_for_agent() {
     done
 
     # Prune any previously managed skills that are no longer published.
-    # This safely removes old entries (including legacy flat skills and
-    # any renamed/removed grouped or flattened skills) without touching
-    # third-party skills.
+    # This safely removes old entries (including legacy flat skills, dangling
+    # symlinks to removed dist entries, and any renamed/removed grouped or
+    # flattened skills) without touching third-party skills.
     local user_target
     user_target=$(get_agent_skills_dir "$agent" "user")
     local project_target

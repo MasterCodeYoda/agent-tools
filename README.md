@@ -34,7 +34,7 @@ Re-run `./setup.sh` after pulling changes. The publisher runs on every invocatio
 The system is built around a clean separation:
 
 - `src/` — The single source of truth. All skill development happens here. Skills may contain lightweight embedded markup (`<!-- agent:include claude --> ... <!-- /agent:include claude -->`) when behavior must differ between agents.
-- `tools/publish-skills.sh` — A thin, mechanical publisher (pure bash + portable awk). It walks `src/`, resolves the `agent:include` / `agent:exclude` markup for each target agent, strips all HTML comments, and writes clean trees to `dist/<agent>/skills/`. For every agent it also emits top-level hyphenated siblings (e.g. `git-commit/`) for any sub-skill whose `name:` frontmatter contains a colon, so both family overviews and direct sub-commands appear in slash menus. (Grok's loader does not yet promote invocable sub-skills as first-class top-level commands, so these siblings are currently inert there — but they are published uniformly so they "just work" the moment that limitation is fixed upstream.)
+- `tools/publish-skills.sh` — A thin, mechanical publisher (pure bash + portable awk). It walks `src/`, resolves the `agent:include` / `agent:exclude` markup for each target agent, strips all HTML comments, and writes clean trees to `dist/<agent>/skills/`. For agents whose skill discovery only sees direct children of the skills directory (Claude, Grok, Factory) it also emits top-level hyphenated siblings (e.g. `git-commit/`) for any sub-skill whose `name:` frontmatter contains a colon, so both family overviews and direct sub-commands appear in slash menus. Codex receives only the hierarchical tree (it recursively discovers nested SKILL.md files). (Grok's loader does not yet promote invocable sub-skills as first-class top-level commands, so these siblings are currently inert there — but they are published for it so they "just work" the moment that limitation is fixed upstream.)
 - `setup.sh` — Runs the publisher on every invocation, then installs skills from `dist/<agent>/skills/` into the right locations based on each skill’s `publish-target` frontmatter:
   - `publish-target: user-profile` (default) → installed (symlinked) into your global `~/.claude/skills/`, `~/.grok/skills/`, `~/.factory/skills/`, or `~/.codex/skills/`.
   - `publish-target: project` → installed only into the local project directory (`.claude/skills/`, `.grok/skills/`, `.factory/skills/`). Currently used by the `skills` meta-skill and `swarm-test`.
@@ -97,7 +97,7 @@ Skills are context-aware reference material that Claude loads on demand via `@sk
 
 ### Commands — Executable Workflows
 
-Commands are invoked with `/command-name` (or the hyphenated equivalents for sub-commands) in supported agents. For Claude and Factory both the family overview and direct sub-commands appear in slash menus. The same flattened siblings are published for Grok, but until its loader promotes invocable sub-skills the family overview skills (`/git`, `/workflow`, etc.) remain the practical surface — they document the available sub-commands, which remain reachable by exact name. Each family also provides an invocable overview skill that surfaces the full command table and guidance.
+Commands are invoked with `/command-name` (or the hyphenated equivalents for sub-commands) in supported agents. For Claude and Factory both the family overview and direct sub-commands appear in slash menus (via the emitted flat siblings). The same flattened siblings are published for Grok, but until its loader promotes invocable sub-skills the family overview skills (`/git`, `/workflow`, etc.) remain the practical surface — they document the available sub-commands, which remain reachable by exact name. Codex discovers the nested layout directly and uses the `name:` declared in each SKILL.md (no hyphenated siblings are created for it). Each family also provides an invocable overview skill that surfaces the full command table and guidance.
 
 #### Workflow Commands
 
@@ -182,9 +182,9 @@ agent-tools/
 │   ├── claude/skills/               # family/ + flattened command siblings (e.g. git-commit/)
 │   ├── grok/skills/                 # family/ + flattened command siblings (inert until Grok's loader supports them)
 │   ├── factory/skills/              # family/ + flattened command siblings
-│   └── codex/skills/                # family/ + flattened command siblings
+│   └── codex/skills/                # family/ + nested sub-skills only (Codex recurses for discovery)
 ├── tools/
-│   └── publish-skills.sh            # Mechanical publisher (bash + awk): markup resolution + uniform flattening (all agents)
+│   └── publish-skills.sh            # Mechanical publisher (bash + awk): markup resolution + agent-specific flattening (Claude/Grok/Factory only)
 ├── setup.sh                         # Runs publisher + installs (user profile vs project) + prunes stale
 └── README.md
 ```

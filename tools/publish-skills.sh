@@ -133,10 +133,10 @@ get_declared_name() {
 # and also publish them as top-level skills using hyphen as separator (git-commit, workflow-refine).
 # This allows both the group overview (/git) and direct sub-commands (/git-commit) to appear.
 #
-# For OpenCode, we additionally emit the corresponding invocable sub-skills (and top-level
-# invocables) as native *commands* (in dist/opencode/commands/) because OpenCode treats
-# skills and commands as distinct concepts. Commands provide the direct `/name` slash UX
-# that our sub-skill families are designed to deliver.
+# IMPORTANT: only used for agents whose discovery walks *only* direct children of skills/
+# (Claude Code, Grok, Factory). Codex recursively discovers any SKILL.md under the tree,
+# so emitting flats would duplicate every sub-skill. OpenCode never emits them here
+# (it uses the separate commands/ mechanism instead).
 emit_flattened_leaves() {
     local agent="$1"
     local package="$2"          # e.g. "git", "workflow"
@@ -501,16 +501,16 @@ publish_for_agent() {
         # Emit flattened top-level versions for any sub-skills that use colon namespacing
         # (e.g. src/git/commit/SKILL.md with name: git:commit  →  dist/.../skills/git-commit/).
         #
-        # For most agents this enables direct /git-commit etc. For opencode we skip this:
-        # sub-skills are only emitted as native commands (see emit_commands_for_opencode),
-        # so we do not want them also present as top-level skills (avoids duplication).
-        if [[ "$agent" != "opencode" ]]; then
+        # Only for agents that do not support recursive discovery inside skill directories.
+        # Codex recurses (so the nested tree written above is sufficient and prevents dups).
+        # OpenCode uses commands/ exclusively for subs.
+        if [[ "$agent" != "opencode" && "$agent" != "codex" ]]; then
             emit_flattened_leaves "$agent" "$skill_name" "$dest_skill_dir"
         fi
     done
 
-    # For OpenCode, also emit the (flattened + top-level) invocables as native commands.
-    # See emit_commands_for_opencode for rationale.
+    # For OpenCode, emit the sub-skill (colon) invocables as native commands.
+    # See emit_commands_for_opencode for rationale. (We never create hyphenated skill dirs for opencode.)
     if [[ "$agent" == "opencode" ]]; then
         emit_commands_for_opencode "$agent" "$dest_dir"
 
