@@ -270,10 +270,15 @@ repo-root `.gitignore`.
 
 ### 4.4 AGENTS.md charter-link block
 
-`AGENTS.md` is the **single canonical** agent-memory file. Insert (or refresh) a
+`AGENTS.md` is the **single canonical** agent orientation file. Insert (or refresh) a
 marker-bounded block. If `AGENTS.md` doesn't exist, create it with this block. If it exists,
 insert the block (typically near the top) or refresh the existing one in place — never
 duplicate it.
+
+> **Shared project memory** (`.agent-tools/memory/` + `agent-tools:memory-link` block) is owned
+> by `/workflow:setup`, not this skill. After charter setup, run `/workflow:setup` (or ensure it
+> has been run) so the memory scaffold and memory-link block exist. Do not invent a second
+> memory-link format here.
 
 The block is a *pointer for discoverability*, not an auto-load trigger for the charter content. Swarm commands are responsible for reading the charter files when relevant.
 

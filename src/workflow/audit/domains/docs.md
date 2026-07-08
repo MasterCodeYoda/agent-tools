@@ -43,7 +43,7 @@ Parse input to determine audit scope:
 
 ### Step 3: Count and classify
 - Count doc files per location using glob
-- Classify: README, contributing, architecture, API, inline, planning, solution docs
+- Classify: README, contributing, architecture, API, inline, planning, agent memory (`.agent-tools/memory/`)
 - Check for doc tooling configs and build steps in CI
 
 ## Scope Gate

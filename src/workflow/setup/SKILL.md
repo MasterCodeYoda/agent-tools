@@ -1,6 +1,6 @@
 ---
 name: workflow:setup
-description: Initialize and maintain the planning/ docs the workflow family depends on, and collaborate with the user to define project-local conventions — work tracks, project-specific gates, and integration policy — that all /workflow phases honor.
+description: Initialize and maintain planning/ docs, project-local conventions (tracks, gates, integration policy), and the shared project memory scaffold under .agent-tools/memory/ (with AGENTS.md memory-link) for the workflow family.
 argument-hint: "[optional: 'maintain' to refresh existing conventions, or blank to initialize]"
 user-invocable: true
 ---
@@ -37,9 +37,10 @@ through to maintain if docs already exist).
 ## Relationship to other skills
 
 - **`/swarm:setup`** — complementary, not overlapping. `/workflow:setup` is **swarm-independent**
-  and writes only under `planning/`; it may reference or contribute to `.agent-tools/` for other
-  durable agent configuration (e.g. bounded personify profile). If you also use `/swarm`, run `/swarm:setup` for
-  the shared charter (`.agent-tools/charter/`). Different primary scopes, no collision.
+  for `planning/` conventions; it also owns the **project shared-memory scaffold** under
+  `.agent-tools/memory/` and the AGENTS.md memory-link block. It may reference other
+  `.agent-tools/` config (e.g. personify). If you also use `/swarm`, run `/swarm:setup` for
+  the shared charter (`.agent-tools/charter/`). Swarm does not invent a second memory-link format.
 - **`/workflow:continue`** — the primary consumer of `planning/conventions.md`. It classifies the
   next slice into the right track, routes per the conventions, and applies the project gates.
 - **All `/workflow:*` phases** honor the project gates and integration policy recorded here.
@@ -55,6 +56,8 @@ Survey what already exists; **read before writing**:
 - Top-level `planning/session-state.md` — present with live pointer → maintain. Otherwise do not create/maintain one (per-item `planning/<item>/session-state.md` is the normal location; top-level is only a light optional pointer for cross-slice coordination).
 - `AGENTS.md` / `CLAUDE.md` / `CONTRIBUTING.md` and any PM/MCP signals — to pre-fill defaults and
   avoid re-asking what the project already states.
+- `.agent-tools/memory/` — present → maintain scaffold + AGENTS memory-link. Absent → plan to create.
+- Legacy `docs/solutions/` — if present, note for the user (migrate via `/workflow:compound --maintain --migrate-solutions`; setup does **not** migrate).
 
 Report what you found and what's missing before changing anything.
 
@@ -155,7 +158,7 @@ For each work-item subdirectory (`planning/<item>/`):
 
 These rules are **directory-local** inside `planning/.gitignore` and per-item `.gitignore` (no planning/ exceptions are placed in the project root `.gitignore`).
 
-In initialize mode: ensure `planning/` hygiene (`.gitkeep` + `.gitignore`). Create `conventions.md` or a top-level `session-state.md` **only when there is actual content to record** (see rules above). Per-item state and handoffs are created later by the phases that need them.
+In initialize mode: ensure `planning/` hygiene (`.gitkeep` + `.gitignore`). Create `conventions.md` or a top-level `session-state.md` **only when there is actual content to record** (see rules above). Per-item state and handoffs are created later by the phases that need them. **Always** run §5 / §5.1 (memory scaffold + AGENTS memory-link) — they are independent of conventions content.
 
 ### 4. Handoff scaffold (top-level `session-state.md`) — optional
 
@@ -177,7 +180,89 @@ When a top-level handoff *is* present and useful, include a durable orientation 
 
 Keep any handoff **light**. Compress history per `@workflow:continue`.
 
-### 5. Maintain mode
+### 5. Project shared memory scaffold (`.agent-tools/memory/`)
+
+Idempotent. Create missing pieces; never clobber non-empty entry/solution files.
+
+**Directory tree** (create dirs + defaults if absent):
+
+```text
+.agent-tools/memory/
+  MEMORY.md
+  state.yml
+  entries/          # keep with .gitkeep if empty
+  solutions/        # keep with .gitkeep if empty
+```
+
+**Default `MEMORY.md`** (only when file is missing):
+
+```markdown
+# Project memory index
+
+Agent working knowledge for this repo (patterns, gotchas, lessons, debugging solutions).
+Maintained by `/workflow:compound`. Not a substitute for ADRs, CONTRIBUTING, or Codex/domain docs.
+
+## Entries
+
+<!-- One-line pointers to entries/<slug>.md — added by compound capture/maintain -->
+
+## Solutions
+
+Debugging post-mortems live under `solutions/<category>/`. Search by `symptoms` / `tags` in
+frontmatter; browse by category. Do not enumerate every solution here.
+```
+
+**Default `state.yml`** (only when file is missing):
+
+```yaml
+schema_version: 1
+interval_days: 7
+last_maintain_at: null
+snooze_until: null
+last_maintain_result: null
+solutions_migrated_from_docs: false
+```
+
+**Empty dirs:** add `entries/.gitkeep` and `solutions/.gitkeep` if the directories would otherwise be empty.
+
+If `MEMORY.md` or `state.yml` already exist with real content, leave them; only fill missing keys in `state.yml` with documented defaults (never overwrite user values).
+
+### 5.1 AGENTS.md memory-link block
+
+`AGENTS.md` is the canonical agent orientation file. Insert (or refresh) a **marker-bounded** block for shared memory — same mechanism as the charter-link from `/swarm:setup`, different markers.
+
+Emit each marker as a standard HTML comment whose inner content is exactly:
+
+- **opening marker** — content: `agent-tools:memory-link begin`
+- **closing marker** — content: `agent-tools:memory-link end`
+
+If `AGENTS.md` does not exist, create it with this block. If it exists, insert near the top (after charter-link if present) or refresh the existing marked block in place — never duplicate.
+
+Block body (replace `[[BEGIN-MARKER]]` / `[[END-MARKER]]` with the two HTML comments):
+
+```markdown
+[[BEGIN-MARKER]]
+## Project agent memory
+
+This project keeps **shared agent working knowledge** under [`.agent-tools/memory/`](.agent-tools/memory/).
+
+| Path | Contents |
+|------|----------|
+| [`MEMORY.md`](.agent-tools/memory/MEMORY.md) | Index of entries (and a pointer to solutions) |
+| `entries/` | Patterns, gotchas, lessons, process invariants |
+| `solutions/` | Debugging post-mortems by category |
+
+**What it is:** portable, git-committed knowledge any harness should use — how we got burned, how to operate, reusable patterns.
+
+**What it is not:** ADRs (`docs/decisions/`), CONTRIBUTING/gates, Codex/domain docs, planning scratch, or personify voice.
+
+**Loading policy:** Read [`MEMORY.md`](.agent-tools/memory/MEMORY.md) when compounding, debugging, or hitting an unfamiliar seam; open individual entry/solution files on demand. Do **not** auto-import the entire tree every turn. Capture and maintain via `/workflow:compound` (and `/workflow:compound --maintain`).
+[[END-MARKER]]
+```
+
+On maintain/re-run: refresh the marked block to the canonical text (safe; only the marked region is replaced). If markers are missing or malformed, stop and ask — never speculatively rewrite AGENTS.md.
+
+### 6. Maintain mode
 
 When conventions already exist: show the current conventions, diff against detected reality
 (new work-item dirs, a PM tool now present, a track doc that moved), and offer **targeted** edits.
@@ -191,9 +276,15 @@ Also evaluate the planning/ structure:
 - If a top-level `session-state.md` exists but has no active content, offer to delete it.
 - If anything structural is missing or incorrect: propose creating or fixing (idempotent, non-destructive). This keeps the "everything not explicitly allowed is ignored" contract and avoids empty scaffolding.
 
+Also evaluate shared memory:
+- `.agent-tools/memory/` tree present with MEMORY.md + state.yml + entries/ + solutions/
+- AGENTS.md memory-link block present and current
+- If `docs/solutions/` still has solution files and `solutions_migrated_from_docs` is not true: report once — migrate with `/workflow:compound --maintain --migrate-solutions` (setup does not move them)
+
 ## What `/workflow:setup` does not do
 
 - Does **not** plan, refine, or execute work — it sets up the scaffolding those phases use.
-- Does **not** author the swarm charter (that's `/swarm:setup`); it may interact with `.agent-tools/` for other durable config.
+- Does **not** author the swarm charter (that's `/swarm:setup`); it may interact with `.agent-tools/` for other durable config (including memory scaffold).
 - Does **not** invent conventions the project doesn't have. If only defaults apply, no `conventions.md` is created (phases fall back to built-in defaults).
 - Does **not** create empty top-level `session-state.md` scaffolding. Top-level handoff is created only for a live cross-project pointer; normal per-item state is created under `planning/<item>/` by plan/execute.
+- Does **not** migrate `docs/solutions/` or promote harness-local memories — that's `/workflow:compound --maintain` (with user approval).

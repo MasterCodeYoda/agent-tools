@@ -36,6 +36,32 @@ Most agents maintain at least two broad categories of memory:
 
 These are typically scoped by visibility and sharing needs (user-wide, project-wide, local-only, etc.).
 
+### Agent-tools levels (cross-harness)
+
+| Level | Home | Scope |
+|-------|------|--------|
+| **L1 Global** | User prefs (e.g. `~/.claude/CLAUDE.md`, platform Memory) | User-wide across projects |
+| **L2 Project guide** | `AGENTS.md` (often with `CLAUDE.md` → symlink) | Always-load thin project rules |
+| **L3-shared** | **`.agent-tools/memory/`** (git-committed) | Project-wide agent working knowledge — portable across machines and harnesses |
+| **L3-local** | Harness auto-memory (e.g. Claude project `MEMORY.md` under `~/.claude/projects/…`) | Personal, machine, or session-adjacent; **not** the team SoT |
+| **Docs** | ADRs, runbooks, Codex/domain, CONTRIBUTING | Human + agent durable product corpus |
+
+**L3-shared layout** (authored/maintained by `/workflow:setup` + `/workflow:compound`):
+
+```text
+.agent-tools/memory/
+  MEMORY.md                 # Entries index (full); Solutions = pointer only
+  state.yml                 # Maintain cadence + last-run summary
+  entries/<slug>.md         # type: pattern | gotcha | lesson | process
+  solutions/<category>/<slug>.md
+```
+
+**Non-goals for L3-shared:** restating ADRs or CONTRIBUTING; personify voice; planning scratch; secrets; product docs under `docs/`. Debugging post-mortems live under `.agent-tools/memory/solutions/`, **not** `docs/solutions/`.
+
+**Loading:** `AGENTS.md` carries a marker-bounded pointer to `MEMORY.md` (installed by `/workflow:setup`). Agents read the index on demand (compound, unfamiliar seams, debugging); they do **not** `@`-import every satellite every turn.
+
+**Harness auto-memory must not be redirected into the repo** (e.g. Claude `autoMemoryDirectory` is restricted for security). Shared strata is written by compound capture/maintain (with user approval on promote/migrate), not by platform auto-writers.
+
 <!-- agent:include claude -->
 
 ### Claude Code Implementation
@@ -43,7 +69,9 @@ These are typically scoped by visibility and sharing needs (user-wide, project-w
 Claude Code maintains two independent memory systems:
 
 - **User-authored**: `CLAUDE.md` files (with scopes: managed policy, project, user, local).
-- **Auto-memory**: `MEMORY.md` + topic files written by Claude (subject to 200-line / 25 KB truncation).
+- **Auto-memory**: `MEMORY.md` + topic files written by Claude (subject to 200-line / 25 KB truncation) — this is **L3-local**, not L3-shared.
+
+Team-shared technical memory for agent-tools projects is **`.agent-tools/memory/`**. Prefer writing project-wide captures there via `/workflow:compound`; keep Claude auto-memory for personal/machine notes or thin pointers.
 
 See the detailed scopes table and primitive list below for Claude’s current mechanisms.
 
@@ -81,6 +109,8 @@ Factory strongly distinguishes between **Memory** (descriptive records of decisi
 
 <!-- /agent:include factory -->
 
+<!-- agent:include personify -->
+
 ### Personify Profile (cross-cutting, from agent-tools skills)
 
 The `personify` skill provides a specialized, narrow-scope durable profile for **agent personality, voice, and interpersonal communication facts only**.
@@ -116,9 +146,19 @@ The `personify` skill provides a specialized, narrow-scope durable profile for *
   ...
   ```
 - Maintenance is built-in: the skill surfaces bloat signals and walks through review. Prefer this over letting the file grow.
-- Distinction from other memory: This is **not** general project memory or rules (use charter/AGENTS.md, memories.md, etc.). It is narrowly for how the *agent* should present itself and communicate with humans.
+- Distinction from other memory: This is **not** general project memory or rules (use charter/AGENTS.md, `.agent-tools/memory/`, etc.). It is narrowly for how the *agent* should present itself and communicate with humans.
 
 <!-- /agent:include personify -->
+
+### Project shared memory (cross-cutting, from agent-tools)
+
+Installed and maintained by `/workflow:setup` + `/workflow:compound`:
+
+- **Location:** `.agent-tools/memory/` (see levels table above)
+- **AGENTS link:** marker block `agent-tools:memory-link begin/end` pointing at `MEMORY.md`
+- **Capture routing:** deterministic gate in `/workflow:compound` (solutions → `solutions/`; project-wide patterns/gotchas → `entries/`; decisions → ADRs; voice → personify)
+- **Maintain:** `/workflow:compound --maintain` audits L1–L3, proposes promote/retire, optional `--migrate-solutions` for legacy `docs/solutions/`
+- **Cadence:** `state.yml` `interval_days` (default 7) soft-prompts on capture; `--maintain` is always on-demand
 
 ---
 
@@ -150,7 +190,8 @@ The table below lists the specific mechanisms Claude Code currently exposes.
 | `claude project purge` (built-in, v2.1.126+) | Command | Nuclear archival: deletes transcripts, task history, file history, project config under `~/.claude/projects/<hash>/`. Use for project handoff or when winding down a stale workspace.   |
 | `InstructionsLoaded` hook              | Hook     | Fires when CLAUDE.md or `.claude/rules/*.md` loads. Matchers: `session_start`, `nested_traversal`, `path_glob_match`, `include`, `compact`. Wire-point for size warnings or audit logging. |
 | `PreCompact` / `PostCompact` hooks     | Hook     | Wrap conversation compaction events. Useful for deciding when to trigger maintenance.                              |
-| `/workflow:compound --maintain`        | Command (this repo) | The deliberate, evidence-producing alternative to `/dream` — a three-tier audit across all memory levels with selective approval. See "When to run compound --maintain" below. |
+| `/workflow:compound --maintain`        | Command (this repo) | Three-tier audit across L1 / L2 / L3-shared / L3-local with promote/retire proposals and selective approval. Optional `--migrate-solutions` for legacy `docs/solutions/`. |
+| `.agent-tools/memory/`                 | File set (this repo) | **L3-shared**: committed project memory (`MEMORY.md` + `entries/` + `solutions/`). Preferred home for project-wide captures. |
 
 <!-- /agent:include claude -->
 
@@ -356,12 +397,15 @@ These patterns are intended to be useful regardless of which agent you use.
 
 Use a deliberate memory maintenance workflow when:
 
-- Memory files or context are approaching practical limits (bloat, truncation, or degraded agent performance) — including the personify profile approaching 800+ tokens
+- Memory files or context are approaching practical limits (bloat, truncation, or degraded agent performance) — including the personify profile approaching 800+ tokens, shared `MEMORY.md` Entries section past ~120 lines, or Claude local MEMORY.md near 200 lines / 25 KB
+- Maintain due per `.agent-tools/memory/state.yml` (`interval_days`, default 7) — soft-prompted by `/workflow:compound`; run `--maintain` anytime on demand
 - New contributors or team members are onboarding
 - The project has undergone significant changes that may have invalidated previous decisions or context
 - Before sharing memory/rules with a wider team or repository
+- Harness-local auto-memory has grown project-wide guidance that should be promoted to `.agent-tools/memory/entries/`
+- Legacy `docs/solutions/` still exists and should be migrated (`--maintain --migrate-solutions`)
 
-The specific triggers and tools vary by agent platform.
+The specific triggers and tools vary by agent platform. Primary tool: `/workflow:compound --maintain`.
 
 <!-- agent:include claude -->
 

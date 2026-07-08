@@ -198,13 +198,15 @@ to set up hygiene and record any real custom conventions (it will not create emp
 ### /workflow:setup
 **Purpose**: Initialize/maintain project workflow scaffolding and capture project-local conventions
 
-**Behavior**: Idempotent and non-destructive. Surveys existing `planning/` state, then collaborates with the user to record — in `planning/conventions.md` — the requirements-source mode, any **additional work tracks** (e.g. a discovery loop that overrides the default phase table), **project-specific gates** (additive to the review gate), and the **integration/merge policy**. Also ensures the top-level handoff carries a durable *Project orientation* pointer block. Run anytime to refresh.
+**Behavior**: Idempotent and non-destructive. Surveys existing `planning/` state, then collaborates with the user to record — in `planning/conventions.md` — the requirements-source mode, any **additional work tracks** (e.g. a discovery loop that overrides the default phase table), **project-specific gates** (additive to the review gate), and the **integration/merge policy**. Also ensures the top-level handoff carries a durable *Project orientation* pointer block. **Always** scaffolds `.agent-tools/memory/` and the AGENTS.md memory-link block when missing. Run anytime to refresh.
 
 **Outputs**:
 - `./planning/conventions.md` — only when the project has non-default tracks, gates, or policy (absent = use built-in defaults)
 - Top-level `./planning/session-state.md` — only when a live cross-project handoff/pointer exists (optional; normal per-item state lives in `planning/<item>/session-state.md` and is created by plan/execute)
+- `.agent-tools/memory/` — shared project memory scaffold (`MEMORY.md`, `state.yml`, `entries/`, `solutions/`)
+- `AGENTS.md` memory-link block (`agent-tools:memory-link`)
 
-**Boundary**: `planning/`-scoped for transient work and conventions; may reference `.agent-tools/` for other durable config. Complementary to `/swarm:setup` (which owns the swarm charter and umbrella bootstrap).
+**Boundary**: `planning/`-scoped for transient work and conventions; owns shared-memory scaffold under `.agent-tools/memory/`. Complementary to `/swarm:setup` (which owns the swarm charter and umbrella bootstrap).
 
 **When to use**: Onboarding a project to `/workflow`, or whenever the project's tracks/gates/policy change
 
@@ -293,11 +295,17 @@ execution. After approval, the user chooses: save the plan only, or save and pro
 **When to use**: Onboarding to a codebase, periodic health check, pre-release quality gate
 
 ### /workflow:compound
-**Purpose**: Capture durable knowledge from any engineering work — debugging solutions, refactors, features, design decisions, reusable patterns — and route each to its right home
+**Purpose**: Capture durable knowledge from any engineering work — debugging solutions, refactors, features, design decisions, reusable patterns — and route each to its right home; maintain shared + harness-local memory quality
 
-**Creates**: a debugging-solution doc at `docs/solutions/<category>/<slug>.md`, or — for reusable patterns, decisions, and gotchas — a project-memory entry, an ADR, or an AGENTS.md note (the skill classifies and routes)
+**Creates** (via deterministic gate):
+- Debugging solution → `.agent-tools/memory/solutions/<category>/<slug>.md`
+- Project-wide pattern/gotcha/lesson/process → `.agent-tools/memory/entries/<slug>.md` (+ `MEMORY.md` line)
+- Architecture decision → `docs/decisions/` (optional lesson → entries)
+- Or AGENTS.md / personify / harness-local when applicability is not project-shared
 
-**When to use**: After any non-trivial work whose insight would save the next person (or the next you) real time — not only after fixing bugs
+**Maintain** (`--maintain`): audit L1–L3, propose promote/retire (user approval); optional `--migrate-solutions` for legacy `docs/solutions/`
+
+**When to use**: After any non-trivial work whose insight would save the next person (or the next you) real time — not only after fixing bugs; periodically for `--maintain`
 
 ### /workflow:continue
 **Purpose**: Sequential orchestrator — resume the next slice of work and drive it through the full workflow loop
@@ -590,7 +598,7 @@ This parent skill organizes supporting reference material used by the functional
 
 **References** — used across multiple commands:
 - `references/conversation-analysis.md` — Extracting signals from `~/.claude/` conversation history (used by `/evolve`, `/workflow:compound`, `/workflow:audit`)
-- `references/memory-primitives.md` — Claude Code memory file types, settings, hooks, and slash commands (used by `/workflow:compound --maintain`)
+- `references/memory-primitives.md` — memory levels (L1/L2/L3-shared/L3-local), harness primitives, `.agent-tools/memory/` (used by `/workflow:compound` and `--maintain`)
 
 **Examples**:
 - `examples/planning-example.md` — Worked planning example

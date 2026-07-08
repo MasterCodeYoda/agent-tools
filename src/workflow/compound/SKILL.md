@@ -1,7 +1,7 @@
 ---
 name: workflow:compound
 description: Capture durable knowledge from any engineering work — debugging solutions, refactors, features, design decisions, reusable patterns — and maintain memory quality so each unit of work compounds the next
-argument-hint: "[context about what was solved] | --maintain [--level global|project|memory] [--focus staleness|accuracy|scope|gaps]"
+argument-hint: "[context about what was solved] | --maintain [--level global|project|memory|shared|local] [--focus staleness|accuracy|scope|gaps] [--migrate-solutions]"
 user-invocable: true
 ---
 
@@ -11,8 +11,8 @@ Compounding is about making **every unit of engineering work make subsequent wor
 
 Two modes for managing your team's accumulated intelligence:
 
-- **Capture mode** (default): Capture durable knowledge from recently completed work — a solved bug, a refactor, a new feature pattern, a design decision — and route it to the right home (a solution doc, project memory, an ADR, or AGENTS.md).
-- **Maintain mode** (`--maintain`): Audit and refine agent memory quality across the full hierarchy
+- **Capture mode** (default): Capture durable knowledge from recently completed work and route it via a **deterministic gate** to the right home (shared memory entry/solution, ADR, personify, AGENTS.md, or harness-local memory).
+- **Maintain mode** (`--maintain`): Audit and refine agent memory quality across the hierarchy; classify harness-local memories for promotion into project-shared memory; optionally migrate legacy `docs/solutions/`.
 
 ## Mode Detection
 
@@ -20,15 +20,40 @@ Parse `$ARGUMENTS` to determine mode:
 
 | Input Pattern | Mode | Action |
 |---|---|---|
-| `--maintain` | Maintain | Run memory quality audit (see Maintain Mode below) |
-| `--maintain --level global` | Maintain (scoped) | Audit `~/.claude/CLAUDE.md` only |
-| `--maintain --level project` | Maintain (scoped) | Audit `<repo>/CLAUDE.md` only |
-| `--maintain --level memory` | Maintain (scoped) | Audit project memory directory only |
-| `--maintain --focus staleness` | Maintain (focused) | Staleness check across all levels |
-| `--maintain --focus accuracy` | Maintain (focused) | Accuracy verification across all levels |
+| `--maintain` | Maintain | Full memory quality audit (see Maintain Mode) |
+| `--maintain --migrate-solutions` | Maintain + migrate | Full audit **and** legacy `docs/solutions/` migration proposal |
+| `--maintain --level global` | Maintain (scoped) | Audit user-global preferences only |
+| `--maintain --level project` | Maintain (scoped) | Audit `<repo>/AGENTS.md` / `CLAUDE.md` only |
+| `--maintain --level shared` | Maintain (scoped) | Audit `.agent-tools/memory/` only |
+| `--maintain --level local` | Maintain (scoped) | Audit harness-local auto-memory only |
+| `--maintain --level memory` | Maintain (scoped) | Alias: audit **both** L3-shared and L3-local |
+| `--maintain --focus staleness` | Maintain (focused) | Staleness check across levels |
+| `--maintain --focus accuracy` | Maintain (focused) | Accuracy verification across levels |
 | `--maintain --focus scope` | Maintain (focused) | Scope placement analysis |
 | `--maintain --focus gaps` | Maintain (focused) | Gap analysis against codebase |
-| Any other input or empty | Capture | Capture durable knowledge from recent work (default behavior) |
+| Any other input or empty | Capture | Capture durable knowledge from recent work |
+
+`--maintain` is **always on-demand** — it runs immediately. Cadence state only drives soft prompts on *other* compound invocations (see [Maintain Due Check](#maintain-due-check-capture-and-bare-compound)).
+
+---
+
+# Shared project memory (L3-shared)
+
+Team-shared, git-committed agent working knowledge lives under:
+
+```text
+.agent-tools/memory/
+  MEMORY.md                 # Entries index (full one-liners); Solutions = pointer only
+  state.yml                 # Cadence + last maintain summary
+  entries/<slug>.md         # pattern | gotcha | lesson | process
+  solutions/<category>/<slug>.md   # debugging post-mortems
+```
+
+If this tree is missing, run `/workflow:setup` (or create it during capture/maintain with user confirmation). Do **not** write product docs under `docs/solutions/` for new captures.
+
+**Non-goals for this tree:** ADRs, CONTRIBUTING/gate matrices, Codex/domain docs, planning scratch, personify voice, secrets.
+
+**Primitives reference:** @workflow (`references/memory-primitives.md`).
 
 ---
 
@@ -41,27 +66,92 @@ Parse `$ARGUMENTS` to determine mode:
 - After capturing: Quick lookup or reuse (2-3 minutes)
 - Knowledge compounds over time
 
-Each unit of engineering work should make subsequent units of work easier, not harder. That applies to a refactor that clarified a structure or a design decision settled after weighing trade-offs just as much as to a bug that got root-caused.
+## Deterministic routing gate (required)
 
-## What You're Capturing — and Where It Lives
+Classify **before** writing. Apply steps **in order**. Do not skip steps or substitute "judgment only" for a failed gate.
 
-Compound covers durable knowledge from **any** engineering work, not only debugging. Different shapes of knowledge have different natural homes. Classify the knowledge first, then capture it to the right place. The failure mode to avoid is capturing **nothing** because "this wasn't a bug, so compound doesn't apply" — that is exactly the perception this section exists to correct.
+### Step 0 — Preconditions
 
-| Knowledge shape | Examples | Durable home |
-|---|---|---|
-| Debugging solution | Root-caused bug; build / test / runtime failure; performance or security fix | `docs/solutions/<category>/<slug>.md` (template below) |
-| Reusable pattern or technique | A refactor that revealed a cleaner structure; an idiom now applied project-wide; a feature that established a repeatable approach | Project memory (Level 3) and/or AGENTS.md |
-| Architecture / design decision | A trade-off chosen and why; a convention now in force; an approach rejected and the reason | Decision record (`docs/decisions/`) and/or project memory |
-| Cross-cutting gotcha or constraint | "Module X must initialize before Y"; an environment quirk; a non-obvious invariant | Project memory; AGENTS.md if every contributor needs it |
+- [ ] **Work is settled** — fix landed, refactor merged, or decision made
+- [ ] **It holds up** — confirmed working / you'd reuse the pattern
+- [ ] **Non-trivial** — not typos, obvious fixes, or restating what the code already makes plain
 
-Notes on routing:
+If unmet, ask: "Is this work settled and worth capturing for next time?"
 
-- **A single piece of work can produce more than one artifact.** A refactor+feature can both establish a reusable pattern (→ memory) *and* fix a latent bug found along the way (→ solution doc). Capture each to its home rather than forcing everything into one shape.
-- **When the home is memory, write the memory file directly** using the project's memory conventions (frontmatter with `name` / `description` / `type`, plus a one-line pointer in `MEMORY.md`) — do **not** bend a refactor or design decision into a debugging-shaped `docs/solutions/` post-mortem with empty "Symptoms" and "Root Cause" sections. The `Problem → Investigation → Root Cause → Solution` template below is the right shape **only** for debugging solutions.
-- **Capture and maintenance are two halves of one lifecycle.** `--maintain` audits exactly the memory surface that pattern/decision/gotcha captures write to. If you're unsure whether memory already covers something, that's a signal to run `--maintain --focus gaps` afterward.
-- **Maintain decision records in place.** When a captured decision changes one already recorded, **rewrite the existing record** to current state — do not append a supersession note, a tombstone, or a "previously we said X" block, and do not leave the old decision standing beside the new one. Keep the rationale and rejected alternatives; drop the change history. If the *reason it changed* is itself a durable, reusable lesson, that routes to memory — not back into the record as a changelog. See @workflow (`references/decision-records.md`). (Skip when the project elected `classic-immutable` in `planning/conventions.md`.)
+### Step 1 — Shape
 
-The rest of Capture mode below details the **debugging-solution** path (categories, analysis agents, the solution-doc template) because that path has the most structure. For the memory / ADR / AGENTS.md paths, the routing table above plus the project's memory conventions are the procedure — capture the insight, its rationale, and when it applies, then link it from the relevant index.
+| Shape | Route |
+|-------|--------|
+| **Debugging solution** (root-caused bug; build/test/runtime failure; perf/security fix with investigation narrative) | `.agent-tools/memory/solutions/<category>/<slug>.md` |
+| **Architecture / design decision** (chose X over Y; convention in force) | `docs/decisions/` (rewrite-in-place). If the *reason it changed* is a reusable lesson → also an `entries/` lesson (Step 2–4) |
+| **Personify scope** (voice, interpersonal style, how to talk to the user) | `/personify` path — **not** technical memory |
+| **Pattern / technique / gotcha / process invariant** | Continue to Step 2 (applicability) |
+
+A single unit of work may produce **more than one** artifact (e.g. solution + pattern). Route each independently.
+
+### Step 2 — Applicability (non-solution shapes)
+
+| Applicability | Destination |
+|---------------|-------------|
+| **Project-wide** — any contributor or harness on this repo should know it | L3-shared: `.agent-tools/memory/entries/<slug>.md` + one line in `MEMORY.md` |
+| **Personal / collab micro-style** that is user-global | L1 (`~/.claude/CLAUDE.md` or global memory) and/or personify — not project entries |
+| **Machine-only** (host paths, locked `op`, local tool quirks) | L3-local harness memory only |
+| **Session / ticket-ephemeral** (run IDs, closed-ticket narrative without a durable invariant) | Do not capture; or distill one invariant first, then re-run the gate |
+
+### Step 3 — Overlap and safety gates (block full-body shared write)
+
+Before writing to `entries/` or promoting into shared memory:
+
+| Condition | Action |
+|-----------|--------|
+| Restates a **current architectural decision** | Link the ADR; do **not** promote the decision body into memory |
+| Restates **CONTRIBUTING / gates / command matrix** | Link CONTRIBUTING; one-line reminder max |
+| **Near-duplicate** of an existing `entries/` file | Revise the existing entry; do not create a second |
+| Contains **secrets**, passwords, account IDs, raw credentials | **Block.** Suggest runbook with placeholders / secret refs only |
+| Belongs in **personify** | Redirect; do not write technical entry |
+| Always-load rule every agent must see | Prefer a short **AGENTS.md** bullet + optional entry for depth — do not bloat AGENTS with full essays |
+
+Light check only: skim AGENTS.md, CONTRIBUTING.md (if present), `docs/decisions/` titles/index, existing `entries/`. Deep doc consistency is `/workflow:audit`.
+
+### Step 4 — Write rules
+
+1. Ensure `.agent-tools/memory/` exists (scaffold via setup conventions if needed).
+2. **Solutions** → template under [Output Document](#output-document-debugging-solution-path); categories below. Do **not** add every solution to `MEMORY.md` (index is entries-only + a solutions pointer).
+3. **Entries** → frontmatter + body with **Why** and **How to apply**; add exactly one index line in `MEMORY.md`.
+4. **No full-body dual-write.** Project-wide content goes to L3-shared only. Do not also write the full text into Claude/Codex auto-memory. Optional: thin L3-local pointer to the shared path if the harness needs a stub.
+5. If L3-shared tree is missing and user declines scaffold, fall back to L3-local with an explicit note that shared memory is uninitialized.
+6. Legacy `docs/solutions/`: **never** write new files there. If it still has content, soft-warn once and point at `--maintain --migrate-solutions`.
+
+### Entry frontmatter
+
+```yaml
+---
+name: <slug>
+description: <one-line, actionable>
+type: pattern | gotcha | lesson | process
+applicability: project
+related: []          # optional: ADR paths, solution paths, code paths
+promoted_at: null    # set when promoted from harness-local
+source_harness: null # optional: claude | codex | factory | …
+---
+```
+
+### MEMORY.md shape
+
+```markdown
+# Project memory index
+
+## Entries
+- [Title](entries/<slug>.md) — one-line description
+…
+
+## Solutions
+Debugging post-mortems live under `solutions/<category>/`. Search by `symptoms` / `tags` in frontmatter; browse by category. Do not enumerate every solution here.
+```
+
+Soft budget for the Entries section: warn ~120 lines, force extract/consolidate before ~150. Solutions section stays a short pointer.
+
+---
 
 ## User Input
 
@@ -72,121 +162,71 @@ $ARGUMENTS
 ## Invocation Modes
 
 ### 1. Session Boundary (Auto from Execute)
-Pre-filled with session context:
 ```bash
 /workflow:compound "Fixed N+1 query in brief generation"
 ```
 
 ### 2. On-Demand
-Analyzes recent conversation and commits:
 ```bash
 /workflow:compound
 ```
 
 ### 3. With Context Hint
-User provides brief description:
 ```bash
 /workflow:compound "resolved circular dependency in auth module"
 ```
 
+## Maintain Due Check (capture and bare compound)
+
+Before capture work (not when user already passed `--maintain`):
+
+1. Read `.agent-tools/memory/state.yml` if present.
+2. If missing, `last_maintain_at` is null, or older than `interval_days` (default **7**):
+   - Soft-prompt: maintain is due — **run now** / **snooze 3d** (write `snooze_until`) / **skip once**.
+3. Never block capture if the user declines.
+4. On-demand `--maintain` ignores the interval and always runs.
+
 ## Undocumented Solution Surfacing
 
-Before starting capture, check conversation history for completed work in this project — solved bugs, but also landed refactors, features, and settled decisions — that was never captured. References: @workflow (`references/conversation-analysis.md`)
+Before starting capture, check conversation history for completed work that was never captured. References: @workflow (`references/conversation-analysis.md`)
 
 ```
 1. Get project root: git rev-parse --show-toplevel
-2. Read ~/.claude/history.jsonl — filter entries where "project" starts with project root (prefix match, not exact — handles subfolder sessions)
-3. Group by sessionId to get distinct sessions for this project
-4. For each session, read ~/.claude/usage-data/facets/{sessionId}.json (if exists)
+2. Read harness history (e.g. ~/.claude/history.jsonl) — filter entries where "project" starts with project root
+3. Group by sessionId
+4. For each session, read facets if available
 5. Filter for sessions with outcome "fully_achieved" and a meaningful brief_summary
-6. Cross-reference against docs/solutions/ — exclude sessions whose summary matches an existing compound doc
-7. Present undocumented solutions (if any) before proceeding to capture
+6. Cross-reference against:
+   - .agent-tools/memory/solutions/
+   - .agent-tools/memory/entries/
+   - legacy docs/solutions/ (if still present)
+7. Present undocumented work (if any) before proceeding
 ```
 
-If undocumented solutions are found:
-```markdown
-Before we capture your current work, I found [N] prior sessions
-that completed meaningful work in this project but never captured it:
+If found, offer select by number / skip / all. If none, proceed.
 
-1. [date] — [brief_summary from facet]
-2. [date] — [brief_summary from facet]
-3. [date] — [brief_summary from facet]
+## Parallel Analysis (debugging-solution path only)
 
-Would you like to document any of these as well?
-- Select by number (e.g., "1, 3")
-- "skip" to proceed with current capture only
-- "all" to document everything
+For patterns, decisions, and gotchas headed to `entries/` / ADR / AGENTS.md, skip this fan-out: capture the insight, alternatives, and when it applies, then index.
 
-For selected items, I'll load the conversation context and run the
-standard compound analysis.
-```
-
-If no undocumented solutions found, proceed directly to capture.
-
-## Preconditions
-
-Before documenting, verify:
-
-- [ ] **Work is settled** - The bug is fixed, the refactor is landed, or the decision is made — not in-progress
-- [ ] **It holds up** - The solution is confirmed working, or the pattern/decision is one you'd actually stand behind reusing
-- [ ] **Non-trivial** - Worth documenting (not typos, obvious fixes, or restating what the code already makes plain)
-
-If conditions not met, ask: "Is this work settled and worth capturing for next time?"
-
-## Parallel Analysis
-
-This multi-agent analysis is tuned for the **debugging-solution** path — its agents extract symptoms, root cause, and recurrence prevention. For a pattern, decision, or gotcha headed to memory / ADR / AGENTS.md, you don't need this fan-out: capture the insight, the alternatives weighed, and when it applies, then link it from the relevant index. Use the agents below when the artifact is a `docs/solutions/` entry.
-
-Launch specialized agents simultaneously for efficient analysis:
+For **solutions**, launch specialized agents:
 
 ### Agent 1: Context Analyzer
-Extracts from conversation history:
-- Problem type and category
-- Component/module affected
-- Observable symptoms
-- Error messages if any
-
-**Returns**: YAML frontmatter structure
+Extracts problem type, component, symptoms, errors → YAML frontmatter structure
 
 ### Agent 2: Solution Extractor
-Analyzes investigation and fix:
-- Steps tried (what didn't work)
-- Root cause identified
-- Working solution with code
-- Key insights
-
-**Returns**: Solution content block
+Steps tried, root cause, working solution, insights
 
 ### Agent 3: Related Docs Finder
-Searches existing knowledge:
-- Related docs in `docs/solutions/`
-- Similar patterns elsewhere
-- Cross-references to link
-- GitHub issues if applicable
-
-**Returns**: Links and relationships
+Searches `.agent-tools/memory/solutions/`, `entries/`, ADRs, similar patterns
 
 ### Agent 4: Prevention Strategist
-Develops preventive measures:
-- How to avoid recurrence
-- Best practices to follow
-- Test cases if applicable
-- Warning signs to watch for
-
-**Returns**: Prevention content
+Recurrence avoidance, practices, tests, warning signs
 
 ### Agent 5: Category Classifier
-Determines organization:
-- Best-fit category
-- Filename from slug
-- Tags for searchability
-- Related categories
+Best-fit category, slug, tags
 
-**Returns**: File path and metadata
-
-## Debugging-Solution Categories (for `docs/solutions/`)
-
-These categories apply when the artifact is a debugging-solution doc. Auto-classify into the appropriate one. (Pattern / decision / gotcha captures route to memory, ADR, or AGENTS.md instead — see *What You're Capturing* above.)
+## Debugging-Solution Categories
 
 | Category | When to Use |
 |----------|-------------|
@@ -200,9 +240,11 @@ These categories apply when the artifact is a debugging-solution doc. Auto-class
 | `integration-issues/` | API failures, service communication |
 | `logic-errors/` | Incorrect behavior, edge cases |
 
+Unknown legacy categories from migrate: map to closest above or `misc/`.
+
 ## Output Document (debugging-solution path)
 
-For a debugging solution, create `docs/solutions/<category>/<slug>.md`. (Pattern / decision / gotcha captures use the project's memory / ADR / AGENTS.md conventions instead — capture the insight, its rationale, and when it applies, then link it from the relevant index.)
+Create `.agent-tools/memory/solutions/<category>/<slug>.md`:
 
 ```markdown
 ---
@@ -302,19 +344,11 @@ Document this for future reference?
 
 ### With Existing Knowledge
 
-Link new docs to related content:
-- Add cross-references in related documents
-- Update index if exists
-- Tag for discoverability
+Link new docs to related content; update `MEMORY.md` for entries; tag solutions for discovery.
 
-### With AGENTS.md (Optional)
+### With AGENTS.md
 
-For project-specific learnings:
-```markdown
-Consider adding to AGENTS.md:
-- Pattern: [what we learned]
-- When: [when it applies]
-```
+Only for always-load rules. Prefer shared memory for depth; keep AGENTS thin.
 
 ## Success Output
 
@@ -322,27 +356,18 @@ Consider adding to AGENTS.md:
 ## Knowledge Documented
 
 **File created:**
-`docs/solutions/[category]/[slug].md`
+`.agent-tools/memory/solutions/[category]/[slug].md`
+  — or —
+`.agent-tools/memory/entries/[slug].md` (+ MEMORY.md line)
+  — or —
+`docs/decisions/...` / AGENTS.md / personify as routed
 
 **Summary:**
-- Problem: [one-line description]
-- Category: [category]
-- Tags: [tag list]
+- Shape: [solution | pattern | gotcha | lesson | process | decision]
+- One-line: […]
 
-**Linked to:**
-- [Related doc 1]
-- [Related doc 2]
-
-**Next time this happens:**
-Search for: "[symptoms]" or browse `docs/solutions/[category]/`
-
----
-
-What's next?
-1. Continue workflow
-2. View documentation
-3. Add to related docs
-4. Other
+**Next time:**
+Search `entries/` / `MEMORY.md` or `solutions/<category>/` by symptoms/tags
 ```
 
 ## The Compounding Philosophy
@@ -354,214 +379,244 @@ Build -> Test -> Find Issue -> Research -> Improve -> Document -> Deploy
          Each cycle builds on documented knowledge
 ```
 
-### Value Accumulation
-
-| Occurrence | Without Compound | With Compound |
-|------------|------------------|---------------|
-| First time | 30+ min research | 30+ min (document) |
-| Second time | 20+ min research | 3 min lookup |
-| Third time | 15+ min research | 2 min lookup |
-| Team member | 30+ min research | 3 min lookup |
-
 ### When to Compound
 
 **Always capture:**
-- Non-obvious solutions (debugging)
-- Environment-specific issues, integration problems, performance optimizations, security fixes
-- Reusable patterns or techniques a refactor or feature established
-- Non-obvious design decisions and the rationale / alternatives behind them
-- Cross-cutting gotchas, invariants, or constraints future work must respect
+- Non-obvious debugging solutions
+- Environment/integration/performance/security lessons
+- Reusable patterns from refactors/features
+- Non-obvious design decisions (+ lessons when decisions change)
+- Cross-cutting gotchas and invariants
 
-**Skip capturing:**
+**Skip:**
 - Typos and obvious fixes
-- One-off issues unlikely to recur
-- Knowledge already well-documented or that the code makes plain on its own
+- One-offs unlikely to recur
+- Knowledge already well-documented or plain in code
 - Trivial configuration changes
 
 ## Quality Checklist
 
-Before completing documentation:
+**Solutions:**
+- [ ] Problem, symptoms (searchable), root cause, reproducible solution
+- [ ] Prevention, tags, related links, accurate code
 
-- [ ] Problem clearly described
-- [ ] Symptoms are searchable
-- [ ] Root cause explained
-- [ ] Solution is reproducible
-- [ ] Prevention strategies included
-- [ ] Tags enable discovery
-- [ ] Related docs linked
-- [ ] Code examples are accurate
+**Entries:**
+- [ ] Clear name/description/type
+- [ ] Why + How to apply
+- [ ] MEMORY.md one-liner present
+- [ ] Overlap gates passed; no secrets
 
 ## Commands to Remember
 
 ```bash
-# After completing non-trivial work (a fix, refactor, feature, or decision)
+# After non-trivial work
 /workflow:compound "brief context"
 
-# Audit and maintain memory quality
+# Audit / promote / clean (on-demand, any time)
 /workflow:compound --maintain
 
-# Search existing solutions
-grep -r "symptom" docs/solutions/
+# Also migrate legacy docs/solutions/
+/workflow:compound --maintain --migrate-solutions
 
-# Browse by category
-ls docs/solutions/[category]/
+# Search
+rg "symptom" .agent-tools/memory/solutions/
+rg "gotcha" .agent-tools/memory/entries/
 ```
 
 ---
 
 # Maintain Mode
 
-Activated by `--maintain`. Evaluate agent memory quality across the full hierarchy (Level 1 global, Level 2 project guide, Level 3 project memory) and produce a refinement proposal the user can approve, revise, or reject item-by-item.
+Activated by `--maintain`. Evaluate memory quality across:
 
-**Why maintenance belongs in compound:** You can't compound effectively on a foundation of stale or inaccurate memory. Capture and maintenance are two sides of the same knowledge lifecycle.
+| Level | Location |
+|-------|----------|
+| **L1 Global** | User-wide prefs (e.g. `~/.claude/CLAUDE.md`, global auto-memory) |
+| **L2 Project guide** | `<repo>/AGENTS.md` (and `CLAUDE.md` if not a symlink to AGENTS) |
+| **L3-shared** | `.agent-tools/memory/` (`MEMORY.md`, `entries/`, `solutions/`) |
+| **L3-local** | Harness auto-memory (e.g. Claude `~/.claude/projects/<hash>/memory/`) |
 
-**Primitives reference:** For the underlying memory file types, settings, hooks, and slash commands this mode operates on — including the 200-line / 25 KB hard cutoff for `MEMORY.md`, `CLAUDE.md` scope precedence, `.claude/rules/` with `paths:` frontmatter, and how this mode relates to Anthropic's `/dream` — see @workflow (`references/memory-primitives.md`).
+Produce a refinement **proposal**; apply only after user approval.
+
+**Why maintenance belongs in compound:** You can't compound on stale, duplicated, or harness-siloed memory.
 
 ## Maintain Auto-Detection
 
 ```
-1. Level 1 — Check ~/.claude/CLAUDE.md existence and size
-2. Level 2 — Check <repo>/CLAUDE.md existence and size
-3. Level 3 — Check project memory directory:
-   a. MEMORY.md existence, line count
-   b. Satellite files — count by type (user, feedback, project, reference)
-   c. Frontmatter validity quick scan
-4. Project technology stack (for gap assessment)
-5. Recent git history (last 30 days)
-6. Total memory surface area: combined line count across all levels
+1. L1 — user global prefs existence/size
+2. L2 — AGENTS.md / CLAUDE.md
+3. L3-shared — .agent-tools/memory/:
+   a. MEMORY.md (entries index line count)
+   b. entries/*.md count by type
+   c. solutions/**/*.md count by category
+   d. state.yml (last_maintain_at, interval_days, solutions_migrated_from_docs)
+4. L3-local — detect harness roots:
+   a. Claude: ~/.claude/projects/*<repo-path-hash>*/memory/ (MEMORY.md + satellites)
+   b. Factory: .factory/memories.md, ~/.factory/memories.md if present
+   c. Codex: only if memories feature enabled and content present (do not invent)
+5. Legacy docs/solutions/ — if present and not migrated, flag for migrate
+6. Stack + recent git (30–60d) for gap assessment
+7. Total surface area across levels
 ```
 
 ## Maintain Scope Gate
 
-- **Minimal** (< 5 memory files, MEMORY.md < 50 lines): All tiers automatically
-- **Standard** (5-15 files, MEMORY.md 50-150 lines): All tiers automatically
-- **Dense** (15+ files OR MEMORY.md > 150 lines): Tier 1 all; prompt before Tier 2/3
+- **Minimal** (< 5 local/shared entry files, MEMORY.md < 50 lines): All tiers automatically
+- **Standard** (5–15 files, MEMORY.md 50–150 lines): All tiers automatically
+- **Dense** (15+ files OR MEMORY.md > 150 lines OR L3-local > 50 files): Tier 1 all; prompt before Tier 2/3
 
 ## Maintain Agent Reasoning Standards
 
-- **Cite evidence on both sides.** Every finding must reference the memory `file:line` AND the codebase evidence that confirms or contradicts it.
-- **Check the opposite hypothesis.** Before declaring a memory stale, search broadly — the concept may exist under a different name or behind an abstraction.
-- **Verify before declaring stale.** Run at least two distinct searches (name-based and concept-based) before marking stale.
-- **Respect intentional scope.** Some cross-project patterns intentionally live at Level 1. Flag but don't auto-classify as P1.
-- **Distinguish outdated from wrong.** Staleness (was accurate, no longer applies) differs from error (was never accurate). Score differently.
+- **Cite evidence on both sides.** Memory `file:line` AND codebase evidence.
+- **Check the opposite hypothesis** before declaring stale.
+- **Verify before stale** — at least two searches (name + concept).
+- **Respect intentional scope** — L1 cross-project prefs are valid.
+- **Distinguish outdated from wrong.**
+- **Distill on promote** — one invariant per entry; strip ticket narrative; prefer mechanism names over ticket IDs.
 
 ## Maintain Three-Tier Analysis
 
 ### Tier 1 — Structural Integrity
 
-Spawn 3 parallel agents:
+Spawn parallel agents as needed:
 
-**index-integrity-validator**:
-- MEMORY.md exists and is non-empty
-- Every `.md` file in memory directory is referenced in MEMORY.md (orphans)
-- Every path referenced in MEMORY.md exists on disk (broken references)
-- MEMORY.md line count vs 200-line truncation limit (warning at 160+, critical at 190+)
-- No duplicate references to the same file
+**shared-index-integrity**:
+- `MEMORY.md` exists; Entries section lists every `entries/*.md` (orphans)
+- Every Entries path in MEMORY.md exists (broken refs)
+- No requirement that every `solutions/**` file appears in MEMORY.md
+- Entries section soft budget (warn ~120 lines)
+- Solutions: valid category dirs, non-empty frontmatter for solution files
+
+**local-index-integrity** (when L3-local present):
+- Local MEMORY.md / satellites consistency (Claude 200-line / 25 KB warnings at 160+ / 190+)
+- Orphans and broken refs in local index
 
 **frontmatter-and-type-validator**:
-- Every memory file has valid YAML frontmatter with `name`, `description`, `type`
-- `type` is one of: `user`, `feedback`, `project`, `reference`
-- `name` and `description` are meaningful (not empty or trivially short)
-- No YAML parsing errors
+- Shared entries: `name`, `description`, `type` ∈ {pattern, gotcha, lesson, process}
+- Local Claude-style: accept nested `metadata.type` or top-level `type` ∈ {user, feedback, project, reference} for local only
+- Solutions: title/category/symptoms preferred
 
 **scope-placement-analyzer**:
-- Level 1 contains only user-wide preferences, not project-specific patterns
-- Level 2 contains project guidance for any contributor, not user preferences
-- Level 3 contains project+user-specific knowledge, not universal wisdom
-- Check for information duplicated across levels
-- Check for scope misplacements in both directions
+- L1 = user-wide only
+- L2 = thin always-load project rules (not a dump of entries)
+- L3-shared = project-wide agent working knowledge
+- L3-local = personal/machine/session-adjacent — flag project-wide content still only local (**promotion candidates**)
+- Duplication across shared and local full bodies
 
 ### Tier 2 — Codebase Cross-Reference
 
-Spawn 3 parallel agents:
-
-**staleness-detector**:
-- Memories referencing specific files, directories → verify they exist
-- Memories referencing tools, commands → verify still present
-- Technology/dependency claims → verify against current lock files
-- Date-stamped entries → cross-reference against git history
-
-**accuracy-verifier**:
-- Claims of "we use X" → verify against codebase
-- File path references → verify paths are current
-- Architecture descriptions → verify against code structure
-- Convention claims → spot-check recent code for compliance
-
-**gap-detector**:
-- Recent git history (60 days) for significant changes NOT in memory
-- CLAUDE.md conventions lacking rationale in memory
-- Recurring code patterns with no memory guidance
-- New dependencies with no memory context
+**staleness-detector**, **accuracy-verifier**, **gap-detector** — same intent as before, across shared + local.
 
 ### Tier 3 — Heuristic Analysis
 
-Spawn 3 parallel agents:
+**contradiction-detector**, **quality-and-actionability-reviewer**, **consolidation-advisor** — shared + local; prefer consolidating into shared when project-wide.
 
-**contradiction-detector**:
-- Cross-level contradictions (L1 vs L2/L3)
-- Intra-level contradictions (two L3 memories conflict)
-- Temporal contradictions ("we stopped X" but another memory recommends X)
+## Applicability classification (L3-local remaining items)
 
-**quality-and-actionability-reviewer**:
-- Does each memory tell agents WHAT and WHY?
-- Flag vague memories ("be careful with X" without explaining how)
-- Flag verbose memories compressible without information loss
-- Flag feedback memories missing **Why:** and **How to apply:** structure
-- Signal-to-noise ratio assessment
+After retire/revise candidates, classify each remaining local memory:
 
-**consolidation-advisor**:
-- Related memories that could merge
-- Accretion memories needing clean rewrite
-- Long inline MEMORY.md content that should extract to files
-- Short files that could inline back into MEMORY.md
+| Class | Meaning | Default action |
+|-------|---------|----------------|
+| `project-shared` | Any contributor/harness should know it | Propose promote → `entries/` (distilled) |
+| `personal` | User collab prefs | Keep local or route L1/personify |
+| `machine` | Host-specific | Keep local |
+| `ticket-ephemeral` | Closed-ticket diary without durable invariant | Propose retire or distill-then-promote |
+| `already-documented` | Covered by AGENTS/CONTRIBUTING/ADR/shared entry | Propose thin/delete local |
+| `secret-blocked` | Secrets/credentials | Never promote raw; scrub or runbook |
+
+## Promotion rules
+
+1. Distill to one invariant / pattern / gotcha / lesson per file.
+2. Run Step 3 overlap/safety gates.
+3. Propose path: `.agent-tools/memory/entries/<slug>.md` + MEMORY.md line.
+4. After user approval: write shared file, update index, **retire or thin** local copy to a pointer at the shared path (no dual full body).
+5. Optional separate proposal lines for L2 drift (e.g. AGENTS contradicts a promoted process rule) — never silent AGENTS rewrite.
+
+## Legacy `docs/solutions/` migration
+
+When `--migrate-solutions` is set, **or** maintain detects legacy tree and user opts into migrate:
+
+1. Inventory `docs/solutions/**/*.md` (skip pure templates if empty of content).
+2. Map `docs/solutions/<cat>/<slug>.md` → `.agent-tools/memory/solutions/<cat>/<slug>.md` (normalize category to known set or `misc/`).
+3. Propose **move** (default): write new location, remove old files (prefer `git mv` when applying).
+4. Light link sweep: grep repo for `docs/solutions/` references; propose updates (AGENTS, CONTRIBUTING, planning, solution cross-links).
+5. Optional stub: only if user chooses — short `docs/solutions/README.md` pointing at the new home (default is full move, no stub).
+6. Do **not** enumerate migrated solutions in MEMORY.md Entries.
+7. On apply: set `state.yml` → `solutions_migrated_from_docs: true` and timestamp.
+8. Soft-warn on future capture/maintain if legacy tree remains and not migrated.
+
+Never silent-migrate on setup or first maintain without approval.
 
 ## Maintain Output
 
 ```markdown
 ## Memory Quality Report
 
-**Level 1**: [~/.claude/CLAUDE.md — N lines]
-**Level 2**: [<repo>/CLAUDE.md — N lines]
-**Level 3**: [N memory files, MEMORY.md at N/200 lines]
+**L1**: […]
+**L2**: [AGENTS.md — N lines]
+**L3-shared**: [E entries, S solutions, MEMORY.md Entries section N lines]
+**L3-local**: [harness, N files, index N lines]
+**Legacy docs/solutions/**: [absent | N files | migrated]
 
 ### Health Score
-
-[Same P1/P2/P3 scoring as capture mode reports]
+P1 / P2 / P3 counts
 
 ### Findings
-
-#### P1 — Critical (Structural / Accuracy Failures)
-[Broken references, inaccurate memories, contradictions]
-
-#### P2 — Important (Staleness / Quality Gaps)
-[Stale memories, missing frontmatter, undocumented gaps]
-
-#### P3 — Suggestions (Optimization)
-[Consolidation, density optimization, section reorganization]
+#### P1 — Critical
+#### P2 — Important
+#### P3 — Suggestions
 
 ### Proposed Refinements
 
-#### Level 1 — Global
+#### L1 — Global
 | # | Action | Target | Description | Priority |
-|---|--------|--------|-------------|----------|
 
-#### Level 2 — Project Guide
+#### L2 — Project Guide
 | # | Action | Target | Description | Priority |
-|---|--------|--------|-------------|----------|
 
-#### Level 3 — Project Memory
-| # | Action | Target File | Description | Priority |
-|---|--------|-------------|-------------|----------|
+#### L3-shared
+| # | Action | Target | Description | Priority |
 
-**Net Effect**: N creates, N updates, N deletes, N merges
+#### L3-local
+| # | Action | Target | Description | Priority |
+
+#### Promote → shared
+| # | Source (local) | → entries/<slug> | Distill summary | Gates |
+
+#### Migrate solutions (if applicable)
+| # | From | To | Notes |
+
+#### Retire / thin local after promote
+| # | Target | Action |
+
+**Net Effect**: N creates, N updates, N deletes, N promotes, N migrates
 ```
 
 ## Applying Refinements
 
 After review:
-1. **Full approval** — "approve all": Execute all proposed changes
-2. **Selective approval** — "approve G1, M2, F1-F3": Execute specific items
-3. **Revision** — "change M2 to instead...": Modify and re-present
-4. **Rejection** — "skip": No changes applied
+1. **Full approval** — "approve all"
+2. **Selective** — "approve G1, M2, P1-P3"
+3. **Revision** — "change M2 to…"
+4. **Rejection** — "skip"
 
-Execute in dependency order (creates before updates, deletes after merges). After applying, show summary and new MEMORY.md line count.
+Execute creates before updates; promotes before local retires; deletes after merges. **User approval required before any write/delete.**
+
+Then update `.agent-tools/memory/state.yml`:
+
+```yaml
+schema_version: 1
+interval_days: 7
+last_maintain_at: <ISO-8601>
+snooze_until: null
+last_maintain_result:
+  p1: 0
+  p2: 0
+  p3: 0
+  promoted: 0
+  retired: 0
+  migrated_solutions: 0
+solutions_migrated_from_docs: false  # true after successful migrate
+```
+
+Show summary and new MEMORY.md Entries line count.

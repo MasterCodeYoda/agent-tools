@@ -89,7 +89,7 @@ Correlate commands with session outcomes and friction signals. Useful for identi
 
 ### Undocumented Solutions
 
-Find sessions that ended successfully (`fully_achieved`) with meaningful summaries but have no corresponding entry in `docs/solutions/`.
+Find sessions that ended successfully (`fully_achieved`) with meaningful summaries but have no corresponding entry in `.agent-tools/memory/solutions/`, `.agent-tools/memory/entries/`, or (legacy) `docs/solutions/`.
 
 ### Recurring Friction Patterns
 

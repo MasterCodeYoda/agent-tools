@@ -45,8 +45,9 @@ alternatives rejected (with why). It does **not** narrate how the decision chang
 - **Keep the why, drop the changelog.** Always retain rationale and rejected alternatives — they keep
   a settled question settled, so it isn't re-litigated. Never retain the *change history* of the
   decision; that stale-but-authoritative content is exactly what gets re-imported. If the *reason a
-  decision changed* is itself a durable, reusable lesson, route it to project memory via
-  `/workflow:compound` — not into the record as a changelog.
+  decision changed* is itself a durable, reusable lesson, route it to project shared memory
+  (`.agent-tools/memory/entries/`, type `lesson`) via `/workflow:compound` — not into the
+  record as a changelog.
 - **Reversed → rewrite. Abandoned → delete.** A decision no longer in force gets no file, no section,
   no "historical" notice — the whole file goes for a dead record; the relevant section is rewritten
   for a changed one.
