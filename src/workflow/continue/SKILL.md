@@ -131,36 +131,66 @@ phases automatically **until you hit a user-input gate or the slice completes**.
 
 **Project hygiene gates (typecheck, lint, test, build, architecture validators, issue-ref, etc.)
 are never a substitute for the review phase.** Green gates only mean "validation passed"; they do
-**not** mean "reviewed clean."
+**not** mean "reviewed clean." **Slice size does not skip review** — S-sized verify/harden work and
+docs-touching product code still require a real review pass before integrate.
 
 A slice is **reviewed** only when all of the following hold:
 
 1. **A real review pass ran for this slice** in this session (or a prior session with durable
-   evidence): `/workflow:review`, `/code-review`, or an equivalent structured review subagent using
-   the same standards (findings with priorities, not a casual self-glance).
+   evidence): **`/workflow:review`** (preferred), `/code-review`, or an equivalent structured review
+   using the same standards — multi-lens findings with P1–P3 priorities and a verdict, **not** a
+   casual self-glance while gates are green.
 2. **Confirmed P1–P3 findings are fixed** (or deferred only as the project conventions allow —
    typically only genuine P4/nits, or a deferral recorded on a follow-up PM issue). Project
    conventions may require fixing P3s; honor that bar when present.
-3. **Review evidence is recorded** before integration:
-   - **Preferred:** a PM/issue comment (Linear/Jira) with verdict + P1–P3 disposition, **or**
-   - **Minimum:** a short block in `planning/<item>/session-state.md` such as
-     `review: clean | findings-fixed` with date and one-line summary.
+3. **Review evidence is recorded** before integration — and it must be **non-theater** (schema
+   below). Preferred: a PM/issue comment (Linear/Jira). Minimum: the same fields in
+   `planning/<item>/session-state.md`.
+
+#### Valid review evidence (schema)
+
+Evidence is valid only when it includes **all** of:
+
+| Field | Required content |
+|-------|------------------|
+| `method` | How review ran: `workflow-review` \| `code-review` \| `structured-agents` (name the lenses) |
+| `date` | ISO date of the review pass |
+| `verdict` | `clean` \| `findings-fixed` (after remediation) — not a free-form "LGTM" |
+| `findings` | Counts by priority, e.g. `P1=0 P2=2 P3=1` (zeros explicit when none) |
+| `disposition` | One line: what was fixed, deferred (with issue id), or `none` |
+
+**Minimum handoff line** (session-state or top-level pointer):
+
+```text
+review: findings-fixed | 2026-07-09 | method=workflow-review | P1=0 P2=2 P3=1 | disposition=all fixed in <sha>
+```
+
+**Invalid evidence (treat as not reviewed):**
+
+- `review: clean` with no `method` / findings counts
+- "quick structured review" / "I looked at the diff" / "gates green so review clean"
+- A PM comment that only restates gates without findings disposition
+- Any claim of reviewed-clean that cannot name the review method and P1–P3 counts
 
 A light "I looked at the diff" while CI is green is **not** review. Proceeding from execute straight
-to merge without (1)–(3) is a process bug — treat the slice as still in the "code exists, not
-reviewed" row.
+to merge without (1)–(3) and valid evidence is a process bug — treat the slice as still in the
+"code exists, not reviewed" row. **Do not invent evidence** to unblock merge.
 
-### Autonomous merge preconditions
+### Autonomous merge preconditions (hard ratchet)
 
 When conventions authorize autonomous local merge, **all** of the following must be true before
-merging without asking:
+merging without asking. If **any** is missing, **do not merge** — stop, run the missing phase, or
+hand back. This is a hard refuse, not a judgment call.
 
-1. **Reviewed-clean** per the operational definition above (evidence recorded).
+1. **Reviewed-clean** per the operational definition above, with **valid evidence schema**
+   (`method` + `date` + `verdict` + `findings` counts + `disposition`).
 2. **Every project gate** from Orientation step 0 / `conventions.md` passes cleanly and objectively.
 3. **All task requirements + constraints** for the slice are met (ACs / plan DoD).
+4. **Loop recap** for this `/continue` invocation includes the **Review findings & disposition**
+   block (see *End-of-loop recap* below) — same facts as the evidence, visible to the user.
 
-If any item is missing, **do not autonomous-merge** — stop for confirmation or finish the missing
-phase. Wording like "clean validation pass" in conventions means (1)+(2)+(3), never (2) alone.
+If any item is missing, **do not autonomous-merge**. Wording like "clean validation pass" in
+conventions means (1)+(2)+(3)+(4), never gates alone.
 
 ### Compound after integrate (not optional)
 
@@ -184,18 +214,20 @@ Auto-advance only where no human decision is owed. **Stop and hand back** at any
 - A plan is ready for **approval** (`/workflow:plan` approval gate — never save/execute a plan
   without it).
 - Review surfaced findings that need a **triage decision**.
-- **Review not yet completed** for a slice that has code (missing review pass or missing evidence) —
-  do not integrate; run `/workflow:review` first.
+- **Review not yet completed** for a slice that has code (missing review pass, missing valid
+  evidence schema, or missing recap Review findings block) — do not integrate; run
+  `/workflow:review` first. **Refuse** autonomous merge rather than fabricating evidence.
 - **Integration/merge needs confirmation — by default.** Stop and hand back before merging the slice
   to `main`. **Exception:** if the project's recorded **Integration / merge policy** (loaded in
   Orientation step 0 from `planning/conventions.md`) authorizes an autonomous local merge, follow it
-  only when the **autonomous merge preconditions** above are all met (reviewed-clean with evidence
-  *and* every project gate clean *and* requirements met), then flip the issue status, write the
-  handoff, run compound (or record `compound: none`), and summarize. Absent such a convention, treat
-  the merge as a stop gate. Either way: stop on **genuine doubt** (a validation that didn't pass
-  cleanly, an unmet constraint, a real judgment call), and **pushing/PRs are always user-initiated**
-  — never push or open a PR autonomously, regardless of conventions (unless the project's recorded
-  push policy explicitly allows main-push at agent judgment — still never production promotion).
+  only when the **autonomous merge preconditions** above are all met (reviewed-clean with **valid**
+  evidence *and* every project gate clean *and* requirements met *and* recap Review block present),
+  then flip the issue status, write the handoff, run compound (or record `compound: none`), and
+  emit the end-of-loop recap. Absent such a convention, treat the merge as a stop gate. Either way:
+  stop on **genuine doubt** (a validation that didn't pass cleanly, an unmet constraint, a real
+  judgment call), and **pushing/PRs are always user-initiated** — never push or open a PR
+  autonomously, regardless of conventions (unless the project's recorded push policy explicitly
+  allows main-push at agent judgment — still never production promotion).
 - **Auto-invoked after a slice already completed this session.** If this `/continue` was triggered
   **automatically** (e.g. a scheduled wakeup you set to keep the loop alive across a long-running
   slice) rather than by the user, *and* a full slice has **already completed** in this session, do
@@ -233,12 +265,70 @@ kept **light**:
    `planning/<project>/history-archive.md`) rather than letting `session-state.md` bloat. A fresh
    session should orient from a small file.
 4. If the slice **merged/integrated**:
-   - Ensure **review evidence** is present (PM comment preferred; handoff `review:` line minimum).
+   - Ensure **valid review evidence** is present (schema above — PM comment preferred; handoff
+     `review:` line minimum with `method` + findings counts + disposition).
    - Run `/workflow:compound` **or** record `compound: none — <reason>` (see *Compound after
      integrate*). Do not advance the top-level "next pickup" pointer until one of those is done.
 
 Keep the slice's state and any top-level pointer consistent: if the pointer lags the slice
 state, the next pickup is wrong.
+
+## End-of-loop recap (required — hard gate)
+
+Every `/continue` invocation **ends with a user-visible recap** before the agent stops (slice
+complete, paused at a gate, or blocked). The recap is not optional polish; it is part of the
+skill contract. A missing or incomplete recap means the loop is not finished.
+
+### Always include
+
+| Block | Content |
+|-------|---------|
+| **Slice** | Work item id + one-line title |
+| **Phases run** | Which workflow phases actually ran this invocation (e.g. plan → execute → review → merge) |
+| **Where left** | Next phase / gate / pickup pointer |
+| **Branch / commits** | Branch name and key SHAs if code moved |
+
+### When this loop produced or integrated code (required Review block)
+
+If execute produced commits, or the slice is at/past "code exists", the recap **must** include a
+**Review findings & disposition** block sourced from a real `/workflow:review` (or equivalent)
+pass — **not** from gate output:
+
+```markdown
+### Review findings & disposition
+- **method:** /workflow:review (or structured-agents: <lenses>)
+- **depth:** quick | standard | deep
+- **target:** <range or paths reviewed>
+- **findings:** P1=n · P2=n · P3=n
+- **disposition:** <each finding fixed | deferred to ISSUE | none>
+- **verdict:** APPROVE | REQUEST_CHANGES → remediated
+```
+
+Rules:
+
+1. **No code-path recap without this block.** If you cannot fill it, you have not reviewed —
+   status remains "code exists, not reviewed"; do not merge; do not claim reviewed-clean.
+2. **Gates are a separate line** (typecheck/lint/test/…). Never put gate results inside the
+   Review findings block or use them as a substitute for findings counts.
+3. **Empty findings still report counts** (`P1=0 P2=0 P3=0`) and `disposition: none` — silence
+   is not a valid substitute for "no findings."
+4. **User-visible:** the block appears in the final message of the loop, not only in
+   `session-state.md` or a PM comment. Durable evidence still goes to PM/handoff; the recap is
+   how the human audits that review actually ran.
+5. **If the loop stopped before review** (e.g. plan approval gate), say so explicitly:
+   `Review: not run — stopped at <gate>` rather than omitting the topic.
+
+### When the loop did not touch product code
+
+A shorter recap is fine (slice, phases, where left). Still state `Review: n/a — no code this loop`
+so the omission is deliberate.
+
+## Soft-check on next orientation
+
+On the next `/continue` orientation, if the **most recently completed** slice that produced code
+has a `review:` line missing `method=` or findings counts (theater evidence), **surface it** and
+either re-run `/workflow:review` + remediate or rewrite valid evidence **before** picking up new
+work. Same spirit as the compound soft-check.
 
 ## What `/continue` does not do
 
@@ -246,9 +336,12 @@ state, the next pickup is wrong.
   `brainstorm.md` / `requirements.md` / plan).
 - Does **not** author plan or requirements content directly — that's `/workflow:plan` /
   `/workflow:refine`.
-- Does **not** skip the review gate. Code → merge without `/workflow:review` (or `/code-review`)
-  **and review evidence** is a process bug. Project gates green ≠ reviewed.
+- Does **not** skip the review gate. Code → merge without `/workflow:review` (or equivalent)
+  **and valid review evidence** is a process bug. Project gates green ≠ reviewed.
 - Does **not** treat typecheck/lint/test/build (or other project hygiene gates) as the review.
+- Does **not** claim reviewed-clean or autonomous-merge without a recap **Review findings &
+  disposition** block matching the evidence schema.
+- Does **not** invent `review: clean` theater to satisfy handoff or PM closeout.
 - Does **not** skip compound after integrate without an explicit `compound: none` reason.
 - Does **not** push or open PRs unless project conventions explicitly allow main-push at agent
   judgment — production promotion stays user-initiated either way.

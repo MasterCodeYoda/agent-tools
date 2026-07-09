@@ -310,7 +310,7 @@ execution. After approval, the user chooses: save the plan only, or save and pro
 ### /workflow:continue
 **Purpose**: Sequential orchestrator — resume the next slice of work and drive it through the full workflow loop
 
-**Behavior**: Orients by scanning `planning/*/session-state.md`, picks **one** PM-defined value slice (or an explicitly named target), classifies its stage from disk, and routes it through refine → plan → execute → review → finish → compound — auto-advancing through phases that need no input and stopping only at genuine user-input gates (plan approval, review-findings triage, merge confirmation). Tracks a light handoff on completion (compress/archive history, refresh the next-phase pointer).
+**Behavior**: Orients by scanning `planning/*/session-state.md`, picks **one** PM-defined value slice (or an explicitly named target), classifies its stage from disk, and routes it through refine → plan → execute → review → finish → compound — auto-advancing through phases that need no input and stopping only at genuine user-input gates (plan approval, review-findings triage, merge confirmation). **Review is a hard gate** (hygiene gates ≠ review; size does not skip). Ends every loop with a **required recap**; when code was produced, the recap must include **Review findings & disposition** from `/workflow:review` (method, counts, disposition, verdict). Autonomous merge refuses without valid evidence schema + that recap block. Tracks a light handoff on completion (compress/archive history, refresh the next-phase pointer).
 
 **Flags**:
 - `--worktree` — run the slice in an isolated worktree (new or existing match) so other, non-workflow sessions can run in parallel in the same repo. Defaults to the main workspace.
