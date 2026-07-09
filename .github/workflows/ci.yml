@@ -1,0 +1,26 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  ci:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: shellcheck
+        run: shellcheck setup.sh tools/publish-skills.sh
+
+      - name: Publisher dry-run
+        run: tools/publish-skills.sh --dry-run --quiet
+
+      - name: Unit tests (publisher goldens, doc-lint, swarm harness)
+        run: python3 -m unittest discover -s tests -v
+
+      # Report-only until the D2 stale-reference sweep lands; then drop
+      # the flag so dead references fail CI.
+      - name: Doc-integrity lint (report-only)
+        run: python3 tools/doc_lint.py --report-only

@@ -1,0 +1,4 @@
+verbatim asset
+<!-- agent:include claude -->
+markup in non-md files must survive untouched
+<!-- /agent:include claude -->

@@ -1,0 +1,49 @@
+# doc-lint allowlist — suppressions for legitimate references that the
+# linter cannot resolve against the repo tree.
+#
+# Line forms:
+#   family <name>            external skill family (@name resolves elsewhere)
+#   command <name>           external or shorthand command (/name is not ours)
+#   ref <substring>          any finding whose target contains substring
+#   file <glob> <substring>  finding in files matching glob, target contains substring
+#
+# Every entry needs a comment explaining why it is legitimate. Prefer
+# file-scoped entries; global entries can mask future real defects.
+
+# Skill families provided by other plugins/harnesses, not this corpus.
+family superpowers
+
+# Embedded agent markup: `<!-- /agent:include -->` closers and MARKUP.md
+# examples parse as colon commands.
+command agent:include
+command agent:exclude
+
+# Harness-native commands that exist outside this corpus.
+command code-review
+
+# Documented conversational shorthand for /workflow:continue used
+# throughout that skill.
+command continue
+
+# Generic placeholders in documentation, not real names.
+command skill-name
+command command-name
+ref @skill-name
+
+# npm-scoped package and tool names that look like hyphenated families.
+file src/test-strategy/references/mutation-testing.md @stryker-mutator
+
+# memory-primitives.md surveys memory commands of *other* systems
+# (Claude Code /init, Letta /memory, ChatGPT /clear, ...).
+file src/workflow/references/memory-primitives.md /
+
+# Append-only historical log; records the old /evolve command and the
+# pre-src/ repo layout by design.
+file src/skills/evolve/history.md /evolve
+file src/skills/evolve/history.md references/
+
+# Prose examples of URL/route/flag tokens, not commands.
+file src/workflow/audit/domains/docs.md /section-path-as-anchor-text
+file src/code-patterns/SKILL.md /untyped
+file src/qa/setup/SKILL.md /login
+file src/test-strategy/references/scrap-scoring.md /test

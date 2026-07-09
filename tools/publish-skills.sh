@@ -26,8 +26,9 @@ set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO_ROOT="$(cd "${SCRIPT_DIR}/.." && pwd)"
-SRC_ROOT="${REPO_ROOT}/src"
-DIST_ROOT="${REPO_ROOT}/dist"
+# Overridable so tests can publish a fixture tree into a sandbox directory.
+SRC_ROOT="${AGENT_TOOLS_SRC_ROOT:-${REPO_ROOT}/src}"
+DIST_ROOT="${AGENT_TOOLS_DIST_ROOT:-${REPO_ROOT}/dist}"
 
 # Directories under src/ that are not skills and should be ignored during publishing
 SKIP_DIRS="pdf-build"
@@ -471,7 +472,7 @@ publish_for_agent() {
 
         # Recursively process everything inside this skill
         while IFS= read -r -d '' src_path; do
-            rel_path="${src_path#${skill_dir}}"
+            rel_path="${src_path#"${skill_dir}"}"
             dest_path="${dest_skill_dir}/${rel_path}"
 
             if [[ -d "$src_path" ]]; then

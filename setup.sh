@@ -81,7 +81,8 @@ get_agent_skills_dir() {
 create_symlink() {
     local source="$1"
     local target="$2"
-    local parent_dir="$(dirname "$target")"
+    local parent_dir
+    parent_dir="$(dirname "$target")"
 
     # Create parent directory if it doesn't exist
     if [ ! -d "$parent_dir" ]; then
@@ -157,7 +158,6 @@ install_skill() {
 
     local target_base
     local scope_label
-    local created_local_dir=false
 
     if [ "$publish_target" = "project" ]; then
         target_base=$(get_agent_skills_dir "$agent" "project")
@@ -357,7 +357,9 @@ install_commands_for_agent() {
                 # Search src/ tree for matching sub (by name with :) and inherit target
                 # from its dir or its parent family dir.
                 local src_name="${cmd_name//-/:}"
-                for src_md in $(find src -name SKILL.md 2>/dev/null); do
+                # Process substitution (not a pipe) so the publish_target
+                # assignment survives the loop.
+                while IFS= read -r src_md; do
                     if grep -q "name:.*${src_name}" "$src_md" 2>/dev/null; then
                         local src_dir
                         src_dir=$(dirname "$src_md")
@@ -376,7 +378,7 @@ install_commands_for_agent() {
                             break
                         fi
                     fi
-                done
+                done < <(find src -name SKILL.md 2>/dev/null)
             fi
         fi
 
