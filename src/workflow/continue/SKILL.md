@@ -109,9 +109,9 @@ the same artifact-driven classification `/swarm` uses — then route:
 | Direction chosen, requirements ambiguous or have TBDs | `/workflow:refine` |
 | Requirements clear, no implementation plan | `/workflow:plan` |
 | Plan approved, work not started **or in progress** | `/workflow:execute` (resume where the plan left off) |
-| Code exists, not reviewed | `/workflow:review` (or `/code-review`) — fix every finding |
-| Reviewed clean, not integrated | Finish the branch (see `@superpowers:finishing-a-development-branch`) — **stop to confirm the merge by default**, unless the project's Integration / merge policy (Orientation step 0) authorizes an autonomous local merge on a clean validation pass |
-| Integrated / merged | `/workflow:compound`, then update the handoff |
+| Code exists, not reviewed | `/workflow:review` (or `/code-review`) — fix every finding; **record review evidence** (below) |
+| Reviewed clean, not integrated | Finish the branch (see `@superpowers:finishing-a-development-branch`) — **stop to confirm the merge by default**, unless the project's Integration / merge policy authorizes autonomous merge **and** the autonomous-merge preconditions below are all met |
+| Integrated / merged | `/workflow:compound` (or an explicit skip line — below), then update the handoff |
 
 **Each row is a gate, not a suggestion.** Don't jump from "code exists" to "merged" without the
 review pass — that's a process bug, not a shortcut. **Brainstorm and refine are skip-by-default
@@ -127,6 +127,55 @@ skip the phase that produced it.
 Within one `/continue` invocation, walk this table for the chosen slice, advancing through
 phases automatically **until you hit a user-input gate or the slice completes**.
 
+### Review gate — operational definition (not optional)
+
+**Project hygiene gates (typecheck, lint, test, build, architecture validators, issue-ref, etc.)
+are never a substitute for the review phase.** Green gates only mean "validation passed"; they do
+**not** mean "reviewed clean."
+
+A slice is **reviewed** only when all of the following hold:
+
+1. **A real review pass ran for this slice** in this session (or a prior session with durable
+   evidence): `/workflow:review`, `/code-review`, or an equivalent structured review subagent using
+   the same standards (findings with priorities, not a casual self-glance).
+2. **Confirmed P1–P3 findings are fixed** (or deferred only as the project conventions allow —
+   typically only genuine P4/nits, or a deferral recorded on a follow-up PM issue). Project
+   conventions may require fixing P3s; honor that bar when present.
+3. **Review evidence is recorded** before integration:
+   - **Preferred:** a PM/issue comment (Linear/Jira) with verdict + P1–P3 disposition, **or**
+   - **Minimum:** a short block in `planning/<item>/session-state.md` such as
+     `review: clean | findings-fixed` with date and one-line summary.
+
+A light "I looked at the diff" while CI is green is **not** review. Proceeding from execute straight
+to merge without (1)–(3) is a process bug — treat the slice as still in the "code exists, not
+reviewed" row.
+
+### Autonomous merge preconditions
+
+When conventions authorize autonomous local merge, **all** of the following must be true before
+merging without asking:
+
+1. **Reviewed-clean** per the operational definition above (evidence recorded).
+2. **Every project gate** from Orientation step 0 / `conventions.md` passes cleanly and objectively.
+3. **All task requirements + constraints** for the slice are met (ACs / plan DoD).
+
+If any item is missing, **do not autonomous-merge** — stop for confirmation or finish the missing
+phase. Wording like "clean validation pass" in conventions means (1)+(2)+(3), never (2) alone.
+
+### Compound after integrate (not optional)
+
+After the slice is integrated/merged, **before** treating the slice as fully complete and advancing
+the top-level handoff to the next item:
+
+1. Run `/workflow:compound` for durable insight from the slice, **or**
+2. Record an explicit skip in the slice handoff / Last Session Summary:
+   `compound: none — <one-line reason>` (e.g. trivial docs-only, pure renames with no new pattern).
+
+Do not silently skip compound. Prefer capture when non-obvious patterns, gotchas, or process lessons
+exist. Soft-check on the next `/continue` orientation: if the **most recently completed** slice in
+the handoff has neither a compound capture note nor a `compound: none` line, surface it and either
+compound that slice first or record the skip before picking up new work.
+
 ## Where to stop (inject user input)
 
 Auto-advance only where no human decision is owed. **Stop and hand back** at any genuine gate:
@@ -135,15 +184,18 @@ Auto-advance only where no human decision is owed. **Stop and hand back** at any
 - A plan is ready for **approval** (`/workflow:plan` approval gate — never save/execute a plan
   without it).
 - Review surfaced findings that need a **triage decision**.
+- **Review not yet completed** for a slice that has code (missing review pass or missing evidence) —
+  do not integrate; run `/workflow:review` first.
 - **Integration/merge needs confirmation — by default.** Stop and hand back before merging the slice
   to `main`. **Exception:** if the project's recorded **Integration / merge policy** (loaded in
-  Orientation step 0 from `planning/conventions.md`) authorizes an autonomous local merge on a clean
-  validation pass, follow it — merge to `main` locally **without asking** when every project gate
-  passes cleanly and objectively *and* all task requirements + constraints are met, then flip the
-  issue status, write the handoff, and summarize. Absent such a convention, treat the merge as a stop
-  gate. Either way: stop on **genuine doubt** (a validation that didn't pass cleanly, an unmet
-  constraint, a real judgment call), and **pushing/PRs are always user-initiated** — never push or
-  open a PR autonomously, regardless of conventions.
+  Orientation step 0 from `planning/conventions.md`) authorizes an autonomous local merge, follow it
+  only when the **autonomous merge preconditions** above are all met (reviewed-clean with evidence
+  *and* every project gate clean *and* requirements met), then flip the issue status, write the
+  handoff, run compound (or record `compound: none`), and summarize. Absent such a convention, treat
+  the merge as a stop gate. Either way: stop on **genuine doubt** (a validation that didn't pass
+  cleanly, an unmet constraint, a real judgment call), and **pushing/PRs are always user-initiated**
+  — never push or open a PR autonomously, regardless of conventions (unless the project's recorded
+  push policy explicitly allows main-push at agent judgment — still never production promotion).
 - **Auto-invoked after a slice already completed this session.** If this `/continue` was triggered
   **automatically** (e.g. a scheduled wakeup you set to keep the loop alive across a long-running
   slice) rather than by the user, *and* a full slice has **already completed** in this session, do
@@ -180,8 +232,10 @@ kept **light**:
    entries to one line each. When the log grows long, archive the verbose detail (e.g. to
    `planning/<project>/history-archive.md`) rather than letting `session-state.md` bloat. A fresh
    session should orient from a small file.
-4. If the slice **merged/integrated**, run `/workflow:compound` to capture durable insight (and
-   write a cross-session memory if warranted — see the global memory instructions).
+4. If the slice **merged/integrated**:
+   - Ensure **review evidence** is present (PM comment preferred; handoff `review:` line minimum).
+   - Run `/workflow:compound` **or** record `compound: none — <reason>` (see *Compound after
+     integrate*). Do not advance the top-level "next pickup" pointer until one of those is done.
 
 Keep the slice's state and any top-level pointer consistent: if the pointer lags the slice
 state, the next pickup is wrong.
@@ -193,8 +247,11 @@ state, the next pickup is wrong.
 - Does **not** author plan or requirements content directly — that's `/workflow:plan` /
   `/workflow:refine`.
 - Does **not** skip the review gate. Code → merge without `/workflow:review` (or `/code-review`)
-  is a process bug.
-- Does **not** push or open PRs — integration is local; pushing is user-initiated.
+  **and review evidence** is a process bug. Project gates green ≠ reviewed.
+- Does **not** treat typecheck/lint/test/build (or other project hygiene gates) as the review.
+- Does **not** skip compound after integrate without an explicit `compound: none` reason.
+- Does **not** push or open PRs unless project conventions explicitly allow main-push at agent
+  judgment — production promotion stays user-initiated either way.
 - Does **not** drive multiple items in parallel — that's `/swarm`. It picks **one** slice and
   drives it sequentially.
 - Does **not** grab an item an active swarm run is working.
