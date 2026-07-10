@@ -11,10 +11,11 @@ cd ~/Source/agent-tools
 ./setup.sh
 ```
 
-`setup.sh` publishes the canonical skills for every agent it detects on your machine
-(Claude Code, Codex, Grok, Factory, OpenCode) and symlinks them into each agent's skills
-directory. Re-run it any time after pulling changes — it's idempotent and prunes anything
-it previously installed that no longer exists.
+`setup.sh` publishes the canonical skills for all five supported agents (Claude Code,
+Codex, Grok, Factory, OpenCode) and symlinks them into the skills directory of each agent
+it detects on your machine. Re-run it any time after pulling changes — it's idempotent and
+prunes any skills it previously installed that no longer exist. (OpenCode command symlinks
+are not yet pruned automatically.)
 
 Open your agent and type `/` — you should see families like `/workflow`, `/git`, `/qa`
 in the slash menu.
@@ -42,8 +43,9 @@ project directory, in your agent:
 ```
 
 The skill interviews you briefly (what's in scope, what's not, acceptance criteria) and
-writes `planning/<project>/requirements.md`. `planning/` is transient working state —
-it's gitignored by convention and lives alongside your code.
+writes `planning/<project>/requirements.md` (with a PM tool configured, it updates the
+issue instead). Refine prints the path it saved — use that path in the next two commands.
+`planning/` is transient working state — gitignored by convention, living alongside your code.
 
 **Plan** — turn requirements into an implementation plan:
 

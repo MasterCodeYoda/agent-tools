@@ -363,7 +363,8 @@ filter_for_agent() {
     # The awk program below is a state machine that handles:
     #   <!-- agent:include X,Y --> ... <!-- /agent:include X,Y -->
     #   <!-- agent:exclude X,Y --> ... <!-- /agent:exclude X,Y -->
-    # All other HTML comments are stripped in the final output.
+    # All other HTML comments outside fenced code are stripped (fenced
+    # examples and backticked comment literals publish verbatim).
     #
     # We keep the implementation intentionally straightforward.
 
