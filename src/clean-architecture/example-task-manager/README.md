@@ -80,13 +80,11 @@ Each language implements the same functionality with language-specific patterns:
 
 ## Running the Examples
 
-### Quick Start (Any Language)
+### Quick Start
 
-1. Choose your language directory
-2. Install dependencies (see language-specific README)
-3. Run migrations/setup
-4. Start the application
-5. Test the API endpoints
+Only the Rust/Tauri implementation ships as a runnable tree (`rust/` — see its README).
+For Python, TypeScript, and C#, follow the layer walkthroughs ([domain.md](domain.md) →
+[frameworks.md](frameworks.md)) and assemble the code in your own project scaffold.
 
 ### API Endpoints (Common Across Languages)
 

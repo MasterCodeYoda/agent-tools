@@ -16,7 +16,7 @@ Stage names are lowercase. They are a separate namespace from worker **status co
 (`DONE`, `APPROVED`, etc.). A reviewer's `APPROVED` status advances the item's stage to
 `approved`.
 
-## Classification sources (§6.2)
+## Classification sources
 
 | Source | Reveals |
 |--------|---------|
@@ -42,7 +42,7 @@ as concurrency scales.
 | `NEEDS_CONTEXT` | stage unchanged; raise IN_FLIGHT_DECISION |
 | `BLOCKED` | stage unchanged; TERMINAL_PAUSE |
 
-## Reconciliation (`/swarm:continue`, §6.9)
+## Reconciliation (`/swarm:continue`)
 
 Never trust `state.yml`. Re-classify every non-`merged` item from the sources above, compare
 to `state.yml`, and surface drifts to the user, e.g.:

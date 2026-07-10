@@ -94,7 +94,7 @@ def generate(
 
     # Bootstrap mode is keyed on whether the scenario ships a charter:
     #   charter/ present  → SEEDED: generate writes the full .agent-tools/ umbrella.
-    #   charter/ absent   → INIT-FIRST: bare repo; the run begins with /swarm:init, which
+    #   charter/ absent   → INIT-FIRST: bare repo; the run begins with /swarm:setup, which
     #                       authors the charter + umbrella + roles itself.
     charter_src = scenario_dir / "charter"
     seeded = charter_src.is_dir()
@@ -127,7 +127,7 @@ def generate(
     shutil.copy2(backlog_src, run_dir / "backlog.md")
 
     # 3. .agent-tools umbrella — only in SEEDED mode. In init-first mode the repo is left
-    #    bare; /swarm:init authors the umbrella when the run begins.
+    #    bare; /swarm:setup authors the umbrella when the run begins.
     if seeded:
         agent_tools = run_dir / ".agent-tools"
         shutil.copytree(charter_src, agent_tools / "charter")
@@ -158,7 +158,7 @@ def format_next_step(run_dir: Path) -> str:
     run_steps = f"  cd {run_dir}\n"
     if init_first:
         run_steps += (
-            "  /swarm:init          # bare repo: author the charter + umbrella first\n"
+            "  /swarm:setup          # bare repo: author the charter + umbrella first\n"
             "  /swarm backlog.md\n"
         )
     else:

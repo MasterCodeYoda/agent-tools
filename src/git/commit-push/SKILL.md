@@ -1,7 +1,7 @@
 ---
 name: git:commit-push
 user-invocable: true
-allowed-tools: Bash(git checkout -b:*), Bash(git add:*), Bash(git status:*), Bash(git push:*), Bash(git commit:*)
+allowed-tools: Bash(git add:*), Bash(git status:*), Bash(git commit:*), Bash(git diff:*), Bash(git branch:*), Bash(git log:*), Bash(git push:*)
 description: Commit and push
 argument-hint: "[optional context about which changes to commit]"
 ---

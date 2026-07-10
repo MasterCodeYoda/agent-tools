@@ -25,7 +25,7 @@ $ARGUMENTS
 
 `/swarm:continue` takes no arguments; it resumes the run named by `active-run`.
 
-## Procedure (§6.9)
+## Procedure
 
 ### 1. Locate the run
 

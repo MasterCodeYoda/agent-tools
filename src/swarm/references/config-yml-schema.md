@@ -50,11 +50,11 @@ output:
 
 ## Model-tier mapping
 
-The orchestrator maps tier labels to concrete model IDs for the host CLI. Defaults (§7.7):
+The orchestrator maps tier labels to concrete model IDs for the host CLI. Defaults:
 planner/reviewer/conflict_resolver/integration_fixer → most_capable; implementer → mid_tier
 (highest volume; work is bounded by plan + tests).
 
-## Test-command discovery cascade (§8.6)
+## Test-command discovery cascade
 
 Resolution order when `test_command` is null:
 

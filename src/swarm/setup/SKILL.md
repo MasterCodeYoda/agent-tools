@@ -49,7 +49,7 @@ What it produces:
   agent-memory file without explicit consent. When in doubt, stop and ask.
 - **`./planning/` and QA artifacts are carve-outs.** Do not move `./planning/` or any QA
   test artifacts (`sentinel.config.yaml`, NL specs, Playwright config) under `.agent-tools/`.
-  They stay in their natural locations (design §9.2, §9.3).
+  They stay in their natural locations.
 
 ## User Input
 
@@ -105,7 +105,7 @@ misdetections before any questions.
 
 ## Phase 3 — Dialogue
 
-Principles (design §4.2):
+Principles:
 
 - **Infer from evidence wherever possible**; ask only when ambiguity is real.
 - **Pre-fill smart defaults**; the user confirms with Enter or edits.
@@ -249,7 +249,7 @@ with agent-tools). These files are **committed** and **editable per project**.
 
 **On re-setup**, never silently overwrite a locally-edited role file. For each role file that
 differs from the canonical version, present the diff and offer:
-`keep-local` / `replace-with-canonical` / `merge` / `show-diff` (§7.9). Only copy files that
+`keep-local` / `replace-with-canonical` / `merge` / `show-diff`. Only copy files that
 are missing or that the user chooses to replace.
 
 ### 4.3 Umbrella gitignore
@@ -349,7 +349,7 @@ non-destructive:
    with documented defaults (never overwrite existing values).
 7. **Role templates** — for each role file, diff the project copy against the canonical
    version; for any that differ, offer `keep-local / replace-with-canonical / merge /
-   show-diff` (§7.9). Copy only missing files or those the user chooses to replace; never
+   show-diff`. Copy only missing files or those the user chooses to replace; never
    silently overwrite a customized role file.
 
 ## Safety / Failure Modes

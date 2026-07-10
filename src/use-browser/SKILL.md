@@ -376,7 +376,7 @@ agent-browser snapshot -i --json
 agent-browser get text @e1 --json
 ```
 
-## Chrome DevTools MCP Reference
+## Workflow Examples
 
 ### Chrome DevTools MCP workflow
 

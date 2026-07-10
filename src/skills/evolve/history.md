@@ -1,6 +1,6 @@
 # Evolution History
 
-Score trend and run log for `/evolve` command iterations.
+Historical, append-only run log from the legacy `/evolve` command era (predates `/skills:evolve` and the src/ layout); paths and command names are preserved as written.
 
 ## 2026-05-07
 

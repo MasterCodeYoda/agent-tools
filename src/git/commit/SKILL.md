@@ -1,9 +1,9 @@
 ---
 name: git:commit
-allowed-tools: Bash(git add:*), Bash(git status:*), Bash(git commit:*)
+user-invocable: true
+allowed-tools: Bash(git add:*), Bash(git status:*), Bash(git commit:*), Bash(git diff:*), Bash(git branch:*), Bash(git log:*)
 description: Create a git commit
 argument-hint: "[optional context about which changes to commit]"
-user-invocable: true
 ---
 
 ## CRITICAL: Git Command Rules

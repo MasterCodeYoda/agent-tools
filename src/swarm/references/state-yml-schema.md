@@ -66,7 +66,7 @@ last_handoff: null
 - `fix_list` persists across waves until consumed by the next implementer dispatch.
 - **Wave history is NOT in state.yml** — it lives in `orchestrator.md`.
 
-## Atomic writes (§8.5)
+## Atomic writes
 
 ```
 write state.yml.tmp
@@ -79,7 +79,7 @@ rename state.yml.tmp → state.yml   # atomic on POSIX
 - Crash mid-wave → `state.yml` reflects pre-dispatch state; reconciliation re-derives from
   disk + PM.
 
-## Schema versioning (§8.7)
+## Schema versioning
 
 Read `schema_version` on load. Older than current → migrate in place (forward-only). Newer
 than current → refuse to read; instruct the user to update agent-tools.
