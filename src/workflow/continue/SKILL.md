@@ -14,7 +14,8 @@ finish → compound — **auto-advancing through phases that need no human input
 where your input is genuinely required**.
 
 **Loop executor first:** when the path is clear, run **silently** (no portfolio monologue).
-"Silent" means no pre-claim steering chat — the end-of-loop recap and review ceremony still apply.
+"Silent" means no pre-claim steering chat — the end-of-loop recap and review ceremony still apply
+**except** when the loop ends on a user-approval gate (see *End-of-loop recap* — no recap there).
 
 It is **not** a recipe engine and **not** a horizon author. The underlying `/workflow:*` skills
 carry their own structure; `/continue` only decides *which* slice and *which* phase comes next,
@@ -272,7 +273,7 @@ Auto-advance only where no human decision is owed. **Stop and hand back** at any
 - **Path not established** (pre-claim hard stop) — never invent NEXT.
 - Direction or requirements are ambiguous (brainstorm/refine needs your call).
 - A plan is ready for **approval** (`/workflow:plan` approval gate — never save/execute a plan
-  without it).
+  without it). **No end-of-loop recap** at this stop — present the plan approval prompt only.
 - Review surfaced findings that need a **triage decision**.
 - **Review not yet completed** for a slice that has code (missing review pass, missing valid
   evidence schema, or missing recap Review findings block) — do not integrate; run
@@ -333,13 +334,40 @@ kept **light**:
 Keep the slice's state and any top-level pointer consistent: if the pointer lags the slice
 state, the next pickup is wrong.
 
-## End-of-loop recap (required — hard gate)
+## End-of-loop recap (required — hard gate, with one exception)
 
 Every `/continue` invocation **ends with a user-visible recap** before the agent stops (slice
-complete, paused at a gate, or blocked). The recap is not optional polish; it is part of the
-skill contract. A missing or incomplete recap means the loop is not finished.
+complete, paused without an active approval prompt, or blocked) — **except** at a
+**user-approval stop** (below). Outside that exception the recap is not optional polish; it is
+part of the skill contract. A missing or incomplete recap means the loop is not finished.
 
-### Always include
+### Exception — user-approval stops (no recap)
+
+When the loop ends because a phase skill is presenting a **user approval or decision prompt**
+and waiting for that response, **do not emit the end-of-loop recap**. The approval prompt *is*
+the final user-facing message for this invocation. Do not append Slice / Phases run / Where left
+/ Review lines after (or before) it.
+
+Examples (not exhaustive):
+
+- `/workflow:plan` plan approval gate (Approve & Save / Approve & Execute / Revise)
+- Brainstorm convergence choice
+- Review findings triage that needs an explicit user decision
+- Integration/merge confirmation stop
+- Any other `AskUserQuestion`-class gate where the user must choose before the loop proceeds
+
+**Why:** stacking a continue recap on an approval UI dilutes the decision and restarts ceremony
+the user does not need — the phase already presented the plan, options, or question.
+
+**What still applies at an approval stop:** hand off control with the phase's native prompt only;
+do not save/execute past the gate; do not invent a recap "for completeness." After the user
+answers, the next `/continue` (or continued same-session advance) resumes the loop and recaps
+normally when *that* stop is not another approval gate.
+
+**Not an approval stop** (recap still required): path-not-established hard stop, slice complete /
+merged, blocked without a decision prompt, paused mid-work with no pending approve/choose UI.
+
+### Always include (when recap applies)
 
 | Block | Content |
 |-------|---------|
@@ -351,9 +379,9 @@ skill contract. A missing or incomplete recap means the loop is not finished.
 
 ### When this loop produced or integrated code (required Review block)
 
-If execute produced commits, or the slice is at/past "code exists", the recap **must** include a
-**Review findings & disposition** block sourced from a real `/workflow:review` (or equivalent)
-pass — **not** from gate output:
+If execute produced commits, or the slice is at/past "code exists", **and** this stop is not a
+user-approval exception above, the recap **must** include a **Review findings & disposition**
+block sourced from a real `/workflow:review` (or equivalent) pass — **not** from gate output:
 
 ```markdown
 ### Review findings & disposition
@@ -376,13 +404,14 @@ Rules:
 4. **User-visible:** the block appears in the final message of the loop, not only in
    `session-state.md` or a PM comment. Durable evidence still goes to PM/handoff; the recap is
    how the human audits that review actually ran.
-5. **If the loop stopped before review** (e.g. plan approval gate), say so explicitly:
-   `Review: not run — stopped at <gate>` rather than omitting the topic.
+5. **If the loop stopped before review** for a non-approval reason, say so explicitly:
+   `Review: not run — stopped at <gate>` rather than omitting the topic. (User-approval stops
+   omit the entire recap per the exception above — do not add this line either.)
 
 ### When the loop did not touch product code
 
-A shorter recap is fine (slice, phases, where left). Still state `Review: n/a — no code this loop`
-so the omission is deliberate.
+When recap applies, a shorter recap is fine (slice, phases, where left). Still state
+`Review: n/a — no code this loop` so the omission is deliberate.
 
 ## Soft-check on next orientation
 
@@ -413,6 +442,8 @@ work. Same spirit as the compound soft-check.
   drives it sequentially.
 - Does **not** grab an item an active swarm run is working.
 - Does **not** run soft portfolio steering hunts; optional `steering_note` only (v1).
+- Does **not** emit the end-of-loop recap when stopping on a user-approval gate — the phase's
+  approval/decision prompt is the final message (see *End-of-loop recap* exception).
 
 ## Related
 

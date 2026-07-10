@@ -259,7 +259,7 @@ execution. After approval, the user chooses: save the plan only, or save and pro
 ### /workflow:continue
 **Purpose**: Sequential orchestrator — resolve a **known** next unit and drive it through the full workflow loop
 
-**Behavior**: Orients lightly, runs **pre-claim path resolution** (explicit target → in_progress → conventions NEXT → roadmap NEXT → planned/PM queue → else **hard stop**). Never invents NEXT; never auto-invokes roadmap/brainstorm. When path is clear, drives one slice silently through refine → plan → execute → review → finish → compound — auto-advancing until genuine gates (plan approval, review triage, merge). **Review is a hard gate**. Required end-of-loop recap (with Review findings block when code moved). Planned queue without a roadmap file still counts as path established.
+**Behavior**: Orients lightly, runs **pre-claim path resolution** (explicit target → in_progress → conventions NEXT → roadmap NEXT → planned/PM queue → else **hard stop**). Never invents NEXT; never auto-invokes roadmap/brainstorm. When path is clear, drives one slice silently through refine → plan → execute → review → finish → compound — auto-advancing until genuine gates (plan approval, review triage, merge). **Review is a hard gate**. Required end-of-loop recap (with Review findings block when code moved), **except** when the stop is a user-approval gate (plan approve, merge confirm, etc.) — then the phase prompt alone is the final message, no recap. Planned queue without a roadmap file still counts as path established.
 
 **Flags**:
 - `--worktree` — run the slice in an isolated worktree (new or existing match) so other, non-workflow sessions can run in parallel in the same repo. Defaults to the main workspace.
