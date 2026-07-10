@@ -52,7 +52,7 @@ Read `planning/conventions.md` (if present) to learn:
 
 **Protect the live orchestration set — never prune targets:** `conventions.md`, the `.gitkeep` and `.gitignore` files (for directory structure), any **track process doc** (e.g. `discovery-loop.md`), and history archives still referenced by the handoff. 
 
-The queue (`work-streams.md`), handoff (`session-state.md` / `SESSION-HANDOFF.md`), and `session-state.md` files are protected *only while active or incomplete*. Once the associated (cross-project) work is classified as CONFIRMED-COMPLETE, they become eligible for purge (the only permanent keepers are the structural `.gitkeep`/`.gitignore` and `conventions.md` when present). When in doubt about a meta file, protect it and surface it rather than proposing deletion.
+The queue (`work-streams.md`), handoff (`session-state.md` / `SESSION-HANDOFF.md`), `session-state.md` files, and live horizon maps (`roadmap.md`, active `initiatives/`, `workstreams/`) are protected *only while active or incomplete*. Once the associated (cross-project) work is classified as CONFIRMED-COMPLETE, they become eligible for purge (the only permanent keepers are the structural `.gitkeep`/`.gitignore` and `conventions.md` when present). When in doubt about a meta file, protect it and surface it rather than proposing deletion.
 
 ### 2. Enumerate candidates
 
@@ -142,7 +142,7 @@ or cancel. Never purge on implicit assent.
 
 - Does **not** delete the **active slice**, anything **in progress**, or anything the handoff names
   as **next**.
-- Does **not** delete **permanent live orchestration** docs (`conventions.md`, `.gitkeep`, `.gitignore`, track process docs, referenced archives). The queue (`work-streams.md`), handoff (`session-state.md` / `SESSION-HANDOFF.md`), and `session-state.md` may be purged once their (cross-project) work is complete.
+- Does **not** delete **permanent live orchestration** docs (`conventions.md`, `.gitkeep`, `.gitignore`, track process docs, referenced archives). The queue (`work-streams.md`), handoff (`session-state.md` / `SESSION-HANDOFF.md`), `session-state.md`, and horizon maps (`roadmap.md`, initiatives/workstreams) may be purged once their (cross-project) work is complete.
 - Does **not** purge without an explicit confirmation gate.
 - Does **not** delete an item with **unmigrated durable knowledge** — it flags it for
   `/workflow:compound` first.

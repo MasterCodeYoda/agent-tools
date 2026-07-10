@@ -38,6 +38,10 @@ you're trying to solve."
 Open Questions for Refinement as the starting context for Phase 1 — the fuzzy framing is already
 done, so begin discovery from the chosen direction rather than from scratch.
 
+**Altitude (light):** if the request is clearly a **multi-unit unordered program** (several
+independently claimable workstreams, no map), **offer** `/workflow:roadmap` once and wait — do not
+hard-block refine if the user wants requirements for a single named unit anyway.
+
 **If `continue`**, check for `./planning/*/requirements.md` with `Status: Draft` (file mode) or in-progress PM issues
 (PM mode) and resume.
 

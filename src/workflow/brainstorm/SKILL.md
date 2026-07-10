@@ -1,15 +1,18 @@
 ---
 name: workflow:brainstorm
-description: Explore a fuzzy idea into a framed concept ready for refinement
+description: Explore a single fuzzy idea into a framed concept ready for refinement — collaborative HITL diverge, user-gated converge
 argument-hint: "[optional: a rough idea, problem, or 'what if' to explore]"
 user-invocable: true
 ---
 
 # Concept Brainstorming
 
-Turn a loose, fuzzy idea into a crisp, framed concept that `/workflow:refine` can take into
-structured requirements. This is the divergent front of the pipeline: brainstorm decides **what
-we're building and why**; refine decides the **exact requirements**.
+Turn **one** loose, fuzzy idea into a crisp, framed concept that `/workflow:refine` can take into
+structured requirements. Brainstorm decides **what we're building and why** for a **single unit**;
+refine decides the **exact requirements**.
+
+**Shared invariant:** no durable path decision (`Chosen Direction`, `Status: Explored`) without an
+**explicit user selection turn**. Draft options; the user commits.
 
 ## User Input
 
@@ -19,7 +22,7 @@ $ARGUMENTS
 
 ## When to Use This Skill
 
-Use brainstorm when the idea is still fuzzy:
+Use brainstorm when **one** idea is still fuzzy:
 
 - You can't yet state the problem as a single sentence.
 - You're at "what if we…" or "I have a vague sense we need X."
@@ -27,15 +30,29 @@ Use brainstorm when the idea is still fuzzy:
 
 **Skip it** and go straight to `/workflow:refine` when you can already state the problem and a
 rough direction — refine's Phase 1–2 will explore from there. Brainstorm exists for the step
-*before* that, not as a mandatory gate. Like the rest of the family, it should add signal, not
-ceremony.
+*before* that, not as a mandatory gate.
+
+### Altitude check (entry) — refuse multi-unit work
+
+If the input is a **multi-unit program** (multiple independent workstreams, portfolio sequencing,
+"shape the roadmap," initiative decomposition), **do not** run this skill as a portfolio workshop.
+
+**Stop and offer only** (do not auto-invoke):
+
+- Concept still fuzzy at program scale → user should run `/workflow:brainstorm` only if they first
+  narrow to **one** concept; otherwise go to `/workflow:roadmap` (roadmap owns destination framing
+  for multi-unit horizons).
+- Direction clear enough to name streams/order → `/workflow:roadmap`.
+
+Multi-stream English is not "one big concept." One feature with multiple ACs is still single-unit
+and belongs here or in refine.
 
 ## Input Interpretation
 
 | Input Pattern | Interpretation |
 |---------------|----------------|
 | Empty | Prompt for the rough idea |
-| `continue` | Resume an in-progress `./planning/*/brainstorm.md` (`Status: Exploring`) |
+| `continue` | Resume `./planning/*/brainstorm.md` with `Status: Exploring` (re-present directions; do **not** auto-converge) |
 | Text | Use as the seed idea and begin exploring |
 
 **If input is empty**, ask: "What's the rough idea? It's fine if it's half-formed — a problem,
@@ -46,42 +63,86 @@ small interrelated group) at a time and wait for the answer before continuing.
 
 ## The Brainstorming Protocol
 
-This protocol is the engine and runs on every agent. Move from divergent to convergent — do not
-narrow onto the first idea.
+### Gates (hard)
 
-1. **Frame the fuzz.** Capture the raw idea in the user's words. Surface the itch behind it: who
-   feels the pain, why it matters now, what triggered the thought. Don't solve yet.
-2. **Diverge.** Generate at least three *genuinely different* framings or directions — not
-   variations of one. Useful prompts: "If no constraints existed, what would this be?", "What's
-   the adjacent problem next to this one?", "What's the inverse of the obvious approach?"
-3. **Expand and challenge.** For each direction, name what makes it compelling and what would
-   kill it. Keep this lightweight — a line or two each, not an analysis.
-4. **Converge.** With the user, pick the direction worth refining (or merge two). State why it
-   won over the others.
+| Gate | Rule |
+|------|------|
+| **Diverge-complete** | Present ≥3 framings that pass the structural test (below). Then **hard stop**. |
+| **Forbidden until user converges** | Writing `Chosen Direction`; `Status: Explored`; offering `/workflow:refine` as done; collapsing to one option; same-turn recommendation |
+| **Converge** | User selects, rejects, ranks, merges, or explicitly asks which you prefer — **later turn** |
+| **Recommend** | Only after user selects/ranks/rejects **or** explicitly asks "which do you prefer?" Never in the same turn as first options presentation |
+| **Write Explored** | Only after converge; record `converged_by: user` |
+
+User may **waive** fewer than three options ("only two real frames") — record the waiver.
+
+### Structural options test
+
+Each framing must differ on **at least two** of: problem owner, job-to-be-done, primary constraint,
+success metric, non-goal set. Each must include a **kill criterion that would not kill the other
+options**. Same solution in three outfits → fail the gate; stay in diverge / `Exploring`.
+
+### Steps
+
+1. **Frame the fuzz.** Capture the raw idea in the user's words. Surface the itch: who feels the
+   pain, why it matters now, what triggered the thought. Don't solve yet.
+2. **Diverge.** Generate options that pass the structural test. Expand lightly: compelling + kill
+   (one or two lines each).
+3. **Present the field and STOP.** Write or update `brainstorm.md` as `Status: Exploring` with
+   directions only — **no** `Chosen Direction`, **no** seed as final. Wait for the user.
+4. **Converge (user turn).** Pick, merge, or re-open diverge. Optional recommendation only under
+   the recommend rule above.
 5. **Pressure-test (optional).** If the chosen direction is a big or hard-to-reverse bet, run
-   **Pass 1 (Blind-Spot)** of the Critic Pass — see @workflow (`references/critic-pass.md`) — over
-   the directions considered to surface what the exploration missed. Skip for low-stakes ideas.
-6. **Crystallize the seed.** Write the one-paragraph seed concept: the problem, who it's for, the
-   chosen direction, why, and what is deliberately *not* being decided yet. This paragraph is
-   refine's input.
+   **Pass 1 (Blind-Spot)** of the Critic Pass — see @workflow (`references/critic-pass.md`).
+   Skip for low-stakes ideas.
+6. **Crystallize the seed.** One paragraph: problem, who it's for, chosen direction, why, what is
+   deliberately *not* decided. Then write `Status: Explored` with Chosen + seed.
 
-<!-- The divergent rounds (steps 1–4) can be delegated where a richer ideation skill exists; the protocol above is always the fallback. Availability of superpowers is not guaranteed even on these agents, so this stays conditional, never the engine. -->
 <!-- agent:include claude,grok -->
-If the `superpowers:brainstorming` skill is available, prefer invoking it to drive the divergent
-rounds (steps 1–4), then return here to pressure-test and crystallize the seed into the artifact
-below. If it is not installed, use the protocol above directly.
+If the `superpowers:brainstorming` skill is available, you may borrow **one-question-at-a-time**
+discipline for diverge only. **Do not** run its design-doc, user-review-spec, or writing-plans path —
+return here for gates, artifact, and handoff. If it is not installed, use this protocol directly.
 <!-- /agent:include claude,grok -->
 
 ## Output Artifact
 
 Determine the project name from the git repository or working directory (the same basis
-`/workflow:refine` uses), create `./planning/<project>/` if needed, and write the seed concept to
-`./planning/<project>/brainstorm.md`:
+`/workflow:refine` uses), create `./planning/<project>/` if needed.
+
+### While exploring (required shape)
+
+```markdown
+# Brainstorm: [working title]
+
+Status: Exploring
+
+## The Itch
+
+[What problem or itch this addresses, who feels it, why now.]
+
+## Directions Considered
+
+- **[Direction A]** — [compelling] / kill: [criterion that wouldn't kill B/C]
+- **[Direction B]** — …
+- **[Direction C]** — …
+
+## Deliberately Undecided
+
+[Scope left open — optional at this stage]
+
+## Notes
+
+[Optional: user waiver of option count, open threads]
+```
+
+**Do not** include `## Chosen Direction` or a final `## Seed Concept` while `Status: Exploring`.
+
+### After user converges
 
 ```markdown
 # Brainstorm: [working title]
 
 Status: Explored
+converged_by: user
 
 ## Seed Concept
 
@@ -90,13 +151,11 @@ left undecided.]
 
 ## The Itch
 
-[What problem or itch this addresses, who feels it, why now.]
+[…]
 
 ## Directions Considered
 
-- [Direction A] — [what's compelling / what would kill it]
-- [Direction B] — [what's compelling / what would kill it]
-- [Direction C] — [what's compelling / what would kill it]
+[…]
 
 ## Chosen Direction
 
@@ -111,21 +170,18 @@ left undecided.]
 - [ ] [Question to answer during refinement]
 ```
 
-This artifact is local-file only. PM-system framing (issues, acceptance criteria) begins at
-`/workflow:refine`, not here.
+This artifact is local-file only. PM-system framing begins at `/workflow:refine`, not here.
 
 ## Handoff to Refine
 
-Close by offering the next step: "Concept framed and saved to `planning/<project>/brainstorm.md`.
-Run `/workflow:refine` to turn this seed into structured requirements." Refine reads this file as
-its starting context.
+Only after `Status: Explored`: "Concept framed and saved to `planning/<project>/brainstorm.md`.
+Run `/workflow:refine` to turn this seed into structured requirements."
 
 ## Key Principles
 
-- **Diverge before you converge.** Three real options beat one obvious one. The first idea is
-  rarely the best framing.
-- **Decide what and why, not how.** No acceptance criteria, no user stories, no task breakdown —
-  those belong to refine and plan. Producing them here is scope creep.
-- **A seed, not a spec.** One sharp paragraph is the deliverable. If it's getting long, you've
-  drifted into refinement.
-- **Signal, not ceremony.** If the idea is already clear, say so and send the user to refine.
+- **Diverge before you converge** — and **stop** so the user actually converges.
+- **Single-concept only** — multi-unit horizons belong to `/workflow:roadmap`.
+- **Decide what and why, not how** — no ACs, stories, or task breakdown.
+- **A seed, not a spec** — one sharp paragraph is the deliverable.
+- **Signal, not ceremony** — if the idea is already clear, say so and send the user to refine.
+- **Offer, don't chain-invoke** roadmap or refine until the user asks or the Explored handoff applies.

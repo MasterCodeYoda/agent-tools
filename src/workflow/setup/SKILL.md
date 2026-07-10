@@ -43,6 +43,10 @@ through to maintain if docs already exist).
   the shared charter (`.agent-tools/charter/`). Swarm does not invent a second memory-link format.
 - **`/workflow:continue`** — the primary consumer of `planning/conventions.md`. It classifies the
   next slice into the right track, routes per the conventions, and applies the project gates.
+  Path resolution may also consume a horizon map (`roadmap.md` or workstreams) when present.
+- **`/workflow:roadmap`** — user-only multi-unit map author; default dialect `planning/roadmap.md`.
+  Setup does **not** require a roadmap; record a non-default dialect only if the project already
+  uses something else (e.g. `initiatives/` + `workstreams/`).
 - **All `/workflow:*` phases** honor the project gates and integration policy recorded here.
 
 ## Procedure
@@ -151,7 +155,11 @@ For the top-level `planning/`:
 !.gitkeep
 !conventions.md
 !session-state.md
+!roadmap.md
 ```
+
+(If the project uses committed `initiatives/` or `workstreams/`, add matching `!` exceptions when
+those dirs are intentional live orchestration — only when the project already chose that dialect.)
 
 For each work-item subdirectory (`planning/<item>/`):
 ```gitignore

@@ -1,6 +1,6 @@
 ---
 name: workflow:continue
-description: Resume the next slice of work — orient from planning/ state, pick one PM-defined value slice, and drive it through the full workflow loop, stopping only where user input is required.
+description: Resume the next slice of work — resolve a known path, pick one claimable unit, drive the full workflow loop silently when healthy; hard-stop when path is not established
 argument-hint: "[--worktree] [optional: work item ID, planning dir, or blank to auto-pick the next slice]"
 user-invocable: true
 ---
@@ -8,14 +8,17 @@ user-invocable: true
 # Continue the Next Slice (`/workflow:continue`)
 
 A thin **sequential orchestrator** over the `/workflow` family. It orients from what
-`planning/` already records, picks **one** unit of PM-defined value (a slice / story / work
-item), and drives that single slice through the full workflow loop — refine → plan → execute →
-review → finish → compound — **auto-advancing through phases that need no human input and
-stopping only where your input is genuinely required**.
+`planning/` already records, **resolves a claimable next unit without inventing one**, and
+drives that single slice through the full workflow loop — refine → plan → execute → review →
+finish → compound — **auto-advancing through phases that need no human input and stopping only
+where your input is genuinely required**.
 
-It is **not** a recipe engine. The underlying `/workflow:*` skills carry their own structure;
-`/continue` only decides *which* slice and *which* phase comes next from current state, then
-lets each phase run natively.
+**Loop executor first:** when the path is clear, run **silently** (no portfolio monologue).
+"Silent" means no pre-claim steering chat — the end-of-loop recap and review ceremony still apply.
+
+It is **not** a recipe engine and **not** a horizon author. The underlying `/workflow:*` skills
+carry their own structure; `/continue` only decides *which* slice and *which* phase comes next,
+then lets each phase run natively. Multi-unit maps are authored by `/workflow:roadmap`.
 
 For backlog-scale **parallel** work — many items at once, each in its own worktree — use
 **`/swarm`**, not this. `/continue` is the sequential, one-slice-at-a-time counterpart. The two
@@ -39,13 +42,12 @@ $ARGUMENTS
 ## What `/continue` does
 
 ```
-orient → pick ONE slice → classify its stage → drive the full loop,
-         pausing only at user-input gates → track the handoff → stop
+orient → PRE-CLAIM path resolve → (hard stop | claim ONE unit) → stage table →
+         drive the loop → handoff → stop
 ```
 
-One slice, start to a natural stopping point. Maximum steerability: you see each gate and the
-final handoff, never a runaway. Do **not** layer prescriptive steps on top of the `/workflow:*`
-skills — let each run its own structure.
+One slice, start to a natural stopping point. Do **not** layer prescriptive steps on top of the
+`/workflow:*` skills — let each run its own structure.
 
 ## Orientation
 
@@ -67,17 +69,73 @@ narrative block.
      `planning/*/session-state.md` glob in step 1). When conventions specify an orientation method,
      follow it over the default scan below.
    Absent → use the defaults in this skill as-is.
-1. **Scan** `planning/*/session-state.md` frontmatter (the schema in `@workflow`). Find the
-   active slice:
-   - A slice with `status: in_progress` (and a live `branch`) is already claimed — resume it
-     unless the user named a different target.
-   - Otherwise take the next `status: planned` slice by priority/order.
-   - If a light top-level pointer exists (e.g. a project-wide `planning/session-state.md`),
-     honor it — but do not require one. The scan is the source of truth.
-2. **Honor an explicit target.** If the user named a work item or path, target that slice even
-   if another is in progress (warn if you're leaving an in-progress slice behind).
-3. **Confirm the precise stage** from the slice's own `planning/<project>/session-state.md` and
-   any in-flight state (a half-applied change, an unreviewed commit, an open question).
+1. **Scan** for claimable units: `planning/*/session-state.md` frontmatter (schema in `@workflow`),
+   optional top-level handoff pointer, optional `planning/roadmap.md` (or initiatives/workstreams
+   if that dialect is in use), PM queue only when conventions say so.
+2. **Run Pre-claim path resolution** (next section) **before** the stage table. Do not invent a
+   pseudo-slice so you can enter the table.
+3. **Confirm the precise stage** of the claimed unit from its `session-state.md` and in-flight
+   state (half-applied change, unreviewed commit, open question).
+
+## Pre-claim path resolution (hard gate — before stage table)
+
+**Continue never invents a next unit.** It never creates `planning/<new-unit>/` or PM issues to
+unblock itself. It never auto-invokes `/workflow:brainstorm` or `/workflow:roadmap` — only
+**stops and offers** those commands (unless the user explicitly invoked them this turn).
+
+### Path established? (first match wins)
+
+| # | Condition | Action |
+|---|-----------|--------|
+| 1 | Explicit target in `$ARGUMENTS` (issue id, PM URL, planning path) | Claim that unit (warn if leaving `in_progress` behind) |
+| 2 | Live `status: in_progress` slice (with live branch if required by project) | Resume it |
+| 3 | Conventions / handoff orientation names a resolvable NEXT | Claim that unit |
+| 4 | Roadmap / workstream head names a **resolvable** unit (`NEXT` not `map-only`) | Claim that unit |
+| 5 | ≥1 resolvable `status: planned` unit (or PM-equivalent per conventions) | Claim next by priority/order |
+| 6 | None of the above | **HARD STOP — path not established** |
+
+**Brownfield non-break:** a planned queue or PM backlog **without** `planning/roadmap.md` is still
+path established (row 5). Roadmap is optional altitude, not a passport.
+
+**Resolvable unit** = planning dir, issue id, or conventions pointer that maps to real work — not
+a vague initiative sentence.
+
+**Fatigue language is not path:** "you decide", "just continue", "pick something" without a unit
+id/path → still **HARD STOP** (same template). Do not invent NEXT.
+
+**Authority:** `in_progress` wins over roadmap NEXT. Do not grab swarm in-flight IDs (see
+Coexistence). Filter swarm-owned items from any offer list.
+
+### Hard-stop template (path not established)
+
+```markdown
+### Path not established — stopping
+
+Continue will not invent a next unit.
+
+**Options:**
+1. Name a concrete unit (issue id or `planning/<slug>/`) and re-run `/workflow:continue`
+2. `/workflow:brainstorm` — single fuzzy concept
+3. `/workflow:roadmap` — multi-unit destination + order (or resequence)
+[If any planned orphans / candidates exist, list up to 3 as optional picks — do not claim them
+without the user choosing.]
+```
+
+Remain stopped until the user provides a unit or runs a path skill.
+
+### Optional thin steering (v1 — evidence only)
+
+**Default: no offer.** Do not hunt for leverage at orient.
+
+If the **claimed next unit** (or handoff) carries a greppable unacked `steering_note:` that would
+affect whether to claim it, present **at most one** offer (proceed | pause for roadmap/brainstorm |
+other unit). On **proceed**, treat that note as acked for this unit (record ack in handoff or
+note) so it does not re-prompt every continue. No interaction-density latch and no steering modes
+in v1.
+
+### After claim
+
+Only then classify track and enter the stage table.
 
 ## Coexistence with `/swarm`
 
@@ -105,7 +163,8 @@ the same artifact-driven classification `/swarm` uses — then route:
 
 | Current state | Next phase |
 |---|---|
-| Idea still fuzzy, direction unchosen | `/workflow:brainstorm` |
+| Unit is multi-stream / horizon-only (no single claimable scope) | **Stop + offer** `/workflow:roadmap` (do not invent streams) |
+| Idea still fuzzy, direction unchosen | `/workflow:brainstorm` (offer/run for **this unit** only) |
 | Direction chosen, requirements ambiguous or have TBDs | `/workflow:refine` |
 | Requirements clear, no implementation plan | `/workflow:plan` |
 | Plan approved, work not started **or in progress** | `/workflow:execute` (resume where the plan left off) |
@@ -210,6 +269,7 @@ compound that slice first or record the skip before picking up new work.
 
 Auto-advance only where no human decision is owed. **Stop and hand back** at any genuine gate:
 
+- **Path not established** (pre-claim hard stop) — never invent NEXT.
 - Direction or requirements are ambiguous (brainstorm/refine needs your call).
 - A plan is ready for **approval** (`/workflow:plan` approval gate — never save/execute a plan
   without it).
@@ -287,6 +347,7 @@ skill contract. A missing or incomplete recap means the loop is not finished.
 | **Phases run** | Which workflow phases actually ran this invocation (e.g. plan → execute → review → merge) |
 | **Where left** | Next phase / gate / pickup pointer |
 | **Branch / commits** | Branch name and key SHAs if code moved |
+| **Steering** | When relevant: `silent` · `path-not-established` · `offered (steering_note)` · user choice |
 
 ### When this loop produced or integrated code (required Review block)
 
@@ -332,6 +393,9 @@ work. Same spirit as the compound soft-check.
 
 ## What `/continue` does not do
 
+- Does **not** invent a next unit, NEXT pointer, or planning/PM shell to unblock cold start.
+- Does **not** auto-invoke `/workflow:brainstorm` or `/workflow:roadmap` — stop + offer only.
+- Does **not** author or rewrite roadmaps, workstreams, or brainstorm seeds.
 - Does **not** re-run a phase that already produced its artifact (existing
   `brainstorm.md` / `requirements.md` / plan).
 - Does **not** author plan or requirements content directly — that's `/workflow:plan` /
@@ -348,14 +412,18 @@ work. Same spirit as the compound soft-check.
 - Does **not** drive multiple items in parallel — that's `/swarm`. It picks **one** slice and
   drives it sequentially.
 - Does **not** grab an item an active swarm run is working.
+- Does **not** run soft portfolio steering hunts; optional `steering_note` only (v1).
 
 ## Related
 
 - **`@workflow`** — the parent: session-state schema, branch naming, decomposition modes, phase
-  set. `/continue` routes over these; it doesn't restate them.
+  set, altitude triage. `/continue` routes over these; it doesn't restate them.
 - **`@workflow:setup`** — authors/maintains `planning/conventions.md` (the project tracks, gates,
   and integration policy this skill loads in Orientation step 0). Run it to teach a project's local
   process to `/continue`.
+- **`@workflow:roadmap`** — user-only multi-unit map author; continue consumes NEXT, never writes the map.
+- **`@workflow:brainstorm`** — single-concept HITL; continue may route a claimed fuzzy unit here.
 - **`/swarm`** — parallel, backlog-scale orchestration. `/continue` is its sequential counterpart.
+  Swarm does **not** enforce continue's path-not-established gate (separate state store).
 - **`@superpowers:finishing-a-development-branch`** — the integration decision point routed to
   after a clean review.

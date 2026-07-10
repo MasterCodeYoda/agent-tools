@@ -1,6 +1,6 @@
 ---
 name: workflow
-description: Parent skill for the workflow family — brainstorming, refinement, planning, execution, review, audit, compound, and knowledge capture. Supports vertical-slice and deliverable-partition decomposition modes.
+description: Parent skill for the workflow family — horizon mapping, brainstorming, refinement, planning, execution, review, audit, compound, and knowledge capture. Supports vertical-slice and deliverable-partition decomposition modes.
 user-invocable: true
 ---
 
@@ -14,16 +14,27 @@ This is the parent skill for the `workflow` family. It contains high-level philo
 |---------|---------|
 | `/workflow:setup` | Initialize/maintain the `planning/` docs and collaboratively define project-local conventions (tracks, gates, integration policy) |
 | `/workflow:prune` | Sweep `planning/` for fully-completed work, verify against git + PM, and purge confirmed-complete dirs/meta files on approval |
-| `/workflow:brainstorm` | Explore a fuzzy idea into a framed concept ready for refinement |
+| `/workflow:roadmap` | Chart or resequence a multi-unit horizon — destination, thin claimable streams, order, NEXT (user-approved) |
+| `/workflow:brainstorm` | Explore a **single** fuzzy idea into a framed concept ready for refinement (HITL diverge → user converge) |
 | `/workflow:refine` | Discover and refine requirements through guided conversation |
 | `/workflow:plan` | Create detailed implementation plans from requirements |
 | `/workflow:execute` | Run planned work with progress tracking, todos, and quality gates |
 | `/workflow:review` | Flexible code review (PRs, ranges, files, or uncommitted changes) |
 | `/workflow:audit` | Comprehensive multi-domain project audit |
 | `/workflow:compound` | Capture durable knowledge from any work (solutions, patterns, decisions) and maintain knowledge compounding |
-| `/workflow:continue` | Resume the next slice — orient from `planning/`, drive one slice through the full loop, stopping only at user-input gates |
+| `/workflow:continue` | Resume the next **known** slice — hard-stop if path not established; silent loop when healthy |
 
 See the individual sub-skills for full details, argument hints, and procedures.
+
+**Altitude triage** (which front door): @workflow (`references/horizon-altitudes.md`).
+
+```text
+[multi-unit / path unknown]  /workflow:roadmap
+        ↓ per claimable unit
+brainstorm? → refine → plan → execute → review → finish → compound
+        ↑
+   /workflow:continue  (never invents NEXT)
+```
 
 ## Philosophy
 
@@ -33,8 +44,9 @@ See the individual sub-skills for full details, argument hints, and procedures.
 2. **Work spans multiple sessions** - Structure for continuity without loss of fidelity
 3. **Speed + quality + attention to detail wins** - Fast execution with high standards
 4. **Knowledge compounds** - Each unit of work — a solved bug, a refactor, a feature pattern, a design decision — makes future work easier when its insight is captured
-5. **User approves before action** - Plans require explicit user approval before saving or executing
+5. **User approves before action** - Plans, roadmaps, and brainstorm convergence require explicit user approval before durable commits; continue never invents a queue
 6. **Artifacts state the current target, not their own history** - Decision records, domain docs, and acceptance criteria describe what is true/intended *now*. When a decision changes, re-derive the dependent artifacts from the new target — don't edit in place to preserve old structure (find-replace) or old history (supersession notes, tombstones, status fields). Git holds the past. Keep the rationale and rejected alternatives (they stop re-litigation); drop the change-narrative. See @workflow (`references/decision-records.md`)
+7. **Durable path decisions are user-gated** - `Chosen Direction`, stream lists, and committed NEXT are never agent-unilateral
 
 ### Decomposition Modes
 
@@ -97,10 +109,13 @@ these, so they live as **data** in `planning/conventions.md`, authored and maint
 A project's `conventions.md` may declare:
 
 - **Additional work tracks.** Beyond the default feature track
-  (`brainstorm → refine → plan → execute → review → finish → compound`), a project may define a
+  (`roadmap? → brainstorm? → refine → plan → execute → review → finish → compound`), a project may define a
   track that **overrides** the phase table for the units it governs — e.g. a research/discovery
   loop, a data-labeling cycle, or a release checklist — each following its own process doc and its
   own review-equivalent. `/workflow:continue` classifies each slice into its track before routing.
+- **Horizon layout (optional).** Default roadmap dialect is `planning/roadmap.md`. Projects that
+  already use `initiatives/` + `workstreams/` keep that layout; continue consumes NEXT/pointers
+  either way.
 - **Project-specific gates.** Checks **additive to** the standard review gate (cross-cutting
   safety, regression/holdout adoption, schema/contract lockstep). Applied before a slice is done.
 - **Integration / merge policy.** Local vs remote, merge style, banking/versioning, push policy
@@ -134,9 +149,26 @@ to set up hygiene and record any real custom conventions (it will not create emp
 
 **Outputs**: A removal summary; the approved deletions staged (committed only if the user asks).
 
-**Protects**: Permanent structural files (`conventions.md`, `.gitkeep`, `.gitignore`), track process docs, and referenced archives — never proposed for deletion. The handoff (`session-state.md` / `SESSION-HANDOFF.md`), `session-state.md` files, and queue (`work-streams.md`) are protected only while active or incomplete; they are pruned once the associated work is classified CONFIRMED-COMPLETE (cross-project orchestration artifacts that eventually complete and remove, just like session-state).
+**Protects**: Permanent structural files (`conventions.md`, `.gitkeep`, `.gitignore`), track process docs, and referenced archives — never proposed for deletion. The handoff (`session-state.md` / `SESSION-HANDOFF.md`), `session-state.md` files, queue (`work-streams.md`), and live horizon maps (`roadmap.md`, initiatives/workstreams) are protected only while active or incomplete; they are pruned once the associated work is classified CONFIRMED-COMPLETE.
 
 **When to use**: Periodically as completed work accumulates, or at a milestone close (after durable knowledge is migrated to ADRs / Codex / runbooks / memory)
+
+### /workflow:roadmap
+**Purpose**: User-only multi-unit horizon author — destination, thin claimable streams, order, NEXT
+
+**Behavior**: Decompose (no units yet) or Sequence (order existing units). Approve-before-write.
+Bail if a single claimable unit is enough. Default artifact `planning/roadmap.md`; honor existing
+initiative/workstream layouts. Continue consumes NEXT; continue never writes the map.
+
+**When to use**: Multi-unit program, cold-start path, or resequence after change
+
+### /workflow:brainstorm
+**Purpose**: Single-concept collaborative HITL — diverge options, user-gated converge, seed for refine
+
+**Behavior**: Structural multi-option field → hard stop → user chooses → `Status: Explored`.
+Multi-unit language → stop + offer roadmap (does not portfolio-workshop).
+
+**When to use**: One fuzzy idea; direction unchosen
 
 ### /workflow:refine
 **Purpose**: Discover and refine requirements through conversation
@@ -145,7 +177,7 @@ to set up hygiene and record any real custom conventions (it will not create emp
 - **File mode**: `./planning/<project>/requirements.md` — problem, solution, user stories, requirements. PM issue creation offered as optional add-on.
 - **PM mode**: PM issue updated with refined requirements directly. No `requirements.md` created. `./planning/<project>/` directory created for later use by plan.
 
-**When to use**: When starting from a vague idea, unclear requirements, or needing stakeholder alignment before planning
+**When to use**: When starting from a vague idea, unclear requirements, or needing stakeholder alignment before planning. If entry looks multi-unit unordered, **offer** `/workflow:roadmap` (do not hard-block).
 
 ### /workflow:plan
 **Purpose**: Create implementation plans from requirements
@@ -225,14 +257,14 @@ execution. After approval, the user chooses: save the plan only, or save and pro
 **When to use**: After any non-trivial work whose insight would save the next person (or the next you) real time — not only after fixing bugs; periodically for `--maintain`
 
 ### /workflow:continue
-**Purpose**: Sequential orchestrator — resume the next slice of work and drive it through the full workflow loop
+**Purpose**: Sequential orchestrator — resolve a **known** next unit and drive it through the full workflow loop
 
-**Behavior**: Orients by scanning `planning/*/session-state.md`, picks **one** PM-defined value slice (or an explicitly named target), classifies its stage from disk, and routes it through refine → plan → execute → review → finish → compound — auto-advancing through phases that need no input and stopping only at genuine user-input gates (plan approval, review-findings triage, merge confirmation). **Review is a hard gate** (hygiene gates ≠ review; size does not skip). Ends every loop with a **required recap**; when code was produced, the recap must include **Review findings & disposition** from `/workflow:review` (method, counts, disposition, verdict). Autonomous merge refuses without valid evidence schema + that recap block. Tracks a light handoff on completion (compress/archive history, refresh the next-phase pointer).
+**Behavior**: Orients lightly, runs **pre-claim path resolution** (explicit target → in_progress → conventions NEXT → roadmap NEXT → planned/PM queue → else **hard stop**). Never invents NEXT; never auto-invokes roadmap/brainstorm. When path is clear, drives one slice silently through refine → plan → execute → review → finish → compound — auto-advancing until genuine gates (plan approval, review triage, merge). **Review is a hard gate**. Required end-of-loop recap (with Review findings block when code moved). Planned queue without a roadmap file still counts as path established.
 
 **Flags**:
 - `--worktree` — run the slice in an isolated worktree (new or existing match) so other, non-workflow sessions can run in parallel in the same repo. Defaults to the main workspace.
 
-**Coexistence**: The sequential counterpart to `/swarm`. Keeps a separate state store (`planning/` only, never `.agent-tools/swarm/`); when a swarm run is active it warns and picks only items swarm isn't driving.
+**Coexistence**: The sequential counterpart to `/swarm`. Keeps a separate state store (`planning/` only, never `.agent-tools/swarm/`); when a swarm run is active it warns and picks only items swarm isn't driving. Swarm does not enforce continue's path gate.
 
 **When to use**: Resuming multi-session work — "pick up where I left off" — one slice at a time. For parallel backlog-scale execution, use `/swarm`.
 
@@ -251,13 +283,18 @@ Items genuinely not required by acceptance criteria but worth noting for future 
 
 ```
 ./planning/
+├── roadmap.md                   # Optional horizon map (from /workflow:roadmap)
+├── conventions.md               # Optional project overrides (from /workflow:setup)
 ├── <project-name>/
+│   ├── brainstorm.md            # Optional (from /workflow:brainstorm)
 │   ├── requirements.md          # File mode only (from /workflow:refine)
 │   ├── implementation-plan.md   # Both modes (from /workflow:plan)
 │   ├── session-state.md         # Both modes (from /workflow:plan)
 │   └── technical-decisions.md   # Key decisions (optional)
 └── archive/                     # Completed work
 ```
+
+Some projects use `initiatives/` + `workstreams/` instead of/in addition to `roadmap.md` — continue honors conventions.
 
 ### Session State Schema
 
@@ -402,6 +439,7 @@ This parent skill organizes supporting reference material used by the functional
 - `execution/quality-checkpoints.md` — Quality gate patterns
 
 **References** — used across multiple commands:
+- `references/horizon-altitudes.md` — Altitude triage for roadmap / brainstorm / continue (used by all three + parent)
 - `references/conversation-analysis.md` — Extracting signals from `~/.claude/` conversation history (used by `/skills:evolve`, `/workflow:compound`, `/workflow:audit`)
 - `references/decomposition-modes.md` — Decomposition-mode doctrine: when/how per mode, AC inheritance and resize, anti-patterns (used by `/workflow:refine`, `/workflow:plan`, `/workflow:execute`)
 - `references/memory-primitives.md` — memory levels (L1/L2/L3-shared/L3-local), harness primitives, `.agent-tools/memory/` (used by `/workflow:compound` and `--maintain`)
