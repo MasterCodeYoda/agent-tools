@@ -141,6 +141,35 @@ If refining a new idea (no existing issue), create the issue first, then populat
 2. Record the new issue ID
 3. Use the issue ID for all subsequent workflow commands
 
+## Plan-Time Status Update (from /workflow:plan)
+
+After the user approves an implementation plan, `/workflow:plan` updates the work item based on the detected PM tool:
+
+**Linear**:
+
+```bash
+# If Linear MCP available
+mcp__linear__updateIssue(issueId, {status: "In Progress"})
+mcp__linear__createComment(issueId, "Planning complete. Implementation plan created.")
+```
+
+**Jira**:
+
+```bash
+# If Jira MCP available
+mcp__jira__transitionIssue(issueKey, "In Progress")
+mcp__jira__addComment(issueKey, "Planning complete.")
+```
+
+**Manual**:
+
+```markdown
+Update your tracking system:
+
+- Status: Planning -> In Progress
+- Add link to: ./planning/[project]/
+```
+
 ## Backlog Resize (when the underlying decision changes)
 
 Issue *create* and *refine-requirements* (above) grow and update a backlog. They have no inverse — so when a decision changes, the cheap move is to annotate stale issues ("Reality:", "Model update:") instead of re-shaping them, and old phasing/ceremony rides forward. **Re-size the backlog to the current decision instead.** This is gated on a *recorded* decision change (a decision-record edit), not on taste — don't churn the backlog on every wobble.

@@ -40,54 +40,9 @@ See the individual sub-skills for full details, argument hints, and procedures.
 
 How an epic decomposes into stories or sub-issues depends on the work's shape. Two modes:
 
-**Vertical Slice** — for incremental feature work delivering observable value, especially user-facing, in deployed systems where each slice ships and stakeholders see progress. Default for post-first-release feature increments.
+**Vertical Slice** — build each story end-to-end through all layers and ship it before starting the next; every slice delivers an observable increment. Default for post-first-release feature work in deployed systems.
 
-**Deliverable-Partition** — for work that doesn't slice cleanly into user-facing increments, or where slicing risks process-induced slowdown or gaps in requirements / Definition of Done conformance. Two named sub-cases:
-
-- *Foundation / pre-first-release*: greenfield scaffolding, validators, CI/CD, base contracts. No deployed surface yet to slice through.
-- *Cross-cutting / large-effort*: post-first-release work like contract-first shared-library changes, compliance roll-outs, framework migrations, pipeline epics decomposed by event boundary.
-
-Same mechanism for both deliverable-partition sub-cases: decompose by deliverable, AC traceability matrix in the parent epic, verbatim AC ownership in each sub-issue, per-deliverable Definition of Done.
-
-#### Vertical Slice — When and How
-
-Build features end-to-end, not layer-by-layer.
-
-**Layer-by-layer approach** — avoid within vertical-slice mode:
-
-```
-1. Build all domain entities
-2. Build all repositories
-3. Build all use cases
-4. Build all API endpoints
-5. Build UI
-6. Integrate and test
-```
-
-**Vertical-slice approach**:
-
-```
-1. Pick highest priority user story
-2. Build ONLY what's needed for that story through ALL layers
-3. Ship it
-4. Pick next story, repeat
-```
-
-#### Deliverable-Partition — When and How
-
-Decompose the epic into the artifacts it must produce, not into user-facing increments.
-
-The "layer-by-layer is wrong" warning **does not apply** here — comprehensively building one deliverable (e.g., a CI pipeline, a validator rule, a contract type) to its owned AC subset is exactly the work.
-
-**Deliverable-partition approach**:
-
-```
-1. List the artifacts the epic must produce (validator, CI, hooks, README, ...)
-2. Partition the parent acceptance criteria across those artifacts —
-   each parent AC owned by exactly one sub-issue, verbatim
-3. Build each artifact comprehensively to its owned AC subset
-4. Verify the AC traceability matrix has zero orphans before closing the parent
-```
+**Deliverable-Partition** — decompose the epic into the artifacts it must produce (validator, CI, hooks, contracts, ...), partitioning the parent acceptance criteria across sub-issues with verbatim AC ownership and an AC traceability matrix in the parent. For foundation / pre-first-release work and cross-cutting / large-effort work (contract-first shared-library changes, compliance roll-outs, framework migrations).
 
 #### Mode Selection
 
@@ -107,45 +62,7 @@ Pick **deliverable-partition** when:
 
 When in doubt, default to vertical slice for feature work and deliverable-partition for foundation, infrastructure, or cross-cutting work.
 
-### When Vertical Slicing Works Best
-
-- **Faster time to value** — slices ship as they're ready and stakeholders observe progress.
-- **Reduced risk** — small, end-to-end-tested slices isolate failures.
-- **Better feedback** — users see progress immediately.
-- **Easier integration** — continuous integration of complete features, not big-bang merges.
-- **Clear progress signal** — working features, not "90% complete" partial layers.
-
-These benefits assume a deployed surface and observers. Pre-first-release work, foundation work, and cross-cutting work that doesn't surface to a user typically does not realize them — picking vertical slicing in those situations imports the costs without the payoff.
-
-### When Deliverable-Partition Works Better
-
-- **Gap-prevention discipline** — verbatim AC ownership in each sub-issue plus an AC traceability matrix in the parent makes Definition-of-Done conformance auditable at a glance. No silent paraphrasing drift between parent and child.
-- **No fictional value-delivery framing** — foundation / scaffolding work doesn't pretend each artifact is a user-visible increment.
-- **Sequencing matches the work shape** — contracts before consumers; validators before the rules they enforce; CI before the gates it runs.
-- **No "minimal X, full X later" temptation** — each sub-issue ships its deliverable comprehensively, not a partial first pass to be ratcheted in subsequent stories.
-
-### Issues state the current target, not a migration narrative
-
-An issue (and each AC) describes **what the system is when the work is done**, not the process of getting there — unless that process *is* the deliverable (a runbook, a migration tool, a cutover the issue exists to perform). Cutover ceremony — soak, promote, blue-green, parallel-run, rollback-drill — is admissible only when there's a production surface to cut over *from*; on a pre-launch system, an AC prescribing "soak before promoting" is dead ceremony, not a requirement. When a vendor or technology name changes in an issue, **do not find-replace and move on** — re-read every AC against the current target; phasing and ceremony rarely survive a decision that collapses the architecture.
-
-**Verbatim AC inheritance binds a child to the *current* parent AC, not the original text.** When the parent *decision* changes, re-size the parent AC set first, then children re-inherit. Fidelity is to the current decision, never to superseded AC text — editing a stale AC down to match the new decision is correctness, not a fidelity violation. (The strict no-drop ratchet is correct for compliance/contract work; resize is the explicit escape hatch for everything else, gated on a recorded decision change.) When a decision changes, re-size the backlog rather than annotating it — see @workflow (`planning/pm-integration.md`) › Backlog Resize.
-
-A smell to act on, not a hard cap: a pre-launch epic carrying many ACs — or any AC naming a process the system has no surface to run — is a signal to re-size before planning consumes it. Count ACs against the current decision's surface, not against what was previously written.
-
-### Bottom-Up Implementation (within a vertical slice)
-
-Within a vertical slice, plan **top-down** (user story → layers) and implement **bottom-up**:
-
-1. **Domain Layer First** — pure business logic, no dependencies
-2. **Application Layer** — use cases, orchestration (depends on domain abstractions)
-3. **Infrastructure Layer** — data access, external services (implements application interfaces)
-4. **Framework Layer** — API endpoints, UI
-
-This order follows the dependency rule: each layer depends only on layers inside it. Infrastructure implements the interfaces that Application defines.
-
-Testing integrates naturally with bottom-up implementation: write tests for each layer as you build it upward. See @test-strategy for strategy selection.
-
-In **deliverable-partition** mode, the dependency rule still applies inside each deliverable, but the per-deliverable shape varies — a validator rule, a CI pipeline step, or a hook installer doesn't necessarily span four layers. Plan deliverables in their dependency order (e.g., contracts before consumers; library scaffold before validator rules that operate on the library).
+Full doctrine — when-and-how per mode, why each works where it does, verbatim AC inheritance and backlog resize, bottom-up implementation order within a slice, and anti-patterns with worked examples — lives in @workflow (`references/decomposition-modes.md`).
 
 ## Requirements Source Mode
 
@@ -399,142 +316,30 @@ At session boundaries:
 
 ## Parallel Execution with Worktrees
 
-### When to Use
+Use worktrees when an epic has 2+ independent slices that don't modify the same files and you want multiple sessions executing simultaneously. Don't use them for sequentially-dependent or shared-file slices, small projects, or a single story/bug fix.
 
-- An epic has 2+ independent stories/slices that don't modify the same files
-- You want multiple Claude sessions to execute different slices simultaneously
-- The planning phase has identified parallel execution groups (see epic planning template)
-
-### When NOT to Use
-
-- Stories have sequential dependencies (Story 2 builds on Story 1's code)
-- Stories modify the same files (merge conflicts are likely)
-- The project is small enough that serial execution is fast enough
-- You're working on a single story or bug fix
-
-### Prerequisites
-
-1. **Planning docs must be in the worktree** — either use `/workflow:plan --worktree` (which commits docs into the worktree automatically) or manually commit `./planning/` before running `/workflow:execute --worktree`
-2. **Parallel groups identified** — the implementation plan should indicate which stories can run concurrently
-3. **No shared file modifications** — stories in the same parallel group must touch different files
-
-### Parallel Execution Workflow
-
-```
-1. Plan the epic:  /workflow:plan --worktree <epic>
-                   (or /workflow:plan <epic>, then commit docs manually)
-2. Start parallel sessions (each in its own terminal):
-   Session A: /workflow:execute ./planning/<project>/   (detects existing worktree from plan)
-   Session B: /workflow:execute --worktree ./planning/<project>/   (creates new worktree)
-3. Each session works in its own worktree with its own branch
-4. Sessions complete — each handoff documents its worktree path and branch
-5. USER merges one branch at a time (after ALL sessions complete):
-   cd <main-repo-root>
-   git checkout main
-   git merge feat/<slice-a-key>    # Run full test suite
-   git merge feat/<slice-b-key>    # Run full test suite again
-6. USER cleans up worktrees (only after all merges succeed):
-   git worktree list               # Verify no sessions are still active
-   git worktree remove <worktree-path-a>   # see @git (worktree-delete) for agent-specific resolution
-   git worktree remove <worktree-path-b>
-   git worktree prune
-```
-
-### Branch Naming for Parallel Work
-
-Each worktree gets its own branch following the standard naming convention:
-- `<type>/<issue-key>` (e.g., `feat/LIN-101`, `feat/LIN-102`)
-- The `--worktree` flag auto-creates and renames the branch to match
-
-### Merge Strategy
-
-Merge branches **one at a time**, running the full test suite after each merge. This isolates merge conflicts to a single branch and makes failures easy to attribute.
-
-### Worktree Safety Rules
-
-Use the dedicated git worktree skills (`git:worktree-create` and `git:worktree-delete`) for creating, entering, and safely removing worktrees. These skills contain the concrete, agent-aware implementation details.
-
-General safety principles (apply across agents):
-
-1. **Sessions never remove worktrees** — Handoff documents the worktree path but does NOT delete it. Cleanup is always a separate, user-initiated action.
-2. **Only remove worktrees you created** — Never clean up another session's worktree.
-3. **Check `git worktree list` before removal** — Verify no other worktrees are still active.
-4. **Never remove a worktree while CWD is inside it** — The shell will break irrecoverably.
-5. **Session-state tracks ownership** — The `worktree:` field in `session-state.md` records which worktree belongs to each session.
-
-See @git (worktree-create) and @git (worktree-delete) for agent-specific behavior, directory conventions, and commands.
+The full workflow — prerequisites, per-session commands, branch naming, the one-branch-at-a-time merge strategy, and the Worktree Safety Rules — lives in @workflow (`references/parallel-worktrees.md`). See @git (worktree-create) and @git (worktree-delete) for agent-specific behavior, directory conventions, and commands.
 
 ## Common Pitfalls
 
-### Over-Engineering the First Slice
+- **Over-engineering the first slice** — building everything a feature might need instead of only what the current story needs.
+- **Building horizontal infrastructure inside a vertical slice** — drifting into building all repository methods, service abstractions, or use-case shapes upfront. (Does not apply in deliverable-partition mode, where comprehensively building one deliverable to its owned AC subset is exactly the work.)
+- **Premature abstraction** — complex inheritance before patterns emerge; keep implementations simple and direct.
+- **Skipping quality gates** — fix failures immediately; maintain green builds.
+- **80% done syndrome** — ship complete features before moving to the next.
 
-**Wrong**: Building everything a feature might need
-```python
-class Task:
-    def __init__(self, title, description, status, priority,
-                 assignee, labels, attachments, comments, ...):
-```
-
-**Right**: Building only what the current story needs
-```python
-class Task:
-    def __init__(self, title, description):
-```
-
-### Building Horizontal Infrastructure (within vertical-slice mode)
-
-When you're slicing a feature vertically, resist drifting into building all repository methods, all service abstractions, or all use-case shapes upfront. Stay within the slice's needs.
-
-**Wrong** — all repository methods upfront for a feature where the slice only needs `create()`:
-```python
-class TaskRepository:
-    def create(self, task): ...
-    def update(self, task): ...
-    def delete(self, task_id): ...
-    def find_by_status(self, status): ...
-```
-
-**Right** — only what the current story needs:
-```python
-class TaskRepository:
-    def create(self, task): ...
-```
-
-This pitfall does **not** apply in deliverable-partition mode. There, comprehensively building one deliverable (e.g., a complete CI pipeline, a fully-specified contract type) to its owned AC subset is exactly the work, not a smell.
-
-### Premature Abstraction
-
-**Wrong**: Complex inheritance before patterns emerge
-```python
-class BaseEntity: ...
-class AuditableEntity(BaseEntity): ...
-class Task(AuditableEntity): ...
-```
-
-**Right**: Simple, direct implementation
-```python
-@dataclass
-class Task:
-    id: str
-    title: str
-```
-
-### Skipping Quality Gates
-
-**Wrong**: Moving to next task with failing tests
-**Right**: Fix failures immediately, maintain green builds
-
-### 80% Done Syndrome
-
-**Wrong**: Moving to next feature before current is complete
-**Right**: Ship complete features, then move on
+Wrong/right examples for each pitfall: see @workflow (`references/decomposition-modes.md`).
 
 ## Extended Guidance
 
 For detailed templates and patterns used by the functional areas, reference these sections:
 
+### Decomposition & Parallelism
+- `references/decomposition-modes.md` - Full decomposition doctrine: when/how per mode, AC inheritance and resize, anti-patterns
+- `references/parallel-worktrees.md` - Parallel worktree workflow, merge strategy, worktree safety rules
+
 ### Planning Phase
-- `planning/templates.md` - Vertical slice, quick, epic, spike, bug fix templates
+- `planning/templates.md` - Vertical slice, quick, epic, spike, bug fix templates; implementation-plan document, session-state, and plan-time prompt templates
 - `planning/task-breakdown.md` - Task breakdown patterns and estimation
 
 ### Implementation Phase
@@ -589,7 +394,7 @@ This parent skill organizes supporting reference material used by the functional
 **Planning** — used by `/workflow:plan`, `/workflow:refine`:
 - `planning/pm-integration.md` — PM-system integration patterns
 - `planning/task-breakdown.md` — Decomposition guidance
-- `planning/templates.md` — Plan templates
+- `planning/templates.md` — Plan and plan-time artifact templates
 
 **Implementation** — used by `/workflow:execute`, `/workflow:review`, audit domains:
 - `execution/dependency-establishment.md` — Dependency setup patterns
@@ -598,7 +403,9 @@ This parent skill organizes supporting reference material used by the functional
 
 **References** — used across multiple commands:
 - `references/conversation-analysis.md` — Extracting signals from `~/.claude/` conversation history (used by `/skills:evolve`, `/workflow:compound`, `/workflow:audit`)
+- `references/decomposition-modes.md` — Decomposition-mode doctrine: when/how per mode, AC inheritance and resize, anti-patterns (used by `/workflow:refine`, `/workflow:plan`, `/workflow:execute`)
 - `references/memory-primitives.md` — memory levels (L1/L2/L3-shared/L3-local), harness primitives, `.agent-tools/memory/` (used by `/workflow:compound` and `--maintain`)
+- `references/parallel-worktrees.md` — Parallel worktree execution workflow, merge strategy, safety rules (used by `/workflow:plan`, `/workflow:execute`)
 
 **Examples**:
 - `references/planning-example.md` — Worked planning example

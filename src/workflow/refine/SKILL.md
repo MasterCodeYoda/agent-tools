@@ -65,7 +65,7 @@ State the determination to the user and allow course correction:
 
 ## Decomposition Mode Selection
 
-Refinement output shape depends on decomposition mode (see @workflow for full criteria):
+Refinement output shape depends on decomposition mode (selection criteria in @workflow; full doctrine in @workflow (`references/decomposition-modes.md`)):
 
 - **Vertical-slice mode** — refinement produces user stories that each ship a feature increment end-to-end. Phase 3 output is "As a [user], I want…" stories with shared acceptance criteria.
 - **Deliverable-partition mode** — refinement produces a sub-issue breakdown where each sub-issue owns a verbatim subset of the parent epic's acceptance criteria. Phase 3 output is a deliverable list + AC traceability matrix, not user stories.

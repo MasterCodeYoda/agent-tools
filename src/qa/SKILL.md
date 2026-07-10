@@ -138,3 +138,7 @@ Author NL specs by scanning the app, importing existing docs, or guided interact
 ## Templates
 
 - `templates/spec-template.md` — Blank NL spec with all sections and guidance comments
+- `templates/sentinel-config-template.md` — Full `sentinel.config.yaml` body with bridge example and per-strategy auth variants (used by qa:setup)
+- `templates/playwright-config-template.md` — Full `playwright.config.ts` body plus partitioned-bridge projects variant (used by qa:setup)
+- `templates/seed-spec-template.md` — Full `tests/seed.spec.ts` seed fixture body (used by qa:setup)
+- `templates/readme-template.md` — 12-section content spec for the generated Sentinel README (used by qa:setup)

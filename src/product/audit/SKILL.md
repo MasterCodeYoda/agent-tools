@@ -182,12 +182,10 @@ Spawn 3 parallel agents:
 
 Spawn 2 parallel agents:
 
-**pmf-signal-assessor**:
+**pmf-signal-assessor** — References @product (Positioning Frameworks) for the Sean Ellis PMF test, Gibson Biddle DHM model, and Strategyzer Value Proposition Canvas definitions:
 - Note: These frameworks are applied as proxy indicators from artifact signals only — they are not substitutes for user research and financial analysis.
 - Synthesize Tier 1 and Tier 2 findings into an overall product-market fit signal assessment
-- Apply the Sean Ellis "very disappointed" test heuristic: based on artifact signals (depth of problem articulation, specificity of solution, signs of active usage), estimate whether users would be very disappointed if this product disappeared
-- Evaluate the Gibson Biddle DHM model from artifacts: Delight (is the UX compelling?), Hard-to-copy (are there moat signals?), Margin-enhancing signals (pricing model scalability, self-serve vs. sales-assisted)
-- Apply the Strategyzer Value Proposition Canvas: are Jobs, Pains, and Gains clearly addressed?
+- Apply each framework as an artifact-signal lens per its @product definition: Sean Ellis (would users be very disappointed if this product disappeared?), DHM (delight, moat, and margin signals), Value Proposition Canvas (are Jobs, Pains, and Gains clearly addressed?)
 - Identify the strongest PMF signal and the weakest signal with specific evidence
 - Assess: is this product in search, early traction, or scaling phase?
 
@@ -202,142 +200,9 @@ Spawn 2 parallel agents:
 
 ## Output: Prioritized Report
 
-Present findings using the following structure:
+Scoring model in one line: per-check points (P1 = 10, P2 = 6, P3 = 3, fail = 0) roll up into weighted category scores, which combine into an overall graded product score; a separate findings-based health score starts at 100 and deducts per finding.
 
-```markdown
-## Product & Market Audit Complete
-
-**Scope**: [project path]
-**Product Type**: [detected type — SaaS, SDK, CLI, framework, etc.]
-**Target Audience**: [detected audience — developers, business users, etc.]
-**Product Phase**: [search, early traction, scaling]
-**Tiers Run**: [1, 2, 3] or [1 only]
-
-  ============================================
-  ||     PRODUCT SCORE: [N]/100            ||
-  ||     Grade: [Letter] — [Label]         ||
-  ============================================
-
-### Category Scores
-
-| Category | Score | Grade | Bar |
-|----------|-------|-------|-----|
-| Value Proposition Clarity (20%) | [N]/100 | [A-F] | [████████░░] |
-| Messaging Consistency (15%) | [N]/100 | [A-F] | [██████░░░░] |
-| Positioning & Differentiation (15%) | [N]/100 | [A-F] | [████████░░] |
-| Product Completeness (15%) | [N]/100 | [A-F] | [██████████] |
-| Go-to-Market Readiness (10%) | [N]/100 | [A-F] | [████████░░] |
-| ICP & Audience Definition (10%) | [N]/100 | [A-F] | [████░░░░░░] |
-| Developer Experience (10%) | [N]/100 | [A-F] | [██████░░░░] |
-| Trust & Credibility (5%) | [N]/100 | [A-F] | [████░░░░░░] |
-
-### Health Score
-
-Calculate from findings:
-- Start at 100
-- Each P1: -12 points
-- Each P2: -4 points
-- Each P3: -1 point
-- Floor: 0
-
-| Score Range | Label |
-|-------------|-------|
-| 90-100 | Excellent |
-| 75-89 | Good |
-| 60-74 | Fair |
-| 40-59 | Needs Work |
-| 0-39 | Critical |
-
-**Score: [N]/100 — [Label]**
-
-### Health Summary
-
-| Metric | Value | Status |
-|--------|-------|--------|
-| Value proposition | [clear/vague/missing] | [ok/warning/critical] |
-| Messaging consistency | [consistent/mixed/contradictory] | [ok/warning/critical] |
-| Positioning clarity | [differentiated/generic/absent] | [ok/warning/critical] |
-| Product completeness | [production/beta/prototype] | [ok/warning/critical] |
-| GTM readiness | [ready/partial/missing] | [ok/warning/critical] |
-| Target audience | [explicit/implied/unclear] | [ok/warning/critical] |
-| Developer experience | [polished/functional/rough] | [ok/warning/critical] |
-| Trust signals | [strong/present/weak] | [ok/warning/critical] |
-
-### Findings
-
-#### P1 — Critical (Prospect Cannot Evaluate Product)
-[Prospect cannot determine what the product does, major messaging contradictions across surfaces, product appears non-functional or unstable, security posture blocks enterprise adoption]
-
-#### P2 — Important (Weakened Positioning / Adoption Friction)
-[Inconsistent messaging across surfaces, incomplete onboarding path, weak or generic differentiation, missing GTM artifacts, unclear target audience]
-
-#### P3 — Suggestions (Polish & Optimization)
-[Tone inconsistencies, minor copy improvements, SEO optimization opportunities, additional trust signals, competitive comparison gaps]
-
-### PMF Signal Assessment
-
-| Signal | Strength | Evidence |
-|--------|----------|----------|
-| Problem clarity | [strong/moderate/weak] | [specific citation] |
-| Solution fit | [strong/moderate/weak] | [specific citation] |
-| Differentiation | [strong/moderate/weak] | [specific citation] |
-| Audience definition | [strong/moderate/weak] | [specific citation] |
-| Traction indicators | [strong/moderate/weak] | [specific citation] |
-
-**Overall PMF Signal: [Strong / Emerging / Unclear / Absent]**
-
-### Quick Wins
-
-| Action | Impact | Effort | Category |
-|--------|--------|--------|----------|
-| [highest-impact, lowest-effort action] | High | < 1 hour | [category] |
-| [second action] | High | < 2 hours | [category] |
-| [third action] | Medium | < 4 hours | [category] |
-
-### Benchmark Comparison
-
-| Dimension | This Product | Typical OSS | Funded Startup | Market Leader |
-|-----------|-------------|-------------|----------------|---------------|
-| Value Proposition | [score] | 30-50 | 60-75 | 85+ |
-| Messaging | [score] | 20-40 | 55-70 | 80+ |
-| Positioning | [score] | 15-35 | 50-70 | 85+ |
-| Product Completeness | [score] | 30-50 | 60-75 | 90+ |
-| GTM Readiness | [score] | 10-25 | 50-70 | 85+ |
-| Developer Experience | [score] | 25-45 | 55-70 | 85+ |
-| Trust Signals | [score] | 15-30 | 45-65 | 85+ |
-
-### Positive Observations
-[Strong product elements, effective positioning, clear audience targeting, compelling trust signals]
-
-### Recommended Actions
-1. [Highest-impact fix — usually P1 items]
-2. [Second priority]
-3. [Strategic investment recommendation]
-```
-
-## Scoring Methodology
-
-### Per-Check Scoring
-- P1 check passed: 10 points
-- P2 check passed: 6 points
-- P3 check passed: 3 points
-- Failed check: 0 points
-
-### Category Scoring
-Category score = (earned points / maximum possible points) × 100
-
-### Overall Score
-Weighted sum across categories using the weights in the Category Scores table.
-
-### Grade Scale
-
-| Grade | Score Range | Label |
-|-------|-------------|-------|
-| A | 90-100 | Market-Ready |
-| B | 75-89 | Strong Foundation |
-| C | 60-74 | Needs Positioning Work |
-| D | 40-59 | Significant Gaps |
-| F | 0-39 | Critical |
+The full scoring rubric, category weights, grade scale, benchmark table, and complete report template live in `references/audit-scoring.md`. Load that file when computing scores and render the final report exactly per its template.
 
 ## Actionable Next Steps
 
@@ -357,43 +222,30 @@ After presenting the report, offer:
 
 ## Integration Points
 
-### With /workflow:audit --focus docs
+Division of labor with `/workflow:audit` focus areas:
 
-audit-product evaluates whether documentation tells a compelling product story; audit-docs evaluates documentation completeness and accuracy. A product with excellent docs but weak positioning still loses prospects.
+| Focus | audit-product examines | The focus agent examines | Why both matter |
+|---|---|---|---|
+| `--focus docs` | Whether documentation tells a compelling product story | Documentation completeness and accuracy | Excellent docs with weak positioning still lose prospects |
+| `--focus frontend` | Product messaging and positioning in the UI | Component architecture, accessibility, performance | Both contribute to the user's overall impression |
+| `--focus repo` | Product maturity signals | Engineering infrastructure maturity | Investor/buyer readiness depends on both |
+| `--focus api` | Developer experience and time-to-value | API design quality | For developer-facing products, API quality is a core product differentiator |
+| `--focus code` | Defensibility and moat signals in architecture | Code quality | Technical debt found in audit-code may surface as product completeness concerns |
+| `--focus tests` | Production readiness and trust signals | Test coverage and quality | Strong test coverage is a trust signal for enterprise adoption |
 
-### With /workflow:audit --focus frontend
+Beyond audit focuses:
 
-audit-product examines product messaging and positioning in the UI; audit-frontend examines component architecture, accessibility, and performance. Both contribute to the user's overall impression.
-
-### With /workflow:audit --focus repo
-
-audit-product assesses product maturity signals; audit-repo assesses engineering infrastructure maturity. Investor/buyer readiness depends on both.
-
-### With /workflow:audit --focus api
-
-audit-product examines developer experience and time-to-value; audit-api evaluates API design quality. For developer-facing products, API quality is a core product differentiator.
-
-### With /workflow:audit --focus code
-
-audit-product examines defensibility and moat signals in architecture; audit-code examines code quality. Technical debt found in audit-code may surface as product completeness concerns in audit-product.
-
-### With /workflow:audit --focus tests
-
-audit-product examines production readiness and trust signals; audit-tests evaluates test coverage and quality. Strong test coverage is a trust signal for enterprise adoption.
-
-### With /workflow:plan and /workflow:refine
-
-Product audit findings can inform requirements refinement and planning — P1/P2 findings become inputs for the next planning cycle.
-
-### With /workflow:compound
-
-Product audit insights about positioning, messaging, and competitive stance are excellent candidates for knowledge capture via compound.
+- **/workflow:plan and /workflow:refine** — Product audit findings can inform requirements refinement and planning — P1/P2 findings become inputs for the next planning cycle.
+- **/workflow:compound** — Product audit insights about positioning, messaging, and competitive stance are excellent candidates for knowledge capture via compound.
 
 ## References
 
-- [Obviously Awesome](https://www.aprildunford.com/obviously-awesome) — April Dunford's positioning framework: competitive alternatives, unique attributes, value, target customer, market category
-- [Sean Ellis PMF Test](https://www.startup-marketing.com/the-startup-pyramid/) — "How would you feel if you could no longer use this product?" — the "very disappointed" benchmark
-- [Gibson Biddle DHM Model](https://gibsonbiddle.medium.com/intro-to-product-strategy-60bdf72b17e3) — Delight customers, in Hard-to-copy, Margin-enhancing ways
-- [Strategyzer Value Proposition Canvas](https://www.strategyzer.com/library/the-value-proposition-canvas) — Jobs-to-be-done, Pains, and Gains mapping
+Framework definitions (Dunford positioning, Sean Ellis PMF test, DHM model, Value Proposition Canvas) live in @product (Positioning Frameworks) — apply them from there rather than re-deriving. Source links:
+
+- [Obviously Awesome](https://www.aprildunford.com/obviously-awesome) — April Dunford
+- [Sean Ellis PMF Test](https://www.startup-marketing.com/the-startup-pyramid/)
+- [Gibson Biddle DHM Model](https://gibsonbiddle.medium.com/intro-to-product-strategy-60bdf72b17e3)
+- [Strategyzer Value Proposition Canvas](https://www.strategyzer.com/library/the-value-proposition-canvas)
 - [Crossing the Chasm](https://www.harpercollins.com/products/crossing-the-chasm-3rd-edition-geoffrey-a-moore) — Geoffrey Moore's technology adoption lifecycle and chasm-crossing strategies
-- [react-doctor](https://github.com/millionco/react-doctor) — Health scoring concept adapted from this React diagnostic CLI
+
+Health scoring attribution (react-doctor) lives with the scoring rubric in `references/audit-scoring.md`.

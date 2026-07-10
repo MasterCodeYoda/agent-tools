@@ -31,10 +31,8 @@ The agent and user work together: the agent proposes cleanups, merges, and refin
 
 Use a single markdown file with these clearly labelled sections. Keep content strictly to personality, voice, and communication style.
 
-**Size limits (enforced, token-based):** 
-- Warn at 800 tokens
-- Stronger warning at 1,000 tokens
-- Forced maintenance at 1,200 tokens
+**Size limits (enforced, token-based):** three escalating thresholds — see **Size Limits and
+Maintenance** below for the canonical values and required actions.
 
 This keeps the profile potent, cheap to load every session, and prevents attention dilution. The `/personify` skill surfaces usage (in tokens) on every run and guides consolidation when approaching thresholds. (Approximate tokens: ~4 characters per token, or use platform tokenizer if available.)
 
@@ -155,7 +153,7 @@ Example application:
 
 ## References
 
-The profile is bounded project memory (with explicit token limits: warn 800, strong warn 1,000, forced 1,200; plus proactive maintenance), similar to charter but narrowly scoped to agent <-> human interaction. It is not a replacement for technical docs or ADRs.
+The profile is bounded project memory (with the token limits from Size Limits and Maintenance plus proactive maintenance), similar to charter but narrowly scoped to agent <-> human interaction. It is not a replacement for technical docs or ADRs.
 
 See [references/example.md](references/example.md) for a fully commented example of a reasonable starting persona (remove the `<!-- -->` comments for live use). We keep this example updated with broadly applicable positions.
 

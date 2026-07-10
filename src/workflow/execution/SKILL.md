@@ -172,7 +172,7 @@ Use the agent's worktree creation mechanism (see @git (worktree-create))
 
 This creates a worktree using the agent's worktree naming convention (see @git (worktree-create) for agent-specific path details) and switches CWD to it.
 
-**Worktree exit prompt**: Respect your agent's worktree exit prompt behavior (see @git (worktree-create) and @git (worktree-delete)). In parallel workflows, prefer keeping the worktree until after merging. Worktree removal is a user-initiated action after all sessions complete and branches are merged. See Worktree Safety Rules in @workflow.
+**Worktree exit prompt**: Respect your agent's worktree exit prompt behavior (see @git (worktree-create) and @git (worktree-delete)). In parallel workflows, prefer keeping the worktree until after merging. Worktree removal is a user-initiated action after all sessions complete and branches are merged. See Worktree Safety Rules in @workflow (`references/parallel-worktrees.md`).
 
 **Rename branch** to match naming convention:
 
@@ -278,8 +278,8 @@ Ask user to confirm task selection if unclear.
 
 ## Execution Loop
 
-For detailed implementation guidance and quality checkpoints, reference @workflow (quality checkpoints, layer
-guidance)
+For quality checkpoints, reference @workflow (`execution/quality-checkpoints.md`); for layer guidance (bottom-up
+implementation order within a slice), reference @workflow (`references/decomposition-modes.md`)
 
 ### Task Execution Pattern
 

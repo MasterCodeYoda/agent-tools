@@ -75,7 +75,7 @@ State the determination to the user and allow course correction.
 
 ## Decomposition Mode Selection
 
-Implementation plan shape depends on decomposition mode (see @workflow):
+Implementation plan shape depends on decomposition mode (selection criteria in @workflow; full doctrine in @workflow (`references/decomposition-modes.md`)):
 
 - **Vertical-slice mode** — plan is organized as Vertical Slice Breakdown (Domain → Application → Infrastructure → Framework per slice).
 - **Deliverable-partition mode** — plan is organized as Deliverable Breakdown (per-deliverable task list with verbatim parent-AC ownership in each sub-issue).
@@ -90,7 +90,7 @@ Implementation plan shape depends on decomposition mode (see @workflow):
 State the determination to the user and allow course correction:
 > "I'll plan in [vertical-slice / deliverable-partition] mode. [Reason]. Say 'use [other] mode' if you'd prefer."
 
-The plan template below has both mode variants — use the one matching the selected mode.
+Use the Variant A/B breakdown template from @workflow (`planning/templates.md`) matching the selected mode.
 
 ## Context Gathering
 
@@ -209,6 +209,8 @@ issue relations, confirmed with the user above). Downstream orchestration (`/swa
 this frontmatter to schedule parallel waves; for single-agent work it documents sequencing.
 Use empty lists when there are no dependencies.
 
+The full plan document template — frontmatter plus every section, including both breakdown variants — lives in @workflow (`planning/templates.md`) › Implementation Plan Document Template. Skeleton:
+
 ```markdown
 ---
 project: [project-name]
@@ -219,180 +221,17 @@ parallelizable_with: []     # peer items safe to run concurrently (no shared fil
 ---
 # Implementation Plan: [Feature Title]
 
-## Approach
-
-[High-level approach description]
-[Key architectural decisions]
-[Why this approach was chosen]
-
-## Breakdown (use the variant matching selected mode)
-
-### Variant A: Vertical Slice Breakdown (vertical-slice mode)
-
-#### Slice 1: [Core Functionality]
-
-**Issue**: [ISSUE-ID]
-**Commit Point**: After all layers complete for this slice
-**PM Update**: Mark [ISSUE-ID] as Done
-
-##### Domain Layer
-
-- [ ] [Entity/model with specific fields]
-- [ ] [Validation rules]
-- [ ] [Business logic]
-
-##### Application Layer
-
-- [ ] [Use case implementation]
-- [ ] [Request/Response DTOs]
-
-##### Infrastructure Layer
-
-- [ ] [Repository methods needed]
-- [ ] [External service integrations]
-- [ ] [Database changes]
-
-##### Framework Layer
-
-- [ ] [API endpoints or UI components]
-- [ ] [Input validation]
-
-##### Slice Completion
-
-- [ ] Tests passing
-- [ ] Code committed with issue reference
-- [ ] PM tool updated (issue → Done)
-
-#### Slice 2: [Enhancement] (if applicable)
-
-[Same structure - include Issue, Commit Point, PM Update, and Slice Completion]
-
-### Variant B: Deliverable Breakdown (deliverable-partition mode)
-
-#### Parent Acceptance Criteria
-
-- [ ] AC1 — [verbatim text]
-- [ ] AC2 — [verbatim text]
-- [ ] AC3 — [verbatim text]
-
-#### AC Traceability Matrix
-
-| Parent AC | Owning sub-issue | Verified at |
-|-----------|------------------|-------------|
-| AC1 | Sub-issue 1 | Sub-issue 1 close |
-| AC2 | Sub-issue 2 | Sub-issue 2 close |
-| AC3 | Sub-issue 1 | Sub-issue 1 close |
-
-Every parent AC must appear in exactly one row. Audit-on-close: zero orphans before parent epic closes.
-
-#### Sub-issue 1: [Deliverable name]
-
-**Issue**: [SUB-ISSUE-ID]
-**Commit Point**: After deliverable ships and all inherited ACs verified
-**PM Update**: Mark [SUB-ISSUE-ID] as Done
-
-**Inherited parent ACs (verbatim, verified at this sub-issue's close):**
-
-- [ ] AC1 — [exact text from parent]
-- [ ] AC3 — [exact text from parent]
-
-**Sub-issue-specific tasks:**
-
-- [ ] [Task derived from owned ACs]
-- [ ] [Task]
-
-**Dependencies:**
-
-- Blocked by: [other sub-issues, if any]
-
-**Sub-issue Completion:**
-
-- [ ] All inherited verbatim parent ACs verified
-- [ ] Tests passing (positive + negative cases per @workflow `execution/quality-checkpoints.md`)
-- [ ] Code committed with sub-issue reference
-- [ ] PM tool updated (sub-issue → Done)
-
-#### Sub-issue 2: [Deliverable name]
-
-[Same structure]
-
-#### Gap-prevention check (run before parent epic closes)
-
-- [ ] Every parent AC appears in exactly one sub-issue's "Inherited" block.
-- [ ] No sub-issue has paraphrased ACs; each is verbatim from the parent.
-- [ ] Every closed sub-issue verified its inherited ACs.
-- [ ] Any deferred AC has a tracking issue + explicit approval; otherwise the parent does not close.
-
-## Task Breakdown
-
-All tasks below are required for completion. Every task maps to an acceptance criterion or is necessary for the feature to work correctly. There are no optional tiers — if it's in this list, it must be done before the work is considered complete.
-
-- [ ] [Task 1] - [brief description]
-- [ ] [Task 2] - [brief description]
-- [ ] [Task 3] - [brief description]
-- [ ] [Task 4] - [brief description]
-- [ ] [Task 5] - [brief description]
-
-### Out of Scope
-
-Items not required by acceptance criteria but worth noting for future iterations:
-
-- [Item 1] - [why it's deferred]
-- [Item 2] - [why it's deferred]
-
-## Technical Decisions
-
-### [Decision 1]
-
-- **Context**: [Why this decision matters]
-- **Options**: [Alternatives considered]
-- **Decision**: [What we chose]
-- **Rationale**: [Why]
-
-### [Decision 2]
-
-[Same format]
-
-## Testing Strategy
-
-- **Approach**: [Select testing strategy — see @test-strategy]
-- **Unit Tests**: [Approach for domain/use case testing]
-- **Integration Tests**: [Approach for infrastructure testing]
-- **E2E Tests**: [Approach for complete flow testing]
-
-## Risk Assessment
-
-| Risk | Likelihood | Impact | Mitigation |
-|------|------------|--------|------------|
-| [Risk 1] | Low/Med/High | Low/Med/High | [Strategy] |
-
-## Implementation Order
-
-0. [Prefactoring / enabling work, if any] - behavior-preserving, committed separately before
-   feature work begins (omit this step entirely when the change is already easy — see
-   §Prefactoring Assessment)
-1. [First task/slice] - [Why first]
-2. [Second task/slice] - [Dependencies]
-3. [Continue...]
-
-## Definition of Done
-
-### Per Slice/Story
-
-- [ ] All layers implemented for this slice
-- [ ] Tests passing for this slice
-- [ ] Code committed with issue reference
-- [ ] PM tool updated (issue → Done)
-
-### Per Feature (Epic)
-
-- [ ] All slices complete (using above checklist per slice)
-- [ ] All tasks complete — no deferred items
-- [ ] All acceptance criteria verified against the plan before closing
-- [ ] Code reviewed
-- [ ] Documentation updated
-- [ ] Deployed to staging
+## Approach               <- high-level approach, key decisions, why chosen
+## Breakdown              <- Variant A (vertical-slice) or Variant B (deliverable-partition)
+## Task Breakdown         <- flat list, all required; "Out of Scope" for future ideas
+## Technical Decisions    <- context / options / decision / rationale per decision
+## Testing Strategy       <- approach + unit / integration / e2e (see @test-strategy)
+## Risk Assessment        <- likelihood / impact / mitigation table
+## Implementation Order   <- step 0 = prefactoring / enabling work when applicable
+## Definition of Done     <- per slice/story and per feature (epic)
 ```
+
+Use the Variant A (vertical-slice) or Variant B (deliverable-partition) breakdown template from @workflow (`planning/templates.md`) matching the selected mode. In deliverable-partition mode the breakdown carries the parent ACs, the AC traceability matrix, verbatim AC inheritance per sub-issue, and the gap-prevention check that must pass before the parent epic closes.
 
 ### Initialize Session State
 
@@ -401,34 +240,7 @@ Prepare the session state content below. **Do not write files to disk yet** — 
 
 Target file: `./planning/<project>/session-state.md`
 
-```yaml
----
-project: [project-name]
-requirements_source: [file|pm]
-work_item: [ISSUE-ID]          # Set when PM issue is linked
-pm_tool: [linear|jira|manual]  # Set when PM tool is detected
-session_count: 0
-status: planned
-progress:
-  total_tasks: [count from plan]
-  completed: 0
-  percent: 0%
-current_layer: not_started
-branch: <type>/<issue-key or description>
-worktree: <path>  # Only set when using --worktree; absolute path to worktree directory
-created: [timestamp]
----
-
-## Status
-Planning complete. Awaiting user approval.
-
-## Next Steps
-1. User reviews and approves plan
-2. Run `/workflow:execute ./planning/[project]/` when ready
-
-## Session History
-[Empty - will be populated during execution]
-```
+Use the Session State Template (plan-time initialization) from @workflow (`planning/templates.md`). Frontmatter fields: `project`, `requirements_source` (file|pm), `work_item`, `pm_tool`, `session_count: 0`, `status: planned`, `progress` (total_tasks from plan / completed 0 / percent 0%), `current_layer: not_started`, `branch`, `worktree` (only when using `--worktree`), `created`. Body sections: Status ("Planning complete. Awaiting user approval."), Next Steps (approve, then `/workflow:execute`), Session History (empty).
 
 ## PM Tool Integration
 
@@ -436,33 +248,7 @@ For PM-specific workflows, reference @workflow (PM integration)
 
 ### Update Work Item (after approval)
 
-**Do not update PM tools until the user approves the plan** (see §Plan Approval Gate). Once approved, update based
-on detected PM tool:
-
-**Linear**:
-
-```bash
-# If Linear MCP available
-mcp__linear__updateIssue(issueId, {status: "In Progress"})
-mcp__linear__createComment(issueId, "Planning complete. Implementation plan created.")
-```
-
-**Jira**:
-
-```bash
-# If Jira MCP available
-mcp__jira__transitionIssue(issueKey, "In Progress")
-mcp__jira__addComment(issueKey, "Planning complete.")
-```
-
-**Manual**:
-
-```markdown
-Update your tracking system:
-
-- Status: Planning -> In Progress
-- Add link to: ./planning/[project]/
-```
+**Do not update PM tools until the user approves the plan** (see §Plan Approval Gate). Once approved, apply the plan-time status update for the detected PM tool — status → In Progress plus a planning-complete comment/link. The Linear/Jira MCP calls and the manual fallback live in @workflow (`planning/pm-integration.md`) › Plan-Time Status Update.
 
 ## Leverage Check
 
@@ -489,43 +275,7 @@ gate — no exceptions.
 
 ### Present Plan for Approval
 
-Show the plan summary and ask the user to approve:
-
-```markdown
-## Plan Ready for Review
-
-**Project**: [project-name]
-**Source**: [requirements.md path, issue ID, or description]
-
-### Summary
-
-[2-3 sentence overview of the approach]
-
-### Slices
-
-1. **[Slice 1 name]** - [brief description] ([N] tasks)
-2. **[Slice 2 name]** - [brief description] ([N] tasks)
-
-### Task Breakdown
-
-- **Required**: [N] tasks (all derived from acceptance criteria)
-- **Out of Scope**: [N] items noted for future iterations
-
-### Key Technical Decisions
-
-- [Decision 1]: [brief rationale]
-- [Decision 2]: [brief rationale]
-
-**Will be saved to**: `./planning/[project]/implementation-plan.md`
-
----
-
-**How would you like to proceed?**
-
-1. **Approve & Save** - Finalize planning documents (and update PM tool if applicable)
-2. **Approve & Execute** - Save plan, then begin implementation immediately
-3. **Revise** - Make changes to the plan before approving
-```
+Show the plan summary and ask the user to approve, using the Plan Approval Prompt from @workflow (`planning/templates.md`). It summarizes project, source, approach, slices with task counts, required vs out-of-scope task counts, and key technical decisions; states where the plan will be saved; and offers exactly three options: **1. Approve & Save**, **2. Approve & Execute**, **3. Revise**.
 
 **STOP HERE and wait for the user's response.** Do not take any further action until the user explicitly chooses an
 option. This includes:
@@ -560,7 +310,7 @@ Create an isolated worktree before saving planning docs:
 5. **Establish dependencies** — follow @workflow (dependency establishment) to restore `node_modules/` and/or Python deps. `REPO_ROOT` is already captured; CWD is inside the worktree. Warn on failure, never block.
 6. **Set `WORKTREE_PATH`** to the current working directory for use in session-state.md.
 
-**Worktree exit prompt**: Respect your agent's worktree exit behavior (see @git (worktree-create) and @git (worktree-delete)). In parallel workflows, prefer keeping the worktree until after merging. See Worktree Safety Rules in @workflow.
+**Worktree exit prompt**: Respect your agent's worktree exit behavior (see @git (worktree-create) and @git (worktree-delete)). In parallel workflows, prefer keeping the worktree until after merging. See Worktree Safety Rules in @workflow (`references/parallel-worktrees.md`).
 
 #### Step 2: Create Working Branch (if `WORKTREE_MODE=false`)
 
@@ -614,59 +364,10 @@ Update PM tool if applicable (see §PM Tool Integration above).
 
 #### Step 7: Parallel Execution Prompt
 
-Only when the plan has 2+ independent slices/stories:
+Only when the plan has 2+ independent slices/stories, present the matching prompt from @workflow (`planning/templates.md`) › Parallel Execution Prompts (plan-time):
 
-**If `WORKTREE_MODE=true`** (worktree already created and docs committed):
-
-```markdown
-### Parallel Execution Available
-
-This plan has [N] independent slices that can be executed in parallel using separate worktrees.
-
-Planning docs are already committed in this worktree. To start parallel execution:
-
-1. **In this terminal** (worktree already exists):
-   ```bash
-   /workflow:execute ./planning/[project]/
-   ```
-   Execute will detect the existing worktree from session-state.md — no `--worktree` flag needed.
-
-2. **In a new terminal** (for additional parallel sessions):
-   ```bash
-   /workflow:execute --worktree ./planning/[project]/
-   ```
-
-**Note**: Only use parallel execution when slices are truly independent (don't modify the same files).
-```
-
-**If `WORKTREE_MODE=false`** (no worktree):
-
-```markdown
-### Parallel Execution Available
-
-This plan has [N] independent slices that can be executed in parallel using separate worktrees:
-
-| Group | Slices | Can Run In Parallel |
-|-------|--------|---------------------|
-| A | [Slice 1] | Sequential (foundational) |
-| B | [Slice 2, Slice 3] | Yes — after Group A |
-
-**To execute in parallel:**
-
-1. **Commit planning docs first** (required for worktrees):
-   ```bash
-   git add ./planning/[project]/ && git commit -m "docs: add planning for [project]"
-   ```
-2. **Start separate sessions**, each in its own terminal:
-   ```bash
-   /workflow:execute --worktree ./planning/[project]/
-   ```
-3. Each session will create its own worktree and branch automatically.
-
-**Or** use `/workflow:plan --worktree` next time to automate worktree creation at planning time.
-
-**Note**: Only use parallel execution when slices are truly independent (don't modify the same files).
-```
+- **`WORKTREE_MODE=true`** — docs already committed in this worktree: run `/workflow:execute ./planning/[project]/` here (auto-detects the worktree), plus `--worktree` sessions in new terminals.
+- **`WORKTREE_MODE=false`** — includes the parallel-groups table and the commit-planning-docs-first prerequisite before starting `--worktree` sessions.
 
 **If the user chose "Approve & Save" (option 1)** — stop here. The plan is saved and the user will decide when to
 start execution in their own time. Remind them:
@@ -698,40 +399,7 @@ or a later request like "start implementation", "run /workflow:execute", "go ahe
    ```
    If a worktree was created during planning, execute will detect it automatically from the `worktree:` field in session-state.md — no `--worktree` flag needed.
 
-2. **If continuing in the same conversation**, follow these steps from `/workflow:execute`:
-
-   a. **Display Session Context** (execute.md §Context Review):
-      ```markdown
-      ## Session Context
-      **Project**: [project-name]
-      **Session**: #1 of work
-      **Progress**: 0/[Y] tasks (0% complete)
-      **Current Focus**: [first task]
-      ```
-
-   b. **Initialize TodoWrite** with tasks from implementation-plan.md
-
-   c. **Follow the Execution Loop** (execute.md §Execution Loop):
-    - Mark task in_progress in TodoWrite
-    - Look for existing patterns
-    - Implement following conventions
-    - Write tests
-    - Run tests
-    - Mark task completed in TodoWrite
-    - Update plan checkbox
-    - Check for slice completion → commit with issue reference
-
-   d. **Quality Gates** (execute.md §Quality Gates):
-    - Implementation matches plan requirements
-    - Tests pass for new functionality
-    - No linting/type errors introduced
-    - Code follows existing patterns
-    - Changes are focused and atomic
-
-   e. **Story/Slice Completion** (execute.md §Story/Slice Completion):
-    - Commit with message: `feat(scope): description (ISSUE-ID)`
-    - Update PM tool (mark story Done)
-    - Move to next story
+2. **If continuing in the same conversation**, follow the execution skill's own sections directly rather than re-deriving them here: display the Session Context (execute §Context Review), initialize TodoWrite from implementation-plan.md, run the Execution Loop (execute §Execution Loop), hold the Quality Gates (execute §Quality Gates), and commit per story/slice with issue reference + PM update (execute §Story/Slice Completion). `/workflow:execute` is the source of truth for each step.
 
 ### Why This Matters
 
@@ -751,9 +419,7 @@ or a later request like "start implementation", "run /workflow:execute", "go ahe
 
 ### Decomposition Matches Mode
 
-- Vertical-slice mode: plan complete features through all layers, not by layer; each slice delivers user value
-- Deliverable-partition mode: plan by deliverable with verbatim parent-AC ownership in each sub-issue; each sub-issue ships its artifact comprehensively
-- Mode is selected at planning time per Decomposition Mode Selection above; do not mix modes inside a single plan
+- Plan shape follows the mode selected per Decomposition Mode Selection above — Vertical Slice Breakdown or Deliverable Breakdown; do not mix modes inside a single plan. Doctrine: @workflow (`references/decomposition-modes.md`)
 
 ### Realistic Scope
 
