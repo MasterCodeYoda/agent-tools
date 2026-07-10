@@ -378,7 +378,7 @@ install_commands_for_agent() {
                             break
                         fi
                     fi
-                done < <(find src -name SKILL.md 2>/dev/null)
+                done < <(find "${SCRIPT_DIR}/src" -name SKILL.md 2>/dev/null)
             fi
         fi
 
@@ -418,7 +418,10 @@ run_publisher() {
     local publisher="${SCRIPT_DIR}/tools/publish-skills.sh"
 
     echo "Publishing skills for all agents (claude, grok, factory, codex, opencode)..."
-    if "$publisher" --quiet; then
+    # Unset the test-seam overrides: setup.sh symlinks from its own dist/,
+    # so a leaked override would silently publish elsewhere and install
+    # stale trees.
+    if env -u AGENT_TOOLS_SRC_ROOT -u AGENT_TOOLS_DIST_ROOT "$publisher" --quiet; then
         echo -e "${GREEN}✓${NC} Publishing complete → dist/<agent>/skills/"
     else
         echo -e "${RED}✗${NC} Publishing failed. Aborting setup." >&2

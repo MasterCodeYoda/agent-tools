@@ -88,6 +88,10 @@ class DocLintCase(unittest.TestCase):
         self.assertEqual(code, 1)
         self.assert_finding(out, "unknown skill family: @missing-skill")
 
+    def test_hyphen_variant_of_declared_subskill_ok(self):
+        self.write("src/alpha/doc.md", "see @alpha-setup for details\n")
+        self.assert_clean(*self.run_lint())
+
     def test_unknown_single_word_at_token_skipped(self):
         self.write("src/alpha/doc.md", "@pytest and @property decorators\n")
         self.assert_clean(*self.run_lint())
@@ -134,6 +138,17 @@ class DocLintCase(unittest.TestCase):
         code, out = self.run_lint()
         self.assertEqual(code, 1)
         self.assert_finding(out, "unknown command: /alpha:gone")
+
+    def test_short_family_colon_commands_are_checked(self):
+        # Regression: families shorter than 3 chars (like the real `qa`)
+        # must still be matched in colon form.
+        self.write("src/io/SKILL.md", "---\nname: io\n---\nbody\n")
+        self.write("src/io/run/SKILL.md", "---\nname: io:run\n---\nbody\n")
+        self.write("src/io/doc.md", "run /io:run then /io:gone\n")
+        code, out = self.run_lint()
+        self.assertEqual(code, 1)
+        self.assert_finding(out, "unknown command: /io:gone")
+        self.assertNotIn("/io:run", out)
 
     def test_declared_colon_and_hyphen_commands_ok(self):
         self.write("src/alpha/doc.md", "/alpha:setup or /alpha-setup or /alpha\n")
@@ -189,6 +204,11 @@ class DocLintCase(unittest.TestCase):
         self.write("allow.txt", "command external-tool\n")
         self.assert_clean(*self.run_lint())
 
+    def test_allowlist_ref_entry(self):
+        self.write("src/alpha/doc.md", "see @legacy-thing and [x](legacy-thing.md)\n")
+        self.write("allow.txt", "ref legacy-thing\n")
+        self.assert_clean(*self.run_lint())
+
     def test_allowlist_family_entry(self):
         self.write("src/alpha/doc.md", "see @other-corpus for details\n")
         self.write("allow.txt", "family other-corpus\n")
@@ -224,9 +244,24 @@ class DocLintCase(unittest.TestCase):
             "tests/publisher/fixtures/src/x/doc.md", "[x](missing.md)\n"
         )
         self.write(
+            "tests/publisher/expected/claude/skills/x/doc.md", "[x](gone.md)\n"
+        )
+        self.write(
             "tests/skill-eval/scenarios/foo/code/README.md", "[x](gone.md)\n"
         )
+        self.write(
+            "tests/swarm/history/2026-01-01-run/orchestrator.md",
+            "see @ec208a4 and [x](gone.md)\n",
+        )
         self.assert_clean(*self.run_lint())
+
+    def test_non_excluded_tests_files_are_linted(self):
+        # Guards against the exclusion list silently swallowing all of
+        # tests/ — a violation outside the fixture globs must be reported.
+        self.write("tests/notes.md", "[x](missing-design.md)\n")
+        code, out = self.run_lint()
+        self.assertEqual(code, 1)
+        self.assert_finding(out, "tests/notes.md:1")
 
     def test_readme_is_linted(self):
         self.write("README.md", "[x](missing-doc.md)\n")

@@ -5,7 +5,7 @@
 <!--
 This is a documentation example placed for the skills meta-skill references.
 
-In actual use inside a project's `.agent-tools/personify.md`, remove all <!-- explanatory comments -->.
+In actual use inside a project's `.agent-tools/personify.md`, remove all explanatory HTML comments.
 
 See the primary source at src/personify/references/example.md and the personify/SKILL.md for full details.
 -->

@@ -20,7 +20,7 @@ To regenerate goldens after an intentional publisher change:
   rm -rf tests/publisher/expected
   AGENT_TOOLS_SRC_ROOT=$PWD/tests/publisher/fixtures/src \
   AGENT_TOOLS_DIST_ROOT=$PWD/tests/publisher/expected \
-  tools/publish-skills.sh --quiet
+  tools/publish-skills.sh --quiet --agents claude,grok,factory,codex,opencode
 then review the diff before committing.
 """
 
@@ -53,6 +53,7 @@ class PublishGoldenTest(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         cls._tmp = tempfile.TemporaryDirectory()
+        cls.addClassCleanup(cls._tmp.cleanup)
         cls.dist_root = Path(cls._tmp.name) / "dist"
         env = os.environ.copy()
         env["AGENT_TOOLS_SRC_ROOT"] = str(FIXTURE_SRC)
@@ -69,9 +70,13 @@ class PublishGoldenTest(unittest.TestCase):
                 f"stdout:\n{result.stdout}\nstderr:\n{result.stderr}"
             )
 
-    @classmethod
-    def tearDownClass(cls):
-        cls._tmp.cleanup()
+    def test_golden_tree_covers_exactly_the_tested_agents(self):
+        # Guards against DEFAULT_AGENTS and this suite's AGENTS list
+        # drifting apart: orphan golden dirs would never be compared.
+        self.assertEqual(
+            sorted(d.name for d in EXPECTED_ROOT.iterdir() if d.is_dir()),
+            sorted(AGENTS),
+        )
 
     def test_output_matches_goldens(self):
         for agent in AGENTS:

@@ -52,9 +52,12 @@ ATREF_RE = re.compile(
     r"(?:\s+\((`?)([^)`]+)\2\))?"
 )
 # /family:sub or bare /name, delimited so filesystem paths (including
-# template paths like `<project>/file.md`) don't match.
+# template paths like `<project>/file.md`) don't match. The colon form
+# allows short families (/qa:setup); the bare form keeps a 3-char floor
+# to avoid short prose tokens.
 COMMAND_RE = re.compile(
-    r"(?:^|(?<=[\s`(\[\"']))/([a-z][a-z0-9-]{2,}(?::[a-z][a-z0-9-]*)?)"
+    r"(?:^|(?<=[\s`(\[\"']))"
+    r"/((?:[a-z][a-z0-9-]*:[a-z][a-z0-9-]*)|[a-z][a-z0-9-]{2,})"
     r"(?=$|[\s`)\]\"'.,;:](?!\S*/)|[.,;:]?$)"
 )
 NAME_FRONTMATTER_RE = re.compile(r"^name:\s*(\S+)\s*$", re.MULTILINE)
@@ -183,6 +186,9 @@ def check_atrefs(rel_file, lineno, line, src_root, declared, findings, allow):
             continue
         family_dir = src_root / family
         if not family_dir.is_dir():
+            if name in declared:
+                # Hyphen variants of declared sub-skills (@alpha-setup).
+                continue
             # Single-word unknown @tokens are overwhelmingly decorators,
             # annotations, or social handles (@pytest, @property,
             # @renedotwang). Skill families in this corpus are hyphenated
@@ -323,13 +329,13 @@ def main(argv=None):
 
     declared = collect_declared_names(src_root)
     findings = []
-    for path in gather_files(REPO_ROOT):
+    files = gather_files(REPO_ROOT)
+    for path in files:
         lint_file(path, src_root, declared, findings, allow)
 
     for rel_file, lineno, kind, message in findings:
         print(f"{rel_file}:{lineno}: [{kind}] {message}")
-    print(f"doc-lint: {len(findings)} finding(s) across "
-          f"{len(gather_files(REPO_ROOT))} file(s)")
+    print(f"doc-lint: {len(findings)} finding(s) across {len(files)} file(s)")
 
     if findings and not args.report_only:
         return 1

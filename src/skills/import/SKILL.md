@@ -66,7 +66,7 @@ Low-risk. Review diff or "revert".
 ```
 Claude-specific large-file `Read` (offset/truncation) does not generalize cleanly.
 
-Wrap in <!-- agent:include claude --> to retain fidelity.
+Wrap in `<!-- agent:include claude -->` to retain fidelity.
 
 Options: 1) apply markup (rec) 2) weaken 3) discuss?
 ```

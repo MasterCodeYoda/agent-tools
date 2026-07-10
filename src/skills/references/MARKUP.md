@@ -134,10 +134,17 @@ Some advanced memory introspection features are only available in Claude and Gro
 
 The thin publishing script must:
 
-1. Parse all `<!-- agent:include ... -->` and `<!-- agent:exclude ... -->` blocks.
+1. Parse all `<!-- agent:include ... -->` and `<!-- agent:exclude ... -->` blocks. Tags are
+   directives only when they start a line (leading whitespace allowed); a tag mentioned
+   mid-line or inside backticks is prose, not a directive.
 2. For each target agent, decide whether a block should be kept or removed according to the semantics above.
-3. Strip **all** HTML comments (`<!-- ... -->`) from the final output.
-4. Warn (but not fail) on unknown agent names.
+3. Strip **all** HTML comments (`<!-- ... -->`) from the final output — including multi-line
+   comments — while preserving any non-comment text on the same line. Comment literals inside
+   backtick code spans are kept.
+4. Publish fenced code blocks (``` or ~~~) verbatim: no tag parsing and no comment stripping
+   inside a fence (fenced tags are documentation examples; fenced comments are content).
+   Include/exclude region filtering still applies to fenced lines.
+5. Warn (but not fail) on unknown agent names.
 
 ---
 

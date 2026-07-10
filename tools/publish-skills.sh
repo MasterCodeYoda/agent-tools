@@ -3,17 +3,23 @@
 # tools/publish-skills.sh
 #
 # Thin mechanical publishing layer for the agent-tools skill corpus.
-# Consumes canonical content under src/skills/ (with embedded agent markup)
+# Consumes canonical content under src/ (with embedded agent markup)
 # and emits clean, agent-specific trees under dist/<agent>/skills/.
 #
 # This script is intentionally minimal and dependency-free (pure bash + awk).
 # It is designed to be called by setup.sh on every run.
 #
 # Usage:
-#   tools/publish-skills.sh [--agents claude,grok,factory,codex] [--quiet]
+#   tools/publish-skills.sh [--agents LIST] [--quiet] [--dry-run]
 #
-#   --agents   Comma-separated list of target agents (default: claude,grok,factory,codex)
+#   --agents   Comma-separated list of target agents
+#              (default: claude,grok,factory,codex,opencode)
 #   --quiet    Reduce output (only errors and warnings)
+#   --dry-run  Show what would be published without writing files
+#
+# Environment (test seam):
+#   AGENT_TOOLS_SRC_ROOT   Override the source tree (default: <repo>/src)
+#   AGENT_TOOLS_DIST_ROOT  Override the output tree (default: <repo>/dist)
 #
 # Exit codes:
 #   0  success (or only warnings)
@@ -368,6 +374,8 @@ filter_for_agent() {
             in_exclude = 0
             include_active = 0
             exclude_active = 0
+            in_comment = 0
+            in_fence = 0
         }
 
         function agent_in_list(list) {
@@ -390,8 +398,48 @@ filter_for_agent() {
             return line
         }
 
-        # Opening include tag
-        /<!--[ \t]*agent:include[ \t]/ {
+        # Print a line subject to the active include/exclude region
+        function emit(line) {
+            if (in_include) {
+                if (include_active) print line
+            } else if (in_exclude) {
+                if (!exclude_active) print line
+            } else {
+                print line
+            }
+        }
+
+        # Continuation of a multi-line HTML comment (must run before the
+        # fence and tag rules: inside a comment, everything is comment
+        # content until the closer)
+        in_comment == 1 {
+            if ((j = index($0, "-->")) > 0) {
+                $0 = substr($0, j + 3)
+                in_comment = 0
+                if ($0 ~ /^[ \t]*$/) next
+            } else {
+                next
+            }
+        }
+
+        # Fenced code blocks publish verbatim: tags inside them are
+        # documentation examples, and their comments are literal content.
+        # Region filtering still applies (a fence inside an inactive
+        # include region is dropped with the region).
+        /^[ \t]*(```|~~~)/ {
+            in_fence = !in_fence
+            emit($0)
+            next
+        }
+
+        in_fence == 1 {
+            emit($0)
+            next
+        }
+
+        # Opening include tag (tags must be on their own line; prose or
+        # backticked mentions elsewhere on a line are never directives)
+        /^[ \t]*<!--[ \t]*agent:include[ \t]/ {
             list = extract_list($0)
             in_include = 1
             include_active = agent_in_list(list)
@@ -399,14 +447,14 @@ filter_for_agent() {
         }
 
         # Closing include tag (allow optional whitespace and agent list after the tag)
-        /<!--[ \t]*\/agent:include/ {
+        /^[ \t]*<!--[ \t]*\/agent:include/ {
             in_include = 0
             include_active = 0
             next
         }
 
         # Opening exclude tag
-        /<!--[ \t]*agent:exclude[ \t]/ {
+        /^[ \t]*<!--[ \t]*agent:exclude[ \t]/ {
             list = extract_list($0)
             in_exclude = 1
             exclude_active = agent_in_list(list)
@@ -414,28 +462,52 @@ filter_for_agent() {
         }
 
         # Closing exclude tag (allow optional whitespace and agent list after the tag)
-        /<!--[ \t]*\/agent:exclude/ {
+        /^[ \t]*<!--[ \t]*\/agent:exclude/ {
             in_exclude = 0
             exclude_active = 0
             next
         }
 
-        # Any other HTML comment line -> strip entirely
-        /<!--.*-->/ {
-            # We already handled the agent: tags above.
-            # Any remaining comment-only lines are discarded.
-            next
+        # Strip all remaining HTML comments (agent: tags were handled
+        # above): inline comments are removed with surrounding text
+        # preserved; comment literals inside backtick code spans are kept;
+        # an unterminated opener starts a multi-line comment; a line left
+        # empty after stripping is dropped entirely.
+        /<!--/ {
+            nseg = split($0, seg, /`/)
+            res = ""
+            dropped = 0
+            for (s = 1; s <= nseg; s++) {
+                piece = seg[s]
+                if (s % 2 == 1) {
+                    outp = ""
+                    line = piece
+                    while ((i = index(line, "<!--")) > 0) {
+                        outp = outp substr(line, 1, i - 1)
+                        rest = substr(line, i)
+                        if ((j = index(rest, "-->")) > 0) {
+                            line = substr(rest, j + 3)
+                        } else {
+                            in_comment = 1
+                            line = ""
+                            dropped = 1
+                            break
+                        }
+                    }
+                    piece = outp line
+                }
+                res = res piece
+                if (dropped) break
+                if (s < nseg) res = res "`"
+            }
+            $0 = res
+            sub(/[ \t]+$/, "", $0)
+            if ($0 ~ /^[ \t]*$/) next
         }
 
         # Normal content lines
         {
-            if (in_include) {
-                if (include_active) print
-            } else if (in_exclude) {
-                if (!exclude_active) print
-            } else {
-                print
-            }
+            emit($0)
         }
     ' "$input_file"
 }

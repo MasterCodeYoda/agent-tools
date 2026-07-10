@@ -21,6 +21,10 @@ command agent:exclude
 # Harness-native commands that exist outside this corpus.
 command code-review
 
+# Planned-but-unimplemented command, referenced as explicit future work
+# (docs disclose the status). Remove this entry when /qa:audit ships.
+command qa:audit
+
 # Documented conversational shorthand for /workflow:continue used
 # throughout that skill.
 command continue

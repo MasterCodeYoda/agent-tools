@@ -8,7 +8,7 @@ EXPLANATORY COMMENTS — REMOVE IN LIVE USE
 This file is an *example* for documentation and the personify skill.
 
 - The header above (the > Size line) is recommended. It is maintained automatically by /personify.
-- All <!-- ... --> blocks are for readers of this reference only. Never include explanatory comments in a real .agent-tools/personify.md — they add noise and count toward the token limit.
+- All explanatory HTML-comment blocks in this file are for readers of this reference only. Never include explanatory comments in a real .agent-tools/personify.md — they add noise and count toward the token limit.
 - Token counts are approximate. The /personify skill computes and displays them (roughly 4 chars per token, or better if the platform provides a tokenizer).
 - Live files should stay lean, high-signal, and strictly scoped to interpersonal/voice matters.
 
