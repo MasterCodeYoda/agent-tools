@@ -32,3 +32,7 @@ plus an adversarial code review surfaced immediately.
 3. When adding a new doc-transformation behavior or reference style, extend the fixture tree
    in the same change — an untested behavior class is where the next shipped corruption lives.
 4. Before trusting "the docs are clean," run the gates, not another read-through.
+5. **Know each gate's blind spots.** The doc linter scans only `*.md` — the D2 sweep missed
+   `/swarm:init` surviving in harness *Python* (emitted to operators) and a scenario `.yml`,
+   with stale test assertions locking the defect in green. After a rename sweep, grep the
+   whole repo for the old token, not just the file types your gate covers.
