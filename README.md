@@ -1,8 +1,16 @@
 # Agent Tools
 
-A canonical, portable skill corpus for modern coding agents (Claude Code, Grok, Factory Droid, etc.).
+A canonical, portable skill corpus for modern coding agents (Claude Code, Codex, Grok, Factory Droid, OpenCode).
+
+**The problem this solves:** every coding agent wants its own skills directory, its own
+discovery quirks, and its own dialect — so the knowledge you invest in one agent doesn't
+travel, and copies drift apart. Agent Tools keeps one canonical source of truth with
+lightweight per-agent markup, mechanically publishes clean per-agent trees, and installs
+them where each agent looks. Write a skill once; every agent gets its best version.
 
 Clone once, run `./setup.sh`, and get a consistent set of high-quality skills across all your projects and agents. The system automatically publishes the canonical source (`src/`) into agent-specific trees (`dist/<agent>/skills/`) and installs them in the right places (global profile vs local project).
+
+New here? Start with the worked walkthrough in [docs/getting-started.md](docs/getting-started.md).
 
 ## Quick Start
 
@@ -14,18 +22,19 @@ cd ~/Source/agent-tools
 
 `setup.sh` does the following automatically:
 
-1. Publishes the canonical skills from `src/` into `dist/<agent>/skills/` (resolving any agent-specific markup).
+1. Publishes the canonical skills from `src/` into `dist/<agent>/skills/` (resolving any agent-specific markup) for all five targets: claude, grok, factory, codex, opencode.
 2. Installs the appropriate skills into your environment:
-   - Most skills go into your user profile (`~/.claude/skills/`, `~/.grok/skills/`, `~/.factory/skills/`, `~/.codex/skills/`).
-   - Project-scoped skills (the `skills` meta-skill and `swarm-test`) go into the local project directory (`.claude/skills/`, `.grok/skills/`, `.factory/skills/`).
+   - Most skills go into your user profile (`~/.claude/skills/`, `~/.grok/skills/`, `~/.factory/skills/`, `~/.codex/skills/`, `~/.config/opencode/`).
+   - Project-scoped skills (the `skills` meta-skill and `swarm-test`) go into the local project directory (`.claude/skills/`, `.grok/skills/`, `.factory/skills/`, `.opencode/`).
 
-| Target                  | Behavior                                      |
-|-------------------------|-----------------------------------------------|
-| `~/.claude/skills/`     | Symlinked from `dist/claude/skills/`          |
-| `~/.grok/skills/`       | Symlinked from `dist/grok/skills/`            |
-| `~/.factory/skills/`    | Symlinked from `dist/factory/skills/`         |
-| `~/.codex/skills/`      | Symlinked from `dist/codex/skills/`           |
-| `./.claude/skills/` etc.| Per-skill symlink (all agents) of project-scoped skills only |
+| Target                      | Behavior                                      |
+|-----------------------------|-----------------------------------------------|
+| `~/.claude/skills/`         | Symlinked from `dist/claude/skills/`          |
+| `~/.grok/skills/`           | Symlinked from `dist/grok/skills/`            |
+| `~/.factory/skills/`        | Symlinked from `dist/factory/skills/`         |
+| `~/.codex/skills/`          | Symlinked from `dist/codex/skills/`           |
+| `~/.config/opencode/`       | Skills from `dist/opencode/skills/` + native commands from `dist/opencode/commands/` (XDG layout) |
+| `./.claude/skills/` etc.    | Per-skill symlink (all agents) of project-scoped skills only |
 
 Re-run `./setup.sh` after pulling changes. The publisher runs on every invocation.
 
@@ -34,7 +43,7 @@ Re-run `./setup.sh` after pulling changes. The publisher runs on every invocatio
 The system is built around a clean separation:
 
 - `src/` — The single source of truth. All skill development happens here. Skills may contain lightweight embedded markup (`<!-- agent:include claude --> ... <!-- /agent:include claude -->`) when behavior must differ between agents.
-- `tools/publish-skills.sh` — A thin, mechanical publisher (pure bash + portable awk). It walks `src/`, resolves the `agent:include` / `agent:exclude` markup for each target agent, strips all HTML comments, and writes clean trees to `dist/<agent>/skills/`. For agents whose skill discovery only sees direct children of the skills directory (Claude, Grok, Factory) it also emits top-level hyphenated siblings (e.g. `git-commit/`) for any sub-skill whose `name:` frontmatter contains a colon, so both family overviews and direct sub-commands appear in slash menus. Codex receives only the hierarchical tree (it recursively discovers nested SKILL.md files). (Grok's loader does not yet promote invocable sub-skills as first-class top-level commands, so these siblings are currently inert there — but they are published for it so they "just work" the moment that limitation is fixed upstream.)
+- `tools/publish-skills.sh` — A thin, mechanical publisher (pure bash + portable awk). It walks `src/`, resolves the `agent:include` / `agent:exclude` markup for each target agent, strips HTML comments outside fenced code (fenced examples and backticked comment literals publish verbatim), and writes clean trees to `dist/<agent>/skills/`. For agents whose skill discovery only sees direct children of the skills directory (Claude, Grok, Factory) it also emits top-level hyphenated siblings (e.g. `git-commit/`) for any sub-skill whose `name:` frontmatter contains a colon, so both family overviews and direct sub-commands appear in slash menus. Codex receives only the hierarchical tree (it recursively discovers nested SKILL.md files). (Grok's loader does not yet promote invocable sub-skills as first-class top-level commands, so these siblings are currently inert there — but they are published for it so they "just work" the moment that limitation is fixed upstream.)
 - `setup.sh` — Runs the publisher on every invocation, then installs skills from `dist/<agent>/skills/` into the right locations based on each skill’s `publish-target` frontmatter:
   - `publish-target: user-profile` (default) → installed (symlinked) into your global `~/.claude/skills/`, `~/.grok/skills/`, `~/.factory/skills/`, or `~/.codex/skills/`.
   - `publish-target: project` → installed only into the local project directory (`.claude/skills/`, `.grok/skills/`, `.factory/skills/`). Currently used by the `skills` meta-skill and `swarm-test`.
@@ -237,4 +246,8 @@ See `src/workflow/SKILL.md` for full mode-selection criteria.
 
 ## Attribution
 
-Much of the content here draws from techniques, patterns, and guides shared freely by others in the community. I've adapted and integrated them into a cohesive workflow that fits the way I work. Where a skill is based on or inspired by someone else's work, the corresponding `SKILL.md` includes a reference to the original author.
+Much of the content here draws from techniques, patterns, and guides shared freely by others in the community. I've adapted and integrated them into a cohesive workflow that fits the way I work. Where a skill is based on or inspired by identifiable work, the corresponding `SKILL.md` (or its references) credits the original author. The remainder is original synthesis of widely-shared community practice.
+
+## License
+
+[MIT](LICENSE).

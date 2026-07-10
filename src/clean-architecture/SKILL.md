@@ -461,3 +461,8 @@ Remember:
 - Be pragmatic, not dogmatic
 
 Start with the decision tree, follow the patterns, and validate continuously.
+## Credits
+
+Synthesized from the Clean Architecture and Domain-Driven Design canon — Robert C. Martin,
+Eric Evans, Vaughn Vernon, Martin Fowler, Harry Percival & Bob Gregory, and others. Full
+citations with links live in `references/external-resources.md`.
