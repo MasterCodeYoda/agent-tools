@@ -90,7 +90,7 @@ Implementation plan shape depends on decomposition mode (selection criteria in @
 State the determination to the user and allow course correction:
 > "I'll plan in [vertical-slice / deliverable-partition] mode. [Reason]. Say 'use [other] mode' if you'd prefer."
 
-Use the Variant A/B breakdown template from @workflow (`planning/templates.md`) matching the selected mode.
+Use the Variant A/B breakdown template from @workflow (`planning/templates.md`) › Implementation Plan Document Template matching the selected mode.
 
 ## Context Gathering
 
@@ -399,7 +399,7 @@ or a later request like "start implementation", "run /workflow:execute", "go ahe
    ```
    If a worktree was created during planning, execute will detect it automatically from the `worktree:` field in session-state.md — no `--worktree` flag needed.
 
-2. **If continuing in the same conversation**, follow the execution skill's own sections directly rather than re-deriving them here: display the Session Context (execute §Context Review), initialize TodoWrite from implementation-plan.md, run the Execution Loop (execute §Execution Loop), hold the Quality Gates (execute §Quality Gates), and commit per story/slice with issue reference + PM update (execute §Story/Slice Completion). `/workflow:execute` is the source of truth for each step.
+2. **If continuing in the same conversation**, follow the execution skill's own sections directly rather than re-deriving them here: display the Session Context (execute §Context Review), initialize TodoWrite from implementation-plan.md, run the Execution Loop (execute §Execution Loop), hold the Quality Gates (execute §Quality Gates), and commit per story/slice with issue reference + PM update (execute §Story / Slice / Sub-issue Completion Checkpoint). `/workflow:execute` is the source of truth for each step.
 
 ### Why This Matters
 
@@ -441,7 +441,7 @@ Before presenting plan for approval:
 - [ ] Acceptance criteria are specific
 - [ ] Scope boundaries are explicit
 - [ ] Implementation approach is documented
-- [ ] Tasks are broken down with priorities
+- [ ] Tasks are broken down and complete (no optional tiers)
 - [ ] Risks are identified
 - [ ] Plan presented to user for approval
 - [ ] User has explicitly approved the plan

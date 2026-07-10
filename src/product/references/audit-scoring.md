@@ -14,7 +14,7 @@ Scoring methodology, grade scale, benchmark table, and the full report scaffold 
 Category score = (earned points / maximum possible points) × 100
 
 ### Overall Score
-Weighted sum across categories using the weights in the Category Scores table.
+Weighted sum across categories using the weights in the Category Scores table (inside the report template below).
 
 ### Grade Scale
 

@@ -55,21 +55,9 @@ The "layer-by-layer is wrong" warning **does not apply** here — comprehensivel
 
 ## Mode Selection
 
-Pick **vertical slice** when:
-
-- The system has users (or simulated equivalents) observing value at each slice.
-- Each story can ship independently and deliver an observable increment.
-- The epic spans Domain → Framework cleanly and stories don't share files extensively.
-
-Pick **deliverable-partition** when:
-
-- No deployed surface yet (greenfield / pre-first-release).
-- The epic produces multiple distinct artifacts (validator rules, CI steps, hooks, contracts) rather than user-facing increments.
-- Vertical slicing would force "minimal X, full X later" boundaries that risk silently weakening parent ACs.
-- The epic touches a shared library/contract that downstream consumers must adopt incrementally.
-- Compliance, refactor, or framework-migration work spans the system without a natural user-story shape.
-
-When in doubt, default to vertical slice for feature work and deliverable-partition for foundation, infrastructure, or cross-cutting work.
+The selection criteria live in the parent skill — see @workflow (SKILL.md § Mode Selection).
+They stay there because routing between modes happens before this reference is loaded; this
+file carries the doctrine for executing whichever mode was selected.
 
 ## When Vertical Slicing Works Best
 

@@ -6,7 +6,7 @@ How multiple sessions execute independent slices of one epic simultaneously in i
 
 - An epic has 2+ independent stories/slices that don't modify the same files
 - You want multiple Claude sessions to execute different slices simultaneously
-- The planning phase has identified parallel execution groups (see epic planning template)
+- The planning phase has identified parallel execution groups (see @workflow (`planning/templates.md`) › Implementation Plan Document Template)
 
 ## When NOT to Use
 

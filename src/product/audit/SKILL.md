@@ -202,7 +202,7 @@ Spawn 2 parallel agents:
 
 Scoring model in one line: per-check points (P1 = 10, P2 = 6, P3 = 3, fail = 0) roll up into weighted category scores, which combine into an overall graded product score; a separate findings-based health score starts at 100 and deducts per finding.
 
-The full scoring rubric, category weights, grade scale, benchmark table, and complete report template live in `references/audit-scoring.md`. Load that file when computing scores and render the final report exactly per its template.
+The full scoring rubric, category weights, grade scale, benchmark table, and complete report template live in @product (`references/audit-scoring.md`). Load that file when computing scores and render the final report exactly per its template.
 
 ## Actionable Next Steps
 
@@ -248,4 +248,4 @@ Framework definitions (Dunford positioning, Sean Ellis PMF test, DHM model, Valu
 - [Strategyzer Value Proposition Canvas](https://www.strategyzer.com/library/the-value-proposition-canvas)
 - [Crossing the Chasm](https://www.harpercollins.com/products/crossing-the-chasm-3rd-edition-geoffrey-a-moore) — Geoffrey Moore's technology adoption lifecycle and chasm-crossing strategies
 
-Health scoring attribution (react-doctor) lives with the scoring rubric in `references/audit-scoring.md`.
+Health scoring attribution (react-doctor) lives with the scoring rubric in @product (`references/audit-scoring.md`).
