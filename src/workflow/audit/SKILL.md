@@ -285,7 +285,7 @@ Audit findings inform planning — P1 items become candidates for the next plann
 
 Domain definitions live in `skills/audit/domains/`. Each file defines the agents, skill references, and check criteria for one domain. The orchestrator reads them; `--focus <domain>` routes to the specific domain definition for focused depth.
 
-### With /evolve
+### With /skills:evolve
 
 Evolve ensures the skills that back audit agents are complete and consistent. When the unified audit consistently misses issues, evolve identifies which skill gap explains it.
 

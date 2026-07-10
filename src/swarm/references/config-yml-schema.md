@@ -1,7 +1,7 @@
 # Reference: `config.yml` Schema
 
 Project-stable orchestrator preferences at `.agent-tools/swarm/config.yml`. **Committed** —
-preferences are part of the project. Written with defaults by `/swarm:init`; user-editable.
+preferences are part of the project. Written with defaults by `/swarm:setup`; user-editable.
 
 ## Schema
 

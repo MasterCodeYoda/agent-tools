@@ -13,4 +13,4 @@ conflict-resolution only; most content is additive.
 - `workflow.md` — how we move (branching, commits, merge policy, review).
 
 ## Maintenance
-Seed charter for the `cli-task-manager` swarm test scenario. Not authored by `/swarm:init`.
+Seed charter for the `cli-task-manager` swarm test scenario. Not authored by `/swarm:setup`.

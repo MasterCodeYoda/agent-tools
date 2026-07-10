@@ -1,5 +1,6 @@
 ---
-name: qa-tools
+name: qa:tools
+user-invocable: true
 description: QA inspection tools for visual testing -- video frame extraction, screenshot analysis
 ---
 
@@ -20,8 +21,10 @@ The `video_frames.py` tool extracts frames from a video file at regular interval
 
 ### Invocation
 
+Run from this skill's own directory (shown as "Base directory for this skill" when the skill loads):
+
 ```bash
-cd ~/Source/OMG/agent-tools/skills/qa/tools && uv sync && uv run video_frames.py <video_path>
+cd <base directory of this skill> && uv sync && uv run video_frames.py <video_path>
 ```
 
 ### Options
@@ -36,17 +39,17 @@ cd ~/Source/OMG/agent-tools/skills/qa/tools && uv sync && uv run video_frames.py
 
 Extract frames every 2 seconds (default):
 ```bash
-cd ~/Source/OMG/agent-tools/skills/qa/tools && uv sync && uv run video_frames.py /tmp/recording.webm
+cd <base directory of this skill> && uv sync && uv run video_frames.py /tmp/recording.webm
 ```
 
 Extract frames every half-second for detailed inspection:
 ```bash
-cd ~/Source/OMG/agent-tools/skills/qa/tools && uv sync && uv run video_frames.py /tmp/recording.webm --interval 0.5
+cd <base directory of this skill> && uv sync && uv run video_frames.py /tmp/recording.webm --interval 0.5
 ```
 
 Save as JPEG to a specific directory:
 ```bash
-cd ~/Source/OMG/agent-tools/skills/qa/tools && uv sync && uv run video_frames.py /tmp/recording.webm --output-dir /tmp/bug-123/ --format jpg
+cd <base directory of this skill> && uv sync && uv run video_frames.py /tmp/recording.webm --output-dir /tmp/bug-123/ --format jpg
 ```
 
 ## Viewing Extracted Frames

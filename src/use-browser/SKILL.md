@@ -86,7 +86,7 @@ All tools are prefixed `mcp__chrome-devtools__`. Use these as your primary brows
 |------|---------|
 | `take_snapshot` | Full accessibility tree (like `snapshot -i`) |
 | `take_screenshot` | Screenshot of current page |
-| `take_memory_snapshot` | Heap snapshot for memory analysis |
+| `take_heapsnapshot` | Heap snapshot for memory analysis |
 
 ### Interaction
 | Tool | Purpose |
@@ -376,7 +376,7 @@ agent-browser snapshot -i --json
 agent-browser get text @e1 --json
 ```
 
-## agent-browser CLI Reference
+## Chrome DevTools MCP Reference
 
 ### Chrome DevTools MCP workflow
 

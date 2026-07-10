@@ -97,7 +97,7 @@ Run `/swarm:setup` first." Also confirm `roles/` and `references/` exist under
 
 Then run the orchestration loop:
 
-#### Phase 1 — Goal interpretation & ingestion (§6.1)
+#### Phase 1 — Goal interpretation & ingestion
 
 Interpret the goal and resolve it to a concrete item list:
 
@@ -115,12 +115,12 @@ PM-first via MCP; file fallback. Then **always** show a pre-launch confirmation:
 Generate a run-id (`<YYYY-MM-DD>-<5-char-nonce>-<goal-slug>`), create
 `sessions/<run-id>/`, write the run-id into `active-run`, and start `orchestrator.md`.
 
-#### Phase 2 — Initial classification (§6.2)
+#### Phase 2 — Initial classification
 
 Classify each item's stage per `references/classification-rules.md` (read only
 `session-state.md` frontmatter). Write the initial `state.yml`.
 
-#### Phase 3 — Main loop (§6.3)
+#### Phase 3 — Main loop
 
 ```
 (A) MERGE SWEEP        — merge approved items into main (see merge orchestration below)
@@ -135,7 +135,7 @@ Classify each item's stage per `references/classification-rules.md` (read only
 (H) EXIT-STATE TRIAGE  — see below; else loop back to (A)
 ```
 
-#### Dispatch (§6.5)
+#### Dispatch
 
 Each wave is **one message** with up to `concurrency_cap` (default 5) parallel native
 `Agent`-tool dispatches. Assemble each prompt per `references/dispatch-mechanics.md`
@@ -143,7 +143,7 @@ Each wave is **one message** with up to `concurrency_cap` (default 5) parallel n
 pass the per-role model from `config.models`. Workers enter their worktree via `cd`. Capture
 the dispatch prompt and the returned YAML into the per-dispatch session log.
 
-#### Merge orchestration (§6.8)
+#### Merge orchestration
 
 Between waves, sequentially for each approved item: `git checkout main` → `git merge --no-ff`.
 On conflict → one-shot **conflict-resolver** dispatch (workspace = main); on test failure
@@ -151,7 +151,7 @@ after merge → one-shot **integration-fixer** dispatch. A second failure of eit
 TERMINAL_PAUSE. On success → `/git:worktree-delete` the item's worktree and mark `merged`.
 Full detail in `references/dispatch-mechanics.md`.
 
-#### Exit-state triage (§6.7)
+#### Exit-state triage
 
 | Trigger | Exit state | Behavior |
 |---------|-----------|----------|
@@ -164,7 +164,7 @@ Full detail in `references/dispatch-mechanics.md`.
 **IN_FLIGHT vs TERMINAL rule:** *"Can I act on the user's answer within this loaded session,
 without requiring off-band work?"* — yes → IN_FLIGHT; no → TERMINAL.
 
-#### `active-run` lifecycle (§8.4)
+#### `active-run` lifecycle
 
 Created when the run starts; **cleared on GOAL_COMPLETE**; **preserved on TERMINAL_PAUSE** so
 `/swarm:continue` can find the run.
@@ -176,7 +176,9 @@ Created when the run starts; **cleared on GOAL_COMPLETE**; **preserved on TERMIN
   templates, reference schemas, session logs, `active-run`. ✓
 - **Phase 3:** cross-CLI worker dispatch via shell-out (per-role CLI selection). Not yet.
 
-The authoritative design lives at `planning/swarm/design.md` in the agent-tools repo.
+This skill and its references/ are the authoritative design. (Durable design documents,
+when needed, live under `docs/design/` — `planning/` is transient and never cited by
+committed files.)
 
 ## References
 

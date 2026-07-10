@@ -219,7 +219,7 @@ During execution, if an API audit was recently run, reference its findings for t
 
 ### With @clean-architecture
 
-Framework layer patterns from `references/layer-patterns.md#frameworks` inform API endpoint structure. Controller thinness and use case delegation are shared concerns.
+Framework layer patterns from @clean-architecture (`references/layer-patterns.md#frameworks`) inform API endpoint structure. Controller thinness and use case delegation are shared concerns.
 
 ### With @code-patterns
 

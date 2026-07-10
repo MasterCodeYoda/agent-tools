@@ -136,7 +136,7 @@ Every parent AC must appear in exactly one row. Audit-on-close: zero orphans bef
 
 - All inherited parent ACs verified
 - Sub-issue-specific tasks complete
-- Mode-appropriate quality gates per @workflow (`implementation/quality-checkpoints.md`)
+- Mode-appropriate quality gates per @workflow (`execution/quality-checkpoints.md`)
 
 #### Sub-issue 2: [Deliverable name]
 

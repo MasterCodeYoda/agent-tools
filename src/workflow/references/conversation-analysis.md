@@ -1,6 +1,6 @@
 # Conversation History Analysis
 
-Reference for extracting signals from agent conversation history. Used by `/evolve`, `/workflow:compound`, and `/workflow:audit` for data-driven improvement.
+Reference for extracting signals from agent conversation history. Used by `/skills:evolve`, `/workflow:compound`, and `/workflow:audit` for data-driven improvement.
 
 ---
 

@@ -143,7 +143,7 @@ Use `<REPO_ROOT>/.codex/worktrees/<name>` as the path.
 
 <!-- /agent:include codex -->
 
-This is the same pattern used by `workflow/execute.md` for entering existing worktrees. It switches the Bash working directory for subsequent commands without disrupting other sessions.
+This is the same pattern used by @workflow (execution) for entering existing worktrees. It switches the Bash working directory for subsequent commands without disrupting other sessions.
 
 **Do not use any agent-specific "enter worktree" tool** that auto-creates from HEAD — always use explicit `git worktree` commands so you can control the base ref and target directory (see the agent blocks above for the correct path pattern).
 

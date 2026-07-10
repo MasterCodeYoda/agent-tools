@@ -4,8 +4,9 @@ A permanent harness for exercising the `/swarm` orchestrator end-to-end against 
 scenarios, and turning the resulting role logs into evidence-linked improvements to the swarm
 role templates and skills.
 
-Design: [`../../planning/swarm/test-harness-design.md`](../../planning/swarm/test-harness-design.md).
-Plan: [`../../planning/swarm/implementation-plan-test-harness.md`](../../planning/swarm/implementation-plan-test-harness.md).
+The design rationale is summarized in this README (the original working docs lived in
+untracked `planning/` and were purged after completion — this README and the harness
+code are authoritative).
 
 ## Why a harness (and not a `pytest`)
 
@@ -47,7 +48,7 @@ generate  →  [agent runs /swarm]  →  analyze
    A separate session is required: `/swarm` is agent-driven — it interprets the skill,
    dispatches sub-agents, and makes in-flight decisions — so it can't be run or backgrounded
    from the analysis session, and it must run in the generated repo's working directory.
-   Init-first scenarios begin with `/swarm:init` before `/swarm backlog.md`. This produces
+   Init-first scenarios begin with `/swarm:setup` before `/swarm backlog.md`. This produces
    per-dispatch session logs under
    `.agent-tools/swarm/sessions/<run-id>/<item>/<role>-<n>.md`.
 
@@ -108,8 +109,8 @@ Create `tests/swarm/scenarios/<name>/` with:
     when you want a *controlled, repeatable* orchestrator input (the common case — e.g.
     `cli-task-manager`).
   - **absent → init-first:** `generate` produces a **bare** repo (no `.agent-tools/`). The run
-    begins with `/swarm:init`, which detects the stack, authors the charter, and bootstraps
-    the umbrella itself. Use this to exercise `/swarm:init` (e.g. `greenfield-init`). Note the
+    begins with `/swarm:setup`, which detects the stack, authors the charter, and bootstraps
+    the umbrella itself. Use this to exercise `/swarm:setup` (e.g. `greenfield-init`). Note the
     charter then varies run-to-run, so it's a less controlled input — keep these scenarios
     focused on init + a simple orchestrator pass.
 - `seed/` — initial application sources, including any files deliberately engineered to force

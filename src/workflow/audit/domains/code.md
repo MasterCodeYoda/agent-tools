@@ -81,7 +81,7 @@ Spawn 4 parallel agents that read production code:
 - Entity/Value Object distinction
 - Aggregate boundary enforcement
 
-**observability-readiness-analyst** — References @workflow (`implementation/logging.md`):
+**observability-readiness-analyst** — References @workflow (`execution/logging.md`):
 - Structured logging compliance (JSON, not string interpolation)
 - Required field presence (timestamp, level, event, request_id/trace_id)
 - Correct log level usage

@@ -538,16 +538,16 @@ For detailed templates and patterns used by the functional areas, reference thes
 - `planning/task-breakdown.md` - Task breakdown patterns and estimation
 
 ### Implementation Phase
-- `implementation/quality-checkpoints.md` - Per-layer quality gates
-- `implementation/dependency-establishment.md` - Worktree dependency cache restoration
+- `execution/quality-checkpoints.md` - Per-layer quality gates
+- `execution/dependency-establishment.md` - Worktree dependency cache restoration
 - `@test-strategy` - Testing strategy, TDD, property-based testing, contracts, and test quality
-- `implementation/logging.md` - Structured logging standards, required fields, context propagation
+- `execution/logging.md` - Structured logging standards, required fields, context propagation
 
 ### PM Integration
 - `planning/pm-integration.md` - Linear, Jira, and manual workflow guides
 
 ### Examples
-- `examples/planning-example.md` - Complete planning walkthrough
+- `references/planning-example.md` - Complete planning walkthrough
 
 ## Related Skills
 
@@ -592,16 +592,16 @@ This parent skill organizes supporting reference material used by the functional
 - `planning/templates.md` — Plan templates
 
 **Implementation** — used by `/workflow:execute`, `/workflow:review`, audit domains:
-- `implementation/dependency-establishment.md` — Dependency setup patterns
-- `implementation/logging.md` — Structured logging standards (consumed by `audit:code` observability-readiness-analyst)
-- `implementation/quality-checkpoints.md` — Quality gate patterns
+- `execution/dependency-establishment.md` — Dependency setup patterns
+- `execution/logging.md` — Structured logging standards (consumed by `audit:code` observability-readiness-analyst)
+- `execution/quality-checkpoints.md` — Quality gate patterns
 
 **References** — used across multiple commands:
-- `references/conversation-analysis.md` — Extracting signals from `~/.claude/` conversation history (used by `/evolve`, `/workflow:compound`, `/workflow:audit`)
+- `references/conversation-analysis.md` — Extracting signals from `~/.claude/` conversation history (used by `/skills:evolve`, `/workflow:compound`, `/workflow:audit`)
 - `references/memory-primitives.md` — memory levels (L1/L2/L3-shared/L3-local), harness primitives, `.agent-tools/memory/` (used by `/workflow:compound` and `--maintain`)
 
 **Examples**:
-- `examples/planning-example.md` — Worked planning example
+- `references/planning-example.md` — Worked planning example
 
 ### Knowledge Compounding
 

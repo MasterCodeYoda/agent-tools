@@ -1,6 +1,6 @@
 # greeter Backlog
 
-Local backlog (file mode). This scenario has **no seeded charter** — run `/swarm:init` first;
+Local backlog (file mode). This scenario has **no seeded charter** — run `/swarm:setup` first;
 it authors the charter from the detected stack, then `/swarm backlog.md` runs the orchestrator.
 
 Commands auto-discover from `greeter/commands/` (each module exposes `NAME` + `run(argv)`), so

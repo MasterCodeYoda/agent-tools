@@ -26,7 +26,5 @@ jobs:
       - name: Unit tests (publisher goldens, doc-lint, swarm harness)
         run: python3 -m unittest discover -s tests -v
 
-      # Report-only until the D2 stale-reference sweep lands; then drop
-      # the flag so dead references fail CI.
-      - name: Doc-integrity lint (report-only)
-        run: python3 tools/doc_lint.py --report-only
+      - name: Doc-integrity lint
+        run: python3 tools/doc_lint.py

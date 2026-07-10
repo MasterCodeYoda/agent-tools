@@ -64,7 +64,7 @@ bare scenario name can never collide with a run dir.
      /swarm:test <run-dir>
    ```
 
-   For **init-first** scenarios the middle block lists two prompts (`/swarm:init`, then
+   For **init-first** scenarios the middle block lists two prompts (`/swarm:setup`, then
    `/swarm backlog.md`). Parse the run-dir from the `Generated:` line and keep it in context.
 
 2. Hand off to the user. The generator's block is **already agent-agnostic** (just `cd` +
@@ -79,7 +79,7 @@ bare scenario name can never collide with a run dir.
    > ```
    > /swarm backlog.md
    > ```
-   > (init-first scenarios: send `/swarm:init` first, let it finish, then `/swarm backlog.md`.)
+   > (init-first scenarios: send `/swarm:setup` first, let it finish, then `/swarm backlog.md`.)
 
    Explain why a separate terminal: `/swarm` is an interactive agent session that dispatches
    sub-agents — this conversation can't run it or background it, and running it here would

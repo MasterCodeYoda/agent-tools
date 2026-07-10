@@ -4,7 +4,7 @@ Committed, compacted summaries of `/swarm` test runs worth remembering.
 
 `runs/` is gitignored — generated repos are throwaway (28 MB each, mostly `.venv`, plus a
 nested `.git`). Worse, the evidence is *doubly transient*: the session logs under
-`.agent-tools/swarm/sessions/` are gitignored inside the throwaway repo too (a `/swarm:init`
+`.agent-tools/swarm/sessions/` are gitignored inside the throwaway repo too (a `/swarm:setup`
 rule), and the richest record — the orchestrator's Claude Code transcript — lives outside the
 repo entirely under `~/.claude/projects/…` on a retention clock. Delete the run dir and all of
 it is gone.

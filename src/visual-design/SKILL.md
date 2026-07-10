@@ -203,7 +203,7 @@ Apply patterns starting with P1, verify each against its audit checklist, and mo
 ## Related Skills
 
 - **code-patterns**: TypeScript/React component patterns complement visual design patterns
-- **audit**: Frontend audit domain (`domains/frontend.md`) checks accessibility and UX completeness
+- **audit**: Frontend audit domain (@workflow `audit/domains/frontend.md`) checks accessibility and UX completeness
 
 ## Attribution
 

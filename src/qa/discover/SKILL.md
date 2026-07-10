@@ -38,31 +38,31 @@ Systematically explore the running application to build a feature map organized 
 
 ### Step 1: Launch Browser and Navigate
 
-Use Playwright MCP to open the app:
+Use the browser tooling from @use-browser (Chrome DevTools MCP, or the agent-browser CLI) to open the app:
 
-1. If the config has a `bridge` section with a `shim_path`, inject the bridge shim first using `browser_run_code` with `page.addInitScript()`
-2. Navigate to `base_url` from config using `browser_navigate`
-3. Wait for page load using `browser_wait_for`
-4. Take a snapshot with `browser_snapshot` to capture initial navigation structure
+1. If the config has a `bridge` section with a `shim_path`, inject the bridge shim first using `evaluate_script`
+2. Navigate to `base_url` from config using `navigate_page`
+3. Wait for page load using `wait_for`
+4. Take a snapshot with `take_snapshot` to capture initial navigation structure
 
 ### Step 2: Authenticate (if needed)
 
 If `auth.strategy` is `credentials`:
 
-1. Navigate to `auth.login_url` using `browser_navigate`
-2. Use `browser_fill_form` to fill credentials from config (resolve password from env var)
-3. Click the submit button using `browser_click` with the button's `ref` from the snapshot
-4. Verify authentication succeeded by taking a `browser_snapshot` and checking for redirect or user indicator
+1. Navigate to `auth.login_url` using `navigate_page`
+2. Use `fill_form` to fill credentials from config (resolve password from env var)
+3. Click the submit button using `click` with the button's `uid` from the snapshot
+4. Verify authentication succeeded by taking a `take_snapshot` and checking for redirect or user indicator
 
 ### Step 3: Explore Navigation
 
 Systematically discover the app's structure:
 
-1. Take a snapshot of the main page using `browser_snapshot`
-2. Identify all navigation elements (nav bars, sidebars, menus, tabs) from `ref` attributes
+1. Take a snapshot of the main page using `take_snapshot`
+2. Identify all navigation elements (nav bars, sidebars, menus, tabs) from their snapshot `uid`s
 3. For each top-level navigation link:
-   - Click it using `browser_click` with its `ref`
-   - Take a `browser_snapshot`
+   - Click it using `click` with its `uid`
+   - Take a `take_snapshot`
    - Record the URL path, page title, and key interactive elements (forms, buttons, tables, modals)
    - Identify sub-navigation if present and follow one level deep
 4. Look for common patterns:

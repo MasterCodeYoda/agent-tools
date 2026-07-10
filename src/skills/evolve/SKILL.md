@@ -223,7 +223,3 @@ After all iterations (or early convergence), present a final summary of changes 
 - Uses agent capability quick-references from `src/skills/references/agents/`
 - Uses the embedded markup system defined in `src/skills/references/MARKUP.md` when proposing portable changes
 - Operates under the `skills` meta-skill (`src/skills/SKILL.md`)
-
----
-
-*This is the canonical evolve capability. Once validated, the legacy implementation at `.claude/commands/evolve.md` and `.claude/evolve/` will be removed.*

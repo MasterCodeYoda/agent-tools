@@ -71,7 +71,7 @@ All tasks are required for completion.
 
 ### Testing
 
-- [ ] [Mode-appropriate test per @workflow (`implementation/quality-checkpoints.md`)]
+- [ ] [Mode-appropriate test per @workflow (`execution/quality-checkpoints.md`)]
 - [ ] [Negative-case / failure-mode test where the deliverable enforces a rule]
 
 ### Out of Scope

@@ -308,7 +308,7 @@ Every parent AC must appear in exactly one row. Audit-on-close: zero orphans bef
 **Sub-issue Completion:**
 
 - [ ] All inherited verbatim parent ACs verified
-- [ ] Tests passing (positive + negative cases per @workflow `implementation/quality-checkpoints.md`)
+- [ ] Tests passing (positive + negative cases per @workflow `execution/quality-checkpoints.md`)
 - [ ] Code committed with sub-issue reference
 - [ ] PM tool updated (sub-issue → Done)
 

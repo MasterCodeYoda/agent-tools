@@ -187,6 +187,6 @@ For each identified competitor:
 
 ## Related Skills
 
-- **audit** — The unified audit command assesses code/test/infrastructure quality, which feeds into product completeness signals
+- **workflow** — `/workflow:audit` assesses code/test/infrastructure quality, which feeds into product completeness signals
 - **visual-design** — UI polish patterns that contribute to product delight
 - **qa** — Test coverage as a product trust/quality signal

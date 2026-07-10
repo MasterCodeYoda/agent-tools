@@ -113,6 +113,7 @@ Ask the user which authoring adapters to scaffold. Use the current agent as the 
 Options:
 - **claude** — Claude Code `.mcp.json` + `.claude/agents/` Playwright Test Agents.
 - **opencode** — OpenCode `opencode.json` + `.opencode/prompts/` Playwright Test Agents.
+- **grok / factory / codex** — Best-effort scaffolding via `npx playwright init-agents` auto-detection (no native `--loop` support yet; manual role configuration may be needed).
 - **none** — Only create the tool-agnostic harness; adapters can be generated later.
 
 Record the selected providers in `authoring_adapters.providers`. These providers are not part of deterministic test execution; they only enable agent-assisted planning, generation, and healing.

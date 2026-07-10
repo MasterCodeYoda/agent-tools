@@ -53,25 +53,22 @@ This is a complete, evolving example of Clean Architecture implementation across
 Each language implements the same functionality with language-specific patterns:
 
 ### Python
-- Location: `python/`
 - Framework: FastAPI
 - Database: SQLAlchemy with SQLite
 - Testing: pytest
-- [View Python Implementation](python/README.md)
+- Code appears throughout the layer walkthroughs ([domain.md](domain.md) → [frameworks.md](frameworks.md)); no standalone tree is provided
 
 ### TypeScript
-- Location: `typescript/`
 - Framework: Express.js
 - Database: TypeORM with SQLite
 - Testing: Jest
-- [View TypeScript Implementation](typescript/README.md)
+- Code appears throughout the layer walkthroughs ([domain.md](domain.md) → [frameworks.md](frameworks.md)); no standalone tree is provided
 
 ### C#
-- Location: `csharp/`
 - Framework: ASP.NET Core
 - Database: Entity Framework Core with SQLite
 - Testing: xUnit
-- [View C# Implementation](csharp/README.md)
+- Code appears throughout the layer walkthroughs ([domain.md](domain.md) → [frameworks.md](frameworks.md)); no standalone tree is provided
 
 ### Rust/Tauri
 - Location: `rust/`
@@ -290,7 +287,7 @@ To improve this example:
 
 - [Clean Architecture Book](https://www.amazon.com/Clean-Architecture-Craftsmans-Software-Structure/dp/0134494164)
 - [Domain-Driven Design](https://www.amazon.com/Domain-Driven-Design-Tackling-Complexity-Software/dp/0321125215)
-- [This Skill's Documentation](../README.md)
+- [This Skill's Documentation](../SKILL.md)
 
 ## Questions to Consider
 

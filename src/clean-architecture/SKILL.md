@@ -318,8 +318,6 @@ See: `references/vertical-slicing.md`
 **Problem**: Entities exposing collections directly
 **Solution**: Return copies, use immutable value objects
 
-See: `references/common-mistakes.md` for more anti-patterns.
-
 ## Core References
 
 Essential reading for deep understanding:

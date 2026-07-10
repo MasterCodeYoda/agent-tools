@@ -229,7 +229,7 @@ For each deliverable, draft a sub-issue body containing:
 - Sub-issue-specific tasks
 - Dependencies on other sub-issues — captured as `blocks` / `blocked_by` /
   `parallelizable_with` (see Phase 3.5)
-- Per-deliverable Definition of Done (per @workflow `implementation/quality-checkpoints.md`)
+- Per-deliverable Definition of Done (per @workflow `execution/quality-checkpoints.md`)
 
 The full Deliverable-Partition Template lives in @workflow (`planning/templates.md`).
 

@@ -127,7 +127,7 @@ Ask user to confirm: "This looks like a [quick/standard/deep] review. Proceed?"
 
 ## Agent Orchestration
 
-For review criteria and quality standards, reference @workflow (`implementation/quality-checkpoints.md`)
+For review criteria and quality standards, reference @workflow (`execution/quality-checkpoints.md`)
 
 ### Quick Review (2 agents)
 
@@ -170,11 +170,11 @@ Run in parallel:
 
 **test-reviewer** — References @test-strategy:
 - Test coverage for changed code
-- Test quality and assertion strength (see `references/test-quality.md`)
+- Test quality and assertion strength (see @test-strategy `references/test-quality.md`)
 - Edge cases for changed logic
 - Regression risk assessment
 - If mutation tool available: flag domain logic changes lacking mutation testing coverage
-- SCRAP structural analysis on changed test files (see `references/scrap-scoring.md`):
+- SCRAP structural analysis on changed test files (see @test-strategy `references/scrap-scoring.md`):
   - Score each changed/added test function and report any with SCRAP > 12 (questionable) or > 20 (poor)
   - Flag smell penalties: no-assertions, low-assertion-density, multiple-phases, high-mocking, large-example
   - If a SCRAP baseline exists, compare and report verdict (improved/worse/mixed/unchanged)

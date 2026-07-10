@@ -1,6 +1,6 @@
 # Reference: Dispatch Mechanics, Wave Scheduling & Merge Orchestration
 
-## Wave scheduling (§6.4)
+## Wave scheduling
 
 ```
 candidates = items NOT in [merged, awaiting-user-input]
@@ -27,7 +27,7 @@ dispatch.
 `blocks`/`blocked_by`/`parallelizable_with` (from `/workflow:refine`). Missing metadata → fall
 back to treating all items as independent in FIFO order (functional, higher conflict risk).
 
-## Dispatch assembly (§6.5)
+## Dispatch assembly
 
 Each wave is a **single message** containing N parallel native `Agent`-tool dispatches (one
 per item-stage transition). Each dispatch prompt is assembled by the orchestrator as:
@@ -62,14 +62,14 @@ never as an unconditional cost for other sessions.
 Do **not** use the host `Agent` tool's `isolation: "worktree"` option — it conflicts with the
 explicit worktree-per-item model.
 
-## Wave completion (§6.6)
+## Wave completion
 
 1. Collect all N returns; parse each (malformed → `BLOCKED`, see structured-return-schema.md).
 2. Update `state.yml` atomically (temp + rename).
 3. Advance each item's stage per classification-rules.md.
-4. Run exit-state triage (§6.7).
+4. Run exit-state triage.
 
-## Merge orchestration (§6.8)
+## Merge orchestration
 
 Runs **between** waves (sequential; affects shared `main`). For each item in stage=approved:
 
@@ -98,7 +98,7 @@ on success:
 Each ad-hoc fix-it role is **one-shot**: a second failure → `TERMINAL_PAUSE`. Ad-hoc roles
 have no `BLOCKED`/`NEEDS_CONTEXT` — only `DONE`/`FAILED`.
 
-## Session logs (§7.8)
+## Session logs
 
 Per-dispatch files at `.agent-tools/swarm/sessions/<run-id>/<item>/<role>-<n>.md` (orchestrator
 captures the dispatch prompt + the returned YAML; worker appends a best-effort decision log).

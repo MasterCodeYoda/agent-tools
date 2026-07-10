@@ -83,6 +83,9 @@ re-asking. Capture, into `planning/conventions.md`:
 - **Integration / merge policy** — local vs remote, merge style, any banking/versioning, and the
   push policy. Default and recommended: **local integration only; pushing and PRs are
   user-initiated** (never autonomous).
+- **Durable design docs vs planning/** — `planning/` is transient, gitignored per-item work
+  product and must never be cited by committed files. Designs worth keeping after the work
+  ships are promoted to a committed location (default: `docs/design/`) before being cited.
 - **Decision-record layers + genre.** Confirm (detect, don't over-ask) the file that plays each of
   the three doc roles, and the genre. **Decision layer** (researched decisions — default
   `docs/decisions/`, or a README `## Decisions` section), **domain layer** (how the system is
