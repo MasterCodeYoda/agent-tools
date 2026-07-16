@@ -7,7 +7,7 @@ user-invocable: true
 
 # Flexible Code Review
 
-Review code changes with configurable depth - supports PRs, git ranges, specific files, or uncommitted changes.
+Review code changes with configurable depth — supports PRs, git ranges, specific files, or uncommitted changes.
 
 ## User Input
 
@@ -81,11 +81,7 @@ Analyze changes to determine:
 
 ### 3. Locate Plan and Acceptance Criteria (if available)
 
-Check whether an implementation plan or requirements exist for the changes under review. The source depends on the
-requirements source mode:
-
 ```bash
-# Check for planning docs in the repo
 ls ./planning/*/implementation-plan.md 2>/dev/null
 ls ./planning/*/session-state.md 2>/dev/null
 ls ./planning/*/requirements.md 2>/dev/null
@@ -98,151 +94,35 @@ ls ./planning/*/requirements.md 2>/dev/null
 4. If no `requirements.md` but a `work_item` is recorded in session state → PM mode
 5. If reviewing a PR with issue references (e.g., `LIN-123`, `PROJ-456`) → fetch criteria from PM issue
 
-**File mode**: Load and extract:
-- Acceptance criteria from `requirements.md`
-- Definition of Done checklist from `implementation-plan.md`
-- Task breakdown (to verify all planned tasks were addressed)
+**File mode**: Load acceptance criteria from `requirements.md`, Definition of Done and tasks from `implementation-plan.md`.
 
-**PM mode**: Fetch acceptance criteria from the PM issue using the Issue Retrieval Strategy from @workflow
-(PM integration). Also load Definition of Done and task breakdown from `implementation-plan.md` (which exists in both
-modes).
+**PM mode**: Fetch acceptance criteria from the PM issue via Issue Retrieval Strategy from @workflow
+(`planning/pm-integration.md`). Load DoD and tasks from `implementation-plan.md`.
 
-**If no plan or criteria found**: Skip the acceptance criteria review agent — code quality review proceeds as normal.
-Note the absence in the review output:
-```markdown
-**Acceptance Criteria**: No plan, requirements doc, or linked PM issue found — criteria verification skipped.
-```
+**If no plan or criteria found**: Skip the acceptance-criteria agent — note absence in output.
 
 ### 4. Select Review Depth
-
-Based on scope, recommend depth:
 
 | Depth | When to Use | Agents |
 |-------|-------------|--------|
 | **Quick** | Small changes (<100 lines, <5 files) | 2 |
 | **Standard** | Most reviews | 5 |
-| **Deep** | Large/complex changes, security-sensitive | 8 |
+| **Deep** | Large/complex changes, security-sensitive | 8+ |
 
 Ask user to confirm: "This looks like a [quick/standard/deep] review. Proceed?"
 
-## Agent Orchestration
-
-For review criteria and quality standards, reference @workflow (`execution/quality-checkpoints.md`)
-
-### Quick Review (2 agents)
-
-Run in parallel:
-
-**code-quality-reviewer**:
-- Code clarity and readability
-- Pattern consistency
-- Obvious bugs or issues
-- Test coverage
-
-**security-basics**:
-- Input validation
-- Obvious vulnerabilities
-- Sensitive data handling
-
-### Standard Review (5 agents)
-
-Run in parallel:
-
-**code-quality-reviewer**: (as above)
-
-**security-sentinel**:
-- OWASP Top 10 checks
-- Authentication/authorization
-- Data protection
-- Injection vulnerabilities
-
-**performance-oracle**:
-- N+1 queries
-- Inefficient algorithms
-- Resource leaks
-- Caching opportunities
-
-**architecture-strategist**:
-- Layer violations
-- Dependency direction
-- Pattern consistency
-- Coupling/cohesion
-
-**test-reviewer** — References @test-strategy:
-- Test coverage for changed code
-- Test quality and assertion strength (see @test-strategy `references/test-quality.md`)
-- Edge cases for changed logic
-- Regression risk assessment
-- If mutation tool available: flag domain logic changes lacking mutation testing coverage
-- SCRAP structural analysis on changed test files (see @test-strategy `references/scrap-scoring.md`):
-  - Score each changed/added test function and report any with SCRAP > 12 (questionable) or > 20 (poor)
-  - Flag smell penalties: no-assertions, low-assertion-density, multiple-phases, high-mocking, large-example
-  - If a SCRAP baseline exists, compare and report verdict (improved/worse/mixed/unchanged)
-  - Report actionability class for changed test files (AUTO_REFACTOR, REVIEW_FIRST, etc.)
-  - Flag duplication clusters with positive extraction pressure in changed test files
-
-**acceptance-criteria-verifier** (only when plan/requirements/PM issue found in §3):
-- Load acceptance criteria from the appropriate source: `requirements.md` (file mode) or PM issue (PM mode) via
-  Issue Retrieval Strategy from @workflow (PM integration)
-- Cross-reference each acceptance criterion against the changes — is it addressed?
-- Check the plan's Definition of Done checklist — are all items satisfiable from the diff?
-- Verify all planned tasks are reflected in the changes (no missing slices)
-- Flag criteria that appear unmet or only partially addressed as P1 findings
-- Flag planned tasks with no corresponding changes as P2 findings
-- If the plan has an Out of Scope section, verify nothing out-of-scope crept in
-
-### Deep Review (8+ agents)
-
-Standard agents (including acceptance-criteria-verifier when plan available) plus:
-
-**domain-expert** (based on file types):
-- Language-specific best practices
-- Framework conventions
-- Idiomatic code
-
-**data-integrity-guardian**:
-- Database migrations
-- Data consistency
-- Transaction handling
-
-**observability-analyst**:
-- Logging adequacy
-- Monitoring hooks
-- Debug-ability
-
-### Synthesis Pass (Standard and Deep)
-
-After the parallel agents report and findings are drafted, run the Critic Pass — see @workflow
-(`references/critic-pass.md`) — before producing the verdict:
-
-- **Blind-spot pass** — one agent asks what category of risk none of the reviewers raised;
-  emits any concrete gaps tagged `[blind-spot]`.
-- **Refutation pass** — each P1 is handed to a skeptic that tries to refute it; P1s refuted on
-  the evidence are downgraded or retracted, so a false positive cannot block the merge.
-
-Skip this pass for Quick reviews.
+**Load agent menus:** `references/agent-menus.md` for the chosen depth (role lists, synthesis/critic pass).
+For review criteria standards, also reference @workflow (`execution/quality-checkpoints.md`).
 
 ## Findings Structure
 
 ### Priority Classification
 
-**P1 - Critical (Blocks Merge)**
-- Security vulnerabilities
-- Data corruption risks
-- Breaking changes
-- Critical bugs
+**P1 - Critical (Blocks Merge)** — security, data corruption, breaking changes, critical bugs
 
-**P2 - Important (Should Fix)**
-- Performance issues
-- Architectural concerns
-- Code quality problems
-- Missing tests
+**P2 - Important (Should Fix)** — performance, architecture, code quality, missing tests
 
-**P3 - Nice to Have (Optional)**
-- Style improvements
-- Minor optimizations
-- Documentation gaps
-- Refactoring opportunities
+**P3 - Nice to Have (Optional)** — style, minor optimizations, docs, optional refactors
 
 ### Finding Format
 
@@ -252,7 +132,7 @@ Skip this pass for Quick reviews.
 **Location**: `file/path.ext:line`
 
 **Issue**:
-[Description of the problem]
+[Description]
 
 **Impact**:
 [Why this matters]
@@ -272,203 +152,59 @@ Skip this pass for Quick reviews.
 
 ## Review Output
 
-### Summary Report
+When emitting the summary, verdict, and next steps, **load and use** `templates/review-report.md`.
 
-```markdown
-## Code Review Complete
+Verdict options:
 
-**Target**: [PR #X / git range / files]
-**Scope**: [X files, +Y/-Z lines]
-**Depth**: [Quick/Standard/Deep]
-
-### Findings Summary
-
-| Priority | Count | Status |
-|----------|-------|--------|
-| P1 Critical | X | BLOCKS MERGE |
-| P2 Important | Y | Should fix |
-| P3 Nice to Have | Z | Optional |
-
-### P1 Findings (Critical)
-
-[List each P1 finding with details]
-
-### P2 Findings (Important)
-
-[List each P2 finding]
-
-### P3 Findings (Nice to Have)
-
-[List each P3 finding]
-
-### Acceptance Criteria Status (if plan available)
-
-| Criterion | Status | Evidence |
-|-----------|--------|----------|
-| [Criterion 1] | MET / UNMET / PARTIAL | [file:line or explanation] |
-| [Criterion 2] | MET / UNMET / PARTIAL | [file:line or explanation] |
-
-**Definition of Done**: [X]/[Y] items verified
-**Planned Tasks**: [X]/[Y] reflected in changes
-**Scope Creep**: [None detected / Items found outside plan scope]
-
-### Positive Observations
-
-- [Good pattern followed]
-- [Well-tested area]
-- [Clean implementation]
-
-### Review Agents Used
-- [List of agents and focus areas]
-
-## Verdict
-
-[ ] **APPROVE** - No P1 issues, all acceptance criteria met (if plan available), code is ready
-[ ] **REQUEST CHANGES** - P1 issues or unmet acceptance criteria must be addressed
-[ ] **COMMENT** - Suggestions but no blockers
-```
-
-### Actionable Next Steps
-
-```markdown
-## Next Steps
-
-**If P1 issues found:**
-1. Address each P1 finding before merging
-2. Re-run review after fixes: `/workflow:review [target]`
-
-**If approved:**
-1. Merge when ready
-2. Consider P2/P3 items for follow-up
-
-**Options:**
-1. **Fix P1 issues** - Address critical findings now
-2. **Create follow-up tasks** - Track P2/P3 for later
-3. **Re-review** - Run again after changes
-4. **Export findings** - Save to file for tracking
-```
+- **APPROVE** — No P1 issues, all acceptance criteria met (if plan available)
+- **REQUEST CHANGES** — P1 issues or unmet acceptance criteria
+- **COMMENT** — Suggestions but no blockers
 
 ## Special Review Modes
 
-### Pre-Commit Review
-
-Before committing:
-```bash
-/workflow:review changes
-```
-
-Focuses on:
-- Accidental debug code
-- Sensitive data in code
-- Incomplete implementations
-- Missing tests for changes
-
-### Deployment Range Review
-
-Before deploying:
-```bash
-/workflow:review "production..HEAD"
-```
-
-Focuses on:
-- Breaking changes
-- Migration safety
-- Rollback considerations
-- Feature flags
-
-### Security-Focused Review
-
-For security-sensitive changes:
-```bash
-/workflow:review #123 --depth deep
-```
-
-Enhanced focus on:
-- Authentication flows
-- Authorization checks
-- Data encryption
-- Input sanitization
-- OWASP compliance
+For pre-commit, deployment-range, or security-focused variants, **load** `references/special-modes.md`.
 
 ## Integration Points
 
 ### With PR Comments (if PR target)
 
-Option to post findings:
-```markdown
-Post review findings to PR?
-1. Yes - Add as PR comment
-2. No - Keep local only
-```
+Offer to post findings as a PR comment (yes/local-only).
 
 ### With /workflow:plan and /workflow:execute
 
-Review automatically loads acceptance criteria to verify completeness — not just code quality. In file mode, criteria come from `requirements.md`. In PM mode, criteria are fetched from the linked PM issue. `implementation-plan.md` provides the Definition of Done and task breakdown in both modes. This closes the loop between what was planned and what was delivered. Unmet criteria are flagged as P1 (blocking) findings.
+Review loads acceptance criteria to verify completeness — not just code quality. Unmet criteria are P1 (blocking).
 
 ### With /workflow:compound
 
-If significant issues found and fixed:
-```markdown
-Document the fix pattern?
-1. Yes - Run /workflow:compound
-2. No - Skip
-```
+If significant issues found and fixed, offer `/workflow:compound`.
 
 ### With Session State
 
-If reviewing during execute session, findings can inform session notes.
+If reviewing during execute, findings can inform session notes.
 
 ## Quality Principles
 
 ### Reasoning Rigor
 
-Every review finding must be grounded in evidence, not intuition:
+Every finding must be grounded in evidence, not intuition:
 
-- **Cite evidence for every claim.** Reference specific `file:line` locations. If you can't point to a concrete location, you haven't verified the claim.
-- **Trace, don't assume.** When a finding involves a function call, follow it to its actual definition. A function named `validate()` might be shadowed, overridden, or intercepted by a framework.
-- **Check the opposite hypothesis.** Before flagging a P1 or P2 finding, ask: "What if this code is actually correct?" Look for evidence that would refute your finding (guards elsewhere, framework behavior, test coverage). If you find it, downgrade or retract.
-- **Distinguish crash sites from root causes.** A bug manifesting at line 200 may originate at line 50. Trace back to where the incorrect behavior begins, not where it surfaces.
+- **Cite evidence** — specific `file:line`. If you can't point to a location, you haven't verified.
+- **Trace, don't assume** — follow calls to actual definitions; names can be shadowed or framework-wrapped.
+- **Check the opposite hypothesis** — before P1/P2, ask what would make the code correct; downgrade if refuted.
+- **Distinguish crash sites from root causes** — trace to where incorrect behavior begins.
 
 ### Focus on Impact
-- P1 issues are blockers
-- P2 issues improve quality
-- P3 issues are suggestions
-- Don't overwhelm with minor issues
+
+- P1 blockers; P2 quality; P3 suggestions — don't overwhelm with minor issues.
 
 ### Be Constructive
-- Explain why issues matter
-- Provide concrete suggestions
-- Acknowledge good practices
-- Focus on code, not author
+
+- Explain why; provide concrete suggestions; acknowledge good practices; focus on code not author.
 
 ### Scale Appropriately
-- Quick reviews for small changes
-- Deep reviews for critical paths
-- Don't over-review trivial changes
-- Don't under-review complex changes
 
-## Common Review Patterns
+- Quick for small; deep for critical paths; don't over- or under-review.
 
-### Database Changes
-- Migration reversibility
-- Index implications
-- Data integrity
-- Performance impact
+## Common Patterns
 
-### API Changes
-- Breaking changes
-- Versioning
-- Documentation
-- Error handling
-
-### Security Changes
-- Auth flow correctness
-- Permission checks
-- Data exposure
-- Audit logging
-
-### UI Changes
-- Accessibility
-- Responsive design
-- Error states
-- Loading states
+For domain-specific checklists (DB, API, security, UI), **load** `references/common-patterns.md`.

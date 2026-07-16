@@ -60,9 +60,6 @@ file src/test-strategy/references/scrap-scoring.md /test
 # src/skills/references/thin-routing.md.
 
 # workflow phase template extractions
-shape src/workflow/refine/SKILL.md
-shape src/workflow/compound/SKILL.md
-shape src/workflow/review/SKILL.md
 shape src/workflow/continue/SKILL.md
 shape src/workflow/setup/SKILL.md
 
