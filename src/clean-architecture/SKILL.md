@@ -5,56 +5,23 @@ description: Guide projects through Clean Architecture patterns with strict laye
 
 # Clean Architecture
 
-A language-agnostic guide for implementing Clean Architecture principles with strict layer boundaries, vertical slicing,
-and dependency inversion.
+Language-agnostic guide for strict layer boundaries, vertical slicing, and dependency inversion.
 
 ## When to Use This Skill
 
-Activate this skill when:
-
-- Starting a new Clean Architecture project
-- Implementing features with clear layer separation
-- Creating domain entities, value objects, or aggregates
-- Building application layer use cases
-- Designing repository patterns and gateways
-- Validating layer boundaries and dependencies
-- Learning or teaching Clean Architecture patterns
-- Reviewing code for architectural compliance
+- Starting a Clean Architecture project or feature with clear layer separation  
+- Domain entities, value objects, aggregates, use cases, repositories/gateways  
+- Validating layer boundaries; teaching/reviewing architectural compliance  
 
 ## Quick Decision Tree
 
-**"Where does this code belong?"**
+**"Where does this code belong?"** (in order):
 
-Ask yourself these questions in order:
-
-1. **Is it a business rule or core concept?**
-    - YES → **Domain Layer**
-    - Pure business logic, no external dependencies
-    - Examples: Order, Customer, Money, OrderStatus
-    - See: `references/layer-patterns.md#domain`
-
-2. **Does it orchestrate business operations?**
-    - YES → **Application Layer**
-    - Coordinates domain objects, defines workflows
-    - Examples: CreateOrderUseCase, ProcessPaymentUseCase
-    - See: `references/layer-patterns.md#application`
-
-3. **Does it connect to external systems?**
-    - YES → **Infrastructure Layer**
-    - Databases, APIs, file systems, email services
-    - Examples: SqlOrderRepository, EmailGateway
-    - See: `references/layer-patterns.md#infrastructure`
-
-4. **Is it a user interface or entry point?**
-    - YES → **Frameworks Layer**
-    - HTTP endpoints, CLI commands, GUI, message handlers
-    - Examples: OrderController, CreateOrderCommand
-    - See: `references/layer-patterns.md#frameworks`
-
-5. **Should I use separate packages/crates for layers?**
-    - Team >3 developers OR project >6 months OR strict compliance needed → **Yes, use separate packages**
-    - Prototype or small team → **Single package with module separation is fine**
-    - See: `references/polyglot-projects.md#three-packagecrate-architecture`
+1. **Business rule / core concept?** → **Domain** (pure, no external deps) — `references/layer-patterns.md#domain`  
+2. **Orchestrates business operations?** → **Application** — `references/layer-patterns.md#application`  
+3. **Connects to external systems?** → **Infrastructure** — `references/layer-patterns.md#infrastructure`  
+4. **UI / entry point?** → **Frameworks** — `references/layer-patterns.md#frameworks`  
+5. **Separate packages/crates?** Team >3 or long-lived / strict compliance → yes; prototype/small team → modules OK — `references/polyglot-projects.md`  
 
 ## Core Architectural Rules
 
@@ -67,402 +34,118 @@ Ask yourself these questions in order:
   (outer)         (concrete)       (orchestration)   (pure)
 ```
 
-**This means:**
+- Domain knows nothing about outer layers  
+- Application knows only Domain  
+- Infrastructure knows Application + Domain  
+- Frameworks may know inner layers  
 
-- Domain knows nothing about outer layers
-- Application knows only about Domain
-- Infrastructure knows about Application and Domain
-- Frameworks knows about all inner layers
-
-**Never violate this rule.** Inner layers cannot import from, reference, or know about outer layers.
+**Never violate this rule.** Inner layers cannot import, reference, or know about outer layers.
 
 ### Compile-Time Enforcement
 
-For projects requiring strict compliance, **separate packages/crates** enforce layer boundaries at compile time:
-
-- **Rust**: Separate crates (`project-domain`, `project-application`, `project-infrastructure`)
-- **TypeScript**: Separate packages (`@project/domain`, `@project/application`)
-
-The compiler itself prevents architecture violations - domain crate literally cannot import infrastructure. See `references/polyglot-projects.md` for multi-package patterns.
+Prefer separate packages/crates where strict compliance matters (Rust crates, TS packages). Compiler prevents illegal imports — see `references/polyglot-projects.md`.
 
 ### Service Abstractions Placement
 
-Service abstractions (repository interfaces, gateway protocols) belong in the **application layer**, colocated with use cases - not in a separate "ports" layer:
-
-```
-application/
-└── workspace/
-    ├── services.ts       # WorkspaceRepository interface + errors
-    ├── initialize.ts     # InitializeWorkspaceUseCase
-    └── create.ts         # CreateWorkspaceUseCase
-```
-
-This keeps abstractions close to their consumers and avoids the "ports vs adapters" naming confusion.
+Repository/gateway interfaces live in the **application** layer, colocated with use cases — not a separate "ports" package. Keeps abstractions next to consumers.
 
 ### Implementation Strategy: Vertical Slicing + Layer Sanctity
 
-We combine two orthogonal principles:
+- **When:** one user story end-to-end (all layers) before the next — `references/vertical-slicing.md`  
+- **How:** dependencies only inward; each layer's responsibilities — `references/layer-patterns.md`  
 
-**1. Vertical Slicing (WHEN to build)**
+Example order for "Create Task": Domain entity → Application use case → Infrastructure repo → Framework endpoint → tests → checkpoint.
 
-- Build ONE user story at a time, end-to-end
-- Complete all layers for that story before moving on
-- Priority-driven: P1 (MVP) → P2 → P3
+## Core Concepts (load depth)
 
-**2. Layer Sanctity (HOW to build)**
-
-- Maintain strict architectural boundaries
-- Dependencies always flow inward
-- Each layer has specific responsibilities
-
-See: `references/vertical-slicing.md` for detailed workflow.
-
-### Example: Building "Create Task" Feature
-
-```
-Story: As a user, I want to create a task
-
-Implementation Order (Vertical):
-1. Domain: Task entity with validation
-2. Application: CreateTaskUseCase with Request/Response
-3. Infrastructure: TaskRepository implementation
-4. Framework: POST /tasks endpoint
-5. Tests: All layers
-✓ CHECKPOINT: Feature works end-to-end
-
-Dependencies (Horizontal):
-Domain ← Application ← Infrastructure ← Framework
-(No reverse arrows allowed!)
-```
-
-## Core Concepts
-
-### Entities vs Value Objects
-
-**Entities:**
-
-- Have unique identity (ID)
-- Mutable state over time
-- Equality by ID
-- Example: Order, Customer, Product
-
-**Value Objects:**
-
-- No identity
-- Immutable
-- Equality by all attributes
-- Example: Money, Address, DateRange
-
-See: `references/core-concepts.md#entities-value-objects`
-
-### Encapsulation Principles
-
-1. **Default to private** - All attributes private unless justified
-2. **Expose behavior, not state** - Methods over getters
-3. **Controlled access** - Use properties when needed
-4. **Protect invariants** - Never allow invalid state
-
-See: `references/core-concepts.md#encapsulation`
-
-### Use Cases and Application Services
-
-Each use case should:
-
-- Have single responsibility
-- Define clear Request/Response models
-- Orchestrate domain objects
-- Be framework-agnostic
-- Return domain-agnostic responses
-
-Pattern:
-
-```
-UseCase + Request + Response = Single File
-```
-
-See: `references/layer-patterns.md#application-patterns`
+Entities vs value objects, encapsulation, use-case shape (UseCase + Request + Response in one file):  
+**load** `references/core-concepts.md` and `references/layer-patterns.md` — do not re-teach full essays here.
 
 ## Language-Specific Implementation
 
-Choose your implementation language for specific patterns, tools, and examples:
+| Language | Guide (patterns/tools) |
+|----------|------------------------|
+| Python | `languages/python/guide.md` |
+| TypeScript | `languages/typescript/guide.md` |
+| C# | `languages/csharp/guide.md` |
+| Rust | `languages/rust/guide.md` |
+| Other | `languages/README.md` |
 
-- **Python**: `languages/python/guide.md`
-    - Type hints, dataclasses, protocols
-    - Tools: mypy, ruff, pytest
+## Example: Task Manager
 
-- **TypeScript**: `languages/typescript/guide.md`
-    - Branded types, Result pattern, domain events
-    - Recommended: NestJS (backend), Next.js App Router (full-stack)
-    - ORM: Prisma (default), Drizzle (alternative)
-    - Tools: ESLint, Jest, Zod
-
-- **C#**: `languages/csharp/guide.md`
-    - Interfaces, dependency injection
-    - Tools: .NET CLI, xUnit
-
-- **Rust**: `languages/rust/guide.md`
-    - Traits, ownership, Result pattern
-    - Recommended: Axum (API), Tauri v2 (Desktop)
-    - Tauri v2: Capabilities/ACL, tauri-specta bindings, events
-    - Database: SQLx (default), Diesel (alternative)
-    - Tools: Clippy, rustfmt, cargo-nextest, insta
-
-- **Other Languages**: See `languages/README.md` for adding support
-
-## Example Implementation: Task Manager
-
-A complete, evolving example showing Clean Architecture patterns:
-
-- Start: `example-task-manager/README.md`
-- Domain patterns: `example-task-manager/domain.md`
-- Application patterns: `example-task-manager/application.md`
-- Infrastructure: `example-task-manager/infrastructure.md`
-- Frameworks: `example-task-manager/frameworks.md`
-
-The example starts simple (CRUD) and documents how to evolve it to handle:
-
-- Authentication and authorization
-- Complex business rules
-- Event-driven patterns
-- Performance optimization
+- `example-task-manager/README.md` + domain / application / infrastructure / frameworks docs  
 
 ## Validation and Quality Checks
 
-### Architectural Validation
-
-Check your implementation with language-specific validators:
-
-**Python:**
-
-```bash
-python .claude/skills/clean-architecture/languages/python/validators/validate_imports.py
-python .claude/skills/clean-architecture/languages/python/validators/validate_structure.py
-```
-
-(Note: The `.claude/skills/...` path above assumes the skill is symlinked into your Claude user or project directory. Adjust the path according to your installation.)
-
-**TypeScript:** Use compile-time enforcement via multi-package architecture (separate `domain/`, `application/`, `infrastructure/` packages with strict `tsconfig.json` project references) or ESLint with `eslint-plugin-boundaries` for single-package projects.
+**Python validators** (adjust install path): import/structure validators under the skill's language tools.  
+**TypeScript:** multi-package project references or `eslint-plugin-boundaries`.  
 
 ### Manual Review Checklist
 
-Before committing code:
+- [ ] Dependencies flow inward only  
+- [ ] Domain has no external dependencies  
+- [ ] Use cases are framework-agnostic  
+- [ ] Repositories return domain entities  
+- [ ] Controllers/endpoints are thin  
+- [ ] Business logic is in domain  
+- [ ] Tests mirror source structure  
 
-- [ ] Dependencies flow inward only
-- [ ] Domain has no external dependencies
-- [ ] Use cases are framework-agnostic
-- [ ] Repositories return domain entities
-- [ ] Controllers/endpoints are thin
-- [ ] Business logic is in domain
-- [ ] Tests mirror source structure
+See `templates/architecture-review.md`. Templates: `templates/decision-tree.md`, `templates/user-story-checklist.md`. Feature workflow: `references/vertical-slicing.md`.
 
-See: `templates/architecture-review.md`
+## Common Pitfalls
 
-## Templates and Workflows
+One-liners — detail in core-concepts / layer-patterns:
 
-### Quick Start Templates
-
-- **Layer Selection**: `templates/decision-tree.md`
-- **User Story Implementation**: `templates/user-story-checklist.md`
-- **Code Review Criteria**: `templates/architecture-review.md`
-
-### Workflow: Implementing a New Feature
-
-1. **Understand the requirement**
-    - Identify domain concepts
-    - Define use cases
-    - Plan data flow
-
-2. **Implement vertically by story**
-    - Start with domain entities
-    - Add application use case
-    - Implement infrastructure
-    - Create framework entry point
-    - Write tests for each layer
-
-3. **Validate architecture**
-    - Run language-specific validators
-    - Review dependency directions
-    - Check encapsulation
-
-4. **Checkpoint**
-    - Feature works end-to-end
-    - Tests pass
-    - Architecture intact
-
-See: `references/vertical-slicing.md`
-
-## Common Pitfalls and Solutions
-
-### Pitfall 1: Framework Logic in Domain
-
-**Problem**: HTTP concerns, database logic in entities
-**Solution**: Keep domain pure, move I/O to outer layers
-
-### Pitfall 2: Anemic Domain Model
-
-**Problem**: Entities with only getters/setters
-**Solution**: Move behavior into entities, protect invariants
-
-### Pitfall 3: Use Case Doing Too Much
-
-**Problem**: Business logic in application layer
-**Solution**: Push logic down to domain, orchestrate in application
-
-### Pitfall 4: Skipping Layers
-
-**Problem**: Controller directly accessing repository
-**Solution**: Always go through use cases
-
-### Pitfall 5: Shared Mutable State
-
-**Problem**: Entities exposing collections directly
-**Solution**: Return copies, use immutable value objects
+1. Framework/DB logic in domain → keep domain pure  
+2. Anemic entities → behavior + invariants in domain  
+3. Fat use cases → push rules down to domain  
+4. Skipping layers (controller → repo) → always via use cases  
+5. Shared mutable collections on entities → copies / immutability  
 
 ## Core References
 
-Essential reading for deep understanding:
+| Ref | Contents |
+|-----|----------|
+| `references/core-concepts.md` | Dependency rule, SOLID, entities/VOs, domain services/events |
+| `references/layer-patterns.md` | Per-layer responsibilities and patterns |
+| `references/vertical-slicing.md` | Story workflow + checkpoints |
+| `references/implementation-strategy.md` | Vertical + horizontal combination |
+| `references/polyglot-projects.md` | Multi-package/crate monorepos |
+| `references/external-resources.md` | Papers, books, courses |
 
-- **Core Concepts**: `references/core-concepts.md`
-    - Dependency Rule, SOLID principles
-    - Entities, Value Objects, Aggregates
-    - Domain services, Domain events
+## Testing by Layer
 
-- **Layer Patterns**: `references/layer-patterns.md`
-    - Detailed responsibilities per layer
-    - Common patterns and implementations
-    - Inter-layer communication
+- **Domain** — pure unit tests, no mocks  
+- **Application** — orchestration; mock at service abstractions (@test-strategy)  
+- **Infrastructure** — integration with real resources  
+- **Frameworks** — E2E critical paths  
 
-- **Vertical Slicing**: `references/vertical-slicing.md`
-    - Story-based development workflow
-    - Maintaining boundaries while iterating
-    - Checkpoint-driven development
+| Language | Boundary enforcement |
+|----------|----------------------|
+| Rust | Compile-time separate crates |
+| TypeScript | `eslint-plugin-boundaries` / multi-package |
+| C# | Separate `.csproj` |
+| Python | Convention + review (`import-linter` optional) |
 
-- **Implementation Strategy**: `references/implementation-strategy.md`
-    - Combining vertical and horizontal approaches
-    - Priority-driven development
-    - Incremental architecture
-
-- **Polyglot Projects**: `references/polyglot-projects.md`
-    - Multi-language monorepo structure (apps/, packages/, crates/)
-    - Type generation pipelines (Specta, JSON Schema)
-    - Three-crate/package architecture for compile-time enforcement
-    - Service abstractions in application layer pattern
-
-## Testing Strategies
-
-### Test Pyramid Approach
-
-```
-     /\      E2E Tests (Few)
-    /  \     - Complete workflows
-   /    \    - Happy paths only
-  /------\   Integration Tests (Some)
- /        \  - Use cases with real repositories
-/          \ - Infrastructure with databases
-/------------\ Unit Tests (Many)
-               - Domain logic isolation
-               - Pure functions
-               - No external dependencies
-```
-
-### Layer-Specific Testing
-
-- **Domain**: Pure unit tests, no mocks needed — business logic is isolated by design
-- **Application**: Test use case orchestration — see @test-strategy for mocking boundary guidance
-- **Infrastructure**: Integration tests with real resources (test containers, test databases)
-- **Frameworks**: E2E tests for critical paths
-
-### Layer Boundary Enforcement by Language
-
-Enforcement mechanisms vary by language. Audit agents should adjust expectations accordingly:
-
-| Language | Primary Enforcement | Mechanism |
-|----------|-------------------|-----------|
-| **Rust** | Compile-time | Separate crates per layer — compiler prevents illegal imports |
-| **TypeScript** | Lint-time | `eslint-plugin-boundaries` for single-package; multi-package workspace for strict enforcement |
-| **C#** | Project-time | Separate `.csproj` per layer — build system enforces dependency direction |
-| **Python** | Convention + review | Import discipline, `import-linter` optional — code review is primary enforcement |
-
-For projects without compile-time enforcement, audit agents should flag layer violations more aggressively since there's no tooling safety net.
-
-For testing methodology (strategy selection, assertion design, mocking philosophy), @test-strategy is authoritative. For *which* layer gets *which* test type, the Layer-Specific Testing section above applies — test-strategy owns *how* to test within each layer.
+Without compile-time enforcement, audits should flag layer violations aggressively.  
+**Methodology** (strategy, assertions, mocking philosophy): @test-strategy is authoritative.
 
 ## When NOT to Use Clean Architecture
 
-Be pragmatic. Skip Clean Architecture for:
-
-- Simple CRUD apps with no business logic
-- Prototypes and throwaway code
-- Scripts and utilities
-- Projects with <3 developers
-- Short-lived projects (<3 months)
-
-Use Clean Architecture when:
-
-- Complex business rules exist
-- Multiple teams collaborate
-- Long-term maintenance expected
-- Technology might change
-- Testability is critical
-
-## Getting Help
-
-### Quick Troubleshooting
-
-**"Where does X go?"** → Use decision tree above
-**"Can A depend on B?"** → Check dependency rule
-**"How to test X?"** → See testing strategies
-**"Is this overengineered?"** → Check "When NOT to use"
-
-### Extended Resources
-
-For deeper learning (loaded on request only):
-
-- Academic papers: `references/external-resources.md#papers`
-- Books and articles: `references/external-resources.md#books`
-- Video courses: `references/external-resources.md#courses`
-- Case studies: `references/external-resources.md#case-studies`
-
-## Contributing
-
-To add support for a new language:
-
-1. Read `languages/README.md`
-2. Create `languages/{language}/guide.md`
-3. Add examples following existing patterns
-4. Optional: Add validators
-5. Update Task Manager example
+Skip for: simple CRUD, prototypes, scripts, tiny/short-lived teams.  
+Use when: complex rules, multi-team, long life, tech may change, testability critical.
 
 ## Commands
 
-- `/workflow:audit` — Audit production code and API surface for architectural compliance (code and api domains)
-- `/workflow:review` — Code review references these patterns for dependency direction and layer compliance
+- `/workflow:audit` — architectural compliance (code/api domains)  
+- `/workflow:review` — dependency direction and layer compliance  
 
 ## Related Skills
 
-- **code-patterns**: Language-specific implementation of these architectural patterns
-- **test-strategy**: Testing strategy selection by architectural layer
-- **workflow-guide**: Vertical slicing and implementation ordering
+- **code-patterns** — language implementation of these patterns  
+- **test-strategy** — testing methodology within layers  
+- **workflow** — vertical slicing / ordering in the workflow family  
 
-## Summary
-
-Clean Architecture enables:
-
-- **Independence**: Change frameworks without touching business logic
-- **Testability**: Test each layer in isolation
-- **Maintainability**: Clear boundaries reduce complexity
-- **Flexibility**: Adapt to changing requirements
-
-Remember:
-
-- Dependencies flow inward
-- Build vertically, maintain horizontally
-- Start simple, evolve as needed
-- Be pragmatic, not dogmatic
-
-Start with the decision tree, follow the patterns, and validate continuously.
 ## Credits
 
-Synthesized from the Clean Architecture and Domain-Driven Design canon — Robert C. Martin,
-Eric Evans, Vaughn Vernon, Martin Fowler, Harry Percival & Bob Gregory, and others. Full
-citations with links live in `references/external-resources.md`.
+Synthesized from Clean Architecture and DDD canon (Martin, Evans, Vernon, Fowler, Percival & Gregory, and others). Citations: `references/external-resources.md`.
