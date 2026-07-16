@@ -59,9 +59,6 @@ file src/test-strategy/references/scrap-scoring.md /test
 # modularizes the skill (skill-corpus-* horizon). See
 # src/skills/references/thin-routing.md.
 
-# use-browser encyclopedia extraction
-shape src/use-browser/SKILL.md
-
 # workflow phase template extractions
 shape src/workflow/refine/SKILL.md
 shape src/workflow/compound/SKILL.md
