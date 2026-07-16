@@ -6,6 +6,8 @@
 #   command <name>           external or shorthand command (/name is not ours)
 #   ref <substring>          any finding whose target contains substring
 #   file <glob> <substring>  finding in files matching glob, target contains substring
+#   shape <glob>             suppress skill-shape findings for SKILL.md paths
+#                            matching glob (thin-routing; remove as extractions land)
 #
 # Every entry needs a comment explaining why it is legitimate. Prefer
 # file-scoped entries; global entries can mask future real defects.
@@ -51,3 +53,24 @@ file src/workflow/audit/domains/docs.md /section-path-as-anchor-text
 file src/code-patterns/SKILL.md /untyped
 file src/qa/setup/SKILL.md /login
 file src/test-strategy/references/scrap-scoring.md /test
+
+# ── skill-shape (thin-routing) ─────────────────────────────────────────
+# Pre-extraction fat skills. Remove each entry when its roadmap unit
+# modularizes the skill (skill-corpus-* horizon). See
+# src/skills/references/thin-routing.md.
+
+# use-browser encyclopedia extraction
+shape src/use-browser/SKILL.md
+
+# workflow phase template extractions
+shape src/workflow/refine/SKILL.md
+shape src/workflow/compound/SKILL.md
+shape src/workflow/review/SKILL.md
+shape src/workflow/continue/SKILL.md
+shape src/workflow/setup/SKILL.md
+
+# product / qa / swarm setup modularization
+shape src/product/brief/SKILL.md
+shape src/product/position/SKILL.md
+shape src/qa/discover/SKILL.md
+shape src/swarm/setup/SKILL.md

@@ -53,6 +53,13 @@ For each `src/skills/*/SKILL.md`:
 - Should reference related skills for boundary clarity
 - Internal file references must resolve to actual files within the skill's directory
 
+**Before proposing structure changes** (extractions, new templates/refs, merging content into
+`SKILL.md`): **load** `@skills` (`references/thin-routing.md`). Treat as structural gaps when a
+skill re-embeds catalogs or write-time templates that belong in `references/` / `templates/`,
+duplicates a reference (dual residence), or would hollow hard gates into optional-only docs.
+Objective shape signals are also enforced by `tools/doc_lint.py` (`shape` findings; thresholds
+and allowlist policy documented in the thin-routing norm).
+
 **cross-reference-auditor** — Check reference integrity:
 - Find all `@skill-name` references in skills
 - Verify each resolves to a corresponding `src/skills/<name>/SKILL.md`

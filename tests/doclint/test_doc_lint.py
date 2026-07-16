@@ -269,6 +269,46 @@ class DocLintCase(unittest.TestCase):
         self.assertEqual(code, 1)
         self.assert_finding(out, "README.md:1")
 
+    # ── skill-shape (thin-routing) ─────────────────────────────────────
+
+    def test_skill_bloat_no_siblings_reported(self):
+        # Dedicated family: only SKILL.md under the skill dir, ≥300 lines.
+        self.write("src/solo/SKILL.md", "---\nname: solo\n---\n" + "x\n" * 310)
+        code, out = self.run_lint()
+        self.assertEqual(code, 1)
+        self.assert_finding(out, "src/solo/SKILL.md:1: [shape] skill-bloat-no-siblings")
+
+    def test_skill_with_sibling_md_not_flagged_for_bloat(self):
+        # alpha already has setup/SKILL.md + references/guide.md — fat root OK.
+        self.write(
+            "src/alpha/SKILL.md",
+            "---\nname: alpha\n---\n" + "x\n" * 310,
+        )
+        code, out = self.run_lint()
+        self.assertNotIn("skill-bloat-no-siblings", out)
+
+    def test_skill_high_fence_ratio_reported(self):
+        # 205 lines, fence body 80 → ratio ≈ 0.39 ≥ 0.35.
+        lines = ["---", "name: fenced", "---"]
+        lines.extend(f"p {i}" for i in range(120))
+        lines.append("```")
+        lines.extend(f"c {i}" for i in range(80))
+        lines.append("```")
+        self.write("src/fenced/SKILL.md", "\n".join(lines) + "\n")
+        code, out = self.run_lint()
+        self.assertEqual(code, 1)
+        self.assert_finding(out, "src/fenced/SKILL.md:1: [shape] skill-high-fence-ratio")
+
+    def test_skill_shape_allowlist_suppresses(self):
+        self.write("src/solo/SKILL.md", "---\nname: solo\n---\n" + "x\n" * 310)
+        self.write("allow.txt", "shape src/solo/SKILL.md\n")
+        self.assert_clean(*self.run_lint())
+
+    def test_skill_shape_allowlist_glob(self):
+        self.write("src/solo/SKILL.md", "---\nname: solo\n---\n" + "x\n" * 310)
+        self.write("allow.txt", "shape src/solo/**\n")
+        self.assert_clean(*self.run_lint())
+
 
 if __name__ == "__main__":
     unittest.main()

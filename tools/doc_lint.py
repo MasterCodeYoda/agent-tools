@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 """Doc-integrity linter for the agent-tools skill corpus.
 
-Validates three reference classes in src/**/*.md, tests/**/*.md, and
-README.md against the actual repo tree:
+Validates reference integrity and skill-shape signals in src/**/*.md,
+tests/**/*.md, and README.md against the actual repo tree:
 
   link     relative markdown links (outside fenced code blocks) must
            resolve to an existing file or directory
@@ -12,12 +12,19 @@ README.md against the actual repo tree:
   command  slash commands (/family:sub or bare /name) must match a
            declared `name:` in some src/**/SKILL.md (colon or hyphen
            form) or an allowlisted external command
+  path     intra-skill backtick paths (references/, templates/, …)
+  shape    thin-routing skill-shape metrics on each src/**/SKILL.md:
+             skill-bloat-no-siblings — ≥ SHAPE_MIN_LINES_NO_SIBLINGS lines
+               and zero other .md files under the skill directory tree
+             skill-high-fence-ratio — ≥ SHAPE_MIN_LINES_FENCE lines and
+               fenced-code line ratio ≥ SHAPE_FENCE_RATIO
+           (see src/skills/references/thin-routing.md)
 
 Findings print as `path:line: [class] message`. Exit codes: 0 clean,
 1 findings (0 with --report-only), 2 usage/config error.
 
 False positives are suppressed via tools/doc-lint-allowlist.txt — see
-that file's header for the format.
+that file's header for the format (including `shape <glob>`).
 
 Stdlib only; no third-party dependencies.
 """
@@ -33,6 +40,11 @@ DEFAULT_ALLOWLIST = Path(__file__).resolve().parent / "doc-lint-allowlist.txt"
 
 # Directories under src/ that are not skills (mirrors the publisher's SKIP_DIRS)
 SKIP_DIRS = {"pdf-build"}
+
+# Thin-routing skill-shape thresholds (src/skills/references/thin-routing.md).
+SHAPE_MIN_LINES_NO_SIBLINGS = 300
+SHAPE_MIN_LINES_FENCE = 200
+SHAPE_FENCE_RATIO = 0.35
 
 # Fixture and captured-run data: content is test *data* by design (including
 # intentional violations), not authored documentation. Never linted.
@@ -81,6 +93,7 @@ class Allowlist:
       command <name>
       ref <substring>
       file <glob> <substring>
+      shape <glob>
     """
 
     def __init__(self):
@@ -88,6 +101,7 @@ class Allowlist:
         self.commands = set()
         self.refs = []
         self.file_refs = []  # (glob, substring)
+        self.shape_globs = []  # globs matching SKILL.md paths for shape suppressions
 
     @classmethod
     def load(cls, path):
@@ -108,6 +122,8 @@ class Allowlist:
                 allow.refs.append(line.split(None, 1)[1])
             elif kind == "file" and len(parts) == 3:
                 allow.file_refs.append((parts[1], parts[2]))
+            elif kind == "shape" and len(parts) == 2:
+                allow.shape_globs.append(parts[1])
             else:
                 raise ValueError(f"malformed allowlist line: {raw!r}")
         return allow
@@ -119,6 +135,9 @@ class Allowlist:
             fnmatch.fnmatch(rel_file, glob) and sub in target
             for glob, sub in self.file_refs
         )
+
+    def permits_shape(self, rel_file):
+        return any(fnmatch.fnmatch(rel_file, glob) for glob in self.shape_globs)
 
 
 def collect_declared_names(src_root):
@@ -285,6 +304,64 @@ def lint_file(path, src_root, declared, findings, allow):
                                 src_root, findings, allow)
 
 
+def skill_md_metrics(text):
+    """Return (line_count, fenced_line_count) for a SKILL.md body.
+
+    Fence delimiter lines are not counted as fenced content (matches the
+    inventory used for thin-routing budget guidance).
+    """
+    lines = text.splitlines()
+    fenced = 0
+    in_fence = False
+    for line in lines:
+        if FENCE_RE.match(line):
+            in_fence = not in_fence
+            continue
+        if in_fence:
+            fenced += 1
+    return len(lines), fenced
+
+
+def sibling_md_count(skill_md_path):
+    """Count other .md files under the skill directory tree (not SKILL.md)."""
+    skill_dir = skill_md_path.parent
+    return sum(
+        1 for p in skill_dir.rglob("*.md")
+        if p != skill_md_path and not any(part in SKIP_DIRS for part in p.parts)
+    )
+
+
+def check_skill_shapes(src_root, findings, allow):
+    """Thin-routing shape metrics for every src/**/SKILL.md."""
+    for skill_md in sorted(src_root.rglob("SKILL.md")):
+        if any(part in SKIP_DIRS for part in skill_md.parts):
+            continue
+        rel_file = skill_md.relative_to(REPO_ROOT).as_posix()
+        if allow.permits_shape(rel_file):
+            continue
+        text = skill_md.read_text(encoding="utf-8")
+        line_count, fenced = skill_md_metrics(text)
+        sibs = sibling_md_count(skill_md)
+        if line_count >= SHAPE_MIN_LINES_NO_SIBLINGS and sibs == 0:
+            findings.append(
+                (rel_file, 1, "shape",
+                 f"skill-bloat-no-siblings: {line_count} lines, "
+                 f"0 sibling .md under skill dir "
+                 f"(threshold {SHAPE_MIN_LINES_NO_SIBLINGS}+ lines, 0 siblings; "
+                 f"see thin-routing.md)")
+            )
+        ratio = (fenced / line_count) if line_count else 0.0
+        if (line_count >= SHAPE_MIN_LINES_FENCE
+                and ratio >= SHAPE_FENCE_RATIO):
+            findings.append(
+                (rel_file, 1, "shape",
+                 f"skill-high-fence-ratio: {line_count} lines, "
+                 f"fence_ratio={ratio:.2f} "
+                 f"(threshold {SHAPE_MIN_LINES_FENCE}+ lines, "
+                 f"ratio>={SHAPE_FENCE_RATIO:.2f}; see thin-routing.md)")
+            )
+
+
 def gather_files(repo_root):
     files = []
     for base in ("src", "tests"):
@@ -332,6 +409,7 @@ def main(argv=None):
     files = gather_files(REPO_ROOT)
     for path in files:
         lint_file(path, src_root, declared, findings, allow)
+    check_skill_shapes(src_root, findings, allow)
 
     for rel_file, lineno, kind, message in findings:
         print(f"{rel_file}:{lineno}: [{kind}] {message}")

@@ -27,7 +27,8 @@ This is the meta-skill for the overall skill system. Its purpose is to maintain 
 - `import/` — Handles the import and canonicalization of external skills.
 - `evolve/` — Handles ongoing analysis and improvement of existing skills.
 - `references/` — Supporting reference material, including agent capability quick-references and the embedded markup specification.
+- **`references/thin-routing.md`** — Corpus layout norm (thin skills, modular context, selective loading). **Load this before adding or restructuring skills**, extracting catalogs/templates, or changing skill shape. Dual residence and hollow routers are bugs; hard gates stay in `SKILL.md`.
 
 ## Philosophy
 
-The value of this system lies in the quality and portability of the skills themselves, not in the complexity of the tooling around them. The `skills` meta-skill exists to keep the corpus healthy, consistent, and easy to contribute to over time.
+The value of this system lies in the quality and portability of the skills themselves, not in the complexity of the tooling around them. The `skills` meta-skill exists to keep the corpus healthy, consistent, and easy to contribute to over time. Structure changes follow `references/thin-routing.md`.
