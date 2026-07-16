@@ -63,7 +63,3 @@ file src/test-strategy/references/scrap-scoring.md /test
 shape src/workflow/setup/SKILL.md
 
 # product / qa / swarm setup modularization
-shape src/product/brief/SKILL.md
-shape src/product/position/SKILL.md
-shape src/qa/discover/SKILL.md
-shape src/swarm/setup/SKILL.md

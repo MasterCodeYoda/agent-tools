@@ -200,25 +200,9 @@ Spawn 2 parallel agents:
 
 ## Output: Prioritized Report
 
-Scoring model in one line: per-check points (P1 = 10, P2 = 6, P3 = 3, fail = 0) roll up into weighted category scores, which combine into an overall graded product score; a separate findings-based health score starts at 100 and deducts per finding.
-
-The full scoring rubric, category weights, grade scale, benchmark table, and complete report template live in @product (`references/audit-scoring.md`). Load that file when computing scores and render the final report exactly per its template.
-
-## Actionable Next Steps
-
-After presenting the report, offer:
-
-```markdown
-## Next Steps
-
-1. **Fix critical findings** — Address P1 items (unclear value prop, contradictory messaging, non-functional product signals)
-2. **Implement quick wins** — Low-effort, high-impact improvements from the Quick Wins table
-3. **Sharpen positioning** — Use April Dunford's positioning framework to clarify competitive context
-4. **Validate with prospects** — Use findings to structure prospect interviews around weak signals
-5. **Re-audit after fixes** — Run `/product:audit` to verify progress
-6. **Save report** — Export findings to `./planning/product-audit-report.md`
-7. **Run complementary audits** — `/workflow:audit --focus docs` for documentation depth, `/workflow:audit --focus frontend` for UX quality
-```
+Produce a prioritized findings report (tiers 1–3 analysis). For actionable next-steps shell, load
+`templates/audit-next-steps.md` when presenting the "what's next" block. Scoring detail:
+`references/audit-scoring.md`.
 
 ## Integration Points
 

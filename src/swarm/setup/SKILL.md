@@ -138,26 +138,7 @@ last_updated: <YYYY-MM-DD>
 ---
 ```
 
-**`charter/charter.md`** (~30 lines)
-
-```markdown
----
-last_updated: <YYYY-MM-DD>
----
-# Project Charter
-
-## Precedence
-Earlier files win on conflict: project > engineering > workflow. Precedence is
-conflict-resolution only; most content is additive.
-
-## File Index
-- `project.md` — what this project is (identity, stack, surfaces, vocab, stakeholders).
-- `engineering.md` — how we build (tests, types, lint, architecture, quality gates, DoD).
-- `workflow.md` — how we move (PM, branching, commits, merge, review, release, docs).
-
-## Maintenance
-Authored by `/swarm:setup`. Re-run `/swarm:setup` to update; it reconciles section by section.
-```
+**`charter/charter.md`** (~30 lines) — load skeleton from **`templates/charter-entry.md`**, then fill.
 
 **`charter/project.md`** (~120 lines) — headers: `# Project: <name>`, `## Identity`,
 `## Stack`, `## Surfaces`, `## Domain Vocabulary`, `## Stakeholders`, `## Out of Scope`.
@@ -176,61 +157,7 @@ headers stable / body specific, reference don't restate (e.g. "TDD-strict per
 
 ### 4.2 Swarm config
 
-Write `.agent-tools/swarm/config.yml`:
-
-```yaml
-schema_version: 1
-
-# Project-stable orchestrator preferences. Safe to edit by hand.
-
-# Concurrency cap for parallel dispatch waves
-concurrency_cap: 5
-
-# Role chain (which roles execute, in what dispatch order)
-role_chain:
-  - planner
-  - implementer
-  - reviewer
-
-# Model selection per role. Tier labels (most_capable | mid_tier | fast) map to actual
-# model IDs per host CLI; or pin an exact model ID.
-models:
-  planner: most_capable
-  implementer: mid_tier
-  reviewer: most_capable
-  conflict_resolver: most_capable
-  integration_fixer: most_capable
-
-# CLI per role (Phase 3; defaults to host CLI for all in Phase 2).
-# The orchestrator role is always the host and cannot be overridden here.
-clis:
-  planner: claude
-  implementer: claude
-  reviewer: claude
-  conflict_resolver: claude
-  integration_fixer: claude
-
-# Test command run by the merge sweep after each merge into main.
-# null = orchestrator auto-detects from manifests + charter engineering.md.
-test_command: null
-
-# Backlog source defaults (if /swarm <goal> doesn't specify a source explicitly)
-backlog:
-  default_source: <linear|jira|github-issues|file>   # set from detected PM tool
-  default_filter: null
-
-# Session log retention
-sessions:
-  retention_days: null   # null = keep indefinitely
-
-# Pre-launch confirmation
-pre_launch:
-  always_confirm: true
-
-# Output verbosity
-output:
-  per_wave_summary: brief   # brief | verbose | quiet
-```
+Write `.agent-tools/swarm/config.yml` using **`templates/config.yml.md`** (load; set `backlog.default_source` from detected PM tool).
 
 Set `backlog.default_source` from the detected PM tool (fall back to `file` if none).
 
@@ -255,15 +182,7 @@ are missing or that the user chooses to replace.
 ### 4.3 Umbrella gitignore
 
 Create or update `.agent-tools/.gitignore` with the **add-don't-remove** policy (add missing
-entries; never delete user-added ones):
-
-```
-# Managed by Agent Tools. User edits respected on re-run.
-
-# Swarm transient state, managed by /swarm:setup (per-run; not project source)
-swarm/active-run
-swarm/sessions/
-```
+entries; never delete user-added ones). Load **`templates/umbrella-gitignore.md`** and apply add-don't-remove.
 
 This is the single canonical umbrella-gitignore implementation. It does **not** modify the
 repo-root `.gitignore`.
