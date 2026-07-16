@@ -297,10 +297,7 @@ Auto-advance only where no human decision is owed. **Stop and hand back** at any
   a wakeup that lands after the original slice finished should check in, not self-extend the backlog.
 - Any `AskUserQuestion`-class decision the slice can't resolve on its own.
 
-The goal in a `/continue` loop is to complete the assigned slice with **as little assistance as
-possible** while honoring every project constraint and task requirement. Stop only at the genuine
-gates above. A stop is a feature: it returns control with state saved, so the next `/continue` (or
-you) resumes cleanly.
+Stop only at genuine gates above; a stop saves state for clean resume.
 
 ## Workspace
 
@@ -356,16 +353,11 @@ Examples (not exhaustive):
 - Integration/merge confirmation stop
 - Any other `AskUserQuestion`-class gate where the user must choose before the loop proceeds
 
-**Why:** stacking a continue recap on an approval UI dilutes the decision and restarts ceremony
-the user does not need — the phase already presented the plan, options, or question.
+At an approval stop: phase prompt only — no invented recap. After the user answers, next continue
+recaps normally if that stop is not another approval gate.
 
-**What still applies at an approval stop:** hand off control with the phase's native prompt only;
-do not save/execute past the gate; do not invent a recap "for completeness." After the user
-answers, the next `/continue` (or continued same-session advance) resumes the loop and recaps
-normally when *that* stop is not another approval gate.
-
-**Not an approval stop** (recap still required): path-not-established hard stop, slice complete /
-merged, blocked without a decision prompt, paused mid-work with no pending approve/choose UI.
+**Recap still required for:** path-not-established, slice complete/merged, blocked without decision
+prompt, paused mid-work without approve/choose UI.
 
 ### Always include (when recap applies)
 
@@ -415,10 +407,8 @@ When recap applies, a shorter recap is fine (slice, phases, where left). Still s
 
 ## Soft-check on next orientation
 
-On the next `/continue` orientation, if the **most recently completed** slice that produced code
-has a `review:` line missing `method=` or findings counts (theater evidence), **surface it** and
-either re-run `/workflow:review` + remediate or rewrite valid evidence **before** picking up new
-work. Same spirit as the compound soft-check.
+On next orient: theater `review:` lines (missing `method=` / findings counts) and missing compound
+notes — surface before new work. Detail: `references/soft-checks.md`.
 
 ## What `/continue` does not do
 

@@ -195,52 +195,27 @@ Proceed to implementation planning once requirements are confirmed.
 
 ## Implementation Plan
 
-For task breakdown patterns, reference @workflow (task breakdown patterns)
+For task breakdown patterns, see @workflow (`planning/task-breakdown.md`).
 
 ### Create Implementation Plan
 
-Prepare the implementation plan content below. **Do not write files to disk yet** — present the plan to the user
-for approval first (see §Plan Approval Gate).
+**Do not write files to disk yet** — present for approval first (§Plan Approval Gate).
 
-Target file: `./planning/<project>/implementation-plan.md`
+Target: `./planning/<project>/implementation-plan.md`
 
-The plan opens with YAML frontmatter carrying dependency metadata (from the requirements /
-issue relations, confirmed with the user above). Downstream orchestration (`/swarm`) reads
-this frontmatter to schedule parallel waves; for single-agent work it documents sequencing.
-Use empty lists when there are no dependencies.
+**Load and fill** @workflow (`planning/templates.md`) › **Implementation Plan Document Template**
+(frontmatter with `blocks` / `blocked_by` / `parallelizable_with`, Approach through Definition of Done,
+Variant A vertical-slice or Variant B deliverable-partition breakdown). Empty dependency lists when none.
 
-The full plan document template — frontmatter plus every section, including both breakdown variants — lives in @workflow (`planning/templates.md`) › Implementation Plan Document Template. Skeleton:
-
-```markdown
----
-project: [project-name]
-work_item: [ISSUE-ID or null]
-blocks: []                  # items this work blocks (issue keys or item names)
-blocked_by: []              # items that must complete before this work starts
-parallelizable_with: []     # peer items safe to run concurrently (no shared files/ordering)
----
-# Implementation Plan: [Feature Title]
-
-## Approach               <- high-level approach, key decisions, why chosen
-## Breakdown              <- Variant A (vertical-slice) or Variant B (deliverable-partition)
-## Task Breakdown         <- flat list, all required; "Out of Scope" for future ideas
-## Technical Decisions    <- context / options / decision / rationale per decision
-## Testing Strategy       <- approach + unit / integration / e2e (see @test-strategy)
-## Risk Assessment        <- likelihood / impact / mitigation table
-## Implementation Order   <- step 0 = prefactoring / enabling work when applicable
-## Definition of Done     <- per slice/story and per feature (epic)
-```
-
-Use the Variant A (vertical-slice) or Variant B (deliverable-partition) breakdown template from @workflow (`planning/templates.md`) matching the selected mode. In deliverable-partition mode the breakdown carries the parent ACs, the AC traceability matrix, verbatim AC inheritance per sub-issue, and the gap-prevention check that must pass before the parent epic closes.
+In deliverable-partition mode the breakdown carries parent ACs, AC traceability matrix, verbatim AC
+inheritance per sub-issue, and gap-prevention before parent epic close.
 
 ### Initialize Session State
 
-Prepare the session state content below. **Do not write files to disk yet** — this is saved after user approval
-(see §Plan Approval Gate).
+**Do not write until approved.** Target: `./planning/<project>/session-state.md`.
 
-Target file: `./planning/<project>/session-state.md`
-
-Use the Session State Template (plan-time initialization) from @workflow (`planning/templates.md`). Frontmatter fields: `project`, `requirements_source` (file|pm), `work_item`, `pm_tool`, `session_count: 0`, `status: planned`, `progress` (total_tasks from plan / completed 0 / percent 0%), `current_layer: not_started`, `branch`, `worktree` (only when using `--worktree`), `created`. Body sections: Status ("Planning complete. Awaiting user approval."), Next Steps (approve, then `/workflow:execute`), Session History (empty).
+**Load** Session State Template (plan-time) from @workflow (`planning/templates.md`):
+`session_count: 0`, `status: planned`, progress zeros, Status awaiting approval, Next Steps → execute.
 
 ## PM Tool Integration
 
@@ -348,19 +323,8 @@ Update PM tool if applicable (see §PM Tool Integration above).
 
 #### Step 6: Present Confirmation
 
-```markdown
-## Planning Complete
-
-**Created**:
-
-- `./planning/[project]/implementation-plan.md`
-- `./planning/[project]/session-state.md`
-
-**Branch**: `<type>/<issue-key or description>`
-**Worktree**: `<worktree-path>` (if using --worktree, otherwise omit)
-
-[PM tool update summary if applicable]
-```
+Confirm paths written (`implementation-plan.md`, `session-state.md`), branch name, worktree path if any,
+and PM update summary if applicable.
 
 #### Step 7: Parallel Execution Prompt
 
@@ -400,14 +364,6 @@ or a later request like "start implementation", "run /workflow:execute", "go ahe
    If a worktree was created during planning, execute will detect it automatically from the `worktree:` field in session-state.md — no `--worktree` flag needed.
 
 2. **If continuing in the same conversation**, follow the execution skill's own sections directly rather than re-deriving them here: display the Session Context (execute §Context Review), initialize TodoWrite from implementation-plan.md, run the Execution Loop (execute §Execution Loop), hold the Quality Gates (execute §Quality Gates), and commit per story/slice with issue reference + PM update (execute §Story / Slice / Sub-issue Completion Checkpoint). `/workflow:execute` is the source of truth for each step.
-
-### Why This Matters
-
-- **Session state becomes source of truth** for multi-session continuity
-- **TodoWrite integration** enables clear task tracking
-- **Quality gates** prevent regressions
-- **Commit-per-slice** discipline ensures incremental progress visibility
-- **PM tool updates** show real progress to stakeholders
 
 ## Key Principles
 
