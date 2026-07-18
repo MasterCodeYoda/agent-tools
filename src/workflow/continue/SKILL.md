@@ -72,23 +72,30 @@ narrative block.
    Absent → use the defaults in this skill as-is.
 1. **Scan** for claimable units: `planning/*/session-state.md` frontmatter (schema in `@workflow`),
    optional top-level handoff pointer, optional `planning/roadmap.md` (or initiatives/workstreams
-   if that dialect is in use), PM queue only when conventions say so.
+   if that dialect is in use), PM queue only when conventions say so. **Named NEXT slugs without a
+   planning dir yet are still claimable** (shell is not the passport — see resolvable unit below).
 2. **Run Pre-claim path resolution** (next section) **before** the stage table. Do not invent a
    pseudo-slice so you can enter the table.
-3. **Confirm the precise stage** of the claimed unit from its `session-state.md` and in-flight
-   state (half-applied change, unreviewed commit, open question).
+3. **Confirm the precise stage** of the claimed unit from artifacts on disk (`session-state.md`,
+   requirements/plan if any) and in-flight state. **Missing planning dir is fine** — classify as
+   early loop (usually refine) and let the phase skill create the shell.
 
 ## Pre-claim path resolution (hard gate — before stage table)
 
-**Continue never invents a next unit.** It never creates `planning/<new-unit>/` or PM issues to
-unblock itself. It never auto-invokes `/workflow:brainstorm` or `/workflow:roadmap` — only
-**stops and offers** those commands (unless the user explicitly invoked them this turn).
+**Continue never invents a next unit.** It does not pick work nobody named (no fatigue “you
+decide,” no residual-only initiative sentence). It never auto-invokes `/workflow:brainstorm` or
+`/workflow:roadmap` — only **stops and offers** those commands (unless the user explicitly invoked
+them this turn).
+
+**Scaffolding ≠ inventing.** Creating (or letting refine/plan create) `planning/<slug>/` for a
+unit **already named** by args / handoff NEXT / roadmap NEXT is normal loop entry — not inventing
+path. Cold-start hard-stop is for **unlisted** work only.
 
 ### Path established? (first match wins)
 
 | # | Condition | Action |
 |---|-----------|--------|
-| 1 | Explicit target in `$ARGUMENTS` (issue id, PM URL, planning path) | Claim that unit (warn if leaving `in_progress` behind) |
+| 1 | Explicit target in `$ARGUMENTS` (issue id, PM URL, planning path, or stable slug) | Claim that unit (warn if leaving `in_progress` behind) |
 | 2 | Live `status: in_progress` slice (with live branch if required by project) | Resume it |
 | 3 | Conventions / handoff orientation names a resolvable NEXT | Claim that unit |
 | 4 | Roadmap / workstream head names a **resolvable** unit (`NEXT` not `map-only`) | Claim that unit |
@@ -98,11 +105,23 @@ unblock itself. It never auto-invokes `/workflow:brainstorm` or `/workflow:roadm
 **Brownfield non-break:** a planned queue or PM backlog **without** `planning/roadmap.md` is still
 path established (row 5). Roadmap is optional altitude, not a passport.
 
-**Resolvable unit** = planning dir, issue id, or conventions pointer that maps to real work — not
-a vague initiative sentence.
+**Resolvable unit** = a concrete identity already named as next work:
+
+- issue id / PM URL, **or**
+- existing `planning/<slug>/` path, **or**
+- **stable slug/name from handoff `NEXT` / roadmap `NEXT` / workstream list** (planning dir optional)
+
+— **not** a vague initiative sentence, residual-only note, or fatigue language.
+
+**Named-without-shell is claimable:** if NEXT says `sys-foo` and `planning/sys-foo/` does not exist
+yet, **claim `sys-foo`** and enter the stage table (almost always → refine; shell is phase output).
+
+**Multiple named NEXTs (∥ or a list):** path is established. Claim **one** — first listed in the
+handoff `NEXT` block, else roadmap `NEXT` / stream order. Continue is sequential; parallel peers
+remain available for a later claim.
 
 **Fatigue language is not path:** "you decide", "just continue", "pick something" without a unit
-id/path → still **HARD STOP** (same template). Do not invent NEXT.
+id/path/slug → still **HARD STOP** (same template). Do not invent NEXT.
 
 **Authority:** `in_progress` wins over roadmap NEXT. Do not grab swarm in-flight IDs (see
 Coexistence). Filter swarm-owned items from any offer list.
@@ -115,14 +134,16 @@ Coexistence). Filter swarm-owned items from any offer list.
 Continue will not invent a next unit.
 
 **Options:**
-1. Name a concrete unit (issue id or `planning/<slug>/`) and re-run `/workflow:continue`
+1. Name a concrete unit (issue id, slug, or `planning/<slug>/`) and re-run `/workflow:continue`
 2. `/workflow:brainstorm` — single fuzzy concept
 3. `/workflow:roadmap` — multi-unit destination + order (or resequence)
-[If any planned orphans / candidates exist, list up to 3 as optional picks — do not claim them
-without the user choosing.]
+[If any named-but-unstarted candidates exist in handoff/roadmap, those *are* claimable under
+rows 3–4 — hard-stop only when nothing is named. List up to 3 only as orientation if you
+somehow stopped with named candidates present (should not happen).]
 ```
 
-Remain stopped until the user provides a unit or runs a path skill.
+Remain stopped until the user provides a unit or runs a path skill. **Do not hard-stop solely
+because a named unit lacks a planning directory.**
 
 ### Optional thin steering (v1 — evidence only)
 
@@ -136,7 +157,9 @@ in v1.
 
 ### After claim
 
-Only then classify track and enter the stage table.
+Only then classify track and enter the stage table. If the unit has **no planning dir yet**,
+route from artifacts (none → direction from roadmap/handoff one-liner counts as direction chosen →
+usually `/workflow:refine`, which creates the shell).
 
 ## Coexistence with `/swarm`
 
@@ -166,7 +189,7 @@ the same artifact-driven classification `/swarm` uses — then route:
 |---|---|
 | Unit is multi-stream / horizon-only (no single claimable scope) | **Stop + offer** `/workflow:roadmap` (do not invent streams) |
 | Idea still fuzzy, direction unchosen | `/workflow:brainstorm` (offer/run for **this unit** only) |
-| Direction chosen, requirements ambiguous or have TBDs | `/workflow:refine` |
+| Direction chosen (incl. roadmap/handoff one-liner), no or weak requirements — **planning dir optional** | `/workflow:refine` (creates `planning/<slug>/` as needed) |
 | Requirements clear, no implementation plan | `/workflow:plan` |
 | Plan approved, work not started **or in progress** | `/workflow:execute` (resume where the plan left off) |
 | Code exists, not reviewed | `/workflow:review` (or `/code-review`) — fix every finding; **record review evidence** (below) |
@@ -412,7 +435,9 @@ notes — surface before new work. Detail: `references/soft-checks.md`.
 
 ## What `/continue` does not do
 
-- Does **not** invent a next unit, NEXT pointer, or planning/PM shell to unblock cold start.
+- Does **not** invent a next unit or NEXT pointer (unlisted work / fatigue language / residual-only).
+  Scaffolding `planning/<slug>/` for a **named** NEXT unit (or letting refine/plan do so) is allowed.
+- Does **not** hard-stop solely because a named unit lacks a planning directory yet.
 - Does **not** auto-invoke `/workflow:brainstorm` or `/workflow:roadmap` — stop + offer only.
 - Does **not** author or rewrite roadmaps, workstreams, or brainstorm seeds.
 - Does **not** re-run a phase that already produced its artifact (existing

@@ -17,7 +17,7 @@ No durable path decision (`Chosen Direction`, stream list, committed NEXT) witho
 | One unit; requirements weak | `/workflow:refine` | |
 | Requirements clear; need how | `/workflow:plan` | |
 | Drive known next unit through the loop | `/workflow:continue` | Silent when path clear |
-| Empty continue; no resolvable unit | continue **hard-stop** | Offer brainstorm / roadmap / name a unit — never invent |
+| Empty continue; no **named** resolvable unit | continue **hard-stop** | Offer brainstorm / roadmap / name a unit — never invent. Missing `planning/<slug>/` alone is **not** hard-stop |
 
 ## Offer ≠ invoke
 
@@ -28,6 +28,8 @@ another user-invoked skill unless the user invoked it this turn.
 
 First match wins: explicit args → `in_progress` → conventions/handoff NEXT → roadmap NEXT →
 planned/PM queue → else hard stop. **Planned without roadmap still counts as established.**
+**Named NEXT without a planning dir still counts as established** — claim and route (usually
+refine); the shell is phase output, not a passport.
 
 ## Thin maps
 

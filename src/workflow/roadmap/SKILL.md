@@ -46,8 +46,10 @@ $ARGUMENTS
 If charting shows **one** claimable unit and no multi-stream structure, **stop without writing a
 map**. Offer `/workflow:brainstorm` or `/workflow:refine` instead.
 
-A claimable unit is something continue can pick: a `planning/<item>/` path, a PM issue id, or an
-explicit stub the user accepts as next work — **not** a phase of one story and not an AC list.
+A claimable unit is something continue can pick: a stable slug/name, a `planning/<item>/` path
+(optional at claim time), a PM issue id, or an explicit stub the user accepts as next work —
+**not** a phase of one story and not an AC list. **Missing planning dir does not make a named
+stream unclaimable** — continue claims it and enters refine/plan, which create the shell.
 
 ## Modes
 
@@ -76,9 +78,9 @@ user asks.
    Don't invent fake streams you can't claim later.
 3. **Order & deps.** `→` sequential, `∥` parallel (swarm-wave candidates). Note blockers.
 4. **Out of scope** for this horizon.
-5. **NEXT.** One resolvable unit (issue id, `planning/<slug>/`, or clear workstream name that
-   maps to a claimable unit). Or explicit **map-only** (no NEXT) — continue will hard-stop with
-   a "finish roadmap / name unit" offer.
+5. **NEXT.** One resolvable unit (issue id, clear slug/workstream name, or `planning/<slug>/` —
+   dir optional). Or explicit **map-only** (no NEXT) — continue will hard-stop with a "finish
+   roadmap / name unit" offer. Named NEXT without a planning shell is still consumable.
 6. **Present draft → user approves → then write.** Never write durable map before approval.
 7. **Stop.** Do not refine or implement.
 
@@ -112,7 +114,7 @@ Notation: `→` sequential · `∥` parallelizable
 
 ## NEXT
 
-[resolvable unit: ISSUE-id | planning/<slug>/ | clear name]  · or `map-only`
+[resolvable unit: ISSUE-id | clear-slug | planning/<slug>/ (dir optional)]  · or `map-only`
 
 ## Out of scope
 
@@ -149,7 +151,7 @@ Titles are mnemonics when PM owns the issue.
 ## Key principles
 
 - **Destination first** — scope every stream against it.  
-- **Claimable units** — if continue can't pick it, it isn't a stream yet.  
+- **Claimable units** — if continue can't pick it by name/id, it isn't a stream yet (shell optional).  
 - **Index, not store** — detail lives in unit planning/PM, not the map.  
 - **Approve before write** — durable path decisions are user-gated.  
 - **Signal, not ceremony** — bail when one unit is enough.

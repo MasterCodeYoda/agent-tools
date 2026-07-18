@@ -24,7 +24,7 @@ for full detail.
 | `/workflow:review` | Code review (PR / range / paths / uncommitted) |
 | `/workflow:audit` | Multi-domain project audit |
 | `/workflow:compound` | Capture durable knowledge; `--maintain` memory quality |
-| `/workflow:continue` | Drive next **known** slice; hard-stop if path not established |
+| `/workflow:continue` | Drive next **known** slice; hard-stop only if no named unit |
 
 See each sub-skill for arguments and full procedure.
 
@@ -32,10 +32,10 @@ See each sub-skill for arguments and full procedure.
 
 ```text
 [multi-unit / path unknown]  /workflow:roadmap
-        ↓ per claimable unit
+        ↓ per claimable unit (name/id; planning dir optional)
 brainstorm? → refine → plan → execute → review → finish → compound
         ↑
-   /workflow:continue  (never invents NEXT)
+   /workflow:continue  (never invents NEXT; named-without-shell → refine)
 ```
 
 ## Philosophy
@@ -46,7 +46,7 @@ brainstorm? → refine → plan → execute → review → finish → compound
 2. Work spans sessions — structure for continuity  
 3. Speed + quality + detail  
 4. Knowledge compounds — capture insight after non-trivial work  
-5. User approves before durable commits (plans, roadmaps, brainstorm converge); continue never invents a queue  
+5. User approves before durable commits (plans, roadmaps, brainstorm converge); continue never invents a queue (named NEXT without a planning shell is still claimable)  
 6. Artifacts state the **current** target — re-derive when decisions change; git holds history. See `references/decision-records.md`  
 7. Durable path decisions (`Chosen Direction`, stream lists, NEXT) are user-gated  
 
