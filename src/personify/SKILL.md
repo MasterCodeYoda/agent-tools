@@ -1,160 +1,219 @@
 ---
 name: personify
-description: Project-specific agent personality, voice guidance, and communication facts. Stores a single bounded .agent-tools/personify.md (personality traits & behaviors, speaking/writing voice, persistent interpersonal facts only). Enforces size limits and proactive maintenance on subsequent runs. Invocable as /personify for interactive init or collaborative edit+cleanup. Agents load the data file directly via AGENTS.md.
+description: Agent personality, voice guidance, and communication facts. Two-layer storage — user-space ~/.agent-tools/personify.md (shared defaults) plus optional project .agent-tools/personify.md (local override/delta). Enforces size limits and proactive maintenance. Invocable as /personify for interactive init or collaborative edit+cleanup. Agents load both layers; project AGENTS.md links the project file.
 user-invocable: true
 ---
 
 # Personify
 
-`/personify` lets you define and maintain a durable "agent personality" for a project. It steers how the agent communicates and behaves inter-personally — tone, voice, style preferences, and key facts about how to interact with the team/user.
+`/personify` defines and maintains a durable "agent personality" — how the agent communicates and behaves interpersonally: tone, voice, style preferences, and key interaction facts.
 
-**Only communication and interpersonal content belongs here.** No technical instructions, codebase memories, or project facts (those go in charter or other docs).
+**Only communication and interpersonal content belongs here.** No technical instructions, codebase memories, or project facts (those go in charter, conventions, or harness instruction files).
 
-The profile lives at `.agent-tools/personify.md` (single bounded file under `.agent-tools/`). It uses explicit size limits and quality maintenance to stay high-signal and avoid context bloat. Agents load it directly via an AGENTS.md block.
+## Two-layer model
 
-The agent and user work together: the agent proposes cleanups, merges, and refinements based on size/quality signals; the user directs priorities and final decisions.
+| Layer | Path | Role |
+|-------|------|------|
+| **User** (shared defaults) | `~/.agent-tools/personify.md` | Cross-project voice and behavior. Applies to every project. |
+| **Project** (local override) | `.agent-tools/personify.md` | Project/audience/domain delta. Wins on conflict. |
+
+Same idea as skill defaults + project `conventions.md`, but with an explicit user layer: **user is the base; project is the override.**
+
+### Merge semantics (cascade)
+
+When both layers exist, agents build an **effective profile** as follows:
+
+1. Start from the **user** profile (all sections).
+2. Overlay the **project** profile:
+   - Project bullets in the same section **add** to the effective set.
+   - A project bullet that starts with `OVERRIDE` (or is clearly a direct contradiction of a user rule on the same topic) **replaces** that user rule for this project.
+   - Project **Persistent Facts** are additive unless the project explicitly revokes one.
+3. Project wins on conflict. User alone is enough when no project file exists.
+
+**Do not duplicate** user rules into project files. Project files should be thin deltas after promotion.
+
+### Optional section: Technical Language
+
+Either layer may include `## Technical Language (STE-inspired principles)` — controlled-language *principles* for technical prose (active voice, short sentences, one claim per sentence, lists for multi-step). This is **not** full ASD-STE100 dictionary compliance. Link: https://www.asd-ste100.org/
 
 ## Commands in This Family
 
 | Command | Purpose |
 |---------|---------|
-| `/personify` | Initialize (if missing) or review/edit + maintain (display current memory, size, propose cleanup) the project personify profile through guided collaboration |
+| `/personify` | Review/edit/maintain. Default target: project if in a project with a profile, else user. |
+| `/personify user` | Init or maintain the **user-space** profile only |
+| `/personify project` | Init or maintain the **project** profile only |
+| `/personify promote` | Diff project vs user; propose lifting shared rules into user-space and thinning the project file |
 
 ## When to Use This Skill
 
-- Starting a new project or collaboration and want consistent agent voice/persona from the start.
-- The agent is forgetting or varying tone, structure preferences, or key interpersonal facts across sessions.
-- The profile is approaching size limits, has accumulated redundancy, or needs quality pruning to stay high-signal.
-- You want a lightweight, bounded, persistent profile focused purely on *how the agent should talk and behave with humans on this project* (with built-in maintenance).
+- Starting a new project or collaboration and want consistent agent voice.
+- The agent is forgetting or varying tone, structure, or interpersonal facts across sessions.
+- The same voice rules are repeated across projects → promote to user-space.
+- A profile is approaching size limits or needs quality pruning.
+- You want a lightweight, bounded profile focused on *how the agent talks and behaves with humans*.
 
-## Profile Format (.agent-tools/personify.md)
+## Profile Format
 
-Use a single markdown file with these clearly labelled sections. Keep content strictly to personality, voice, and communication style.
+Use a single markdown file per layer with these sections. Keep content strictly to personality, voice, and communication style.
 
-**Size limits (enforced, token-based):** three escalating thresholds — see **Size Limits and
-Maintenance** below for the canonical values and required actions.
-
-This keeps the profile potent, cheap to load every session, and prevents attention dilution. The `/personify` skill surfaces usage (in tokens) on every run and guides consolidation when approaching thresholds. (Approximate tokens: ~4 characters per token, or use platform tokenizer if available.)
-
-Recommended top-of-file header for visibility:
+Recommended header:
 
 ```markdown
-# Agent Personify Profile
+# Agent Personify Profile (user-space)
+#   — or — (project override)
 
-> Size: 720 / 1,200 tokens (60%) | Last maintained: 2026-06-23
+> Layer: user | Size: 420 / 600 tokens (70%) | Last maintained: 2026-07-18
+>
+> Shared defaults for all projects. Project `.agent-tools/personify.md` is a local override.
 ```
+
+(Project header should say `Layer: project` and note that it is a delta on user-space.)
 
 ### Sections
 
 ```markdown
 ## Personality & Behaviors
 
-[Traits and consistent behaviors the agent should exhibit. E.g. "Be direct and concise. Use numbered steps for plans. Celebrate small wins with the user."]
+[Traits and consistent behaviors.]
 
 ## Voice Guidance (speaking and writing)
 
-[Speaking style: "Warm but professional, use 'we' when appropriate."
-Writing style: "Short paragraphs. Bullet points for lists. Avoid jargon unless the user uses it first. Example: Instead of 'leverage synergies' say 'work together on this'."]
+[Speaking and writing style; anti-patterns; examples.]
+
+## Technical Language (STE-inspired principles)   # optional
+
+[Principles only — not full STE dictionary compliance.]
 
 ## Persistent Facts
 
-[Only interpersonal/communication facts. E.g. "User prefers updates in Linear comments rather than long chat threads." "Team uses humor in technical discussions — light sarcasm is welcome." "Stakeholder X likes visual diagrams in every plan."]
+[Interpersonal/communication facts only.]
 
-**Scope note:** This file is *only* for how the agent should present itself and communicate. Do not include technical decisions, code patterns, requirements, or project history.
+**Scope note:** How the agent presents itself and communicates — not technical decisions or project history.
 ```
 
-For a complete, maintained example that includes a reasonable starting persona (with the recommended header, good density across all three sections, and explanatory notes), see [references/example.md](references/example.md). Remove the `<!-- -->` comments before using in a real project.
+For a commented starting example, see [references/example.md](references/example.md). Remove `<!-- -->` comments before live use.
 
 ## Size Limits and Maintenance
 
-The token limits are deliberate (inspired by successful bounded-memory designs like Hermes' tiny prompt-resident files). They force prioritization of only the highest-leverage interpersonal and voice guidance.
+Token limits force prioritization (inspired by bounded-memory designs like Hermes). Approximate tokens as ~4 characters per token, or use a platform tokenizer when available.
 
-- **800 tokens**: Start warning the user (approaching limit, consider cleanup).
-- **1,000 tokens**: Stronger warning + explicit suggestions for consolidation.
-- **1,200 tokens**: Forced maintenance — the skill requires review and cleanup before allowing further growth.
+| Scope | Warn | Strong | Hard max |
+|-------|------|--------|----------|
+| **User** layer | 400 | 500 | **600** |
+| **Project** layer | 400 | 500 | **600** |
+| **Combined** (user + project loaded) | 900 | 1050 | **1200** |
 
-- The skill always shows live usage (in tokens) on profile load.
-- It enters maintenance mode at the thresholds above (or on explicit request):
-  - Identifies candidates for consolidation (duplicate facts, verbose phrasing, low-recency items).
-  - Proposes concrete before/after changes.
-  - Walks you through approval, editing, or rejection one item (or batch) at a time.
-- You can always request "review & maintain" from the menu.
-- Goal: keep the profile dense, current, and under the 1,200 token hard limit without losing important voice or facts.
-- Agent role: surfaces signals and drafts improvements. Your role: set priorities ("this fact is critical, keep it even if verbose").
+Combined hard max equals two full layers so a rich project house-voice delta can coexist with a full user base; prefer thin deltas so combined stays near the warn band. Legacy single-file projects without user-space may still use a per-file 1,200 cap until promoted.
 
-This pairs user direction with agent assistance — never agent-only or user-only edits. High-quality entries are those that are durable (cross-session), non-redundant, directly influence voice/behavior, and high-signal.
+On every `/personify` run:
+
+- Show live usage for the target layer (and combined if both exist).
+- Enter maintenance mode at thresholds or on request: flag duplicates, verbose phrasing, content that belongs in the other layer, and out-of-scope technical drift.
+- Propose concrete before/after changes; user approves.
+- Goal: dense, current profiles under hard max without losing important voice or facts.
+
+High-quality entries are durable, non-redundant, directly influence voice/behavior, and high-signal.
 
 ## Behavior
 
-Parse arguments (usually empty or context).
+Parse arguments: empty | `user` | `project` | `promote` (plus free-form context).
 
-### No profile yet (`.agent-tools/personify.md` missing)
+### Target resolution
 
-1. Create the directory and file if needed (`.agent-tools/personify.md`).
-2. Start an interactive session: ask targeted questions to build the three sections.
-3. Present a draft (including initial size/usage header), iterate with the user until they approve.
-4. Write the file with the approved content + usage header.
-5. Offer to also add the AGENTS.md reference block (see below).
-6. Summarize: "Profile created (under limits). Next time you run /personify I will display the full current memory + usage in tokens, propose any cleanup or consolidation needed, and guide you through maintenance while you direct changes."
+- `user` → `~/.agent-tools/personify.md` only.
+- `project` → `.agent-tools/personify.md` in the current project root only.
+- empty → if cwd is a project with (or needing) a project profile, prefer project; also surface user size if present. If no project context, target user.
+- `promote` → see Promote mode below.
+
+### No profile yet (target path missing)
+
+1. Create directory and file if needed.
+2. Interactive session: targeted questions for the three main sections (plus optional Technical Language).
+3. For **project** init when user-space already exists: start from an empty delta template and only capture *overrides* and project-specific facts — do not copy the whole user file.
+4. Present draft with size header; iterate until approved.
+5. Write file. For project: offer AGENTS.md link block.
+6. Summarize usage and next steps.
 
 ### Profile exists
 
-1. Read `.agent-tools/personify.md` and compute current size/usage in tokens.
-2. Display the full current profile (or section-by-section for readability) **plus** a clear usage meter (e.g. "Size: 920 / 1,200 tokens (77%) — strong warning, consider maintenance").
-3. Propose maintenance if near the limit, if obvious redundancies are detected, or on request:
-   - List specific suggestions: "These two Persistent Facts overlap on humor preference. Proposed merge: '...'. Remove one? Rephrase for density?"
-   - "Voice section has grown wordy. Suggested tightened version: [diff]."
-   - Offer "Full review & cleanup" pass.
-4. Present menu: "tweak personality / voice / facts / review & maintain (cleanup/consolidate) / see raw file / done"
-5. If tweak or maintain: enter collaborative mode. The agent proposes targeted changes, merges, or prunes based on size, signal strength, and scope. You review, edit, approve, or direct priorities (e.g. "keep the sarcasm example, drop the diagram one").
-6. Apply only approved changes. Re-check size and show updated usage.
-7. Remind about AGENTS.md if not present.
+1. Read target file; compute size. If both layers exist, also report combined.
+2. Display full profile (or section-by-section) plus usage meters.
+3. Propose maintenance near limits, on redundancy, or on request.
+4. Menu: `tweak personality / voice / facts / technical language / review & maintain / see raw / promote candidates / done`
+5. Apply only approved changes. Re-check size.
+6. Remind about AGENTS.md for project layer if missing.
 
-Always keep the interaction non-destructive and collaborative. The agent and user work together: the agent surfaces the current memory, flags bloat, and proposes high-quality refinements; you retain final say on what is kept or changed. Use the existing profile as ground truth. Changes are always shown as diffs or before/after for review.
+### Promote mode (`/personify promote`)
 
-## Setting Up in a Project
+1. Read user and project profiles (error if project missing).
+2. Diff: list project bullets that also appear (semantically) in other projects or that are clearly cross-project defaults.
+3. Propose a batch: move to user, remove from project (or mark OVERRIDE if project needs a variant).
+4. Apply only after user approval. Re-check both sizes.
 
-Run `/personify` in your project root.
+Always non-destructive and collaborative. Show diffs / before-after. User retains final say.
 
-The skill will create `.agent-tools/personify.md` (with token-based size tracking) if missing and guide you. On every future run it will show the live memory + usage (in tokens) and drive any needed maintenance.
+## Setting Up
 
-To make agents load it automatically, add this block to your project's `AGENTS.md` (after the Project Charter section if present):
+### User-space (once per machine)
 
-```markdown
-## Agent Personify Profile
-
-This project uses a personify profile for consistent agent personality, voice, and interpersonal style.
-
-@.agent-tools/personify.md
+```text
+/personify user
 ```
 
-(Use the same marker pattern as the charter block if you want future automation to find/refresh it.)
+Creates `~/.agent-tools/personify.md` if missing. No AGENTS.md change required — agents must load this path when present (see below).
+
+### Project
+
+```text
+/personify project
+```
+
+Creates `.agent-tools/personify.md` as a **delta** when user-space exists.
+
+Add to project `AGENTS.md` (after charter if present):
+
+```markdown
+<!-- agent-tools:personify-link begin -->
+## Agent Personify Profile
+
+This project uses personify for agent personality, voice, and interpersonal style.
+User-space defaults: `~/.agent-tools/personify.md` (load when present).
+Project override (this repo):
+
+@.agent-tools/personify.md
+<!-- agent-tools:personify-link end -->
+```
 
 ## How Agents Should Apply the Profile
 
-When `@.agent-tools/personify.md` is loaded:
+At the start of a work session (or before substantial replies):
 
-- Read the three sections (and any size/maintenance header) at the start of any work session or before responding to user.
-- Let the personality traits and voice guidance shape your tone, sentence length, structure, and examples. Stay concise to respect the bounded size.
-- Reference the persistent facts when they are relevant to the current conversation or task.
-- Never violate the scope: stay out of technical/project content that belongs elsewhere.
-- If the profile approaches the 800-token warning threshold (or higher), surface the need for `/personify` maintenance rather than letting low-signal content accumulate.
+1. **Read user-space** if it exists: `~/.agent-tools/personify.md` (expand `~` to the user's home).
+2. **Read project** if linked or present: `.agent-tools/personify.md`.
+3. **Merge** per cascade rules above (project wins on conflict).
+4. Let personality and voice shape tone, structure, length, and examples.
+5. Apply Technical Language principles to technical prose, plans, procedures, and PM text — not as a rigid dictionary checker.
+6. Use Persistent Facts when relevant.
+7. Stay in scope: no technical/project content that belongs elsewhere.
+8. If either layer or combined usage approaches warn thresholds, surface `/personify` maintenance rather than letting low-signal content accumulate.
 
-Example application:
-- User asks for a plan → Use the structure preference from the profile (numbered steps, etc.).
-- Writing a commit message or comment → Match the voice guidance.
-- Interacting over multiple messages → Keep the personality consistent.
+Examples:
+
+- User asks for a plan → structure from effective profile (recommendation-first, tight bullets).
+- Writing a commit or comment → match voice; STE-inspired clarity for procedural text.
+- Project has Daybreak/Jira house voice → project OVERRIDE wins for PM-facing prose.
 
 ## Related Skills
 
-- **workflow** — Personify complements session continuity and conventions.
-- **swarm** — Use after `/swarm:setup` to add communication preferences.
+- **workflow** — Personify complements session continuity and `planning/conventions.md` (process; not voice).
+- **swarm** — Use after `/swarm:setup` for communication preferences.
 - **skills** — The personify skill itself can be evolved like other skills.
 
 ## References
 
-The profile is bounded project memory (with the token limits from Size Limits and Maintenance plus proactive maintenance), similar to charter but narrowly scoped to agent <-> human interaction. It is not a replacement for technical docs or ADRs.
+Bounded multi-layer memory (size limits + maintenance), narrowly scoped to agent ↔ human interaction. Not a replacement for technical docs, ADRs, or harness ops instructions.
 
-See [references/example.md](references/example.md) for a fully commented example of a reasonable starting persona (remove the `<!-- -->` comments for live use). We keep this example updated with broadly applicable positions.
+See [references/example.md](references/example.md) for a commented example. See Hermes (SOUL + bounded MEMORY/USER), Letta core blocks, and memory-primitives patterns for design rationale on limits and collaborative upkeep.
 
-See the research on systems like Hermes (SOUL + bounded MEMORY/USER with forced consolidation), Letta core blocks, and memory-primitives.md patterns for the design rationale around limits, quality, and collaborative upkeep.
+STE context: ASD-STE100 Simplified Technical English (https://www.asd-ste100.org/) — use as *principle inspiration* only inside personify, not full standard enforcement.
