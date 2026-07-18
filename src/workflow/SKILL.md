@@ -120,6 +120,11 @@ worktree: <path>  # only with --worktree
 [Append-only log]
 ```
 
+> **Scope:** this template — including the append-only `Session History` log — is for **per-item**
+> `planning/<item>/session-state.md`. The **top-level handoff** (`planning/session-state.md`) is a
+> *light pointer*, not a log: it never carries an append-only history or completed/released-work
+> records. See `@workflow:setup` §4.
+
 ### Branch Naming Convention
 
 **Rule:** `<type>/<identifier>` exactly.

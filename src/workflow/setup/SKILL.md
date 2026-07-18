@@ -189,7 +189,7 @@ When a top-level handoff *is* present and useful, include a durable orientation 
 - `AGENTS.md` / `CONTRIBUTING.md` — general collaboration rules and gates.
 ```
 
-Keep any handoff **light**. Compress history per `@workflow:continue`.
+Keep any handoff **light** — an index, not a log. It holds only: the active-horizon pointer (→ roadmap → unit), the orientation block above, and genuinely-open **unscoped backlog**. It must **not** accumulate release notes (those live in CHANGELOG / tags), completed- or pruned-work narratives, prune records, or items merely pending a routine step (e.g. a merged-but-unpushed fix awaiting a prod release — `git status` shows push state). Unlike a per-item `session-state.md`, the top-level handoff has **no append-only `Session History`** section. Compress/prune per `@workflow:continue`.
 
 ### 5. Project shared memory scaffold (`.agent-tools/memory/`)
 
