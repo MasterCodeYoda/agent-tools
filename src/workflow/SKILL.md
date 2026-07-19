@@ -219,6 +219,7 @@ Examples: `references/decomposition-modes.md`.
 | Planning root | `references/planning-root.md` |
 | Built-in tracks | `references/tracks.md` |
 | Runs ledger | `references/runs-ledger.md` |
+| Handoff package (unit ↔ swarm) | `references/handoff-package.md` |
 | Decomposition | `references/decomposition-modes.md` |
 | Worktrees | `references/parallel-worktrees.md` |
 | Plan templates | `planning/templates.md` |

@@ -77,13 +77,17 @@ One object per line; justified by phase-return evidence only — never invent ti
 2. Append one NDJSON line = phase_return + from/to + run_id + channel + track
 3. If refine/plan reentry from execute/review → bump reentry_counts
 4. If THRASH_BOUND → thrash_bound_hits += 1
-5. On MERGED + COMPOUND_DONE → close run, append ledger.yml row
+5. On MERGED + COMPOUND_DONE → close run, append ledger.yml row (below)
 6. Soft-fail if FS write fails — never hard-stop work for telemetry
 ```
 
 **Do not** emit per-task, per-file-edit, or per-tool events (log bloat).
 
 ## Closed-run rollup (`ledger.yml`)
+
+**When:** unit reaches `done` (merged + compound disposition), or explicit abandon.
+
+**How:** compute from this `run_id`'s events + session-state counters — do not hand-wave.
 
 ```yaml
 version: 1
@@ -110,14 +114,64 @@ runs:
 **Shipped** under local-merge policy: merged to main + valid review evidence + compound
 disposition (capture or reasoned none).
 
-## Yield glance
+**Close recipe:**
 
-Regenerate `yield.md` on demand (`/workflow:continue` with yield intent, or soft weekly offer
-when ≥5 closed runs and glance older than 7d). **Never** hand-curate vanity metrics. Never
-block claim for “metrics due.”
+```text
+1. Count events for run_id: refine/plan reentries, REVIEW_* cycles, thrash
+2. fidelity.review from last valid review evidence vs theater soft-check
+3. fidelity.compound from COMPOUND_DONE + none_reasoned vs missing
+4. rework: true if any execute/review → refine/plan edge in events
+5. Append row to ledger.yml (create file with version: 1 if missing)
+6. Clear open thrash urgency on session-state; keep run_id for history
+```
 
-Derived KPIs: ship rate, stuck open runs, rework rate, thrash rate, review/compound fidelity,
-median TTM when known, channel mix.
+## Yield glance (`yield.md`)
+
+**Triggers (any):**
+
+- User invokes continue with yield intent: `--yield`, `yield`, or “show run yield”
+- Soft weekly offer: glance missing/older than 7d **and** ≥5 closed runs since last generate
+- Optional: after close-run when user is in a recap and asks
+
+**Never** block claim for metrics. **Never** hand-edit vanity numbers — regenerate from
+`ledger.yml` (+ open runs from recent events if cheap).
+
+### Yield document shape (overwrite entire file)
+
+```markdown
+# Run yield
+
+Generated: <ISO date>
+Closed runs in ledger: <N>
+
+## KPIs (from ledger)
+
+| KPI | Value |
+|-----|--------|
+| Shipped (last 30d) | n |
+| Rework rate | % of closed with rework: true |
+| Thrash rate | % with thrash_bound_hits > 0 |
+| Review fidelity ok | % |
+| Compound fidelity ok/none_reasoned | % |
+| Median ttm_hours | value or n/a |
+
+## By track
+
+| track | shipped | rework |
+|-------|---------|--------|
+
+## Recent closed (max 10)
+
+| run_id | unit | track | outcome | closed |
+|--------|------|-------|---------|--------|
+
+## Notes
+
+One line only if something structural stands out (e.g. thrash cluster). Else omit.
+```
+
+Derived KPIs: ship rate, stuck open runs (optional from events), rework rate, thrash rate,
+review/compound fidelity, median TTM when known, channel mix.
 
 ## Process self-improvement
 

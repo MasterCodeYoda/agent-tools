@@ -103,7 +103,13 @@ classify cannot reconstruct.
 
 After forming `phase_return`, the continue host **also** appends one event line under
 `.agent-tools/runs/events.ndjson` per @workflow `references/runs-ledger.md`. Soft-fail on FS
-errors — never block the loop for telemetry. On unit `done`, append a closed-run row to
-`ledger.yml` when practical.
+errors — never block the loop for telemetry. On unit `done`, run the **close-run recipe**
+(ledger.yml row). Yield glance only on demand / soft weekly offer — not every phase.
 
 This is line instrumentation, not a parallel state machine.
+
+## Optional handoff package
+
+When pausing for another session/agent (not the default same-session path), emit
+`handoff_package` per @workflow `references/handoff-package.md`. Map worker structured returns
+into `phase_return` events using that file’s status table.

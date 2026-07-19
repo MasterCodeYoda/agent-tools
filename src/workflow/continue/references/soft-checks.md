@@ -36,7 +36,8 @@ mention once when evidence is thick; never auto-mutate skills from continue.
 ## Yield glance (optional, non-blocking)
 
 If `.agent-tools/runs/yield.md` is older than 7 days **and** ≥5 closed runs exist since last
-generate, soft-offer regenerate from ledger/events. Never block claim for metrics.
+generate, soft-offer regenerate from ledger (shape in `runs-ledger.md`). User can force with
+`/workflow:continue --yield`. Never block claim for metrics.
 
 ## Active swarm
 

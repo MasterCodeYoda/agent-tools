@@ -81,10 +81,13 @@ Analyze changes to determine:
 
 ### 3. Locate Plan and Acceptance Criteria (if available)
 
+Resolve **planning root** first (`.agent-tools/planning/` preferred; else `./planning/` — @workflow
+`references/planning-root.md`). Then:
+
 ```bash
-ls ./planning/*/implementation-plan.md 2>/dev/null
-ls ./planning/*/session-state.md 2>/dev/null
-ls ./planning/*/requirements.md 2>/dev/null
+ls <planning-root>/*/implementation-plan.md 2>/dev/null
+ls <planning-root>/*/session-state.md 2>/dev/null
+ls <planning-root>/*/requirements.md 2>/dev/null
 ```
 
 **Determine requirements source**:
@@ -100,19 +103,45 @@ ls ./planning/*/requirements.md 2>/dev/null
 (`planning/pm-integration.md`). Load DoD and tasks from `implementation-plan.md`.
 
 **If no plan or criteria found**: Skip the acceptance-criteria agent — note absence in output.
+On **feature** and **micro** tracks with ACs available, acceptance-criteria check is **mandatory**
+for standard+ depth (and for micro quick when ACs exist — single agent may combine AC + quality).
 
-### 4. Select Review Depth
+### 4. Select Review Depth (infer; do not ask by default)
 
-| Depth | When to Use | Agents |
-|-------|-------------|--------|
-| **Quick** | Small changes (<100 lines, <5 files) | 2 |
-| **Standard** | Most reviews | 5 |
-| **Deep** | Large/complex changes, security-sensitive | 8+ |
+Depth changes **dose**, not the review gate. Green tests ≠ reviewed. Evidence schema always
+required for continue integrate (`gates.md`).
 
-Ask user to confirm: "This looks like a [quick/standard/deep] review. Proceed?"
+**Resolution order** (first hit wins):
+
+1. User flag in `$ARGUMENTS`: `--depth quick|standard|deep` or words `quick` / `standard` / `deep`
+2. Session-state `track:` or continue context — @workflow `references/tracks.md`:
+   - **micro** → `quick`
+   - **feature** → `standard` (or `deep` if security-sensitive paths / large diff)
+   - **research** spike with code → `quick` or `standard` by size
+3. Diff heuristics when no track:
+   - **Quick** — small changes (&lt;100 lines, &lt;5 files), obvious bugfix
+   - **Standard** — most reviews
+   - **Deep** — large/complex, security-sensitive paths (auth, crypto, payments, migrations)
+
+**State the chosen depth in one line** and proceed. Ask to confirm **only** when ambiguous
+between standard and deep, or user previously required always-confirm in conventions.
+
+| Depth | Agents (see menus) |
+|-------|---------------------|
+| **Quick** | 2 |
+| **Standard** | 5 |
+| **Deep** | 8+ |
+
+**Optional mode extras** (additive, not depth): path-triggered **security** emphasis; structural
+**architecture** when layer boundaries move — covered in agent menus / special-modes.
 
 **Load agent menus:** `references/agent-menus.md` for the chosen depth (role lists, synthesis/critic pass).
 For review criteria standards, also reference @workflow (`execution/quality-checkpoints.md`).
+
+**Continue integration:** map verdict to unit events — APPROVE → evidence + `REVIEW_CLEAN`;
+REQUEST CHANGES (code) → `REVIEW_FINDINGS_CODE`; structural → `REVIEW_FINDINGS_STRUCTURAL`.
+Swarm reviewer statuses `APPROVED` / `FIX_REQUESTED` use the same evidence bar
+(@workflow `references/handoff-package.md`).
 
 ## Findings Structure
 
@@ -180,7 +209,14 @@ If significant issues found and fixed, offer `/workflow:compound`.
 
 ### With Session State
 
-If reviewing during execute, findings can inform session notes.
+If reviewing during execute/continue, findings inform session notes. Prefer recording valid
+evidence line on session-state or PM (`gates.md` schema). Optional structured return fields:
+@workflow `references/handoff-package.md`.
+
+### With runs ledger
+
+Continue host records review phase-return + fidelity; review skill need not write
+`.agent-tools/runs/` itself when invoked under continue.
 
 ## Quality Principles
 

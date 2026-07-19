@@ -28,6 +28,11 @@ Your entire return MUST be a single YAML document inside one fenced ```yaml code
 **nothing outside it**. The orchestrator parses this mechanically; a malformed or
 unparseable return is treated as `BLOCKED`.
 
+**Shared dialect:** field names align with `/workflow` unit handoff
+(`@workflow` `references/handoff-package.md`) and this file /
+`references/structured-return-schema.md`. Do not invent alternate artifact keys. Optional
+`run_id` / `track` help the runs ledger when known.
+
 ```yaml
 status: DONE | DONE_WITH_CONCERNS | NEEDS_CONTEXT | BLOCKED | APPROVED | FIX_REQUESTED | FAILED
 item: <issue-key>
@@ -52,6 +57,8 @@ fix_list: []          # if FIX_REQUESTED: concrete items for the next implemente
 next_action_recommended: <one phrase>
                       # orchestrator hint, e.g. "ready for implementer", "needs reviewer",
                       # "ready for merge", "user input required"
+run_id: <r-YYYYMMDD-N or null>   # optional; prefer when session-state has run_id
+track: feature | micro | research | null
 ```
 
 ## Status Code Semantics

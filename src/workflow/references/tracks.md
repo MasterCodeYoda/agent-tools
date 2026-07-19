@@ -102,6 +102,9 @@ built-in minimum when the file is absent.
 Depth changes **dose**, not the review gate. Green tests ≠ reviewed. Infer depth; state it;
 user may override. Do not skip review for code-bearing work.
 
+`/workflow:review` **does not ask** depth by default — resolve from track → flags → diff size
+(see review skill §4). Continue passes `track` via session-state when invoking review.
+
 ## Personal factory profile (conventions pack)
 
 When setup interviews “personal factory” (or the user asks for that profile), write a sparse

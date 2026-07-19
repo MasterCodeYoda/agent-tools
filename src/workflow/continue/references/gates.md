@@ -26,7 +26,9 @@ Continue will not invent a next unit.
 **Project hygiene gates (typecheck, lint, test, build, architecture validators, issue-ref, etc.)
 are never a substitute for the review phase.** Green gates ≠ reviewed. Slice size does not skip
 review. **Depth** may scale by track (`quick` | `standard` | `deep` — @workflow
-`references/tracks.md`); evidence schema is always required for code-bearing work.
+`references/tracks.md`); evidence schema is always required for code-bearing work. Review skill
+**infers** depth (track → user flag → diff heuristics) and proceeds without confirmation unless
+ambiguous standard vs deep.
 
 A slice is **reviewed** only when all hold:
 

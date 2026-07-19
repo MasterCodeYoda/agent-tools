@@ -107,7 +107,7 @@ decision is.
 | `ready_execute` | `EXECUTE_GAP` + requirements/decision issue | `needs_refine` | re-refine (resize) |
 | `ready_execute` | `EXECUTE_GAP` + plan structure only | `needs_plan` | re-plan |
 | `ready_execute` | `CODE_READY_FOR_REVIEW` | `needs_review` | — |
-| `needs_review` | — | (run) | `/workflow:review` (or equivalent) |
+| `needs_review` | — | (run) | `/workflow:review` (depth from track; infer, don't ask) |
 | `needs_review` | `REVIEW_FINDINGS_CODE` | `ready_execute` | fix, then re-review |
 | `needs_review` | `REVIEW_FINDINGS_STRUCTURAL` | `needs_plan` or `needs_refine` | evidence-based |
 | `needs_review` | `REVIEW_CLEAN` | `needs_integrate` | — |

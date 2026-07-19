@@ -28,7 +28,13 @@ needs: []             # NEEDS_CONTEXT: questions for the user
 blocker:              # BLOCKED: { what, why_offband_needed, suggested_action }
 fix_list: []          # FIX_REQUESTED: items for the next implementer dispatch
 next_action_recommended: <one phrase>
+run_id: <r-YYYYMMDD-N or null>   # optional; shared with /workflow runs ledger
+track: feature | micro | research | null
 ```
+
+Unit continue maps these statuses to phase-return events via `@workflow`
+`references/handoff-package.md`. Schema changes here and in `roles/worker-contract.md` stay
+in lockstep — do not fork a second return dialect for sequential workflow.
 
 ## Parse rules
 

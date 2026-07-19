@@ -37,6 +37,7 @@ $ARGUMENTS
 | *(empty)* | Soft-check → portfolio mode resolve → drive |
 | Work item ID / PM URL / planning path / slug | Force **unit** mode on that target |
 | `--worktree` | Isolated worktree for unit mode (see *Workspace*) |
+| `--yield` / `yield` | Regenerate `.agent-tools/runs/yield.md` from ledger; summarize KPIs; **stop** (no unit claim unless also given a target) |
 
 ## Mandatory loads
 
@@ -46,8 +47,10 @@ $ARGUMENTS
 | Path roots | @workflow `references/planning-root.md` |
 | Before mode select | `references/portfolio-router.md` |
 | Unit mode | `references/unit-state-machine.md`, `references/phase-return.md`, @workflow `references/tracks.md` |
-| After phase-return | @workflow `references/runs-ledger.md` (append event) |
+| After phase-return | @workflow `references/runs-ledger.md` (append event; close-run on done) |
+| Yield-only args | @workflow `references/runs-ledger.md` (regenerate yield.md) |
 | Before review / integrate / recap / merge | `references/gates.md` |
+| Cross-session / multi-agent pause | @workflow `references/handoff-package.md` (optional) |
 | Orientation | `references/soft-checks.md` |
 | Conventions present | `planning/conventions.md` (tracks, gates, merge policy, orientation entrypoint) |
 | Schema / family contracts | `@workflow` (session-state, branch naming, PM mode, claim dialect) |
@@ -57,10 +60,12 @@ $ARGUMENTS
 ## Control loop
 
 ```text
+if yield-only args → regenerate yield.md → summarize → stop
 orient (conventions + soft-checks)
   → load portfolio-router → MODE
   → swarm_resume | swarm_handoff | unit SM | hard_stop*
-  → on unit: classify → transition → phase → phase-return → re-classify … until stop
+  → on unit: classify → transition → phase → phase-return → runs append → re-classify … until stop
+  → on done: close-run ledger row
   → handoff / recap per gates
 ```
 
@@ -171,8 +176,13 @@ or enter via `@git` worktree-create; **continue never removes** a worktree.
 
 Update `planning/<project>/session-state.md` lightly: status/progress/branch; Current Focus +
 next state; compress history (archive verbose detail). Optional light fields only when needed:
-`pending_gate`, `last_transition` (see phase-return). After merge: valid review evidence +
-compound disposition before advancing top-level NEXT pointer.
+`pending_gate`, `last_transition`, `run_id` (see phase-return). After merge: valid review
+evidence + compound disposition before advancing top-level NEXT pointer; **close-run** ledger
+row per `runs-ledger.md`.
+
+**Cross-session / multi-agent pause (optional):** if stopping mid-unit for another agent or
+CLI, emit `handoff_package` per @workflow `references/handoff-package.md`. Default remains
+same-session drive — do not emit-and-stop after plan by default.
 
 ## What `/continue` does not do
 
