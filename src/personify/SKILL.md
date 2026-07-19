@@ -1,6 +1,6 @@
 ---
 name: personify
-description: Agent personality, voice guidance, and communication facts. Two-layer storage — user-space ~/.agent-tools/personify.md (shared defaults) plus optional project .agent-tools/personify.md (local override/delta). Enforces size limits and proactive maintenance. Invocable as /personify for interactive init or collaborative edit+cleanup. Agents load both layers; project AGENTS.md links the project file.
+description: Agent personality, voice guidance, and communication facts. Two-layer storage — user-space ~/.agent-tools/personify.md (shared defaults) plus optional project .agent-tools/personify.md (local override/delta). Enforces size limits, proactive maintenance, and AGENTS.md imports. Invocable as /personify for interactive init or collaborative edit+cleanup.
 user-invocable: true
 ---
 
@@ -109,6 +109,7 @@ Combined hard max equals two full layers so a rich project house-voice delta can
 On every `/personify` run:
 
 - Show live usage for the target layer (and combined if both exist).
+- In a project, verify that its `AGENTS.md` explicitly imports every existing profile layer.
 - Enter maintenance mode at thresholds or on request: flag duplicates, verbose phrasing, content that belongs in the other layer, and out-of-scope technical drift.
 - Propose concrete before/after changes; user approves.
 - Goal: dense, current profiles under hard max without losing important voice or facts.
@@ -126,14 +127,44 @@ Parse arguments: empty | `user` | `project` | `promote` (plus free-form context)
 - empty → if cwd is a project with (or needing) a project profile, prefer project; also surface user size if present. If no project context, target user.
 - `promote` → see Promote mode below.
 
+### AGENTS.md import verification
+
+On **every** `/personify` run inside a project, inspect the project-root `AGENTS.md`. A profile does
+not reliably reach future session context merely because its file exists.
+
+1. If `~/.agent-tools/personify.md` exists, require `@~/.agent-tools/personify.md` in the managed
+   personify block.
+2. If `.agent-tools/personify.md` exists, also require `@.agent-tools/personify.md` in that block.
+3. Remove only stale personify imports for profile layers that no longer exist. Never alter unrelated
+   `AGENTS.md` content.
+4. If the block is missing or stale, show the proposed managed-block diff and ask for approval to
+   repair it. Do not report setup as complete if the repair is declined; state that future sessions
+   may not load the profile.
+5. If the project has no `AGENTS.md`, offer to create one containing the managed block.
+
+Use this user-only form when no project overlay exists:
+
+```markdown
+<!-- agent-tools:personify-link begin -->
+## Agent Personify Profile
+
+Load the user-space profile for agent personality, voice, and interpersonal style:
+
+@~/.agent-tools/personify.md
+<!-- agent-tools:personify-link end -->
+```
+
+When both layers exist, use the combined form under **Setting Up → Project**.
+
 ### No profile yet (target path missing)
 
 1. Create directory and file if needed.
 2. Interactive session: targeted questions for the three main sections (plus optional Technical Language).
 3. For **project** init when user-space already exists: start from an empty delta template and only capture *overrides* and project-specific facts — do not copy the whole user file.
 4. Present draft with size header; iterate until approved.
-5. Write file. For project: offer AGENTS.md link block.
-6. Summarize usage and next steps.
+5. Write the file.
+6. Run the `AGENTS.md` import verification when in a project.
+7. Summarize usage and next steps.
 
 ### Profile exists
 
@@ -142,7 +173,7 @@ Parse arguments: empty | `user` | `project` | `promote` (plus free-form context)
 3. Propose maintenance near limits, on redundancy, or on request.
 4. Menu: `tweak personality / voice / facts / technical language / review & maintain / see raw / promote candidates / done`
 5. Apply only approved changes. Re-check size.
-6. Remind about AGENTS.md for project layer if missing.
+6. Run the `AGENTS.md` import verification when in a project.
 
 ### Promote mode (`/personify promote`)
 
@@ -161,7 +192,8 @@ Always non-destructive and collaborative. Show diffs / before-after. User retain
 /personify user
 ```
 
-Creates `~/.agent-tools/personify.md` if missing. No AGENTS.md change required — agents must load this path when present (see below).
+Creates `~/.agent-tools/personify.md` if missing. There is no single global `AGENTS.md` change, but
+each project must explicitly import this profile so its harness loads it in future sessions.
 
 ### Project
 
@@ -171,16 +203,16 @@ Creates `~/.agent-tools/personify.md` if missing. No AGENTS.md change required �
 
 Creates `.agent-tools/personify.md` as a **delta** when user-space exists.
 
-Add to project `AGENTS.md` (after charter if present):
+When both profile layers exist, add this managed block to project `AGENTS.md` (after charter if
+present):
 
 ```markdown
 <!-- agent-tools:personify-link begin -->
 ## Agent Personify Profile
 
-This project uses personify for agent personality, voice, and interpersonal style.
-User-space defaults: `~/.agent-tools/personify.md` (load when present).
-Project override (this repo):
+Load the user-space profile, then the project override:
 
+@~/.agent-tools/personify.md
 @.agent-tools/personify.md
 <!-- agent-tools:personify-link end -->
 ```
