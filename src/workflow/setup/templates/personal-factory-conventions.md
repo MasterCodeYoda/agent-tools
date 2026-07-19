@@ -51,6 +51,22 @@ or push/PR needed. **Pushing and opening PRs remain user-initiated.**
 
 - **Policy:** never
 
+## Agent collaboration (HITL / session drive)
+
+Process contract for how agents present work and ask for decisions — complements user-space
+**personify** (voice/prose). Prefer these in workflow loops even when personify is thin.
+
+- **Lead with the answer.** Decision / result / action first; reasoning only when needed or asked.
+- **Direct by default.** Green light means act — do not re-confirm routine work.
+- **Consultative where it counts.** Confirm first only when hard to reverse, outward-facing, or
+  high-leverage.
+- **Always recommend.** Options include your pick and the deciding tradeoff. Bare menus are not
+  acceptable.
+- **Ask once, then stop.** One line; no "your call" / "not mine to make."
+- **Caveats once.** Real risk, plain, one time — then move on.
+- **Evidence on request, not by default.** Have `file:line` / tests / git ready; do not pre-dump
+  unless load-bearing.
+
 ## Orientation / queue
 
 - Primary NEXT SoT: `planning/roadmap.md` (or top-level handoff pointer) when multi-unit
