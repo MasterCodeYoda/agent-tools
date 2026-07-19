@@ -64,6 +64,11 @@ narrative block.
    - **Project-specific gates** — checks **additive to** the review gate (cross-cutting safety,
      regression/holdout adoption, contract lockstep). Apply them before treating a slice as done.
    - **Integration / merge policy** — honor the project's recorded policy.
+   - **Visual plan approval** — optional presentation policy for `/workflow:plan`
+     (`never` | `on-substantial` | `always`). Continue does not implement this itself; plan owns it.
+     Conventions are a **sparse overlay**: if this section is absent, plan still uses the built-in
+     `on-substantial` default. Orientation treats `implementation-plan.md` + session-state as the
+     plan passport — a visual plan URL is metadata only, never a substitute for the markdown plan.
    - **Orientation entrypoint & queue location** — conventions may redirect *where* to orient and
      *what* the queue is (e.g. a milestone handoff at a non-default path like
      `planning/<milestone>/SESSION-HANDOFF.md`, with per-item state nested deeper than the default
@@ -190,8 +195,8 @@ the same artifact-driven classification `/swarm` uses — then route:
 | Unit is multi-stream / horizon-only (no single claimable scope) | **Stop + offer** `/workflow:roadmap` (do not invent streams) |
 | Idea still fuzzy, direction unchosen | `/workflow:brainstorm` (offer/run for **this unit** only) |
 | Direction chosen (incl. roadmap/handoff one-liner), no or weak requirements — **planning dir optional** | `/workflow:refine` (creates `planning/<slug>/` as needed) |
-| Requirements clear, no implementation plan | `/workflow:plan` |
-| Plan approved, work not started **or in progress** | `/workflow:execute` (resume where the plan left off) |
+| Requirements clear, no implementation plan | `/workflow:plan` (may surface an optional visual approval presentation; markdown `implementation-plan.md` remains SoT — see @workflow (`planning/references/visual-approval.md`)) |
+| Plan approved, work not started **or in progress** | `/workflow:execute` (resume where the plan left off; execute reads markdown plan only) |
 | Code exists, not reviewed | `/workflow:review` (or `/code-review`) — fix every finding; **record review evidence** (below) |
 | Reviewed clean, not integrated | Finish the branch (see `@superpowers:finishing-a-development-branch`) — **stop to confirm the merge by default**, unless the project's Integration / merge policy authorizes autonomous merge **and** the autonomous-merge preconditions below are all met |
 | Integrated / merged | `/workflow:compound` (or an explicit skip line — below), then update the handoff |
@@ -296,7 +301,9 @@ Auto-advance only where no human decision is owed. **Stop and hand back** at any
 - **Path not established** (pre-claim hard stop) — never invent NEXT.
 - Direction or requirements are ambiguous (brainstorm/refine needs your call).
 - A plan is ready for **approval** (`/workflow:plan` approval gate — never save/execute a plan
-  without it). **No end-of-loop recap** at this stop — present the plan approval prompt only.
+  without it). **No end-of-loop recap** at this stop — present the plan approval prompt only
+  (including optional **Visual plan** link or skip line from the plan skill). The visual surface
+  does not change the three options or the markdown SoT.
 - Review surfaced findings that need a **triage decision**.
 - **Review not yet completed** for a slice that has code (missing review pass, missing valid
   evidence schema, or missing recap Review findings block) — do not integrate; run
@@ -444,6 +451,8 @@ notes — surface before new work. Detail: `references/soft-checks.md`.
   `brainstorm.md` / `requirements.md` / plan).
 - Does **not** author plan or requirements content directly — that's `/workflow:plan` /
   `/workflow:refine`.
+- Does **not** treat a visual plan (hosted or local MDX) as the executable plan or as proof of
+  plan approval — only `implementation-plan.md` + session-state after Approve.
 - Does **not** skip the review gate. Code → merge without `/workflow:review` (or equivalent)
   **and valid review evidence** is a process bug. Project gates green ≠ reviewed.
 - Does **not** treat typecheck/lint/test/build (or other project hygiene gates) as the review.

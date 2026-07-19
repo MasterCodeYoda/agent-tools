@@ -87,6 +87,13 @@ re-asking. Capture, into `planning/conventions.md`:
 - **Integration / merge policy** — local vs remote, merge style, any banking/versioning, and the
   push policy. Default and recommended: **local integration only; pushing and PRs are
   user-initiated** (never autonomous).
+- **Visual plan approval** (optional) — whether `/workflow:plan` publishes an interactive visual
+  review surface before the approval gate. Values: `never` | `on-substantial` (built-in default) |
+  `always`. Optional mode: `local-files` (prefer) | `hosted` | `self-hosted`. The visual surface is
+  **presentation only**; `implementation-plan.md` remains the executable source of truth. **Omit
+  the section to keep the built-in default** — do not treat “conventions file exists” as
+  `never`. Record only when the project wants a non-default policy, an explicit mode, or wants
+  the default spelled out for readers. See @workflow (`planning/references/visual-approval.md`).
 - **Durable design docs vs planning/** — `planning/` is transient, gitignored per-item work
   product and must never be cited by committed files. Designs worth keeping after the work
   ships are promoted to a committed location (default: `docs/design/`) before being cited.
@@ -107,6 +114,8 @@ Create (or update) it **only if** the project has non-default conventions:
 - One or more additional work tracks that override the default phase table
 - Project-specific gates beyond the standard review gate
 - Non-default integration / merge policy
+- Non-default visual plan approval policy or mode (anything other than implicit
+  `on-substantial` + tooling auto-detect)
 - Non-default decision-record layers (a decision/domain layer that isn't `docs/decisions/` + the obvious docs home) or the `classic-immutable` genre
 
 If everything is default (file mode + the standard feature track + standard local-only policy), **do not create** the file. All `/workflow:*` phases already assume the defaults when `conventions.md` is absent.
@@ -117,6 +126,8 @@ When content *does* exist, use this shape (omit empty sections):
 # Project Workflow Conventions
 
 > Project-local overrides honored by all `/workflow:*` phases. Maintained by `/workflow:setup`.
+> **Sparse overlay:** only record non-defaults. Any section omitted here keeps the skill’s
+> built-in default (e.g. visual plan approval remains `on-substantial` unless this file sets it).
 
 ## Requirements source
 <file | pm (tool)>
@@ -140,6 +151,11 @@ brainstorm → refine → plan → execute → review → finish → compound  (
 
 ## Integration / merge policy
 <local-only / merge style / banking / push policy>
+
+## Visual plan approval   (only if non-default)
+- **Policy:** never | on-substantial | always
+- **Mode:** local-files | hosted | self-hosted
+- **Local dir:** `.agent-native/plans/<slug>/`   # optional
 ```
 
 ### 3.5 Ensure planning/ git hygiene (directory-local)

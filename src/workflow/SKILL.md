@@ -19,7 +19,7 @@ for full detail.
 | `/workflow:roadmap` | Multi-unit horizon map + NEXT (user-approved) |
 | `/workflow:brainstorm` | Single fuzzy concept → framed seed (HITL) |
 | `/workflow:refine` | Requirements discovery (file or PM) |
-| `/workflow:plan` | Implementation plan + session-state (approval gate) |
+| `/workflow:plan` | Implementation plan + session-state (approval gate; optional visual presentation) |
 | `/workflow:execute` | Session-based implementation loop |
 | `/workflow:review` | Code review (PR / range / paths / uncommitted) |
 | `/workflow:audit` | Multi-domain project audit |
@@ -64,9 +64,13 @@ mappings: `planning/pm-integration.md`. Agent states mode and allows course-corr
 
 ## Project-Local Conventions
 
-Optional `planning/conventions.md` (via `/workflow:setup`) may define: extra work tracks, horizon
-layout, additive gates, integration/merge policy (including autonomous local merge). Continue and
-execute honor it. Absent → built-in defaults.
+Optional `planning/conventions.md` (via `/workflow:setup`) is a **sparse overlay** of project-local
+overrides — not a full replacement of built-in defaults. It may define: extra work tracks, horizon
+layout, additive gates, integration/merge policy (including autonomous local merge), and optional
+**visual plan approval** policy (`never` | `on-substantial` | `always`). Continue and execute honor
+recorded sections; **any section left out keeps the skill’s built-in default** (e.g. visual plan
+stays `on-substantial` when the file never mentions it). File entirely absent → all built-in
+defaults. Visual presentation is non-blocking when tooling is unavailable.
 
 ## Task Planning
 
@@ -109,6 +113,7 @@ progress:
 current_layer: [domain|infrastructure|application|framework]
 branch: <type>/<issue-key or description>
 worktree: <path>  # only with --worktree
+visual_plan: <url-or-dir | skipped — reason>  # optional; approval presentation only
 ---
 ## Current Focus
 [What's being worked on]
@@ -165,6 +170,7 @@ Examples: `references/decomposition-modes.md`.
 | Decomposition | `references/decomposition-modes.md` |
 | Worktrees | `references/parallel-worktrees.md` |
 | Plan templates | `planning/templates.md` |
+| Visual plan approval | `planning/references/visual-approval.md` |
 | Task breakdown | `planning/task-breakdown.md` |
 | Quality gates | `execution/quality-checkpoints.md` |
 | Deps in worktree | `execution/dependency-establishment.md` |

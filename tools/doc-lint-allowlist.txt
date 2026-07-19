@@ -38,6 +38,7 @@ ref @skill-name
 
 # npm-scoped package and tool names that look like hyphenated families.
 file src/test-strategy/references/mutation-testing.md @stryker-mutator
+file src/workflow/planning/references/visual-approval.md @agent-native
 
 # memory-primitives.md surveys memory commands of *other* systems
 # (Claude Code /init, Letta /memory, ChatGPT /clear, ...).
