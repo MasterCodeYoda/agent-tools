@@ -91,9 +91,9 @@ If unmet, ask: "Is this work settled and worth capturing for next time?"
 A single unit of work may produce **more than one** artifact (e.g. solution + pattern). Route each independently.
 
 **Corpus self-improvement:** memory captures process *lessons*. Changing workflow/swarm skill
-text is **`/skills:evolve` only** (detect → propose → validate → present), fed by run-ledger
-evidence (`.agent-tools/runs/`) and conversation signals — not compound maintain inventing
-skill diffs.
+text happens only in the **skill source** via **`/skills:evolve`** when installed (detect →
+propose → validate → present), fed by run-ledger evidence and conversation signals. Consumer
+projects keep process entries and escalate upstream — compound never invents skill diffs.
 
 ### Step 2 — Applicability (non-solution shapes)
 
@@ -262,14 +262,16 @@ Only for always-load rules. Prefer shared memory for depth; keep AGENTS thin.
 ### With /skills:evolve
 
 When capture surfaces a **skill corpus gap** (continue mis-route, missing gate, track bug),
-record the process lesson and point the user at `/skills:evolve` in the agent-tools repo (or
-skill source). Compound **never** applies skill patches itself.
+record the process lesson. If `/skills:evolve` is available (skill source), point there; else
+point upstream to the skill source. Compound **never** applies skill patches itself and does
+**not** invent a workflow-local improve command.
 
 ### With runs ledger
 
 Thrash / rework close may cite `run_id` from `.agent-tools/runs/` in a process entry’s
-`related:` field. Prefer `type: process` with symptoms + hypothesized skill gap. Point at
-`/skills:evolve` and `run-ledger-seeds.md` — do not patch skills here.
+`related:` field. Prefer `type: process` with symptoms + hypothesized skill gap + candidate
+skill paths (portable seed fields; see @workflow `references/runs-ledger.md`). Do not patch
+skills here.
 
 ### With docs promote
 

@@ -24,16 +24,20 @@ work. Treat as `needs_compound` on that unit.
 If the claimed (or prior open) unit has `reentry_counts` already at thrash bound
 (`refine_from_execute_or_review` + `plan_from_execute_or_review` re-entries from execute/review
 **> 2** for this `run_id`), or `thrash_bound_hits ≥ 1` unresolved, **diagnose before** another
-refine/plan loop. Offer process memory capture; schedule **`/skills:evolve`** for corpus gaps —
-do not edit workflow skills in-place.
+refine/plan loop. Offer process memory capture; do **not** edit workflow skills in-place.
 
-## Process gap → evolve (not in-loop rewrite)
+## Process gap → corpus (not in-loop rewrite)
 
-Repeated theater, thrash, or fidelity misses across runs are **evidence** for
-`/skills:evolve` when working in the agent-tools corpus (or the published skill source). Soft
-mention once when evidence is thick; never auto-mutate skills from continue. Prefer seed shape
-from `@skills` evolve `references/run-ledger-seeds.md` (run_ids + hypothesized gap + candidate
-skill paths).
+Repeated theater, thrash, or fidelity misses across runs are **evidence** for corpus
+improvement — never auto-mutate skills from continue. Soft-mention once when evidence is thick.
+
+| Where you are | What to do |
+|---------------|------------|
+| **Skill source** (agent-tools / checkout with `/skills:evolve`) | Capture process memory, then schedule **`/skills:evolve`** with seeds: `run_ids` + hypothesized gap + candidate skill paths |
+| **Consumer project** (published workflow only) | Capture process memory (`type: process`); take the gap **upstream** to the skill source. Do **not** invent a workflow-local improve command or edit installed skills |
+
+Seed fields (portable — no skill-source file required to record them): `run_ids`, `symptoms`,
+`hypothesized_gap`, `candidate_skills`, optional `severity_guess`.
 
 ## Yield glance (optional, non-blocking)
 

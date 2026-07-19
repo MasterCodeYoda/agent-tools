@@ -150,7 +150,8 @@ After plan approve → **same-session execute** (no emit-and-stop default).
 **Skip** refine/plan only when track is micro (issue-as-plan) or artifacts match the **current
 governing decision**. Stale artifact vs moved decision → re-enter refine (resize). Thrash bound:
 >2 refine/plan re-entries from execute/review **per `run_id`** without new external evidence →
-`await_user`. Corpus fixes → `/skills:evolve`, not in-loop skill edits.
+`await_user`. Corpus fixes → skill-source `/skills:evolve` (or upstream escalate), not in-loop
+skill edits.
 
 Append phase-return events to `.agent-tools/runs/` per `runs-ledger.md`.
 
@@ -199,7 +200,8 @@ same-session drive — do not emit-and-stop after plan by default.
 - Does **not** invent a swarm wave without explicit `∥` / `{wave}` grouping.
 - Does **not** free-form thrash phases without artifact/decision evidence (thrash bound).
 - Does **not** emit end-of-loop recap on user-approval stops.
-- Does **not** edit the skill corpus mid-loop — process gaps feed **`/skills:evolve`**.
+- Does **not** edit the skill corpus mid-loop — process gaps → process memory + skill-source
+  `/skills:evolve` when available (else upstream escalate; see `references/soft-checks.md`).
 - Does **not** invent NEXT from open PM backlog scrape (PM queue only with conventions filter).
 
 ## Related
@@ -209,5 +211,5 @@ same-session drive — do not emit-and-stop after plan by default.
 - **`@workflow:roadmap`** — `→` / `∥` / `⚠` / NEXT maps continue consumes
 - **`@workflow:brainstorm`** · **refine** · **plan** · **execute** · **review** · **compound**
 - **`/swarm`** · **`/swarm:continue`** · **`/swarm:setup`** — parallel executor; override entry
-- **`/skills:evolve`** — only path to mutate process IP skills from detected gaps
+- **`/skills:evolve`** — skill-source only; mutates process IP from detected gaps (not published to consumer projects)
 - **`@superpowers:finishing-a-development-branch`** — integrate decision after clean review

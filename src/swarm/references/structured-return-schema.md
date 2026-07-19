@@ -32,9 +32,9 @@ run_id: <r-YYYYMMDD-N or null>   # optional; shared with /workflow runs ledger
 track: feature | micro | research | null
 ```
 
-Unit continue maps these statuses to phase-return events via `@workflow`
-`references/handoff-package.md`. Schema changes here and in `roles/worker-contract.md` stay
-in lockstep — do not fork a second return dialect for sequential workflow.
+Unit continue maps these statuses to phase-return events via @workflow `references/handoff-package.md`.
+Schema changes here and in `roles/worker-contract.md` stay in lockstep — do not fork a second
+return dialect for sequential workflow.
 
 ## Parse rules
 

@@ -133,8 +133,10 @@ one `/continue` invocation), and without new external decision evidence, emit `T
 → `await_user` with a short diagnosis (what oscillated, what evidence is missing). Do not
 infinite re-plan.
 
-On thrash: soft-offer process memory capture; **corpus fixes only via `/skills:evolve`** with
-run evidence — do not rewrite workflow skills in-place.
+On thrash: soft-offer process memory capture with run evidence. **Never** rewrite workflow
+skills in-place. Corpus text changes only in the skill source via `/skills:evolve` when that
+skill is installed; consumer projects keep evidence and take gaps upstream (see soft-checks
+Process gap table).
 
 ## Multi-stream / horizon-only
 

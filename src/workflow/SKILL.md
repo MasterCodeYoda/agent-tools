@@ -243,8 +243,11 @@ Examples: `references/decomposition-modes.md`.
 - **code-patterns** — language implementation  
 - **test-strategy** — testing methodology  
 - **qa** — E2E / NL specs  
-- **skills:evolve** — corpus self-improvement (only path that edits process IP skills)  
+- **skills:evolve** — skill-source only (`publish-target: project`); only path that *edits*
+  process IP skills. Consumer projects capture process evidence and escalate upstream.
 
 ## Remember
 
-YAGNI in-mode · ship early · refactor continuously · stay in mode · test behavior · compound knowledge · evolve the corpus via `/skills:evolve`, not ad-hoc skill rewrites.
+YAGNI in-mode · ship early · refactor continuously · stay in mode · test behavior · compound
+knowledge · never ad-hoc skill rewrites — evolve the corpus in the skill source via
+`/skills:evolve` when installed, else capture evidence and take the gap upstream.

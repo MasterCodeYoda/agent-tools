@@ -361,6 +361,7 @@ Also evaluate shared memory + runs:
 - Does **not** invent conventions the project doesn't have (except when user chooses personal factory pack).
 - Does **not** create empty top-level `session-state.md` scaffolding.
 - Does **not** migrate `docs/solutions/` or promote harness-local memories — `/workflow:compound --maintain`.
-- Does **not** edit the skill corpus — process gaps → `/skills:evolve`.
+- Does **not** edit the skill corpus — process gaps → process memory + skill-source
+  `/skills:evolve` when available (else upstream; never invent a workflow-local improve command).
 - Does **not** force planning migration without explicit yes — but **does** always run the
   migration **check** (§1.5) and must not create a dual-root trap.

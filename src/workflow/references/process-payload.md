@@ -29,7 +29,7 @@ evidence). Soft doc polish does not bump.
 | Review evidence | continue `gates.md` | method, date, verdict, P1–P3, disposition |
 | Merge policy | conventions | Honor autonomous local merge ratchet; no silent push |
 | Memory | `.agent-tools/memory/` + compound | Capture/maintain; no skill mutation |
-| Corpus change | `/skills:evolve` | Only path that edits process IP skills |
+| Corpus change | Skill source only (`/skills:evolve` when installed) | Never edit process IP from run traces; consumers capture evidence + escalate upstream |
 
 ## Must not reimplement
 
@@ -56,11 +56,14 @@ workflow (parent)
   continue | setup | prune | roadmap | brainstorm | refine | plan | execute | review | audit | compound
 swarm (parent)
   setup | continue | <goal orchestrator>
-git | personify | skills (import | evolve)
+git | personify
+skills (import | evolve)   # publish-target: project — skill source only, not consumer installs
 knowledge (on-demand): clean-architecture | code-patterns | test-strategy | …
 ```
 
 Adapters may subset **invocable** surfaces but must not drop hard gates when a phase is offered.
+`skills` / evolve is **optional** outside the skill-source repo; adapters must still refuse
+silent process-IP skill edits.
 
 ## Artifact layout (project)
 
@@ -80,7 +83,7 @@ Adapters may subset **invocable** surfaces but must not drop hard gates when a p
 4. Local merge only when ratchet green (if conventions allow)  
 5. Compound disposition recorded  
 6. Event lines appear under `runs/events.ndjson`  
-7. Process gap → evolve proposal with evidence — not silent skill edit  
+7. Process gap → process memory (+ evolve in skill source, or upstream escalate) — not silent skill edit  
 
 ## Related
 
