@@ -15,9 +15,10 @@ No durable path decision (`Chosen Direction`, stream list, committed NEXT) witho
 |----------------|-------|--------|
 | Multi-unit program; streams/order missing or stale | `/workflow:roadmap` | Destination + `→` / `∥` / `{wave}` / NEXT |
 | One fuzzy concept; direction unchosen | `/workflow:brainstorm` | Hard HITL diverge → user converge |
-| One unit; requirements weak | `/workflow:refine` | |
-| Requirements clear; need how | `/workflow:plan` | |
-| Session kickoff / drive known work | `/workflow:continue` | Portfolio mode: swarm resume/handoff or unit SM |
+| One unit; requirements weak | `/workflow:refine` | Skip if track=micro (issue-as-plan) |
+| Requirements clear; need how | `/workflow:plan` | Skip if track=micro |
+| Research / evaluate / decide (not ship-by-default) | `/workflow:continue` on research track | Built-in research process — `references/tracks.md` |
+| Session kickoff / drive known work | `/workflow:continue` | Portfolio mode: swarm resume/handoff or unit SM; track classify first |
 | Explicit parallel wave at roadmap head | continue → `/swarm` | Auto when `∥` / `{wave}` + swarm ready |
 | Empty continue; no **named** resolvable unit | continue **hard-stop** | Offer brainstorm / roadmap / name a unit — never invent. Missing `planning/<slug>/` alone is **not** hard-stop |
 

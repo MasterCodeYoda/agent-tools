@@ -86,8 +86,14 @@ If unmet, ask: "Is this work settled and worth capturing for next time?"
 | **Architecture / design decision** (chose X over Y; convention in force) | `docs/decisions/` (rewrite-in-place). If the *reason it changed* is a reusable lesson → also an `entries/` lesson (Step 2–4) |
 | **Personify scope** (voice, interpersonal style, how to talk to the user) | `/personify` path — **not** technical memory |
 | **Pattern / technique / gotcha / process invariant** | Continue to Step 2 (applicability) |
+| **Process failure mode** (thrash, theater review, repeated rework — reusable operating lesson) | `type: process` entry under L3-shared when project-wide; **do not** edit skills here |
 
 A single unit of work may produce **more than one** artifact (e.g. solution + pattern). Route each independently.
+
+**Corpus self-improvement:** memory captures process *lessons*. Changing workflow/swarm skill
+text is **`/skills:evolve` only** (detect → propose → validate → present), fed by run-ledger
+evidence (`.agent-tools/runs/`) and conversation signals — not compound maintain inventing
+skill diffs.
 
 ### Step 2 — Applicability (non-solution shapes)
 
@@ -225,6 +231,17 @@ Link new docs to related content; update `MEMORY.md` for entries; tag solutions 
 ### With AGENTS.md
 
 Only for always-load rules. Prefer shared memory for depth; keep AGENTS thin.
+
+### With /skills:evolve
+
+When capture surfaces a **skill corpus gap** (continue mis-route, missing gate, track bug),
+record the process lesson and point the user at `/skills:evolve` in the agent-tools repo (or
+skill source). Compound **never** applies skill patches itself.
+
+### With runs ledger
+
+Thrash / rework close may cite `run_id` from `.agent-tools/runs/` in a process entry’s
+`related:` field for evolve later.
 
 
 ## Success Output

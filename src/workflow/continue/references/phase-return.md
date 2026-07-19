@@ -87,7 +87,23 @@ When non-derivable across sessions:
 # in session-state.md frontmatter or body — only if needed
 pending_gate: plan_approval | merge_confirm | triage | sequencing_choice | none
 last_transition: "ready_execute→needs_refine (REQUIREMENTS_STALE)"
+run_id: r-YYYYMMDD-N
+track: feature | micro | research
+reentry_counts:
+  refine_from_execute_or_review: 0
+  plan_from_execute_or_review: 0
+thrash_bound_hits: 0
+source_channel: cli | linear | github | chat | other
 ```
 
-Do not create a second orchestrator-state file. Prefer re-derive; write only what classify
-cannot reconstruct.
+Do not create a second per-unit orchestrator-state file. Prefer re-derive; write only what
+classify cannot reconstruct.
+
+## Runs ledger append (host)
+
+After forming `phase_return`, the continue host **also** appends one event line under
+`.agent-tools/runs/events.ndjson` per @workflow `references/runs-ledger.md`. Soft-fail on FS
+errors — never block the loop for telemetry. On unit `done`, append a closed-run row to
+`ledger.yml` when practical.
+
+This is line instrumentation, not a parallel state machine.

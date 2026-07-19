@@ -465,12 +465,68 @@ feat(auth): implement user registration [LIN-123]
 Closes: LIN-123
 ```
 
+## Channel claim / resume dialect (ingress)
+
+Channels (terminal, Linear, GitHub) are **doors into continue’s claim machine**, not a second
+orchestrator. PM expands *where work is named*; phase SoT remains session-state + git under the
+planning root. Order SoT is roadmap NEXT when multi-unit — never invent NEXT from open backlog
+priority alone.
+
+### Ingress (greppable comment or paste)
+
+```text
+workflow:claim
+unit: LIN-456
+intent: continue
+channel: linear
+note: optional one-liner steering
+```
+
+| Field | Required | Values |
+|-------|----------|--------|
+| `workflow:claim` or `workflow:resume` | yes | claim vs resume |
+| `unit:` | yes | issue key / slug / planning path |
+| `intent:` | yes | `continue` \| `refine` \| `plan` \| `execute` \| `review` \| `status` |
+| `channel:` | yes | `terminal` \| `linear` \| `github` \| `chat` \| `other` |
+| `note:` | no | candidate `steering_note` (ack once) |
+
+Legacy synonym: `plant:claim` / `plant:resume` (same fields) — accept, prefer `workflow:`.
+
+**Continue behavior:** paste or issue key → portfolio **explicit unit** (row 1). Soft-checks
+first. Never “pick something interesting” from the backlog.
+
+### Egress (agent → PM comment; keep one-liners)
+
+```text
+workflow:claimed unit=LIN-123 channel=terminal phase=needs_plan track=micro
+workflow:await_user unit=LIN-123 gate=plan_approval
+workflow:review method=workflow-review date=2026-07-18 verdict=clean P1=0 P2=0 P3=0 disposition=none
+workflow:merged local main=@abc1234 compound=done|none — <reason>
+workflow:hard_stop reason=path_not_established
+```
+
+### Labels (optional closed PM queue)
+
+| Label | Meaning |
+|-------|---------|
+| `workflow:claimable` | Eligible for conventions PM queue when NEXT empty |
+| `workflow:blocked` | Do not claim as next work |
+
+Legacy: `plant:claimable` / `plant:blocked`. Queue filter must be **closed-world** (label + state
++ assignee); multi-match → hard_stop_choice. See continue `portfolio-router.md` row 8b.
+
+### North-star test
+
+If Linear disappeared for a week, the line still runs from roadmap + session-state + terminal.
+If not, PM is over-centered.
+
 ## Best Practices
 
 1. **Configure Once** - Set PM tool at project start
 2. **Consistent References** - Always include work item IDs
-3. **Regular Updates** - Update status at milestones
+3. **Regular Updates** - Update status at milestones; prefer greppable `workflow:*` egress lines
 4. **Link Artifacts** - Connect plans, PRs, and deployments
+5. **PM is a channel** - not the production line or NEXT inventor
 
 ## Without MCP Tools
 

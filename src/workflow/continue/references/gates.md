@@ -25,7 +25,8 @@ Continue will not invent a next unit.
 
 **Project hygiene gates (typecheck, lint, test, build, architecture validators, issue-ref, etc.)
 are never a substitute for the review phase.** Green gates ≠ reviewed. Slice size does not skip
-review.
+review. **Depth** may scale by track (`quick` | `standard` | `deep` — @workflow
+`references/tracks.md`); evidence schema is always required for code-bearing work.
 
 A slice is **reviewed** only when all hold:
 
@@ -58,7 +59,8 @@ method + P1–P3 counts. **Do not invent evidence** to unblock merge.
 
 ## Autonomous merge preconditions (hard ratchet)
 
-When conventions authorize autonomous local merge, **all** must be true; else **do not merge**:
+When conventions authorize autonomous local merge (personal factory profile does by default),
+**all** must be true; else **do not merge** (fall back to merge confirm / `await_user`):
 
 1. Reviewed-clean with **valid** evidence schema above.
 2. Every project gate from conventions passes cleanly.
@@ -66,6 +68,7 @@ When conventions authorize autonomous local merge, **all** must be true; else **
 4. Loop recap includes the **Review findings & disposition** block (below) when recap applies.
 
 "Clean validation pass" in conventions means (1)+(2)+(3)+(4), never gates alone.
+Push/PR remain user-initiated unless push policy explicitly allows.
 
 ## Compound after integrate
 

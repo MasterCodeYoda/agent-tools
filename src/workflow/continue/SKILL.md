@@ -7,8 +7,10 @@ user-invocable: true
 
 # Continue (`/workflow:continue`)
 
-**Principal entry** for `/workflow` sessions (bare `/workflow` routes here). Orients from
-`planning/`, **never invents a next unit**, then selects a **portfolio mode**:
+**Principal entry** for `/workflow` sessions (bare `/workflow` routes here). Orients from the
+resolved **planning root** (`.agent-tools/planning/` preferred; else `./planning/` — see
+@workflow `references/planning-root.md`), **never invents a next unit**, then selects a
+**portfolio mode**:
 
 | Mode | When |
 |------|------|
@@ -41,12 +43,14 @@ $ARGUMENTS
 | When | Load |
 |------|------|
 | Always (this skill) | Soft orientation rules below; refuse list |
+| Path roots | @workflow `references/planning-root.md` |
 | Before mode select | `references/portfolio-router.md` |
-| Unit mode | `references/unit-state-machine.md`, `references/phase-return.md` |
+| Unit mode | `references/unit-state-machine.md`, `references/phase-return.md`, @workflow `references/tracks.md` |
+| After phase-return | @workflow `references/runs-ledger.md` (append event) |
 | Before review / integrate / recap / merge | `references/gates.md` |
 | Orientation | `references/soft-checks.md` |
 | Conventions present | `planning/conventions.md` (tracks, gates, merge policy, orientation entrypoint) |
-| Schema / family contracts | `@workflow` (session-state, branch naming, PM mode) |
+| Schema / family contracts | `@workflow` (session-state, branch naming, PM mode, claim dialect) |
 
 **Hard gates are not optional.** `gates.md` is a mandatory load, not a nice-to-read essay.
 
@@ -64,15 +68,17 @@ orient (conventions + soft-checks)
 
 Keep handoffs **light** — scan state, do not read a heavyweight narrative.
 
-0. **Conventions** (`planning/conventions.md` if present): extra tracks (override default feature
-   SM), additive gates, integration/merge policy, visual plan policy (plan owns presentation;
-   markdown plan remains SoT), orientation entrypoint / queue location. Sparse overlay: absent
-   sections keep built-in defaults.
-1. **Soft-checks** (`references/soft-checks.md`) — theater review / missing compound on the
-   prior slice before claiming new work.
+0. **Resolve planning root** (`.agent-tools/planning/` preferred). **Conventions**
+   (`planning/conventions.md` if present): built-in + extra tracks, additive gates,
+   integration/merge policy (incl. autonomous local merge), visual plan policy, orientation
+   entrypoint / PM queue. Sparse overlay: absent sections keep built-in defaults. Built-in
+   tracks always available: feature | micro | research (@workflow `references/tracks.md`).
+1. **Soft-checks** (`references/soft-checks.md`) — theater review / missing compound / thrash
+   counters on the prior or claimed unit before burning new loops.
 2. **Scan** claimable units: `planning/*/session-state.md`, top-level handoff, roadmap /
-   initiatives dialect, PM queue only when conventions say so. Named NEXT without a planning
-   dir is still claimable.
+   initiatives dialect, PM queue only when conventions say so (closed filter — never invent).
+   Named NEXT without a planning dir is still claimable. Channel paste / issue key / 
+   `workflow:claim` body → explicit unit (portfolio row 1).
 3. **Portfolio mode** (`references/portfolio-router.md`) **before** unit claim. Do not invent
    a pseudo-slice to enter the machine.
 
@@ -126,15 +132,22 @@ Full table: `references/unit-state-machine.md`. After each phase: `references/ph
 classify(disk + decisions) → guarded transition → invoke phase → phase_return → re-classify
 ```
 
-States: `fuzzy` · `needs_refine` · `needs_plan` · `ready_execute` · `needs_review` ·
+**Track first:** `feature` | `micro` | `research` (or conventions custom). Micro uses
+direct-issue execute + quick review; research uses conclusion deliverable — see tracks.md.
+
+Feature states: `fuzzy` · `needs_refine` · `needs_plan` · `ready_execute` · `needs_review` ·
 `needs_integrate` · `needs_compound` · `done` · `await_user` · `blocked`.
 
 **Cycles are legal** when evidence says so (e.g. execute → refine on decision drift; review →
 execute on code findings; review → plan on structural findings). Happy path is still one walk.
+After plan approve → **same-session execute** (no emit-and-stop default).
 
-**Skip** refine/plan only when artifacts match the **current governing decision**. Stale
-artifact vs moved decision → re-enter refine (resize). Thrash bound: >2 refine/plan re-entries
-from execute/review without new external evidence → `await_user`.
+**Skip** refine/plan only when track is micro (issue-as-plan) or artifacts match the **current
+governing decision**. Stale artifact vs moved decision → re-enter refine (resize). Thrash bound:
+>2 refine/plan re-entries from execute/review **per `run_id`** without new external evidence →
+`await_user`. Corpus fixes → `/skills:evolve`, not in-loop skill edits.
+
+Append phase-return events to `.agent-tools/runs/` per `runs-ledger.md`.
 
 ### Review / merge / recap (always-on refuse)
 
@@ -176,12 +189,15 @@ compound disposition before advancing top-level NEXT pointer.
 - Does **not** invent a swarm wave without explicit `∥` / `{wave}` grouping.
 - Does **not** free-form thrash phases without artifact/decision evidence (thrash bound).
 - Does **not** emit end-of-loop recap on user-approval stops.
+- Does **not** edit the skill corpus mid-loop — process gaps feed **`/skills:evolve`**.
+- Does **not** invent NEXT from open PM backlog scrape (PM queue only with conventions filter).
 
 ## Related
 
 - **`@workflow`** — family contracts; bare `/workflow` → this skill’s loop
-- **`@workflow:setup`** — `conventions.md`
+- **`@workflow:setup`** — `conventions.md`, planning root, runs scaffold
 - **`@workflow:roadmap`** — `→` / `∥` / `⚠` / NEXT maps continue consumes
 - **`@workflow:brainstorm`** · **refine** · **plan** · **execute** · **review** · **compound**
 - **`/swarm`** · **`/swarm:continue`** · **`/swarm:setup`** — parallel executor; override entry
+- **`/skills:evolve`** — only path to mutate process IP skills from detected gaps
 - **`@superpowers:finishing-a-development-branch`** — integrate decision after clean review

@@ -17,7 +17,8 @@ units and does not implement multi-item parallelism itself.
 | 5 | Live `status: in_progress` slice (project rules for live branch) | **unit** | Resume that unit’s phase machine. |
 | 6 | Conventions / handoff / roadmap names a **resolvable single** NEXT (not map-only, not sequencing-choice-only) | **unit** | Claim that unit. |
 | 7 | NEXT is **map-only**, **user sequencing choice**, or multi-option without a single resolvable unit | **hard_stop_choice** | Surface the choices (up to a short list). Do not invent a wave or a unit. |
-| 8 | ≥1 resolvable `status: planned` unit (or PM-equivalent per conventions) | **unit** | Claim next by priority/order (one unit). |
+| 8 | ≥1 resolvable `status: planned` unit (planning root) | **unit** | Claim next by roadmap/priority order (one unit). |
+| 8b | No planned unit; conventions enable **PM queue**; closed filter matches | **unit** or **hard_stop_choice** | **Exactly one** match → claim. **Multiple** → hard_stop_choice with named list (max ~5). **Zero** → fall through. Never invent from open backlog or priority alone. |
 | 9 | None of the above | **hard_stop** | Path not established — same template as continue SKILL. |
 
 **Authority notes**
@@ -68,6 +69,29 @@ Build a concrete goal string for `/swarm`:
    strip swarm safety; it only removes the need for the *user* to guess `/swarm` vs
    `/workflow:continue`.
 
+## Channel / claim addresses (explicit unit)
+
+These count as **explicit target** (row 1) — not backlog invention:
+
+- Issue key, PM URL, planning path, stable slug in `$ARGUMENTS`
+- Pasted greppable claim block (see @workflow `planning/pm-integration.md`):
+
+```text
+workflow:claim
+unit: LIN-456
+intent: continue
+channel: linear
+note: optional steering
+```
+
+(`plant:claim` accepted as legacy synonym.) Resume: `workflow:resume` + `unit:`.
+
+## PM queue (row 8b)
+
+Only when conventions document a **closed** filter (e.g. label `workflow:claimable` + state +
+assignee). Order SoT remains roadmap NEXT when present — PM queue is **not** a second NEXT
+inventor. Multi-match → hard_stop_choice; never silent “most interesting.”
+
 ## Coexistence while sequential (unit mode)
 
 When mode is **unit** and a swarm run is **also** `in_progress` on *other* items:
@@ -76,8 +100,8 @@ When mode is **unit** and a swarm run is **also** `in_progress` on *other* items
 2. Treat items with live `in_flight` role or unmerged worktree as **off-limits**.
 3. Claim only a disjoint unit; if none free, stop and say so (suggest letting swarm finish).
 
-Separate state stores remain: continue → `planning/**/session-state.md`; swarm →
-`.agent-tools/swarm/`. Never write the other’s files.
+Separate state stores remain: continue → `planning/**/session-state.md` (under planning root);
+swarm → `.agent-tools/swarm/`; runs → `.agent-tools/runs/`. Never write the other’s files.
 
 ## Notation quick reference
 

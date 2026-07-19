@@ -77,15 +77,35 @@ Full selection doctrine, AC inheritance, anti-patterns: `references/decompositio
 Binary per workflow: **file** (`requirements.md`) vs **PM** (issue is SoT). Detection and field
 mappings: `planning/pm-integration.md`. Agent states mode and allows course-correct.
 
+## Planning root
+
+**Preferred home:** `.agent-tools/planning/`. **Legacy fallback:** `./planning/` if that directory
+exists and the preferred root does not. Bare `planning/` in this family means *relative to the
+resolved planning root*. Full rules: `references/planning-root.md`.
+
+**Runs ledger** (line instrumentation, not planning work product): `.agent-tools/runs/` —
+`references/runs-ledger.md`.
+
+## Built-in tracks
+
+| Track | Dose |
+|-------|------|
+| **feature** | Full line: refine → plan → execute → review → integrate → compound |
+| **micro** | Issue-as-plan → execute → review (`quick`) → integrate → compound disposition |
+| **research** | Frame → evidence → conclusion → compound; done is judgment once not-done signals clear |
+
+Classification, micro/research process, review depth: `references/tracks.md`. Project
+`conventions.md` may add tracks or adopt the **personal factory** pack (setup template).
+
 ## Project-Local Conventions
 
 Optional `planning/conventions.md` (via `/workflow:setup`) is a **sparse overlay** of project-local
 overrides — not a full replacement of built-in defaults. It may define: extra work tracks, horizon
-layout, additive gates, integration/merge policy (including autonomous local merge), and optional
-**visual plan approval** policy (`never` | `on-substantial` | `always`). Continue and execute honor
-recorded sections; **any section left out keeps the skill’s built-in default** (e.g. visual plan
-stays `on-substantial` when the file never mentions it). File entirely absent → all built-in
-defaults. Visual presentation is non-blocking when tooling is unavailable.
+layout, additive gates, integration/merge policy (including autonomous local merge), orientation/
+PM queue, and optional **visual plan approval** policy (`never` | `on-substantial` | `always`).
+Continue and execute honor recorded sections; **any section left out keeps the skill’s built-in
+default** (e.g. visual plan stays `on-substantial` when the file never mentions it). File entirely
+absent → all built-in defaults. Visual presentation is non-blocking when tooling is unavailable.
 
 ## Task Planning
 
@@ -97,16 +117,23 @@ in **Out of Scope**, not deferred tasks.
 ### Planning Directory Structure
 
 ```
-./planning/
-├── roadmap.md              # optional (roadmap skill)
-├── conventions.md          # optional (setup)
+<planning-root>/          # .agent-tools/planning/ preferred; else ./planning/
+├── roadmap.md            # optional (roadmap skill)
+├── conventions.md        # optional (setup)
 ├── <project-name>/
-│   ├── brainstorm.md       # optional
-│   ├── requirements.md     # file mode only
+│   ├── brainstorm.md     # optional
+│   ├── requirements.md   # file mode only
 │   ├── implementation-plan.md
 │   ├── session-state.md
 │   └── technical-decisions.md  # optional
 └── archive/
+```
+
+```
+.agent-tools/runs/        # line instrumentation (not under planning-root)
+├── events.ndjson
+├── ledger.yml
+└── yield.md              # optional regenerated glance
 ```
 
 Initiative/workstream dialects are honored when conventions say so.
@@ -121,6 +148,9 @@ work_item: [ISSUE-ID]
 pm_tool: [linear|jira|manual]
 session_count: [N]
 status: [planned|in_progress|complete]
+track: [feature|micro|research]   # optional; classify may set
+run_id: r-YYYYMMDD-N              # optional until first continue claim
+source_channel: [cli|linear|github|chat|other]
 progress:
   total_tasks: [X]
   completed: [Y]
@@ -129,6 +159,10 @@ current_layer: [domain|infrastructure|application|framework]
 branch: <type>/<issue-key or description>
 worktree: <path>  # only with --worktree
 visual_plan: <url-or-dir | skipped — reason>  # optional; approval presentation only
+reentry_counts:   # optional; thrash bound is per run_id
+  refine_from_execute_or_review: 0
+  plan_from_execute_or_review: 0
+thrash_bound_hits: 0
 ---
 ## Current Focus
 [What's being worked on]
@@ -182,6 +216,9 @@ Examples: `references/decomposition-modes.md`.
 
 | Area | Path |
 |------|------|
+| Planning root | `references/planning-root.md` |
+| Built-in tracks | `references/tracks.md` |
+| Runs ledger | `references/runs-ledger.md` |
 | Decomposition | `references/decomposition-modes.md` |
 | Worktrees | `references/parallel-worktrees.md` |
 | Plan templates | `planning/templates.md` |
@@ -190,7 +227,7 @@ Examples: `references/decomposition-modes.md`.
 | Quality gates | `execution/quality-checkpoints.md` |
 | Deps in worktree | `execution/dependency-establishment.md` |
 | Logging | `execution/logging.md` |
-| PM | `planning/pm-integration.md` |
+| PM + claim dialect | `planning/pm-integration.md` |
 | Altitude | `references/horizon-altitudes.md` |
 | Memory | `references/memory-primitives.md` |
 | Decisions | `references/decision-records.md` |
@@ -204,7 +241,8 @@ Examples: `references/decomposition-modes.md`.
 - **code-patterns** — language implementation  
 - **test-strategy** — testing methodology  
 - **qa** — E2E / NL specs  
+- **skills:evolve** — corpus self-improvement (only path that edits process IP skills)  
 
 ## Remember
 
-YAGNI in-mode · ship early · refactor continuously · stay in mode · test behavior · compound knowledge.
+YAGNI in-mode · ship early · refactor continuously · stay in mode · test behavior · compound knowledge · evolve the corpus via `/skills:evolve`, not ad-hoc skill rewrites.

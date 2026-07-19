@@ -1,49 +1,49 @@
-# Direct issue execution
+# Direct issue execution (micro track)
 
-Load from `/workflow:execute` when running simple work from an issue key without full planning docs.
+Load from `/workflow:execute` **or** from `/workflow:continue` when unit track is **micro**
+(@workflow `references/tracks.md`). This is a first-class track process, not only an execute
+side door.
 
-For simple tasks that don't require detailed planning documents, execute directly from an issue tracker item.
-
-### When to Use Direct Execution
+## When to use
 
 - Bug fixes with clear reproduction steps
-- Small enhancements with well-defined scope
-- Tasks where the issue description IS the plan
-- Quick iterations where planning overhead isn't justified
+- Small enhancements / chores / docs with well-defined scope
+- Tasks where the issue description (or user paste) **is the plan**
+- User flags: `micro` | `direct` | `small`
+- Continue classified **micro** (labels or issue-as-plan heuristics)
 
-### Direct Execution Flow
+**Do not use** when: new public contract, multi-module design still open, ambiguous success,
+multi-unit program, or user asks for full plan.
 
-```
-1. Fetch issue details using the Issue Retrieval Strategy from @workflow (PM integration)
-2. Extract:
-   - Title → task subject
-   - Description → requirements
-   - Acceptance criteria (if present) → quality gates
-3. Create minimal session state (in-memory or temporary)
-4. Display issue context to user:
-      ```markdown
-      ## Direct Execution: [ISSUE-ID]
-      **Title**: [issue title]
-      **Description**: [issue description]
-      **Status**: [current status]
-      ```
-5. Confirm with user before proceeding
-6. Execute using standard Execution Loop (below)
-7. On completion:
-    - Commit with issue reference
-    - Update issue status to Done
-    - Offer to create planning docs if scope expanded
+## Flow
 
 ```
+1. Fetch issue (or use paste) via Issue Retrieval Strategy — @workflow PM integration
+2. Extract title, description, ACs if present
+3. Confirm scope with user (issue confirmation = plan approval on micro)
+4. Ensure working branch ≠ main (branch naming @workflow)
+5. Mint run_id / track=micro on session-state if continue host has not
+6. Execute with standard Execution Loop (quality-checkpoints, tests)
+7. Review depth=quick — still valid evidence schema (gates.md)
+8. Integrate: autonomous local merge if conventions allow + ratchet green; else confirm
+9. Compound disposition (capture or compound: none — <reason>)
+10. PM Done + workflow:merged egress line when PM mode
+```
 
-For detailed retrieval strategy (browser-first with MCP fallback), reference @workflow (PM integration).
+Minimal session-state is enough (no `requirements.md` / `implementation-plan.md` required).
+Prefer recording under planning root when multi-session pause is likely.
 
-### Escalation to Full Planning
+## Escalation (mandatory)
 
-If during direct execution the task proves more complex than expected:
+If scope grows mid-flight:
 
 1. Pause execution
-2. Suggest running `/workflow:plan [ISSUE-ID]`
-3. Create proper planning documents
-4. Resume with full session tracking
+2. Reclassify track → **feature**
+3. Enter `needs_plan` or `needs_refine` with evidence (EXECUTE_GAP)
+4. Resume via continue unit machine — do not pretend micro still holds
 
+## Relationship
+
+- Continue classifies micro before feature SM — named-without-shell can be micro when eligible
+- Swarm implementer roles may still use full plan; micro is the sequential personal path
+- Process IP changes from repeated micro mis-routes → `/skills:evolve`, not ad-hoc skill edits

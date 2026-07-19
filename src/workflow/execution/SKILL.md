@@ -53,15 +53,16 @@ Before interpreting input, extract the `--worktree` flag if present:
 | `LIN-[0-9]+` or `[A-Z]+-[0-9]+` | Fetch via Issue Retrieval Strategy, then direct execution |
 | Text summary | Steering input for next session |
 
-## Direct Issue Execution
+## Direct Issue Execution (micro track)
 
-For simple tasks that don't need full planning docs (clear bugs, small enhancements, issue-as-plan):
+For simple tasks that don't need full planning docs (clear bugs, small enhancements, issue-as-plan).
+Also the process used when `/workflow:continue` classifies track **micro**.
 
-- **When:** clear scope; issue description is enough; planning overhead not justified
-- **Flow:** **load** `references/direct-issue-execution.md` (fetch issue, confirm, execute loop, complete)
-- **Escalation:** if complexity grows — pause, suggest `/workflow:plan [ISSUE-ID]`, resume with full session tracking
+- **When:** clear scope; issue description is enough; planning overhead not justified — or track=micro
+- **Flow:** **load** `references/direct-issue-execution.md` (fetch issue, confirm, execute, quick review, integrate, compound disposition)
+- **Escalation:** if complexity grows — reclassify feature; pause; `/workflow:plan` or refine; resume via continue
 
-PM retrieval: @workflow (`planning/pm-integration.md`).
+PM retrieval: @workflow (`planning/pm-integration.md`). Tracks: @workflow `references/tracks.md`.
 
 ## Session Initialization
 

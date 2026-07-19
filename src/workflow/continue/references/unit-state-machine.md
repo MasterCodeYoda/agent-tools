@@ -5,20 +5,37 @@
 Replaces the old “walk the stage table top-to-bottom once.” The happy path is still one
 continuous advance; **cycles are legal** when evidence guards pass.
 
+**Also load:** @workflow `references/tracks.md` (track classification), `references/planning-root.md`
+(path root), `phase-return.md` (runs append).
+
 ## Loop
 
 ```text
-classify(state from disk) →
+classify track → classify state (disk + decisions) →
   if await_user / blocked / done → stop (recap rules in gates.md) →
   else select enabled transition (guards) →
   invoke phase skill →
-  record phase-return event (phase-return.md) →
+  record phase-return event (phase-return.md) + append runs event →
   re-classify → repeat until stop gate
 ```
 
 Do **not** invent transitions without evidence. Agent judgment alone is not a guard.
 
-## States (default feature track)
+## Track first
+
+Before the feature state table, classify **track** (`feature` | `micro` | `research` | custom
+from conventions) per `references/tracks.md`. User flags win. Record `track:` on session-state
+when set.
+
+- **micro** → micro process in tracks.md (direct-issue execute; skip refine/plan shells).
+- **research** → research process in tracks.md (conclusion deliverable; not-done signals).
+- **feature** → states/transitions below.
+- **Custom** → conventions process doc overrides the feature table for that unit.
+
+Named unit without planning shell: **micro** if micro rules match; else usually `needs_refine`
+(shell is phase output) — **not** automatic full refine when the issue is already the plan.
+
+## States (feature track)
 
 | State | Meaning (disk signals) |
 |-------|------------------------|
@@ -33,20 +50,17 @@ Do **not** invent transitions without evidence. Agent judgment alone is not a gu
 | `await_user` | HITL gate (plan approval, merge confirm, triage, path choice, thrash bound) |
 | `blocked` | Off-band blocker; cannot advance without external input |
 
-**Non-feature tracks:** if `planning/conventions.md` assigns a track with its own process doc,
-follow that doc’s states/gates instead of this table — same loop shape (classify → act →
-re-classify).
-
 ## Classify (artifact + decision)
 
 Read, in order of authority:
 
-1. Governing decisions (ADRs / domain docs / PM decision fields the unit realizes)
-2. `requirements.md` or PM issue ACs (file vs PM mode — `@workflow`)
-3. `implementation-plan.md` + session-state approval signals
-4. Branch / commits / worktree for this unit
-5. Review evidence line (schema in `gates.md`)
-6. Merge/integration evidence; compound note
+1. Track classification (tracks.md) + conventions overrides
+2. Governing decisions (ADRs / domain docs / PM decision fields the unit realizes)
+3. `requirements.md` or PM issue ACs (file vs PM mode — `@workflow`)
+4. `implementation-plan.md` + session-state approval signals (feature; micro uses issue-as-plan)
+5. Branch / commits / worktree for this unit
+6. Review evidence line (schema in `gates.md`)
+7. Merge/integration evidence; compound note
 
 **Skip-by-default** for brainstorm/refine only when the existing artifact is **consistent with
 the current governing decision**. If the decision moved (stale phasing, renamed vendor with old
@@ -54,7 +68,7 @@ ceremony, ACs the decision no longer supports) → `needs_refine` (resize mode) 
 requirements doc exists. The most-detailed written artifact is not the authority; the current
 decision is.
 
-**Missing planning dir** for a named unit → usually `needs_refine` (shell is phase output).
+**Missing planning dir** for a named unit → micro if eligible; else usually `needs_refine`.
 
 ## Events (from phase-return + soft-checks)
 
@@ -88,7 +102,7 @@ decision is.
 | `needs_refine` | `REQUIREMENTS_READY` | `needs_plan` | — |
 | `needs_plan` | — | (run) | `/workflow:plan` |
 | `needs_plan` | `PLAN_DRAFTED` | `await_user` | plan approval prompt only (no recap) |
-| `needs_plan` | `PLAN_APPROVED` | `ready_execute` | — |
+| `needs_plan` | `PLAN_APPROVED` | `ready_execute` | — (same-session execute next; no emit-and-stop default) |
 | `ready_execute` | — | (run) | `/workflow:execute` |
 | `ready_execute` | `EXECUTE_GAP` + requirements/decision issue | `needs_refine` | re-refine (resize) |
 | `ready_execute` | `EXECUTE_GAP` + plan structure only | `needs_plan` | re-plan |
@@ -114,9 +128,13 @@ decision is.
 ## Thrash bound
 
 If the unit re-enters `needs_refine` or `needs_plan` from execute/review **more than 2 times**
-in one `/continue` invocation (or without new external decision evidence), emit `THRASH_BOUND`
+**for this `run_id`** (across sessions — use `reentry_counts` on session-state; not only within
+one `/continue` invocation), and without new external decision evidence, emit `THRASH_BOUND`
 → `await_user` with a short diagnosis (what oscillated, what evidence is missing). Do not
 infinite re-plan.
+
+On thrash: soft-offer process memory capture; **corpus fixes only via `/skills:evolve`** with
+run evidence — do not rewrite workflow skills in-place.
 
 ## Multi-stream / horizon-only
 

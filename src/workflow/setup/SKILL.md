@@ -1,6 +1,6 @@
 ---
 name: workflow:setup
-description: Initialize and maintain planning/ docs, project-local conventions (tracks, gates, integration policy), and the shared project memory scaffold under .agent-tools/memory/ (with AGENTS.md memory-link) for the workflow family.
+description: Initialize and maintain planning root (.agent-tools/planning preferred), conventions (tracks, gates, integration), runs ledger scaffold, and shared memory under .agent-tools/memory/ (AGENTS.md memory-link) for the workflow family.
 argument-hint: "[optional: 'maintain' to refresh existing conventions, or blank to initialize]"
 user-invocable: true
 ---
@@ -8,18 +8,17 @@ user-invocable: true
 # Project Workflow Setup (`/workflow:setup`)
 
 `/workflow:setup` is the **idempotent initializer and maintainer** for a project's `/workflow`
-scaffolding. Run it once to bootstrap, and any time afterward to refresh. It does two things:
+scaffolding. Run it once to bootstrap, and any time afterward to refresh. It does three things:
 
-1. **Ensures `planning/` git hygiene** (`.gitkeep` + directory-local `.gitignore` in `planning/`
-   and work-item subdirs) so the area stays low-churn. It creates `conventions.md` *only when*
-   the project has actual custom conventions (extra tracks, gates, or non-default policy). It
-   creates a top-level `session-state.md` *only when* there is an active cross-project handoff
-   or open slice to track at the root. Per-item state lives under `planning/<item>/` and is
-   created by plan/execute when work begins.
-2. **Collaborates with you** to capture **project-local conventions** (only when they differ
-   from the built-in defaults) — additional work tracks, project-specific gates, and integration/merge
-   policy. When real content exists it writes `planning/conventions.md`; otherwise phases simply use
-   the documented defaults.
+1. **Ensures planning-root git hygiene** under the preferred root **`.agent-tools/planning/`**
+   (legacy `./planning/` still honored until migrated — @workflow `references/planning-root.md`).
+   `.gitkeep` + directory-local `.gitignore` so the area stays low-churn. Creates `conventions.md`
+   *only when* the project has actual custom conventions. Top-level `session-state.md` only for
+   live cross-slice handoff. Per-item state under `planning/<item>/` from plan/execute.
+2. **Collaborates on project-local conventions** (non-defaults only) — tracks, gates, merge
+   policy, orientation/PM queue, visual plan. Optional **personal factory** profile pack.
+3. **Scaffolds** `.agent-tools/memory/` (+ AGENTS memory-link) and **`.agent-tools/runs/`**
+   (events spine + empty ledger — @workflow `references/runs-ledger.md`).
 
 It is **non-destructive** and **minimalist**: it never creates empty or default-only scaffolding.
 It never clobbers existing real content. In maintain mode it diffs detected reality against
@@ -53,72 +52,60 @@ through to maintain if docs already exist).
 
 ### 1. Detect current state (idempotent)
 
-Survey what already exists; **read before writing**:
+Survey what already exists; **read before writing** (@workflow `references/planning-root.md`):
 
-- `planning/` directory and any work-item subdirs (`planning/<project>/session-state.md`).
-- `planning/conventions.md` — present → maintain (diff for drift). Absent or only-defaults → no file (defaults are implicit).
-- Top-level `planning/session-state.md` — present with live pointer → maintain. Otherwise do not create/maintain one (per-item `planning/<item>/session-state.md` is the normal location; top-level is only a light optional pointer for cross-slice coordination).
-- `AGENTS.md` / `CLAUDE.md` / `CONTRIBUTING.md` and any PM/MCP signals — to pre-fill defaults and
-  avoid re-asking what the project already states.
-- `.agent-tools/memory/` — present → maintain scaffold + AGENTS memory-link. Absent → plan to create.
-- Legacy `docs/solutions/` — if present, note for the user (migrate via `/workflow:compound --maintain --migrate-solutions`; setup does **not** migrate).
+- Planning roots: `.agent-tools/planning/` (preferred) and/or legacy `./planning/`. If only
+  legacy exists, offer migrate into preferred root (user confirms before move).
+- Work-item subdirs under the resolved root (`planning/<project>/session-state.md`).
+- `planning/conventions.md` — present → maintain (diff for drift). Absent or only-defaults → no file.
+- Top-level `planning/session-state.md` — live pointer only; otherwise do not create.
+- `AGENTS.md` / `CLAUDE.md` / `CONTRIBUTING.md` and PM/MCP signals — pre-fill defaults.
+- `.agent-tools/memory/` — maintain or plan create + AGENTS memory-link.
+- `.agent-tools/runs/` — maintain or plan create (README, events, ledger).
+- Legacy `docs/solutions/` — note migrate via `/workflow:compound --maintain --migrate-solutions`.
 
 Report what you found and what's missing before changing anything.
 
 ### 2. Collaborate to define conventions
 
-Interview the user only for what can't be inferred. Confirm detected defaults rather than
-re-asking. Capture, into `planning/conventions.md`:
+Interview only for what can't be inferred. Confirm detected defaults rather than re-asking.
 
-- **Requirements-source mode** — file vs PM (and PM tool), per `@workflow`. Detect, confirm.
-- **Work tracks.** The **default feature track**
-  (`brainstorm → refine → plan → execute → review → finish → compound`) is always present. Ask
-  whether the project has **additional tracks** that should *override* the default phase table for
-  the units they govern — e.g. a research/discovery loop, a data-labeling cycle, a release
-  checklist. For each extra track capture:
-  - **Name** and a one-line description.
-  - **Classification rule** — how to tell when the next unit belongs to this track vs. the feature
-    track.
-  - **Process** — the doc it follows (e.g. `planning/discovery-loop.md`) and that it **replaces**
-    the default phase table for its units (including its own review-equivalent).
-- **Project-specific gates** — checks **additive to** the standard review gate (e.g. cross-cutting
-  safety, regression/holdout adoption, schema/contract lockstep). For each: what it verifies and
-  the command/criterion to confirm it.
-- **Integration / merge policy** — local vs remote, merge style, any banking/versioning, and the
-  push policy. Default and recommended: **local integration only; pushing and PRs are
-  user-initiated** (never autonomous).
-- **Visual plan approval** (optional) — whether `/workflow:plan` publishes an interactive visual
-  review surface before the approval gate. Values: `never` | `on-substantial` (built-in default) |
-  `always`. Optional mode: `local-files` (prefer) | `hosted` | `self-hosted`. The visual surface is
-  **presentation only**; `implementation-plan.md` remains the executable source of truth. **Omit
-  the section to keep the built-in default** — do not treat “conventions file exists” as
-  `never`. Record only when the project wants a non-default policy, an explicit mode, or wants
-  the default spelled out for readers. See @workflow (`planning/references/visual-approval.md`).
-- **Durable design docs vs planning/** — `planning/` is transient, gitignored per-item work
-  product and must never be cited by committed files. Designs worth keeping after the work
-  ships are promoted to a committed location (default: `docs/design/`) before being cited.
-- **Decision-record layers + genre.** Confirm (detect, don't over-ask) the file that plays each of
-  the three doc roles, and the genre. **Decision layer** (researched decisions — default
-  `docs/decisions/`, or a README `## Decisions` section), **domain layer** (how the system is
-  designed/behaves — a docs site / `docs/` / README), **realization layer** (how much is built — the
-  PM tracker / a milestone). **Genre:** the decisive default is `current-state` (records rewritten in
-  place; no supersession/tombstones — see @workflow (`references/decision-records.md`)). Elect
-  `classic-immutable` (append-only, superseded-not-rewritten) **only** for a regulated/contractual
-  project where an immutable audit trail is itself a deliverable — the unlikely exception, not a
-  co-equal option.
+**Profile shortcut:** if the user wants a **personal factory** (solo throughput, local merge,
+Linear optional), load and adapt `setup/templates/personal-factory-conventions.md` (micro +
+research tracks, visual never, autonomous local merge when ratchet green, orientation/PM queue).
+Optionally write `planning/research-loop.md` from `setup/templates/research-loop.md`.
+
+Otherwise capture into `planning/conventions.md` only non-defaults:
+
+- **Requirements-source mode** — file vs PM (and PM tool).
+- **Work tracks** — built-in always: feature, micro, research (`references/tracks.md`). Ask only
+  for **extra** project tracks (name, classification, process doc). Personal factory documents
+  micro + research in conventions so merge/visual defaults apply with them.
+- **Project-specific gates** — additive to standard review.
+- **Integration / merge policy** — personal factory: autonomous local merge when ratchet green;
+  push/PR user-initiated.
+- **Orientation / queue** — NEXT SoT; optional closed PM filter (`workflow:claimable`); never invent.
+- **Visual plan approval** — omit for built-in `on-substantial`; personal factory: `never`.
+- **Durable design docs vs planning/** — planning transient; promote to `docs/design/` when durable.
+- **Decision-record layers + genre** — default `current-state` (`references/decision-records.md`).
 
 ### 3. Write `planning/conventions.md` (only when it has real content)
 
 Create (or update) it **only if** the project has non-default conventions:
 - Custom requirements source (e.g. `pm (linear)`)
-- One or more additional work tracks that override the default phase table
+- Personal factory profile or explicit micro/research conventions text (recommended for solo)
+- Extra tracks beyond built-ins, or process overrides
 - Project-specific gates beyond the standard review gate
-- Non-default integration / merge policy
+- Non-default integration / merge policy (including autonomous local merge)
+- Orientation / PM queue filter
 - Non-default visual plan approval policy or mode (anything other than implicit
   `on-substantial` + tooling auto-detect)
-- Non-default decision-record layers (a decision/domain layer that isn't `docs/decisions/` + the obvious docs home) or the `classic-immutable` genre
+- Non-default decision-record layers or the `classic-immutable` genre
 
-If everything is default (file mode + the standard feature track + standard local-only policy), **do not create** the file. All `/workflow:*` phases already assume the defaults when `conventions.md` is absent.
+If everything is default (file mode + built-in tracks only + standard local-only policy with
+merge confirm), **do not create** the file. Built-in micro/research classification still works
+from `references/tracks.md` when conventions are absent; personal merge/visual overrides need
+a conventions file.
 
 When content *does* exist, use this shape (omit empty sections):
 
@@ -158,20 +145,25 @@ brainstorm → refine → plan → execute → review → finish → compound  (
 - **Local dir:** `.agent-native/plans/<slug>/`   # optional
 ```
 
-### 3.5 Ensure planning/ git hygiene (directory-local)
+### 3.5 Ensure planning-root git hygiene (directory-local)
 
-To keep `planning/` as a high-traffic but mostly transient area (reducing history churn), every planning directory must have:
+**Preferred root:** `.agent-tools/planning/`. Create it on initialize when no planning root
+exists. If only `./planning/` exists, offer migrate (user confirms) or maintain legacy in place
+until they accept.
+
+Every planning directory must have:
 
 - A `.gitkeep` (to preserve empty directory structure in the repo).
 - A `.gitignore` that ignores everything by default, with explicit exceptions only for allowed files.
 
-For the top-level `planning/`:
+For the top-level planning root:
 ```gitignore
 *
 !.gitkeep
 !conventions.md
 !session-state.md
 !roadmap.md
+!research-loop.md
 ```
 
 (If the project uses committed `initiatives/` or `workstreams/`, add matching `!` exceptions when
@@ -183,9 +175,12 @@ For each work-item subdirectory (`planning/<item>/`):
 !.gitkeep
 ```
 
-These rules are **directory-local** inside `planning/.gitignore` and per-item `.gitignore` (no planning/ exceptions are placed in the project root `.gitignore`).
+These rules are **directory-local** inside the planning root’s `.gitignore` and per-item
+`.gitignore` (no planning/ exceptions required in the project root `.gitignore`).
 
-In initialize mode: ensure `planning/` hygiene (`.gitkeep` + `.gitignore`). Create `conventions.md` or a top-level `session-state.md` **only when there is actual content to record** (see rules above). Per-item state and handoffs are created later by the phases that need them. **Always** run §5 / §5.1 (memory scaffold + AGENTS memory-link) — they are independent of conventions content.
+In initialize mode: ensure planning-root hygiene. Create `conventions.md` or a top-level
+`session-state.md` **only when there is actual content to record**. **Always** run §5 / §5.1
+(memory) and **§5.2 (runs)** — independent of conventions content.
 
 ### 4. Handoff scaffold (top-level `session-state.md`) — optional
 
@@ -289,29 +284,60 @@ This project keeps **shared agent working knowledge** under [`.agent-tools/memor
 
 On maintain/re-run: refresh the marked block to the canonical text (safe; only the marked region is replaced). If markers are missing or malformed, stop and ask — never speculatively rewrite AGENTS.md.
 
+### 5.2 Runs ledger scaffold (`.agent-tools/runs/`)
+
+Idempotent. Create missing pieces; never clobber non-empty `events.ndjson` / `ledger.yml`.
+
+```text
+.agent-tools/runs/
+  README.md
+  events.ndjson    # may be empty file
+  ledger.yml       # version: 1 + runs: [] if new
+```
+
+**Default `README.md`** (only when missing):
+
+```markdown
+# Runs ledger
+
+Append-only production-line events (`events.ndjson`) and closed-run rollups (`ledger.yml`).
+Written by `/workflow:continue` from phase-return. Do not hand-edit vanity metrics.
+See agent-tools workflow skill: `references/runs-ledger.md`.
+Regenerate `yield.md` on demand from ledger/events.
+```
+
+**Default `ledger.yml`** (only when missing):
+
+```yaml
+version: 1
+runs: []
+```
+
+Touch empty `events.ndjson` if absent. Full schema: @workflow `references/runs-ledger.md`.
+
 ### 6. Maintain mode
 
 When conventions already exist: show the current conventions, diff against detected reality
 (new work-item dirs, a PM tool now present, a track doc that moved), and offer **targeted** edits.
 Never silently overwrite the user's recorded intent — confirm each change.
 
-Also evaluate the planning/ structure:
-- Check for `planning/.gitkeep` and `planning/.gitignore` (with the canonical content above, including `!session-state.md` at top level).
-- For every work-item subdirectory (detected via session-state.md, implementation-plan.md, etc.): check for `.gitkeep` and `.gitignore` (with `* \n !.gitkeep`).
-- If the root `.gitignore` has any planning/ lines, note them (they are not required; hygiene is directory-local).
-- If `conventions.md` exists but contains only defaults (no extra tracks/gates/policy), offer to delete it.
-- If a top-level `session-state.md` exists but has no active content, offer to delete it.
-- If anything structural is missing or incorrect: propose creating or fixing (idempotent, non-destructive). This keeps the "everything not explicitly allowed is ignored" contract and avoids empty scaffolding.
+Also evaluate the planning structure (resolved root):
+- Preferred `.agent-tools/planning/` vs legacy `./planning/` — offer migrate if only legacy.
+- Check for `.gitkeep` and `.gitignore` (canonical exceptions including `!session-state.md`).
+- Per work-item subdir: `.gitkeep` + `.gitignore`.
+- If `conventions.md` is default-only, offer to delete it.
+- If top-level `session-state.md` has no active content, offer to delete it.
 
-Also evaluate shared memory:
-- `.agent-tools/memory/` tree present with MEMORY.md + state.yml + entries/ + solutions/
-- AGENTS.md memory-link block present and current
-- If `docs/solutions/` still has solution files and `solutions_migrated_from_docs` is not true: report once — migrate with `/workflow:compound --maintain --migrate-solutions` (setup does not move them)
+Also evaluate shared memory + runs:
+- `.agent-tools/memory/` tree + AGENTS memory-link
+- `.agent-tools/runs/` README + events + ledger
+- Legacy `docs/solutions/` migrate note as before
 
 ## What `/workflow:setup` does not do
 
 - Does **not** plan, refine, or execute work — it sets up the scaffolding those phases use.
-- Does **not** author the swarm charter (that's `/swarm:setup`); it may interact with `.agent-tools/` for other durable config (including memory scaffold).
-- Does **not** invent conventions the project doesn't have. If only defaults apply, no `conventions.md` is created (phases fall back to built-in defaults).
-- Does **not** create empty top-level `session-state.md` scaffolding. Top-level handoff is created only for a live cross-project pointer; normal per-item state is created under `planning/<item>/` by plan/execute.
-- Does **not** migrate `docs/solutions/` or promote harness-local memories — that's `/workflow:compound --maintain` (with user approval).
+- Does **not** author the swarm charter (that's `/swarm:setup`); it may interact with `.agent-tools/` for memory, runs, and planning root.
+- Does **not** invent conventions the project doesn't have (except when user chooses personal factory pack).
+- Does **not** create empty top-level `session-state.md` scaffolding.
+- Does **not** migrate `docs/solutions/` or promote harness-local memories — `/workflow:compound --maintain`.
+- Does **not** edit the skill corpus — process gaps → `/skills:evolve`.
