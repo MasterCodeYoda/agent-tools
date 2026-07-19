@@ -177,9 +177,11 @@ review/compound fidelity, median TTM when known, channel mix.
 
 Repeated thrash/rework/fidelity failures are **gap evidence**, not a license to edit skills.
 
-1. Optionally capture a memory entry (`type: process`) via `/workflow:compound`.
+1. Optionally capture a memory entry (`type: process`) via `/workflow:compound` with `related: [run_id]`.
 2. Corpus changes only via **`/skills:evolve`** (detect → propose → validate → present).
-3. Feed evolve with run_ids, oscillation notes, soft-check hits — not vibes.
+3. Seed format: `@skills` evolve `references/run-ledger-seeds.md` (cluster runs → hypothesized gap →
+   candidate skill paths). Evolve inventories all of `src/**`, including workflow/swarm.
+4. Runtime adapters honor `@workflow` `references/process-payload.md` — do not fork the line.
 
 Do **not** invent `/workflow:improve` or auto-patch the skill tree from the ledger.
 

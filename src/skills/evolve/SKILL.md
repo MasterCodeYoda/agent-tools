@@ -1,33 +1,46 @@
 ---
 name: skills:evolve
-description: Detect gaps in the canonical skill corpus, propose targeted improvements, validate changes, and present for review. Operates against src/skills/ using the new agent knowledge references and embedded markup system.
+description: Detect gaps in the canonical skill corpus, propose targeted improvements, validate changes, and present for review. Inventories src/** skill trees; optional run-ledger seeds for process IP gaps.
 user-invocable: true
 ---
 
 # Skills: Evolve
 
-Apply the autoresearch pattern — detect → propose → validate → present — to iteratively improve the canonical skills under `src/skills/`.
+Apply the autoresearch pattern — detect → propose → validate → present — to iteratively improve
+the canonical skills under `src/` (all families: workflow, swarm, git, skills, …).
 
-**Core principle:** Every proposed change must trace to a concrete, detected gap. No vibes-based rewrites. No style preferences. If there's no gap, there's no change.
+**Core principle:** Every proposed change must trace to a concrete, detected gap. No vibes-based
+rewrites. No style preferences. If there's no gap, there's no change. **Process IP**
+(workflow/swarm) changes only through this skill — never mid-loop from `/workflow:continue`.
 
-This is the canonical version of the evolve capability, now operating as a sub-skill of the `skills` meta-skill.
+This is the canonical version of the evolve capability, now operating as a sub-skill of the
+`skills` meta-skill.
 
 ## Auto-Detection Phase
 
 Before analysis, inventory the ecosystem:
 
 ```
-1. Enumerate all skills: glob src/skills/*/SKILL.md
-2. For each skill: catalog sub-files (references/, languages/, templates/, examples/, etc.)
+1. Enumerate all skills: find src -name SKILL.md  (every family, not only src/skills/)
+2. For each skill root: catalog sub-files (references/, languages/, templates/, examples/, etc.)
 3. Build initial reference graph: which skills reference other skills
-4. Report inventory summary before proceeding
+4. Optional: load run-ledger seeds (below) and attach to detection context
+5. Report inventory summary before proceeding
 ```
+
+### Run-ledger seeds (optional Tier 0 input)
+
+When the user provides process/yield focus, pastes seed YAML, or `.agent-tools/runs/` shows
+thrash/rework clusters: **load** `references/run-ledger-seeds.md`. Convert confirmed seeds into
+Gap Report findings with file evidence — still no proposal without a corpus mismatch.
 
 ## Scope Gate
 
 Based on inventory size:
 - **Standard** (current repo size): Run all tiers automatically
 - **If repo grows significantly**: Run Tier 1 automatically, prompt before Tier 2/3
+- **Process-seed run**: Always include `src/workflow/**` and `src/swarm/**` even if narrowing
+  other families
 
 ## Agent Reasoning Standards
 
@@ -46,10 +59,10 @@ Spawn 2 parallel agents that read all skill files:
 
 **schema-validator** — Check structural compliance of all files:
 
-For each `src/skills/*/SKILL.md`:
+For each discovered `SKILL.md` under `src/`:
 - YAML frontmatter must include `name` and `description`
 - Must have a purpose/introduction section explaining the skill
-- Must have a "When to Use This Skill" section (or clear equivalent)
+- Must have a "When to Use This Skill" section (or clear equivalent) when user-invocable
 - Should reference related skills for boundary clarity
 - Internal file references must resolve to actual files within the skill's directory
 
@@ -62,7 +75,7 @@ and allowlist policy documented in the thin-routing norm).
 
 **cross-reference-auditor** — Check reference integrity:
 - Find all `@skill-name` references in skills
-- Verify each resolves to a corresponding `src/skills/<name>/SKILL.md`
+- Verify each resolves to a corresponding skill under `src/` (family/name layout)
 - Find all inter-file path references within skill files
 - Verify each path exists relative to the skill's root directory
 - Identify **orphaned skills**: skills not referenced by any other skill
@@ -216,7 +229,7 @@ Run for `--iterate N` iterations (default: 5). Each iteration is one full detect
 
 ```
 for iteration in 1..N:
-  1. Run gap detection on CURRENT state of src/skills/
+  1. Run gap detection on CURRENT state of src/** (respect scope)
   2. If no P1 or P2 gaps remain: stop early, report convergence
   3. Generate proposals for top --limit gaps
   4. Validate each proposal
@@ -230,3 +243,6 @@ After all iterations (or early convergence), present a final summary of changes 
 - Uses agent capability quick-references from `src/skills/references/agents/`
 - Uses the embedded markup system defined in `src/skills/references/MARKUP.md` when proposing portable changes
 - Operates under the `skills` meta-skill (`src/skills/SKILL.md`)
+- **Run ledger / process lessons:** `@workflow` `references/runs-ledger.md`, compound `type: process`
+  entries, `references/run-ledger-seeds.md` — seeds in; proposals out only via this skill
+- **Process payload** (what runtimes must honor): `@workflow` `references/process-payload.md`

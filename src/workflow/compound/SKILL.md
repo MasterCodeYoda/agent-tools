@@ -127,6 +127,32 @@ Light check only: skim AGENTS.md, CONTRIBUTING.md (if present), `docs/decisions/
 4. **No full-body dual-write.** Project-wide content goes to L3-shared only. Do not also write the full text into Claude/Codex auto-memory. Optional: thin L3-local pointer to the shared path if the harness needs a stub.
 5. If L3-shared tree is missing and user declines scaffold, fall back to L3-local with an explicit note that shared memory is uninitialized.
 6. Legacy `docs/solutions/`: **never** write new files there. If it still has content, soft-warn once and point at `--maintain --migrate-solutions`.
+7. **Docs promote (optional, user-gated):** when an entry is stable product/architecture knowledge
+   (not a ticket diary), offer promote to committed docs — see Step 5.
+
+### Step 5 — Promote L3 → durable docs (OpenWiki-lite)
+
+L3-shared is **agent working knowledge**. Human+agent durable product corpus lives under `docs/`
+(or the project’s domain layer). Promotion is **not** automatic on every capture.
+
+**Promote when all hold:**
+
+- Entry applied successfully **≥2 times** or linked from an ADR / shipped design, **or** user asks
+- Content is stable (not a one-off thrash note)
+- Shape is architecture, operating model, or product invariant — not a raw debug log
+
+**Promote procedure:**
+
+1. Propose target path (default `docs/` or `docs/design/` / `docs/research/` per content; never
+   `docs/solutions/` for new material).
+2. Distill: rewrite for humans+agents; strip ticket IDs unless load-bearing; link ADR if any.
+3. **User approval** before write.
+4. Write docs page; set entry frontmatter `promoted_to: <path>` and keep a **thin** L3 entry or
+   one-line MEMORY pointer to the docs path (avoid full dual-body).
+5. Do not delete the lesson without leaving a pointer.
+
+**Do not promote:** secrets, process thrash that should become an evolve seed only, pure
+personify voice, planning scratch.
 
 ### Entry frontmatter
 
@@ -136,8 +162,9 @@ name: <slug>
 description: <one-line, actionable>
 type: pattern | gotcha | lesson | process
 applicability: project
-related: []          # optional: ADR paths, solution paths, code paths
+related: []          # optional: ADR paths, solution paths, code paths, run_ids
 promoted_at: null    # set when promoted from harness-local
+promoted_to: null    # docs path when promoted L3 → durable docs
 source_harness: null # optional: claude | codex | factory | …
 ---
 ```
@@ -241,7 +268,13 @@ skill source). Compound **never** applies skill patches itself.
 ### With runs ledger
 
 Thrash / rework close may cite `run_id` from `.agent-tools/runs/` in a process entry’s
-`related:` field for evolve later.
+`related:` field. Prefer `type: process` with symptoms + hypothesized skill gap. Point at
+`/skills:evolve` and `run-ledger-seeds.md` — do not patch skills here.
+
+### With docs promote
+
+Stable architecture/product entries may promote to `docs/` (Step 5). Maintain mode may flag
+promote candidates (see `references/maintain.md`).
 
 
 ## Success Output

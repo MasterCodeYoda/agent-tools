@@ -103,11 +103,21 @@ After retire/revise candidates, classify each remaining local memory:
 
 ## Promotion rules
 
+### L3-local → L3-shared
+
 1. Distill to one invariant / pattern / gotcha / lesson per file.
-2. Run Step 3 overlap/safety gates.
+2. Run Step 3 overlap/safety gates (compound capture).
 3. Propose path: `.agent-tools/memory/entries/<slug>.md` + MEMORY.md line.
 4. After user approval: write shared file, update index, **retire or thin** local copy to a pointer at the shared path (no dual full body).
 5. Optional separate proposal lines for L2 drift (e.g. AGENTS contradicts a promoted process rule) — never silent AGENTS rewrite.
+
+### L3-shared → durable docs (OpenWiki-lite)
+
+Flag `entries/` that are stable product/architecture knowledge as **docs promote candidates**
+(see compound Step 5). Default targets: `docs/`, `docs/design/`, `docs/research/` — never new
+`docs/solutions/`. User approval required. After promote: set `promoted_to` on the entry; keep a
+thin pointer in MEMORY.md. Process thrash entries (`type: process` for skill gaps) stay in L3
+and feed `/skills:evolve` — do not promote those to product docs.
 
 ## Legacy `docs/solutions/` migration
 

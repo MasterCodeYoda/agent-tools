@@ -31,7 +31,9 @@ do not edit workflow skills in-place.
 
 Repeated theater, thrash, or fidelity misses across runs are **evidence** for
 `/skills:evolve` when working in the agent-tools corpus (or the published skill source). Soft
-mention once when evidence is thick; never auto-mutate skills from continue.
+mention once when evidence is thick; never auto-mutate skills from continue. Prefer seed shape
+from `@skills` evolve `references/run-ledger-seeds.md` (run_ids + hypothesized gap + candidate
+skill paths).
 
 ## Yield glance (optional, non-blocking)
 
