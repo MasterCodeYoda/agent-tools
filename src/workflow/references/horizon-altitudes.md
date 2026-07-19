@@ -1,7 +1,8 @@
 # Horizon altitudes (workflow triage)
 
-Shared router for `/workflow:brainstorm`, `/workflow:roadmap`, and `/workflow:continue`.
-Sub-skills enforce refuse rules; this table is the product-level triage.
+Shared router for `/workflow:brainstorm`, `/workflow:roadmap`, and `/workflow:continue`
+(principal entry; also bare `/workflow`). Sub-skills enforce refuse rules; this table is the
+product-level triage.
 
 ## Shared invariant
 
@@ -12,24 +13,36 @@ No durable path decision (`Chosen Direction`, stream list, committed NEXT) witho
 
 | User situation | Skill | Notes |
 |----------------|-------|--------|
-| Multi-unit program; streams/order missing or stale | `/workflow:roadmap` | Owns destination framing for horizons |
+| Multi-unit program; streams/order missing or stale | `/workflow:roadmap` | Destination + `→` / `∥` / `{wave}` / NEXT |
 | One fuzzy concept; direction unchosen | `/workflow:brainstorm` | Hard HITL diverge → user converge |
 | One unit; requirements weak | `/workflow:refine` | |
 | Requirements clear; need how | `/workflow:plan` | |
-| Drive known next unit through the loop | `/workflow:continue` | Silent when path clear |
+| Session kickoff / drive known work | `/workflow:continue` | Portfolio mode: swarm resume/handoff or unit SM |
+| Explicit parallel wave at roadmap head | continue → `/swarm` | Auto when `∥` / `{wave}` + swarm ready |
 | Empty continue; no **named** resolvable unit | continue **hard-stop** | Offer brainstorm / roadmap / name a unit — never invent. Missing `planning/<slug>/` alone is **not** hard-stop |
 
 ## Offer ≠ invoke
 
-Continue and brainstorm may **name** roadmap (or each other) and stop. They do not auto-run
-another user-invoked skill unless the user invoked it this turn.
+Continue may **name** roadmap/brainstorm and stop, or route a *claimed* unit into those phases.
+It does not auto-author a roadmap. Swarm auto-handoff is the exception for **explicit** `∥`
+groups (see continue portfolio router).
 
-## Path established (continue pre-claim)
+## Path / mode established (continue)
 
-First match wins: explicit args → `in_progress` → conventions/handoff NEXT → roadmap NEXT →
-planned/PM queue → else hard stop. **Planned without roadmap still counts as established.**
-**Named NEXT without a planning dir still counts as established** — claim and route (usually
-refine); the shell is phase output, not a passport.
+First match wins (summary — full rules in continue portfolio router):
+
+1. Explicit args → unit mode  
+2. Active swarm run → swarm resume  
+3. Explicit `∥` / `{wave}` at head (≥2 claimable) → swarm handoff (or setup fallback)  
+4. `in_progress` → unit  
+5. Single resolvable NEXT → unit  
+6. map-only / sequencing choice → hard_stop_choice  
+7. Planned/PM queue → unit  
+8. Else hard stop  
+
+**Planned without roadmap still counts as established.** **Named NEXT without a planning dir
+still counts as established** — claim and route (usually refine); the shell is phase output,
+not a passport.
 
 ## Thin maps
 

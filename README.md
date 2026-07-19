@@ -90,8 +90,8 @@ Skills are context-aware reference material that Claude loads on demand via `@sk
 
 | Skill | Purpose |
 |-------|---------|
-| **workflow** | Parent for the workflow family — decomposition modes (vertical-slice + deliverable-partition), session continuity, P1/P2/P3 prioritization, knowledge compounding, and commands (`:setup`, `:prune`, `:brainstorm`, `:refine`, `:plan`, `:execute`, `:review`, `:audit`, `:compound`, `:continue`) |
-| **swarm** | Parent for the swarm family — backlog-scale orchestration on top of `/workflow`. `/swarm:setup` authors a project charter + sets up the `.agent-tools/` umbrella; `/swarm <goal>` runs a host-session orchestrator that drives backlog items through refine (host-side) → plan → implement → review → local-merge via role-specialized sub-agents in per-item worktrees; `/swarm:continue` resumes a paused run |
+| **workflow** | Parent for the workflow family — principal entry `/workflow:continue` (also bare `/workflow`); decomposition modes, session continuity, knowledge compounding; phase commands (`:setup`, `:prune`, `:roadmap`, `:brainstorm`, `:refine`, `:plan`, `:execute`, `:review`, `:audit`, `:compound`) |
+| **swarm** | Parallel multi-item orchestration on top of `/workflow` — usually entered via continue when roadmap has explicit `∥` waves; `/swarm <goal>` override; `/swarm:setup` charter + umbrella; `/swarm:continue` resumes a paused run |
 | **git** | Family of safe, conventional git skills — commits, push/PR flows, and worktree-based parallel development (includes `/git` overview + sub-commands reachable via the parent or exact name) |
 | **product** | Parent for the product family — positioning frameworks, competitive research, messaging, go-to-market patterns, briefs, and audits |
 | **qa** | Parent for the QA family — NL spec authoring for Playwright Test Agents, visual inspection tools, discovery; drift detection via `/workflow:audit` |
@@ -121,14 +121,14 @@ Commands are invoked with `/command-name` (or the hyphenated equivalents for sub
 | `/workflow:review` | Code review for PRs, git ranges, files, or uncommitted changes |
 | `/workflow:audit` | Unified project audit — 7 domains (code, tests, API, frontend, docs, repo, QA) with cross-domain deduplication |
 | `/workflow:compound` | Capture knowledge from solved problems + maintain memory quality |
-| `/workflow:continue` | Resume the next slice — orient from `planning/`, drive one slice through the full loop |
+| `/workflow` / `/workflow:continue` | **Principal entry** — orient from `planning/`, portfolio mode (swarm resume/handoff on explicit `∥` waves, or unit phase state machine); never invents NEXT |
 
 #### Swarm Commands
 
 | Command | Purpose |
 |---------|---------|
 | `/swarm` | Summarize a project's swarm state (active run, item stages, or whether it's initialized) |
-| `/swarm <goal>` | Run the orchestrator on a goal (milestone, issue list, or backlog file) — classifies items, drives through refine (host) → plan → implement → review → local-merge via role-specialized sub-agents in parallel waves, merges with test gates |
+| `/swarm <goal>` | Override entry for parallel orchestration on a goal (also auto-entered from `/workflow:continue` when roadmap has an explicit `∥` / `{wave}` at the head). Classifies items, drives refine (host) → plan → implement → review → local-merge via role-specialized sub-agents in parallel waves |
 | `/swarm:setup` | Author the project charter and set up the `.agent-tools/` umbrella (idempotent, evidence-grounded) |
 | `/swarm:continue` | Resume the most recent paused run, reconciling saved state against disk + PM ground truth |
 

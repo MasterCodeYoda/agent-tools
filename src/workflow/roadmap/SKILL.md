@@ -76,11 +76,12 @@ user asks.
    Sequence only if missing.)
 2. **Breadth-first frontier.** List streams or existing units — don't deep-dive one thread.
    Don't invent fake streams you can't claim later.
-3. **Order & deps.** `→` sequential, `∥` parallel (swarm-wave candidates). Note blockers.
+3. **Order & deps.** Use the formal notation below. Note blockers and collision watches.
 4. **Out of scope** for this horizon.
-5. **NEXT.** One resolvable unit (issue id, clear slug/workstream name, or `planning/<slug>/` —
-   dir optional). Or explicit **map-only** (no NEXT) — continue will hard-stop with a "finish
-   roadmap / name unit" offer. Named NEXT without a planning shell is still consumable.
+5. **NEXT.** One resolvable unit, an explicit **wave package** (`{A ∥ B}`), or **map-only** /
+   sequencing-choice prose. Named NEXT without a planning shell is still consumable. Continue
+   auto-handoffs to swarm only for **explicit** `∥` / `{wave}` groups at the active head —
+   never invents a wave from ungrouped peers.
 6. **Present draft → user approves → then write.** Never write durable map before approval.
 7. **Stop.** Do not refine or implement.
 
@@ -107,14 +108,16 @@ Updated: [date]
 
 ## Streams / order
 
-Notation: `→` sequential · `∥` parallelizable
+Notation: `→` sequential · `∥` (or `||`) parallelizable · `{A ∥ B}` wave · `⚠ A ∥ B` collision watch
 
 1. [claimable unit or stream name] — [one-line purpose]
 2. …
 
+Example order line: `Wave 0 → Wave 1 → (Wave 2 ∥ Wave 3) → Wave 4`
+
 ## NEXT
 
-[resolvable unit: ISSUE-id | clear-slug | planning/<slug>/ (dir optional)]  · or `map-only`
+[resolvable unit | `{A ∥ B}` wave package | `map-only` | user sequencing choice — list options]
 
 ## Out of scope
 
@@ -122,8 +125,21 @@ Notation: `→` sequential · `∥` parallelizable
 
 ## Notes
 
-[optional: depends-on, ⚠, links to initiatives/workstreams]
+[optional: depends-on, ⚠ collision watches, links to initiatives/workstreams]
 ```
+
+### Notation (formal — continue consumes this)
+
+| Token | Meaning | Continue behavior |
+|-------|---------|-------------------|
+| `→` | Hard sequential dependency | Right side not claimable until left done |
+| `∥` or `||` | Parallelizable independent peers | At active head with ≥2 claimable peers → **auto-handoff swarm** when swarm is ready |
+| `{A ∥ B}` | Named wave package | Preferred form for a swarm goal list |
+| `⚠ A ∥ B` | Soft collision (same layer / watch) | **Not** auto-launch; prefer sequential or caution |
+| `map-only` / sequencing choice | No single resolvable NEXT | hard-stop / surface choice — do not invent |
+
+ASCII `||` is an accepted fallback for `∥` (U+2225). Informal `//` in chat means the same as `∥`
+but maps should use `∥` or `||`.
 
 **Thin only:** no acceptance criteria, no task lists, no status SoT (PM/session-state own status).
 Titles are mnemonics when PM owns the issue.
@@ -136,9 +152,11 @@ Titles are mnemonics when PM owns the issue.
 
 ## Relationship to continue
 
-- Continue **consumes** NEXT / planned queue; it does **not** author this map.
-- Continue path resolution prefers explicit target → in_progress → conventions NEXT → **this
-  roadmap head** → planned queue (see `/workflow:continue`).
+- Continue is the **principal session entry**; it **consumes** NEXT / order notation; it does
+  **not** author this map.
+- Portfolio mode (see `@workflow:continue`): explicit target → active swarm resume →
+  **explicit `∥` / `{wave}` auto-handoff** → in_progress → single NEXT → planned queue →
+  hard-stop.
 - On slice complete, continue may advance a **pointer**; it must not rewrite stream structure.
 
 ## What this skill does not do

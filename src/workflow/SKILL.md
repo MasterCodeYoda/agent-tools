@@ -1,6 +1,6 @@
 ---
 name: workflow
-description: Parent skill for the workflow family — horizon mapping, brainstorming, refinement, planning, execution, review, audit, compound, and knowledge capture. Supports vertical-slice and deliverable-partition decomposition modes.
+description: Parent skill for the workflow family — principal session entry is /workflow:continue (also bare /workflow). Horizon mapping, brainstorm, refine, plan, execute, review, audit, compound. Vertical-slice and deliverable-partition modes.
 user-invocable: true
 ---
 
@@ -10,13 +10,27 @@ Parent skill for the `workflow` family: high-level philosophy, shared contracts 
 branch naming, conventions), and navigation. **Procedures live in the sub-skills** — load those
 for full detail.
 
+## Principal entry
+
+**Default session kickoff:** load and run **`/workflow:continue`** (same skill when the user
+invokes bare **`/workflow`** with empty args or continue-like targets: issue id, planning path,
+slug, optional `--worktree`).
+
+Continue is the control plane: portfolio mode (swarm resume / auto-handoff on explicit roadmap
+`∥` waves / single-unit phase state machine) without inventing NEXT. Direct phase commands
+(`:refine`, `:plan`, …) remain valid when the user already knows the phase.
+
+If the user asks only for family help / command list with no work intent, summarize this parent
+skill’s table and stop — do not force a continue hard-stop.
+
 ## Commands in This Family
 
 | Command | Purpose |
 |---------|---------|
+| `/workflow` or `/workflow:continue` | **Principal entry** — mode resolve + drive work |
 | `/workflow:setup` | Scaffold `planning/` hygiene + author `conventions.md` + memory link |
 | `/workflow:prune` | Purge confirmed-complete planning items (approval-gated) |
-| `/workflow:roadmap` | Multi-unit horizon map + NEXT (user-approved) |
+| `/workflow:roadmap` | Multi-unit horizon map + NEXT + `→`/`∥` notation (user-approved) |
 | `/workflow:brainstorm` | Single fuzzy concept → framed seed (HITL) |
 | `/workflow:refine` | Requirements discovery (file or PM) |
 | `/workflow:plan` | Implementation plan + session-state (approval gate; optional visual presentation) |
@@ -24,18 +38,19 @@ for full detail.
 | `/workflow:review` | Code review (PR / range / paths / uncommitted) |
 | `/workflow:audit` | Multi-domain project audit |
 | `/workflow:compound` | Capture durable knowledge; `--maintain` memory quality |
-| `/workflow:continue` | Drive next **known** slice; hard-stop only if no named unit |
 
 See each sub-skill for arguments and full procedure.
 
 **Altitude triage:** @workflow (`references/horizon-altitudes.md`).
 
 ```text
-[multi-unit / path unknown]  /workflow:roadmap
-        ↓ per claimable unit (name/id; planning dir optional)
-brainstorm? → refine → plan → execute → review → finish → compound
-        ↑
-   /workflow:continue  (never invents NEXT; named-without-shell → refine)
+[multi-unit / path unknown]  /workflow:roadmap   (→ sequential · ∥ parallel · {wave})
+        ↓
+   /workflow:continue   ← principal entry (also bare /workflow)
+        ├─ active swarm / explicit ∥ wave  →  /swarm (auto or resume)
+        └─ one claimable unit             →  phase state machine
+              brainstorm? ⇄ refine ⇄ plan ⇄ execute ⇄ review → finish → compound
+              (cycles when artifact/decision evidence requires)
 ```
 
 ## Philosophy
