@@ -54,9 +54,8 @@ through to maintain if docs already exist).
 
 Survey what already exists; **read before writing** (@workflow `references/planning-root.md`):
 
-- Planning roots: `.agent-tools/planning/` (preferred) and/or legacy `./planning/`. If only
-  legacy exists, offer migrate into preferred root (user confirms before move).
-- Work-item subdirs under the resolved root (`planning/<project>/session-state.md`).
+- Planning roots: `.agent-tools/planning/` (preferred) and/or legacy `./planning/`.
+- Work-item subdirs under each root; active `in_progress` session-state if any.
 - `planning/conventions.md` — present → maintain (diff for drift). Absent or only-defaults → no file.
 - Top-level `planning/session-state.md` — live pointer only; otherwise do not create.
 - `AGENTS.md` / `CLAUDE.md` / `CONTRIBUTING.md` and PM/MCP signals — pre-fill defaults.
@@ -65,6 +64,29 @@ Survey what already exists; **read before writing** (@workflow `references/plann
 - Legacy `docs/solutions/` — note migrate via `/workflow:compound --maintain --migrate-solutions`.
 
 Report what you found and what's missing before changing anything.
+
+### 1.5 Planning-root migration check (mandatory)
+
+**Load and follow** `references/planning-migration.md` end-to-end for cases A–D.
+
+| Case | Detect | Setup must |
+|------|--------|------------|
+| **A** Preferred only | `.agent-tools/planning/` exists; no `./planning/` | Hygiene only |
+| **B** Neither | no planning roots | Create preferred empty hygiene — **never** create `./planning/` |
+| **C** Legacy only | `./planning/` exists; preferred absent | **Propose migrate** to `.agent-tools/planning/`; require explicit user **yes**; apply with `git mv` when tracked; grep committed docs for hard-coded `./planning/` |
+| **D** Both | both directories exist | **Dual-root repair** — do not leave silent dual; user chooses finish-merge / resolve conflicts / discard empty preferred / archive legacy |
+
+**Hard refuses:**
+
+- Do **not** create empty `.agent-tools/planning/` while live work remains only under `./planning/`
+  (resolution would hide the live plant).
+- Do **not** migrate or delete a non-empty root without explicit confirmation.
+- Do **not** skip this check in maintain mode — every setup run re-detects.
+
+If the user **declines** Case C migrate: continue setup using legacy as root; do not create
+preferred until they accept migrate later.
+
+After migrate or repair, all later steps use the **active** planning root only.
 
 ### 2. Collaborate to define conventions
 
@@ -147,9 +169,8 @@ brainstorm → refine → plan → execute → review → finish → compound  (
 
 ### 3.5 Ensure planning-root git hygiene (directory-local)
 
-**Preferred root:** `.agent-tools/planning/`. Create it on initialize when no planning root
-exists. If only `./planning/` exists, offer migrate (user confirms) or maintain legacy in place
-until they accept.
+**Active root only** (after §1.5). Preferred when migrated or Case B; legacy only if Case C
+declined. Never author hygiene under a second parallel root.
 
 Every planning directory must have:
 
@@ -321,9 +342,9 @@ When conventions already exist: show the current conventions, diff against detec
 (new work-item dirs, a PM tool now present, a track doc that moved), and offer **targeted** edits.
 Never silently overwrite the user's recorded intent — confirm each change.
 
-Also evaluate the planning structure (resolved root):
-- Preferred `.agent-tools/planning/` vs legacy `./planning/` — offer migrate if only legacy.
-- Check for `.gitkeep` and `.gitignore` (canonical exceptions including `!session-state.md`).
+Also evaluate the planning structure:
+- **Re-run §1.5 migration check** (cases A–D) — maintain is not exempt.
+- Check for `.gitkeep` and `.gitignore` on the **active** root (canonical exceptions).
 - Per work-item subdir: `.gitkeep` + `.gitignore`.
 - If `conventions.md` is default-only, offer to delete it.
 - If top-level `session-state.md` has no active content, offer to delete it.
@@ -341,3 +362,5 @@ Also evaluate shared memory + runs:
 - Does **not** create empty top-level `session-state.md` scaffolding.
 - Does **not** migrate `docs/solutions/` or promote harness-local memories — `/workflow:compound --maintain`.
 - Does **not** edit the skill corpus — process gaps → `/skills:evolve`.
+- Does **not** force planning migration without explicit yes — but **does** always run the
+  migration **check** (§1.5) and must not create a dual-root trap.

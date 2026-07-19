@@ -31,22 +31,32 @@ unless an absolute or repo-root path is explicit. Examples:
 
 ## Migration (legacy `./planning/`)
 
-When maintaining setup and only `./planning/` exists:
+**Owner:** `/workflow:setup` only (initialize and maintain). Full procedure with cases A–D,
+preflight, dual-root repair, and refuse rules:
 
-1. Report legacy location.
-2. Offer move to `.agent-tools/planning/` (user confirms).
-3. Move contents; keep a one-line note in the session if useful.
-4. Do not leave two live roots. After move, only `.agent-tools/planning/` is active.
+→ **`setup/references/planning-migration.md`**
 
-Compatibility during a single horizon: if both exist, **prefer `.agent-tools/planning/`** and
-warn once that `./planning/` is ignored until removed.
+Summary:
+
+| Situation | Setup behavior |
+|-----------|----------------|
+| Preferred only | Hygiene only |
+| Neither | Create preferred; never create legacy |
+| Legacy only | **Migrate check** — propose move; require explicit yes; `git mv` when tracked |
+| Both | **Dual-root repair** — user chooses finish-merge / conflict resolve / discard empty preferred / archive legacy |
+
+**Hard refuse:** never create empty `.agent-tools/planning/` alongside a live `./planning/`
+without migrating (that hides legacy work). Never delete a non-empty root without confirmation.
+
+After successful migrate: only `.agent-tools/planning/` is live. Phase skills resolve preferred
+first and do not move trees mid-loop.
 
 ## Git hygiene
 
 Same rules as before, applied **inside the resolved root**:
 
 - Root: ignore all except `.gitkeep`, `conventions.md`, `session-state.md` (top-level handoff),
-  `roadmap.md`, and intentional dialect exceptions.
+  `roadmap.md`, `research-loop.md`, and intentional dialect exceptions.
 - Per-item dirs: ignore all except `.gitkeep` (item work product is high-churn).
 
-`/workflow:setup` authors hygiene under the **preferred** root (`.agent-tools/planning/`).
+`/workflow:setup` authors hygiene under the **active** planning root after migration resolve.
