@@ -57,7 +57,7 @@ Status **may** (and should):
 6. **Soft signals** — apply continue soft-check *detection* only (theater review evidence,
    missing compound disposition, thrash near/at bound, stale yield offer). List; do not fix.
 7. **Mode preview** — dry-run portfolio-router first-match using continue
-   `references/portfolio-router.md` rules, as if `$ARGUMENTS` were empty (or the focused unit
+   `continue/references/portfolio-router.md` rules, as if `$ARGUMENTS` were empty (or the focused unit
    for focused status). Emit mode + target; do not act.
 8. **Emit report** (template below) → **stop**.
 
