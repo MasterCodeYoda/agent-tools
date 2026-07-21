@@ -108,11 +108,11 @@ Spawn 2 parallel agents:
 
 Spawn 3 parallel agents:
 
-**component-architecture-reviewer** — References @code-patterns (TypeScript/React patterns):
+**component-architecture-reviewer** — References @code-patterns (TypeScript/React patterns) for god components, colocation, and composition; size/prop/drill **numbers** are heuristic defaults (not skill policy):
 - God components (rendering + data fetching + business logic in one file)
-- Component size (flag > 200 lines, render methods > 50 lines)
-- Prop count (flag > 7 props — suggests missing abstraction)
-- Prop drilling depth (flag > 3 levels without context/store extraction)
+- Component size (heuristic flag > 200 lines, render methods > 50 lines)
+- Prop count (heuristic flag > 7 props — suggests missing abstraction)
+- Prop drilling depth (heuristic flag > 3 levels without context/store extraction)
 - Composition patterns (children/slots preferred over deep inheritance)
 - Colocation (component + test + styles + stories together)
 - Circular component dependencies
@@ -138,7 +138,7 @@ Spawn 3 parallel agents:
 - Error message quality (user-friendly, not raw API errors)
 - Responsive breakpoint consistency (consistent set, no ad-hoc magic numbers)
 - Design token consistency (colors, spacing, typography from single source)
-- CSP headers configured (no unsafe-inline/unsafe-eval in production)
+- CSP headers present when the app serves browser content (production posture is project policy — flag missing headers or document intentional relaxations; do not invent skill-backed bans on `unsafe-inline`)
 
 ## Output: Prioritized Report
 
