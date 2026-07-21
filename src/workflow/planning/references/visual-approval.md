@@ -6,7 +6,8 @@ file maps, slice graphs, decisions, risks, open questions) so the user can appro
 direction more easily.
 
 First-party only: no third-party Plan apps, MCP connectors, `npx` CLIs, or hosted bridges.
-The agent authors HTML from the template and opens the local file.
+The agent authors HTML from the template, prints a clickable `file://` link, and does **not**
+auto-launch a browser unless the user explicitly asks.
 
 ## Source of truth (hard rule)
 
@@ -72,17 +73,17 @@ for this invocation.
 
 ## Capability check
 
-Always available when the agent can write a local file and the user can open it in a
-browser. There is **no** third-party tooling probe.
+Always available when the agent can write a local file. There is **no** third-party tooling
+probe. Browser launch is **not** required for a successful visual surface — a `file://` link
+in chat is enough.
 
 Skip only when:
 
 - Policy is `never` or the plan is not substantial under `on-substantial`
 - Write fails (permissions, disk) → `visual_plan: skipped — could not write HTML`
-- User is in an environment where a browser file cannot be opened **and** they decline
-  the path-only handoff → `visual_plan: skipped — no browser handoff`
 
-Do **not** skip because some external CLI or MCP is missing.
+Do **not** skip because some external CLI or MCP is missing, or because the agent cannot
+auto-open a browser.
 
 ## How to build (when policy + substantial pass)
 
@@ -114,8 +115,8 @@ visual surface reflects the same **segmented** plan.
 2. Else `<planning-root>/<project>/visual-plan.html` (same directory the implementation
    plan will use).
 
-Create parent directories as needed. Prefer a repo-relative path in chat; record an
-absolute path in session-state when useful for reopening.
+Create parent directories as needed. Always surface both a repo-relative path (when under the
+repo) and an absolute path for the `file://` link.
 
 ### Authoring steps
 
@@ -131,11 +132,17 @@ absolute path in session-state when useful for reopening.
 5. Surface **intended changes** (snippet callouts or before→after) and **phase verification**
    when the markdown plan has them — tactical density, scannable form.
 6. Write the complete self-contained HTML file to the output path.
-7. Open for review:
-   - macOS: `open <path>`
-   - Linux: `xdg-open <path>` when available
-   - Always print the absolute path in chat so the user can open it manually.
-8. Keep the path for the Plan Approval Prompt and for session-state after approve.
+7. **Handoff in chat (required — do not auto-launch):**
+   - Print the **absolute path** and a **`file://` URL** so the user can open it themselves.
+   - Prefer a markdown link of the form: `` [Open visual plan](file://<absolute-path>) ``
+     (substitute the real absolute path; encode spaces as `%20`).
+   - Keep the path readable next to the link.
+   - **Do not** run `open`, `xdg-open`, or any browser-launch command by default.
+   - **Only** launch if the user explicitly asks (e.g. “open it”, “launch the visual plan”)
+     *or* answers yes to an optional one-line offer: “Open in browser now? (y/N)”. Default
+     is **N** — if they ignore the offer, leave it closed.
+8. Keep the path + `file://` link for the Plan Approval Prompt and for session-state after
+   approve.
 
 ### Content shape by work type
 
@@ -182,8 +189,10 @@ source text — never fail the surface solely because Mermaid cannot fetch.
 
 1. Draft `implementation-plan.md` content (in memory) — complete and ready.
 2. Leverage check.
-3. **Visual approval surface** (this doc) — write/open HTML or skip with reason.
-4. Present Plan Approval Prompt (templates) including visual path **or** skip line.
+3. **Visual approval surface** (this doc) — write HTML + print `file://` link, or skip with
+   reason. **No auto browser launch.**
+4. Present Plan Approval Prompt (templates) including visual path + `file://` link **or**
+   skip line.
 5. Stop for user choice: Approve & Save | Approve & Execute | Revise.
 
 Rules:
@@ -193,7 +202,8 @@ Rules:
 - Approving the plan always means approving the **markdown implementation plan** that will be
   saved; the visual surface is an aid for that decision.
 - On **Revise**: update draft markdown first (executable intent), then rewrite
-  `visual-plan.html` so it matches; re-open if useful; re-present the approval prompt.
+  `visual-plan.html` so it matches; print a fresh `file://` link (still no auto-launch
+  unless the user asked); re-present the approval prompt.
 - On **Approve & Save / Approve & Execute**: write `implementation-plan.md` and
   `session-state.md` as today; leave or refresh `visual-plan.html` next to them; record
   visual metadata in session-state (below). Execute reads **only** the markdown plan.

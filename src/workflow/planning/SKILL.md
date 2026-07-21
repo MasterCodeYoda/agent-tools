@@ -305,8 +305,12 @@ direction more easily in a browser.
 - **Pre-approval write exception:** you may create the project planning directory and write
   **only** `visual-plan.html` before Approve. Still do not write `implementation-plan.md` or
   `session-state.md` until the user chooses Approve.
+- **Link, don’t auto-launch.** On success, print absolute path + `file://` markdown link in
+  this turn. Do **not** run `open` / `xdg-open` unless the user explicitly asks (or says yes
+  to an optional open offer). Full rules: visual-approval reference.
 
-On success, keep the absolute path for the approval prompt and for session-state after approve.
+On success, keep the absolute path and `file://` link for the approval prompt and for
+session-state after approve.
 
 ## Plan Approval Gate
 
@@ -334,7 +338,7 @@ option. This includes:
 
 1. Apply feedback to the **draft markdown implementation plan** first (executable intent).
 2. If a visual surface exists, rewrite `visual-plan.html` so it matches the revised draft
-   and re-open it if useful (see visual-approval reference).
+   and print a fresh `file://` link (do not auto-launch; see visual-approval reference).
 3. Re-run the Plan Approval Prompt (still no disk/PM writes of the markdown plan / session-state
    until Approve; HTML may be rewritten).
 

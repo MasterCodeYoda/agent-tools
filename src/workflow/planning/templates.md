@@ -591,9 +591,10 @@ Planning complete. Awaiting user approval.
 
 Presented by `/workflow:plan` at the approval gate — before any documents are saved, PM tools updated, or execution started.
 
-When a visual approval surface was published or skipped, include the **Visual plan** line (path
-or skip reason). Omit the line only when the visual step was not attempted at all (policy
-`never`). Approval always applies to the markdown plan that will be saved.
+When a visual approval surface was published or skipped, include the **Visual plan** line
+(absolute path + `file://` markdown link, or skip reason). Never auto-launch a browser from
+the approval prompt. Omit the line only when the visual step was not attempted at all
+(policy `never`). Approval always applies to the markdown plan that will be saved.
 
 ```markdown
 ## Plan Ready for Review
@@ -620,7 +621,7 @@ or skip reason). Omit the line only when the visual step was not attempted at al
 - [Decision 1]: [brief rationale]
 - [Decision 2]: [brief rationale]
 
-**Visual plan**: [absolute or repo-relative path to visual-plan.html] (mode=static-html) — review surface only; executable plan is markdown below
+**Visual plan**: `<absolute-path>/visual-plan.html` · [Open visual plan](file://<absolute-path>/visual-plan.html) (mode=static-html) — review surface only; executable plan is markdown below. Not auto-opened — click the link or ask to launch.
 <!-- or: **Visual plan**: skipped — <reason> -->
 
 **Will be saved to**: `./planning/[project]/implementation-plan.md`
