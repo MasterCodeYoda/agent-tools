@@ -87,7 +87,7 @@ Spawn 2 parallel agents that read test files:
 **mock-boundary-checker** — References @test-strategy (`references/mocking-and-contracts.md`). Core principle: mock at architectural **service abstraction boundaries** only (repository, gateway, event publisher), never internal collaborators:
 - Internal collaborator mocking (same-system classes mocked instead of using real)
 - Boundary identification (which mocks are at real architectural ports vs. internal classes)
-- Mock-to-real ratio (flag files with > 50% mocked dependencies)
+- Mock-to-real ratio (heuristic flag when most dependencies in a file are mocks — the 50% figure is not @test-strategy policy; prefer boundary violations over ratio theater)
 - Fake vs. mock usage (recommend fakes for repositories, mocks only for side effects)
 - Dependency injection patterns (flag `new` inside functions being tested)
 
