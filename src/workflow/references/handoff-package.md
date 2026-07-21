@@ -9,8 +9,8 @@ Do not invent emit-and-stop as the default path.
 
 ## One dialect
 
-Swarm `roles/worker-contract.md` structured return and this package share the **same field
-names** for artifacts and status. Unit continue does not invent a second schema.
+Swarm `@swarm` `roles/worker-contract.md` structured return and this package share the **same
+field names** for artifacts and status. Unit continue does not invent a second schema.
 
 | Producer | Consumer | Shape |
 |----------|----------|--------|
@@ -19,8 +19,8 @@ names** for artifacts and status. Unit continue does not invent a second schema.
 | Worker / phase host | Orchestrator or continue | Structured return YAML (worker-contract) |
 
 Canonical return schema authority for swarm: `@swarm` `references/structured-return-schema.md`
-(and `roles/worker-contract.md`). Unit mode **maps** phase-return events into the same status
-vocabulary when emitting a package.
+(and `@swarm` `roles/worker-contract.md`). Unit mode **maps** phase-return events into the same
+status vocabulary when emitting a package.
 
 ## `handoff_package` (outbound — work to resume)
 
