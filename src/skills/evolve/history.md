@@ -2,6 +2,31 @@
 
 Historical, append-only run log from the legacy `/evolve` command era (predates `/skills:evolve` and the src/ layout); paths and command names are preserved as written.
 
+## 2026-07-21
+
+- **Score**: 45 → 88/100 (Good)
+- **Iterations**: 4 of 5 (stopped: no remaining single-file P1/P2; multi-file gaps converted to recommendations)
+- **Gaps**: 1 P1 + ~12 P2 + ~8 P3 detected; 19 single-file proposals applied
+- **Proposals**: 19 applied (19 validated, 0 failed); `doc_lint` 0 findings throughout
+- **Effectiveness**: audit domain load paths fixed (agent procedure); observability/logging field alignment; heuristic labeling on ungrounded numeric audit gates
+- **Branch**: `evolve/2026-07-21`
+- **Status**: pending review
+- **No runs ledger** — `.agent-tools/runs/` absent; Tier 0 seeds skipped
+- **Key changes**:
+  - `workflow:audit` domain paths: `domains/*.md` (was `audit-*.md` / `skills/audit/` / `@audit/`)
+  - Stale related skill `workflow-guide` → `workflow`; Rust advertised on code-patterns + CA frontmatter
+  - Setup template paths; handoff `@swarm` worker-contract qualification; research-loop path disambiguation
+  - Personify two-layer model + limits synced into `memory-primitives.md`
+  - Parallel worktree cleanup → `/git:worktree-delete`
+  - Logging required fields `service` + `environment`; QA frontmatter schema audit; mock/complexity/frontend/docs heuristics
+  - Discoverability: `/swarm:test` and `qa:tools` family indexes
+- **Recommendations (multi-file / judgment — not applied)**:
+  - Planning-root SoT: refine/plan/product still hard-code `./planning/` vs preferred `.agent-tools/planning/` (`planning-root.md`)
+  - Dual residence: parent workflow skill session-state schema vs execute skill session-state template
+  - Product competitive-research protocol dual residence (parent vs `product:audit`)
+  - Dual “Testing by Layer” ownership (code-patterns vs clean-architecture) — pick one authority + deference
+  - Thin-routing extractions for fat write-time bodies in setup/brainstorm/roadmap (allowlisted setup remains)
+
 ## 2026-05-07
 
 - **Score**: 93 → 99/100 (Excellent)
