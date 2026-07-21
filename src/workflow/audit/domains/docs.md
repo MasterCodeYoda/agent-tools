@@ -66,10 +66,10 @@ Follow all standards from the orchestrator's Agent Reasoning Standards (cite evi
 
 Spawn 2 parallel agents:
 
-**structure-validator** — References @workflow (`planning/templates.md`, quality checkpoints):
-- Missing expected docs (README per module, CONTRIBUTING, CHANGELOG)
-- Frontmatter validation (YAML format, required fields)
-- Section completeness (expected sections present)
+**structure-validator** — Industry presence/structure gates (README, CONTRIBUTING, CHANGELOG, headings, links). **Not** grounded in `planning/templates.md` (plan bodies) or quality-checkpoints (execution ratchet). Cite evidence from the repo; treat missing files as project-policy findings, not skill-backed violations:
+- Missing expected docs (README per module, CONTRIBUTING, CHANGELOG) when the project type implies them
+- Frontmatter validation (YAML format, required fields) when docs use frontmatter
+- Section completeness (expected sections present for the doc type)
 - Heading hierarchy (proper nesting)
 - Broken internal links (relative paths, anchor references)
 - Empty or stub files
@@ -124,24 +124,22 @@ Spawn 4 parallel agents:
 - Incomplete API coverage
 - Missing getting-started guide for new contributors
 
-**onboarding-load-walkthrough** — simulate the realistic first-day-or-two reading path for each relevant persona (a new engineer; and, where they're a stated/implied audience, a non-engineer PM and a new ops/on-call hire). For each persona:
-- Walk the actual entry path (README → docs front door → overview → architecture → flows/runbooks as applicable) and instrument it: new concepts/abstractions introduced per page (count them), unstated prerequisites (does page X assume you've internalized page Y?), "I'd have to go look that up" mid-thought detours, dead-ends (links/sections that promise something the reader needs and don't deliver), and roughly new-concepts-per-500-words.
-- Build a **concept dependency graph** (which concepts must be understood before which) and check whether the doc/sidebar ordering respects it — especially whether keystone pages are read *early* or buried.
-- Name **"the cliff"** — the specific page or transition where the reader's cognitive budget blows out — for each persona.
-- Assess whether a usable **marked path** exists ("read these N pages, in this order"); if not, that's a finding.
-- Produce a per-page **cognitive-load rating (1–5)** per persona and a per-persona **onboarding-readiness rating**.
+**onboarding-load-walkthrough** — **Heuristic Tier-3 judgment** (no skill-backed numeric policy). Simulate the realistic first-day-or-two reading path for each relevant persona (a new engineer; and, where they're a stated/implied audience, a non-engineer PM and a new ops/on-call hire). For each persona:
+- Walk the actual entry path (README → docs front door → overview → architecture → flows/runbooks as applicable) and instrument it: new concepts/abstractions introduced per page, unstated prerequisites, mid-thought detours, dead-ends, and dense concept introduction
+- Build a **concept dependency graph** and check whether doc/sidebar ordering respects it
+- Name **"the cliff"** — the page or transition where cognitive load spikes — for each persona
+- Assess whether a usable **marked path** exists ("read these N pages, in this order")
+- Summarize onboarding readiness per persona with evidence (file:line quotes); optional 1–5 ratings are **heuristics**, not skill gates
 
-**readability-mechanics** — measure the prose surface across the doc set, per page (rolled up per section):
-- Sentence-length distribution (median; count of sentences >~35 words; quote the worst run-ons with file:line)
-- Clause nesting / syntactic complexity (3+-subordinate-clause sentences, em-dash pile-ups, "the X of the Y that does the Z" chains)
-- Passive voice — flag specifically where it hides *which component does what* (matters for onboarding)
-- Paragraph length — count walls of text (>~120 words); note where a table/list/`<Steps>` would serve better
-- Scannability — heading density (per ~500 words), table/list vs. prose-block ratio, presence of a useful page intro
-- Heading informativeness (bare class names, generic "Overview"/"Details"/"Notes")
-- Link-text quality (bare "here"/"this"/section-path-as-anchor-text)
-- Jargon/acronym density (undefined-on-page acronyms per section)
+**readability-mechanics** — **Heuristic Tier-3 judgment** (no skill-backed grade scale). Measure the prose surface with evidence:
+- Long/run-on sentences and nested clauses (quote worst cases with file:line)
+- Passive voice that hides *which component does what*
+- Walls of text better served by table/list/steps
+- Scannability — heading density, table/list vs. prose-block ratio, useful page intros
+- Heading informativeness and link-text quality (avoid bare "here"/"this")
+- Jargon/acronym density (undefined-on-page)
 - Tone/voice consistency within and between pages
-- Output: a per-page **readability grade (A–F)** scorecard, a section rollup, a ranked "worst offenders" list (file:line + quote + problem type), and a "quick wins" list (the mechanical fixes that move grades most for least effort)
+- Output: ranked "worst offenders" (file:line + quote + problem type) and "quick wins"; letter grades are optional heuristics, not policy
 
 Findings from these two feed the same prioritized report. Note: the `onboarding-load-walkthrough` and `readability-mechanics` findings often overlap with accuracy findings (a confidently-wrong page is *worse* for a newcomer than a missing one) — cross-reference rather than duplicate.
 
