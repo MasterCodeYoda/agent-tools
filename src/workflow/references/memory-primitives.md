@@ -113,39 +113,21 @@ Factory strongly distinguishes between **Memory** (descriptive records of decisi
 
 ### Personify Profile (cross-cutting, from agent-tools skills)
 
-The `personify` skill provides a specialized, narrow-scope durable profile for **agent personality, voice, and interpersonal communication facts only**.
+The `personify` skill provides a specialized, narrow-scope durable profile for **agent personality, voice, and interpersonal communication facts only**. **Authority for paths, merge cascade, and size limits:** `@personify` (`src/personify/SKILL.md`). Do not invent alternate caps here.
 
-- Location: `.agent-tools/personify.md` (single file; travels with the project or lives in user home for personal)
-- Loading: Explicitly referenced from `AGENTS.md` (after the Project Charter section if present) so agents load it automatically:
+- **Two-layer storage** (user base + project override):
+  | Layer | Path | Role |
+  |-------|------|------|
+  | User | `~/.agent-tools/personify.md` | Cross-project defaults |
+  | Project | `.agent-tools/personify.md` | Project/audience delta; wins on conflict |
+- Loading: project `AGENTS.md` must import each existing layer (managed `agent-tools:personify-link` block). Typical combined form:
   ```markdown
-  ## Agent Personify Profile
-
-  This project uses a personify profile for consistent agent personality, voice, and interpersonal style.
-
+  @~/.agent-tools/personify.md
   @.agent-tools/personify.md
   ```
 - Scope (strict): Only personality traits & behaviors, speaking/writing voice guidance, and persistent interpersonal facts. **No technical decisions, code patterns, architecture, or project history.**
-- Bounded with token limits (enforced via the `/personify` skill):
-  - Warn at 800 tokens
-  - Stronger warning at 1,000 tokens
-  - Forced maintenance at 1,200 tokens
-- On every `/personify` run after init: displays the full current content + live token usage, proposes specific cleanups/consolidations (merges, prunes, rephrasings), and guides the user through the process collaboratively (agent suggests; user directs priorities and approvals).
-- Format example (with explanatory header not required in live use):
-  ```markdown
-  # Agent Personify Profile
-
-  > Size: 720 / 1,200 tokens (60%) | Last maintained: 2026-06-23
-
-  ## Personality & Behaviors
-  ...
-
-  ## Voice Guidance (speaking and writing)
-  ...
-
-  ## Persistent Facts
-  ...
-  ```
-- Maintenance is built-in: the skill surfaces bloat signals and walks through review. Prefer this over letting the file grow.
+- Size limits (per `@personify`): **per layer** warn / strong / hard **400 / 500 / 600**; **combined** **900 / 1050 / 1200**. Legacy single-file projects without user-space may use a per-file 1,200 cap until promoted.
+- On every `/personify` run after init: displays the full current content + live token usage, proposes specific cleanups/consolidations (merges, prunes, rephrasings), and guides the user through the process collaboratively (agent suggests; user directs priorities and approvals). Promote shared rules via `/personify promote`.
 - Distinction from other memory: This is **not** general project memory or rules (use charter/AGENTS.md, `.agent-tools/memory/`, etc.). It is narrowly for how the *agent* should present itself and communicate with humans.
 
 <!-- /agent:include personify -->
@@ -397,7 +379,7 @@ These patterns are intended to be useful regardless of which agent you use.
 
 Use a deliberate memory maintenance workflow when:
 
-- Memory files or context are approaching practical limits (bloat, truncation, or degraded agent performance) — including the personify profile approaching 800+ tokens, shared `MEMORY.md` Entries section past ~120 lines, or Claude local MEMORY.md near 200 lines / 25 KB
+- Memory files or context are approaching practical limits (bloat, truncation, or degraded agent performance) — including either personify layer approaching its 400-token warn (or combined near 900), shared `MEMORY.md` Entries section past ~120 lines, or Claude local MEMORY.md near 200 lines / 25 KB
 - Maintain due per `.agent-tools/memory/state.yml` (`interval_days`, default 7) — soft-prompted by `/workflow:compound`; run `--maintain` anytime on demand
 - New contributors or team members are onboarding
 - The project has undergone significant changes that may have invalidated previous decisions or context
@@ -427,7 +409,7 @@ For Factory Droid, common triggers include `memories.md` files growing large, be
 
 <!-- agent:include personify -->
 
-For the personify profile, common triggers include approaching the 800-token warning threshold, the agent drifting in voice/tone/consistency, or low-signal facts accumulating. Use `/personify` — it will display the current full memory + token usage and guide proactive cleanup/maintenance.
+For the personify profile, common triggers include approaching the per-layer 400-token warn (or combined 900), the agent drifting in voice/tone/consistency, or low-signal facts accumulating. Use `/personify` — it will display the current full memory + token usage and guide proactive cleanup/maintenance.
 
 <!-- /agent:include personify -->
 
