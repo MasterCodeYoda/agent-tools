@@ -1,6 +1,6 @@
 ---
 name: clean-architecture
-description: Guide projects through Clean Architecture patterns with strict layer boundaries, vertical slicing, and dependency inversion. Use when implementing features following Clean Architecture, creating domain models, application use cases, or validating architectural compliance. Language-agnostic with support for Python, TypeScript, C#, and extensible to others.
+description: Guide projects through Clean Architecture patterns with strict layer boundaries, vertical slicing, and dependency inversion. Use when implementing features following Clean Architecture, creating domain models, application use cases, or validating architectural compliance. Language-agnostic with support for Python, TypeScript, C#, Rust, and extensible to others.
 ---
 
 # Clean Architecture
