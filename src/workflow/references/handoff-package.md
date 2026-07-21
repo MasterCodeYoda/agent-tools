@@ -110,8 +110,8 @@ Same agent may play both in one session (default). Split only when useful.
 
 ## Swarm alignment
 
-- Orchestrator continues to prepend full `worker-contract.md` on dispatch (boundaries + brevity).
-- Do **not** dual-maintain a forked return schema in workflow — change structured-return-schema
+- Orchestrator continues to prepend full `@swarm` `roles/worker-contract.md` on dispatch (boundaries + brevity).
+- Do **not** dual-maintain a forked return schema in workflow — change `@swarm` structured-return-schema
   + worker-contract together; this file only maps unit continue ↔ that schema.
 - Unit continue **never** writes swarm `state.yml`; swarm never owns unit phase-return.
 
