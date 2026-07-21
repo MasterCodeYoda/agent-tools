@@ -46,7 +46,7 @@ Follow all standards from the orchestrator's Agent Reasoning Standards (cite evi
 
 ### Tier 1 — Spec Presence (always runs)
 
-**qa-spec-coverage-analyst**:
+**qa-spec-coverage-analyst** — References @qa (`references/spec-format.md`) and @test-strategy (behavioral test design):
 - Check for NL test spec directory existence and structure
 - Count NL specs vs. critical user flows visible in the codebase
 - Flag key user journeys with no corresponding NL spec:
@@ -55,9 +55,10 @@ Follow all standards from the orchestrator's Agent Reasoning Standards (cite evi
   - Payment/checkout flows (if applicable)
   - Onboarding/setup flows
   - Error/edge case flows (404, unauthorized, validation errors)
+- **Frontmatter schema** (required by `spec-format.md` for audit/coverage rollup): each NL spec has valid YAML frontmatter with required fields `id`, `area`, `priority`, `persona` (flag missing/invalid as P2)
 - Assess spec quality: Are specs behavioral (user-centric actions and assertions) or implementation-coupled (CSS selectors, internal state)?
 - Check for spec staleness: do specs reference UI elements, routes, or flows that no longer exist?
-- Severity: P1 for critical flows with no spec, P2 for secondary flows, P3 for spec quality issues
+- Severity: P1 for critical flows with no spec, P2 for secondary flows / frontmatter failures, P3 for other quality issues
 
 ### Tier 2 — Test Generation Health (runs if Playwright config detected)
 
