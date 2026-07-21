@@ -106,9 +106,9 @@ Spawn 2 parallel agents:
 - C#: Roslyn analyzers, dotnet format
 - Rust: clippy, cargo-audit
 
-**complexity-metrics-analyst**:
-- Cyclomatic complexity per function (flag > 10)
-- Function length (flag > 50 lines), class size (flag > 300 lines)
+**complexity-metrics-analyst** — Heuristic defaults (not @code-patterns / @clean-architecture policy; report as judgment with evidence, not skill-backed gates):
+- Cyclomatic complexity per function (heuristic flag > 10)
+- Function length (heuristic flag > 50 lines), class size (heuristic flag > 300 lines)
 - Duplication detection
 - Module coupling metrics
 - Hot path identification (most-called functions via static call graph)
