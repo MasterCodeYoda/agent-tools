@@ -47,10 +47,6 @@ Then: **merge to main locally**, compound (or `compound: none — <reason>`), ad
 Still **stop** when: review missing/invalid, gates red, genuine judgment call, doubt about DoD,
 or push/PR needed. **Pushing and opening PRs remain user-initiated.**
 
-## Visual plan approval
-
-- **Policy:** never
-
 ## Agent collaboration (HITL / session drive)
 
 Process contract for how agents present work and ask for decisions — complements user-space

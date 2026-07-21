@@ -245,25 +245,28 @@ If nothing surfaces, proceed without comment — this step should add signal, no
 ## Visual Plan Approval Surface (optional)
 
 After the draft implementation plan is complete and the leverage check is done — **before** the
-Plan Approval Gate — optionally publish an interactive **visual plan** so the user can review
-direction more easily.
+Plan Approval Gate — optionally publish a **static HTML visual plan** so the user can review
+direction more easily in a browser.
 
 **Load and follow** @workflow (`planning/references/visual-approval.md`). Summary contract:
 
 - **Presentation only.** The visual plan is an approval aid. It does **not** replace
   `implementation-plan.md` as the executable source of truth for execute, continue, or swarm.
+- **First-party static HTML.** Author `planning/<project>/visual-plan.html` from
+  @workflow (`planning/templates/visual-plan.html`). No third-party Plan apps, MCP, or CLIs.
 - **Convention-gated (additive).** Honor `planning/conventions.md` › Visual plan approval when
   that section exists (`never` | `on-substantial` | `always`). **Missing section keeps the
   built-in default `on-substantial`** — other project overrides (merge policy, tracks, PM) do
   not turn visual plan off. See @workflow (`planning/references/visual-approval.md`).
-- **Non-blocking.** Missing Plan tooling, capability failure, or a non-substantial plan →
-  record `visual_plan: skipped — <reason>` and proceed to the approval prompt. Never block the
-  gate; never invent a faux-visual wall of chat markdown as a substitute Plan surface.
-- **Same content.** Build the visual surface **from** the in-memory draft implementation plan
+- **Non-blocking.** Non-substantial plan, policy `never`, or write failure → record
+  `visual_plan: skipped — <reason>` and proceed to the approval prompt. Never block the gate.
+- **Same content.** Build the HTML **from** the in-memory draft implementation plan
   (task breakdown, files, decisions, risks) so approval is of one plan, not two competing ones.
+- **Pre-approval write exception:** you may create the project planning directory and write
+  **only** `visual-plan.html` before Approve. Still do not write `implementation-plan.md` or
+  `session-state.md` until the user chooses Approve.
 
-On success, keep the returned absolute URL or local plan dir for the approval prompt and for
-session-state after approve.
+On success, keep the absolute path for the approval prompt and for session-state after approve.
 
 ## Plan Approval Gate
 
@@ -290,9 +293,10 @@ option. This includes:
 ### On Revise
 
 1. Apply feedback to the **draft markdown implementation plan** first (executable intent).
-2. If a visual surface exists, refresh it so it matches the revised draft (hosted update or
-   local MDX edit + re-check/serve — see visual-approval reference).
-3. Re-run the Plan Approval Prompt (still no disk/PM writes until Approve).
+2. If a visual surface exists, rewrite `visual-plan.html` so it matches the revised draft
+   and re-open it if useful (see visual-approval reference).
+3. Re-run the Plan Approval Prompt (still no disk/PM writes of the markdown plan / session-state
+   until Approve; HTML may be rewritten).
 
 ### On Approval: Save Plan
 
@@ -341,6 +345,7 @@ what will be recorded in session-state.md.
 
 1. Write `./planning/[project]/implementation-plan.md` — this remains the **only** executable plan artifact for execute/continue/swarm.
 2. Write `./planning/[project]/session-state.md` — include the `worktree:` field set to `WORKTREE_PATH` when in worktree mode; omit it otherwise. Include `visual_plan:` when a visual surface was published or explicitly skipped (schema in templates / visual-approval reference).
+3. Ensure `./planning/[project]/visual-plan.html` is present and current when a visual surface was published (refresh if the approved draft drifted).
 
 #### Step 4: Commit Planning Documents (if `WORKTREE_MODE=true`)
 
@@ -357,8 +362,8 @@ Update PM tool if applicable (see §PM Tool Integration above).
 
 #### Step 6: Present Confirmation
 
-Confirm paths written (`implementation-plan.md`, `session-state.md`), branch name, worktree path if any,
-visual plan URL/dir or skip reason if recorded, and PM update summary if applicable.
+Confirm paths written (`implementation-plan.md`, `session-state.md`, `visual-plan.html` when published),
+branch name, worktree path if any, visual plan path or skip reason if recorded, and PM update summary if applicable.
 
 #### Step 7: Parallel Execution Prompt
 
@@ -433,8 +438,8 @@ Before presenting plan for approval:
 - [ ] Implementation approach is documented
 - [ ] Tasks are broken down and complete (no optional tiers)
 - [ ] Risks are identified
-- [ ] Visual plan surface attempted or skipped per conventions (non-blocking)
-- [ ] Plan presented to user for approval (markdown SoT + optional visual link)
+- [ ] Visual plan HTML attempted or skipped per conventions (non-blocking)
+- [ ] Plan presented to user for approval (markdown SoT + optional visual-plan.html path)
 - [ ] User has explicitly approved the plan
 
 ## Integration Points
@@ -449,7 +454,8 @@ Plan produces `implementation-plan.md` and `session-state.md` — execute consum
 
 ### With visual plan approval surface
 
-Optional pre-approval presentation. Contract: @workflow (`planning/references/visual-approval.md`).
+Optional pre-approval **static HTML** presentation (`visual-plan.html`).
+Contract: @workflow (`planning/references/visual-approval.md`).
 Continue routes to `/workflow:plan` as usual; no separate continue stage.
 
 ### With PM tools (Linear, Jira)

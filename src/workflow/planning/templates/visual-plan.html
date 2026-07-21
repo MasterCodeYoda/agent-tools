@@ -1,0 +1,297 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <!--
+    Visual plan approval brief — first-party static HTML for /workflow:plan.
+    Presentation only. Executable source of truth is implementation-plan.md.
+
+    Authoring (agent):
+    1. Copy this template to planning/<project>/visual-plan.html
+    2. Replace every [[PLACEHOLDER]] and sample body with draft-plan content
+    3. Delete entire <section> blocks that have no real content
+    4. Use <pre class="mermaid"> for diagrams; keep one primary architecture diagram
+    5. open / xdg-open the file; print the absolute path in chat
+  -->
+  <title>[[PROJECT]] — Visual plan</title>
+  <style>
+    :root {
+      --bg: #0f1419;
+      --panel: #1a2332;
+      --panel-2: #243044;
+      --text: #e7ecf3;
+      --muted: #9aa8bc;
+      --accent: #6cb6ff;
+      --accent-2: #7ee0a8;
+      --warn: #f0b429;
+      --risk: #f07178;
+      --border: #2e3a4d;
+      --mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      --sans: "Segoe UI", system-ui, -apple-system, sans-serif;
+    }
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      margin: 0;
+      font-family: var(--sans);
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.55;
+    }
+    a { color: var(--accent); }
+    .banner {
+      background: #243b1f;
+      color: var(--accent-2);
+      border-bottom: 1px solid #355a2c;
+      padding: 0.65rem 1.25rem;
+      font-size: 0.9rem;
+    }
+    .banner strong { color: #c8f5d4; }
+    .layout {
+      display: grid;
+      grid-template-columns: 220px minmax(0, 1fr);
+      gap: 0;
+      min-height: 100vh;
+    }
+    nav {
+      position: sticky;
+      top: 0;
+      align-self: start;
+      height: 100vh;
+      overflow: auto;
+      padding: 1.25rem 1rem;
+      background: var(--panel);
+      border-right: 1px solid var(--border);
+      font-size: 0.9rem;
+    }
+    nav .brand {
+      font-weight: 700;
+      margin-bottom: 0.25rem;
+    }
+    nav .sub {
+      color: var(--muted);
+      font-size: 0.8rem;
+      margin-bottom: 1rem;
+    }
+    nav a {
+      display: block;
+      text-decoration: none;
+      color: var(--muted);
+      padding: 0.3rem 0.4rem;
+      border-radius: 6px;
+    }
+    nav a:hover { background: var(--panel-2); color: var(--text); }
+    main { padding: 1.5rem 1.75rem 3rem; max-width: 920px; }
+    h1 {
+      font-size: 1.75rem;
+      margin: 0 0 0.35rem;
+      letter-spacing: -0.02em;
+    }
+    .meta {
+      color: var(--muted);
+      font-size: 0.9rem;
+      margin-bottom: 1.5rem;
+    }
+    section {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 1.1rem 1.25rem 1.25rem;
+      margin: 0 0 1rem;
+    }
+    section h2 {
+      margin: 0 0 0.75rem;
+      font-size: 1.1rem;
+      color: var(--accent);
+    }
+    p { margin: 0 0 0.75rem; }
+    ul, ol { margin: 0 0 0.75rem; padding-left: 1.25rem; }
+    li { margin: 0.25rem 0; }
+    .grid-2 {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 0.75rem;
+    }
+    @media (max-width: 860px) {
+      .layout { grid-template-columns: 1fr; }
+      nav { position: relative; height: auto; border-right: 0; border-bottom: 1px solid var(--border); }
+      .grid-2 { grid-template-columns: 1fr; }
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.92rem;
+    }
+    th, td {
+      border-bottom: 1px solid var(--border);
+      text-align: left;
+      padding: 0.45rem 0.4rem;
+      vertical-align: top;
+    }
+    th { color: var(--muted); font-weight: 600; }
+    code, .path {
+      font-family: var(--mono);
+      font-size: 0.88em;
+      background: var(--panel-2);
+      padding: 0.1rem 0.35rem;
+      border-radius: 4px;
+    }
+    .pill {
+      display: inline-block;
+      font-size: 0.75rem;
+      font-weight: 600;
+      padding: 0.1rem 0.45rem;
+      border-radius: 999px;
+      border: 1px solid var(--border);
+      color: var(--muted);
+      margin-right: 0.25rem;
+    }
+    .pill.add { color: var(--accent-2); border-color: #2f6b4a; }
+    .pill.mod { color: var(--warn); border-color: #7a5a16; }
+    .pill.del { color: var(--risk); border-color: #7a3036; }
+    .callout {
+      border-left: 3px solid var(--accent);
+      background: var(--panel-2);
+      padding: 0.65rem 0.85rem;
+      border-radius: 0 8px 8px 0;
+      margin: 0.5rem 0;
+    }
+    .callout.risk { border-left-color: var(--risk); }
+    .callout.decision { border-left-color: var(--warn); }
+    pre.mermaid {
+      background: #0b1016;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 1rem;
+      overflow: auto;
+    }
+    footer {
+      color: var(--muted);
+      font-size: 0.85rem;
+      margin-top: 1.5rem;
+    }
+  </style>
+</head>
+<body>
+  <div class="banner">
+    <strong>Presentation only.</strong>
+    Approval applies to the markdown implementation plan.
+    Executable source of truth after save:
+    <code>implementation-plan.md</code> — not this HTML file.
+  </div>
+
+  <div class="layout">
+    <nav>
+      <div class="brand">[[PROJECT]]</div>
+      <div class="sub">Visual plan · static HTML</div>
+      <a href="#overview">Overview</a>
+      <a href="#architecture">Architecture</a>
+      <a href="#slices">Slices</a>
+      <a href="#files">Files</a>
+      <a href="#decisions">Decisions</a>
+      <a href="#risks">Risks</a>
+      <a href="#questions">Open questions</a>
+    </nav>
+
+    <main>
+      <h1>[[PROJECT]]</h1>
+      <div class="meta">
+        Source: [[SOURCE]] · Mode: [[DECOMPOSITION_MODE]] · Generated for plan approval
+      </div>
+
+      <section id="overview">
+        <h2>Overview</h2>
+        <p>[[OVERVIEW — 2–4 sentences: outcome and approach]]</p>
+      </section>
+
+      <section id="architecture">
+        <h2>Architecture</h2>
+        <p>[[Short prose on the structural change]]</p>
+        <!-- Prefer flowchart/C4-ish Mermaid grounded in real modules -->
+        <pre class="mermaid">
+flowchart LR
+  Client --> API
+  API --> Domain
+  Domain --> Store
+        </pre>
+      </section>
+
+      <section id="slices">
+        <h2>Slices / deliverables</h2>
+        <ol>
+          <li><strong>[[Slice 1]]</strong> — [[brief]] ([[N]] tasks)</li>
+          <li><strong>[[Slice 2]]</strong> — [[brief]] ([[N]] tasks)</li>
+        </ol>
+        <!-- Optional dependency graph -->
+        <pre class="mermaid">
+flowchart TD
+  S1[Slice 1] --> S2[Slice 2]
+  S1 --> S3[Slice 3]
+        </pre>
+      </section>
+
+      <section id="files">
+        <h2>Files</h2>
+        <table>
+          <thead>
+            <tr><th>Change</th><th>Path</th><th>Note</th></tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><span class="pill add">add</span></td>
+              <td><span class="path">src/example/new.ts</span></td>
+              <td>[[why]]</td>
+            </tr>
+            <tr>
+              <td><span class="pill mod">mod</span></td>
+              <td><span class="path">src/example/existing.ts</span></td>
+              <td>[[why]]</td>
+            </tr>
+          </tbody>
+        </table>
+      </section>
+
+      <section id="decisions">
+        <h2>Decisions</h2>
+        <div class="callout decision">
+          <strong>[[Decision]]</strong> — [[rationale; note hard-to-reverse bets]]
+        </div>
+      </section>
+
+      <section id="risks">
+        <h2>Risks</h2>
+        <div class="callout risk">
+          <strong>[[Risk]]</strong> — [[mitigation]]
+        </div>
+      </section>
+
+      <section id="questions">
+        <h2>Open questions</h2>
+        <ul>
+          <li>[[Question]] — <em>recommended:</em> [[default]]</li>
+        </ul>
+      </section>
+
+      <footer>
+        Regenerate this file on revise so it stays aligned with the draft
+        <code>implementation-plan.md</code>. Execute and swarm ignore this file.
+      </footer>
+    </main>
+  </div>
+
+  <!-- Mermaid from CDN; offline still leaves readable diagram source in <pre> -->
+  <script type="module">
+    try {
+      const { default: mermaid } = await import("https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs");
+      mermaid.initialize({
+        startOnLoad: true,
+        theme: "dark",
+        securityLevel: "strict",
+      });
+    } catch (err) {
+      console.warn("Mermaid CDN unavailable; diagrams remain as source text.", err);
+    }
+  </script>
+</body>
+</html>

@@ -1,8 +1,12 @@
-# Visual Plan Approval (presentation layer)
+# Visual Plan Approval (static HTML)
 
 Optional **human-review surface** for `/workflow:plan` approval. Turns the draft
-implementation plan into an interactive visual plan (diagrams, file maps, schema/API
-blocks, UI wireframes when relevant) so the user can approve direction more easily.
+implementation plan into a **self-contained static HTML brief** (architecture diagrams,
+file maps, slice graphs, decisions, risks, open questions) so the user can approve
+direction more easily.
+
+First-party only: no third-party Plan apps, MCP connectors, `npx` CLIs, or hosted bridges.
+The agent authors HTML from the template and opens the local file.
 
 ## Source of truth (hard rule)
 
@@ -10,7 +14,7 @@ blocks, UI wireframes when relevant) so the user can approve direction more easi
 |----------|------|
 | **`planning/<project>/implementation-plan.md`** | **Executable source of truth** after approval — execute, continue, swarm |
 | **`planning/<project>/session-state.md`** | Resume / phase passport |
-| **Visual plan** (hosted URL or local MDX folder) | **Approval presentation only** — never execute input |
+| **`planning/<project>/visual-plan.html`** | **Approval presentation only** — never execute input |
 
 The visual plan **must not** replace, delay, or weaken the markdown implementation plan.
 If the visual surface fails or is skipped, the plan approval gate still runs on the draft
@@ -34,8 +38,7 @@ defaults. Resolve policy in this order:
 ```markdown
 ## Visual plan approval
 - **Policy:** never | on-substantial | always
-- **Mode:** local-files | hosted | self-hosted
-- **Local dir:** `.agent-native/plans/<slug>/`   # optional override
+- **Output path:** planning/<project>/visual-plan.html   # optional override
 ```
 
 | Policy | Behavior |
@@ -45,8 +48,8 @@ defaults. Resolve policy in this order:
 | `always` | Attempt whenever `/workflow:plan` reaches the approval gate |
 
 **Built-in default** (section absent, with or without a conventions file): policy
-`on-substantial`; mode preference `local-files`, then `hosted` if only hosted tooling is
-available.
+`on-substantial`; output path `planning/<project>/visual-plan.html` (relative to the
+resolved planning root — prefer `.agent-tools/planning/` when that is the active root).
 
 ### Substantial heuristics (`on-substantial`)
 
@@ -67,71 +70,90 @@ Treat the plan as substantial if **any** of:
 User override: if the user explicitly asks for a visual plan this turn, treat as `always`
 for this invocation.
 
-## Capability check (before any generation)
+## Capability check
 
-Non-blocking. In order:
+Always available when the agent can write a local file and the user can open it in a
+browser. There is **no** third-party tooling probe.
 
-1. **Hosted Plan MCP** — tools visible under `plan` or legacy `agent-native-plans`
-   (`create-visual-plan`, `create-ui-plan`, `get-plan-blocks`, …). Discover via host
-   tool search if lazy-loaded.
-2. **Local-files CLI** — `npx @agent-native/core@latest` available (network/npx ok).
-3. **Neither** → `visual_plan: skipped — plan tooling unavailable` and proceed to the
-   normal Plan Approval Prompt. Do **not** invent an inline faux-visual markdown wall
-   as a substitute for the Plan surface.
+Skip only when:
 
-If conventions force `mode: local-files`, prefer (2) and do not write to the hosted Plan DB.
-If conventions force `mode: hosted` and MCP is missing, skip with reconnect hint — do not
-fall back to a fake inline plan.
+- Policy is `never` or the plan is not substantial under `on-substantial`
+- Write fails (permissions, disk) → `visual_plan: skipped — could not write HTML`
+- User is in an environment where a browser file cannot be opened **and** they decline
+  the path-only handoff → `visual_plan: skipped — no browser handoff`
 
-## How to build (when policy + substantial + capability pass)
+Do **not** skip because some external CLI or MCP is missing.
+
+## How to build (when policy + substantial pass)
 
 ### Inputs
 
-Use the **in-memory draft** of `implementation-plan.md` (not yet saved) plus requirements
-context. Pass that text as the plan source (`planText` / local authoring input). Preserve
-task breakdown, DoD, risks, and file touch list so the visual surface reflects the same
-executable plan.
+Use the **in-memory draft** of `implementation-plan.md` (not yet saved as the approved
+executable plan) plus requirements context. Preserve task breakdown, DoD, risks, and file
+touch list so the visual surface reflects the same executable plan.
 
-### Mode selection for content shape
+**Write permission exception:** you **may** create the project planning directory and write
+**only** `visual-plan.html` before the approval gate. Do **not** write
+`implementation-plan.md` or `session-state.md` until the user chooses Approve.
 
-| Work shape | Prefer |
-|------------|--------|
-| Architecture / backend / data / refactor / API | Document-first (`create-visual-plan`) |
-| Product UI states / screens | UI-first (`create-ui-plan`) + canvas wireframes |
-| Multi-step interactive flow | Prototype-first (`create-prototype-plan`) when tooling supports it |
+### Output path
 
-Ground blocks in **real** paths, symbols, schema, and endpoints from research — never invent
-contracts. Label inferred UI/layout as inferred.
+1. Conventions `Output path` when set.
+2. Else `<planning-root>/<project>/visual-plan.html` (same directory the implementation
+   plan will use).
 
-### Hosted mode
+Create parent directories as needed. Prefer a repo-relative path in chat; record an
+absolute path in session-state when useful for reopening.
 
-1. Call `get-plan-blocks` (authoritative tags — do not memorize JSX).
-2. Create with the mode-matched tool; pass draft plan text as source.
-3. Report the **absolute URL** returned by the create tool (not a guessed localhost link).
-4. On user **Revise** feedback that targets the visual plan, update via
-   `update-visual-plan` / `get-plan-feedback` **and** update the draft markdown plan so
-   they stay aligned.
+### Authoring steps
 
-### Local-files mode
+1. **Load** @workflow (`planning/templates/visual-plan.html`) as the shell (CSS, layout,
+   Mermaid bootstrap, section scaffold).
+2. Fill every section that has real content from the draft plan. Omit empty sections
+   entirely (do not leave “TBD” chrome).
+3. Ground paths, symbols, schema, and endpoints in research — never invent contracts.
+   Label inferred UI/layout as *inferred*.
+4. Write the complete self-contained HTML file to the output path.
+5. Open for review:
+   - macOS: `open <path>`
+   - Linux: `xdg-open <path>` when available
+   - Always print the absolute path in chat so the user can open it manually.
+6. Keep the path for the Plan Approval Prompt and for session-state after approve.
 
-1. Choose dir: conventions override, else `.agent-native/plans/<project-slug>/`
-   (repo-local; do not put under `planning/` as the executable artifact).
-2. Author MDX (`kind: "plan"`, `localOnly: true`) from the draft plan; fetch block catalog
-   via `npx @agent-native/core@latest plan blocks --out plan-blocks.md` when MCP unavailable.
-3. Validate: `npx @agent-native/core@latest plan local check --dir <plan-dir>`
-4. Preview: `npx @agent-native/core@latest plan local serve --dir <plan-dir> --kind plan --open`
-5. Hand the bridge URL from stdout or `<plan-dir>/.plan-url` (do not commit `.plan-url`).
-6. On Revise: edit MDX + draft markdown; re-check/serve.
+### Content shape by work type
 
-Full local-files contract details: Agent-Native Plans docs / installed visual-plan skill
-references when present. Do not call hosted create/update tools in local-files mode.
+| Work shape | Emphasize in the HTML |
+|------------|------------------------|
+| Architecture / backend / data / refactor / API | Architecture + data-flow Mermaid, file map, decisions, risks |
+| Product UI / screens | UI notes or simple wireframe sketches (HTML/CSS), before/after, open questions |
+| Mixed | Architecture + file map + a short UI section only if product-facing |
+
+### Section contract (use these ids / headings)
+
+Keep the template’s structure so the brief is scannable:
+
+| Section | Purpose |
+|---------|---------|
+| **Overview** | 2–4 sentence outcome + approach |
+| **Architecture** | One primary Mermaid (or HTML) diagram of the change |
+| **Slices / deliverables** | Ordered units with task counts; optional dependency Mermaid |
+| **Files** | Touch list / tree with add · modify · remove notes |
+| **Decisions** | Hard-to-reverse bets + rationale |
+| **Risks** | Concrete risks and mitigations |
+| **Open questions** | Unresolved items with recommended defaults when possible |
+| **Footer banner** | Always: presentation only; executable SoT is `implementation-plan.md` |
+
+### Mermaid
+
+Use `<pre class="mermaid">…</pre>` blocks inside the template. The template loads Mermaid
+from a CDN for rendering. If the environment is offline, diagrams still show as readable
+source text — never fail the surface solely because Mermaid cannot fetch.
 
 ### Privacy & security
 
-- Default to the narrowest visibility for hosted plans (org/login, not public).
-- Never copy secrets, tokens, or `.env` values into plan blocks — redact.
-- Local-files mode keeps plan content off the hosted Plan database; the preview UI may
-  still load from the hosted origin against a localhost bridge.
+- Never put secrets, tokens, or `.env` values in the HTML.
+- Default is local-file only; do not upload the brief to external services.
+- Treat the HTML as disposable presentation: safe to regenerate on every revise.
 
 ## Integration with Plan Approval Gate
 
@@ -139,8 +161,8 @@ references when present. Do not call hosted create/update tools in local-files m
 
 1. Draft `implementation-plan.md` content (in memory) — complete and ready.
 2. Leverage check.
-3. **Visual approval surface** (this doc) — success or skip with reason.
-4. Present Plan Approval Prompt (templates) including visual link **or** skip line.
+3. **Visual approval surface** (this doc) — write/open HTML or skip with reason.
+4. Present Plan Approval Prompt (templates) including visual path **or** skip line.
 5. Stop for user choice: Approve & Save | Approve & Execute | Revise.
 
 Rules:
@@ -149,18 +171,18 @@ Rules:
 - Visual plan is **not** a fourth approval option and does **not** replace the three options.
 - Approving the plan always means approving the **markdown implementation plan** that will be
   saved; the visual surface is an aid for that decision.
-- On **Revise**: update draft markdown first (executable intent), then refresh the visual
-  surface when one exists; re-present the approval prompt.
+- On **Revise**: update draft markdown first (executable intent), then rewrite
+  `visual-plan.html` so it matches; re-open if useful; re-present the approval prompt.
 - On **Approve & Save / Approve & Execute**: write `implementation-plan.md` and
-  `session-state.md` as today; record visual metadata in session-state (below). Execute
-  reads **only** the markdown plan.
+  `session-state.md` as today; leave or refresh `visual-plan.html` next to them; record
+  visual metadata in session-state (below). Execute reads **only** the markdown plan.
 
 ## Session-state recording
 
 After approval, include when a visual surface was produced or explicitly skipped:
 
 ```yaml
-visual_plan: "<url-or-local-dir> | mode=local-files|hosted | status=published"
+visual_plan: "<absolute-or-repo-relative-path-to-visual-plan.html> | mode=static-html | status=published"
 # or
 visual_plan: "skipped — <reason>"
 ```
@@ -174,4 +196,5 @@ Optional body line under Status / Next Steps is fine; frontmatter preferred for 
 - Not a review gate and not review evidence.
 - Not required for "plan approved" orientation — disk `implementation-plan.md` + session
   state remain the passport.
+- Not a third-party hosted Plan product, MCP connector, or collaborative design canvas.
 - Not visual-recap (post-diff); this is pre-code approval only.

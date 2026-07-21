@@ -191,7 +191,7 @@ same-session drive — do not emit-and-stop after plan by default.
 - Does **not** hard-stop solely because a named unit lacks a planning directory.
 - Does **not** auto-author roadmaps or brainstorm seeds (stop + offer unless unit SM routes there).
 - Does **not** author plan/requirements content — phase skills do.
-- Does **not** treat visual plan as executable SoT or plan-approval proof.
+- Does **not** treat `visual-plan.html` (or any visual surface) as executable SoT or plan-approval proof.
 - Does **not** skip review or invent review evidence; gates green ≠ reviewed.
 - Does **not** skip compound after integrate without explicit `compound: none`.
 - Does **not** push/PR unless project push policy allows — never production promotion.

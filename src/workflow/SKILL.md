@@ -33,7 +33,7 @@ skill’s table and stop — do not force a continue hard-stop.
 | `/workflow:roadmap` | Multi-unit horizon map + NEXT + `→`/`∥` notation (user-approved) |
 | `/workflow:brainstorm` | Single fuzzy concept → framed seed (HITL) |
 | `/workflow:refine` | Requirements discovery (file or PM) |
-| `/workflow:plan` | Implementation plan + session-state (approval gate; optional visual presentation) |
+| `/workflow:plan` | Implementation plan + session-state (approval gate; optional static HTML visual plan) |
 | `/workflow:execute` | Session-based implementation loop |
 | `/workflow:review` | Code review (PR / range / paths / uncommitted) |
 | `/workflow:audit` | Multi-domain project audit |
@@ -105,7 +105,8 @@ layout, additive gates, integration/merge policy (including autonomous local mer
 PM queue, and optional **visual plan approval** policy (`never` | `on-substantial` | `always`).
 Continue and execute honor recorded sections; **any section left out keeps the skill’s built-in
 default** (e.g. visual plan stays `on-substantial` when the file never mentions it). File entirely
-absent → all built-in defaults. Visual presentation is non-blocking when tooling is unavailable.
+absent → all built-in defaults. Visual presentation is first-party static HTML
+(`visual-plan.html`) and is non-blocking when skipped.
 
 ## Task Planning
 
@@ -125,6 +126,7 @@ in **Out of Scope**, not deferred tasks.
 │   ├── requirements.md   # file mode only
 │   ├── implementation-plan.md
 │   ├── session-state.md
+│   ├── visual-plan.html        # optional; approval presentation only
 │   └── technical-decisions.md  # optional
 └── archive/
 ```
@@ -158,7 +160,7 @@ progress:
 current_layer: [domain|infrastructure|application|framework]
 branch: <type>/<issue-key or description>
 worktree: <path>  # only with --worktree
-visual_plan: <url-or-dir | skipped — reason>  # optional; approval presentation only
+visual_plan: <path-to-visual-plan.html | skipped — reason>  # optional; approval presentation only
 reentry_counts:   # optional; thrash bound is per run_id
   refine_from_execute_or_review: 0
   plan_from_execute_or_review: 0
@@ -224,7 +226,8 @@ Examples: `references/decomposition-modes.md`.
 | Decomposition | `references/decomposition-modes.md` |
 | Worktrees | `references/parallel-worktrees.md` |
 | Plan templates | `planning/templates.md` |
-| Visual plan approval | `planning/references/visual-approval.md` |
+| Visual plan approval (static HTML) | `planning/references/visual-approval.md` |
+| Visual plan HTML template | `planning/templates/visual-plan.html` |
 | Task breakdown | `planning/task-breakdown.md` |
 | Quality gates | `execution/quality-checkpoints.md` |
 | Deps in worktree | `execution/dependency-establishment.md` |

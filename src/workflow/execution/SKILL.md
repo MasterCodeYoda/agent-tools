@@ -78,7 +78,7 @@ ls ./planning/*.md 2>/dev/null
 Support project subdirs (`planning/<project>/`) and flat `planning/` files. Both modes use
 `implementation-plan.md` + `session-state.md`; `requirements.md` is file mode only.
 Optional `visual_plan:` in session-state is **approval metadata only** — execute always follows
-the markdown `implementation-plan.md`, never a visual plan URL or MDX folder.
+the markdown `implementation-plan.md`, never `visual-plan.html` or any other presentation file.
 
 ### 1.25–1.5 Worktree detect / enter
 

@@ -519,7 +519,7 @@ progress:
 current_layer: not_started
 branch: <type>/<issue-key or description>
 worktree: <path>  # Only set when using --worktree; absolute path to worktree directory
-visual_plan: "<url-or-local-dir> | mode=local-files|hosted | status=published"  # optional; or "skipped — <reason>"
+visual_plan: "<path-to-visual-plan.html> | mode=static-html | status=published"  # optional; or "skipped — <reason>"
 created: [timestamp]
 ---
 
@@ -535,14 +535,14 @@ Planning complete. Awaiting user approval.
 ```
 
 `visual_plan` is **metadata only**. Execute and continue orientation use
-`implementation-plan.md` (+ session status), never the visual plan body. Full contract:
+`implementation-plan.md` (+ session status), never the visual HTML body. Full contract:
 @workflow (`planning/references/visual-approval.md`).
 
 ## Plan Approval Prompt
 
 Presented by `/workflow:plan` at the approval gate — before any documents are saved, PM tools updated, or execution started.
 
-When a visual approval surface was published or skipped, include the **Visual plan** line (link
+When a visual approval surface was published or skipped, include the **Visual plan** line (path
 or skip reason). Omit the line only when the visual step was not attempted at all (policy
 `never`). Approval always applies to the markdown plan that will be saved.
 
@@ -571,7 +571,7 @@ or skip reason). Omit the line only when the visual step was not attempted at al
 - [Decision 1]: [brief rationale]
 - [Decision 2]: [brief rationale]
 
-**Visual plan**: [absolute URL or local plan dir] (mode=local-files|hosted) — review surface only; executable plan is markdown below
+**Visual plan**: [absolute or repo-relative path to visual-plan.html] (mode=static-html) — review surface only; executable plan is markdown below
 <!-- or: **Visual plan**: skipped — <reason> -->
 
 **Will be saved to**: `./planning/[project]/implementation-plan.md`

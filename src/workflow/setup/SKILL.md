@@ -94,8 +94,9 @@ Interview only for what can't be inferred. Confirm detected defaults rather than
 
 **Profile shortcut:** if the user wants a **personal factory** (solo throughput, local merge,
 Linear optional), load and adapt `setup/templates/personal-factory-conventions.md` (micro +
-research tracks, visual never, autonomous local merge when ratchet green, orientation/PM queue).
-Optionally write `planning/research-loop.md` from `setup/templates/research-loop.md`.
+research tracks, autonomous local merge when ratchet green, orientation/PM queue). Visual plan
+approval is omitted so the built-in `on-substantial` default applies. Optionally write
+`planning/research-loop.md` from `setup/templates/research-loop.md`.
 
 Otherwise capture into `planning/conventions.md` only non-defaults:
 
@@ -107,7 +108,8 @@ Otherwise capture into `planning/conventions.md` only non-defaults:
 - **Integration / merge policy** — personal factory: autonomous local merge when ratchet green;
   push/PR user-initiated.
 - **Orientation / queue** — NEXT SoT; optional closed PM filter (`workflow:claimable`); never invent.
-- **Visual plan approval** — omit for built-in `on-substantial`; personal factory: `never`.
+- **Visual plan approval** — omit for built-in `on-substantial` (including personal factory);
+  only record when non-default (`never` / `always` / custom output path).
 - **Durable design docs vs planning/** — planning transient; promote to `docs/design/` when durable.
 - **Decision-record layers + genre** — default `current-state` (`references/decision-records.md`).
 
@@ -120,8 +122,8 @@ Create (or update) it **only if** the project has non-default conventions:
 - Project-specific gates beyond the standard review gate
 - Non-default integration / merge policy (including autonomous local merge)
 - Orientation / PM queue filter
-- Non-default visual plan approval policy or mode (anything other than implicit
-  `on-substantial` + tooling auto-detect)
+- Non-default visual plan approval policy (anything other than implicit
+  `on-substantial`)
 - Non-default decision-record layers or the `classic-immutable` genre
 
 If everything is default (file mode + built-in tracks only + standard local-only policy with
@@ -163,8 +165,7 @@ brainstorm → refine → plan → execute → review → finish → compound  (
 
 ## Visual plan approval   (only if non-default)
 - **Policy:** never | on-substantial | always
-- **Mode:** local-files | hosted | self-hosted
-- **Local dir:** `.agent-native/plans/<slug>/`   # optional
+- **Output path:** planning/<project>/visual-plan.html   # optional
 ```
 
 ### 3.5 Ensure planning-root git hygiene (directory-local)
