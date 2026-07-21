@@ -164,7 +164,7 @@ Currently supported languages:
 |----------|----------|-------------|-------------|
 | **Python** | Yes | Yes | Yes |
 | **TypeScript** | Yes | — | — |
-| **C#** | Yes | — | — |
+| **C#** | Yes | Yes | — |
 | **Rust** | Yes | — | — |
 
 ## Guidelines for Language Implementations
