@@ -83,7 +83,7 @@ Spawn 4 parallel agents that read production code:
 
 **observability-readiness-analyst** — References @workflow (`execution/logging.md`):
 - Structured logging compliance (JSON, not string interpolation)
-- Required field presence (timestamp, level, event, request_id/trace_id)
+- Required field presence (timestamp, level, event, request_id/trace_id, service, environment)
 - Correct log level usage
 - Sensitive data exposure in logs
 - Context propagation across boundaries
