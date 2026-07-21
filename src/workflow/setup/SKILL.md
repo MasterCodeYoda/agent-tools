@@ -96,10 +96,10 @@ After migrate or repair, all later steps use the **active** planning root only.
 Interview only for what can't be inferred. Confirm detected defaults rather than re-asking.
 
 **Profile shortcut:** if the user wants a **personal factory** (solo throughput, local merge,
-Linear optional), load and adapt `setup/templates/personal-factory-conventions.md` (micro +
+Linear optional), load and adapt `templates/personal-factory-conventions.md` (micro +
 research tracks, autonomous local merge when ratchet green, orientation/PM queue). Visual plan
 approval is omitted so the built-in `on-substantial` default applies. Optionally write
-`planning/research-loop.md` from `setup/templates/research-loop.md`.
+`planning/research-loop.md` from `templates/research-loop.md`.
 
 Otherwise capture into `planning/conventions.md` only non-defaults:
 
