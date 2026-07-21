@@ -25,6 +25,7 @@ git worktrees per item and (b) the host's native sub-agent dispatch. It stays re
 | `/swarm <goal>` | Run the orchestrator on a goal (milestone, issue list, backlog file) |
 | `/swarm:setup` | Author the project charter + setup the `.agent-tools/` umbrella |
 | `/swarm:continue` | Resume the most recent paused run, reconciling state against ground truth |
+| `/swarm:test` | Project-only harness: drive or analyze a swarm test run (`src/swarm-test/`) |
 
 ## Relationship to `/workflow`
 
