@@ -177,12 +177,50 @@ emit_flattened_leaves() {
     done
 }
 
+# Write one OpenCode command .md from a SKILL.md: keep description frontmatter,
+# drop other YAML keys, body is the skill body (frontmatter stripped).
+write_opencode_command() {
+    local skill_md="$1"
+    local cmd_file="$2"
+    local label="$3"   # short name for fallback description / log
+    local log_kind="${4:-command}"  # "command" | "leaf command" | "family command"
+
+    local desc
+    desc=$(grep -m1 -i '^description:' "$skill_md" | cut -d: -f2- | sed 's/^[[:space:]]*//;s/[[:space:]]*$//')
+    [ -z "$desc" ] && desc="Agent skill: ${label}"
+
+    {
+        echo "---"
+        echo "description: ${desc}"
+        echo "---"
+        echo ""
+        awk '
+            BEGIN { seen_first = 0; in_frontmatter = 0 }
+            /^---[ \t]*$/ {
+                if (seen_first == 0) {
+                    seen_first = 1
+                    in_frontmatter = 1
+                    next
+                } else if (in_frontmatter) {
+                    in_frontmatter = 0
+                    next
+                }
+            }
+            !in_frontmatter { print }
+        ' "$skill_md"
+    } > "$cmd_file"
+    log "  → Emitted ${log_kind}: commands/$(basename "$cmd_file")"
+}
+
 # Emit native command definitions for OpenCode.
-# OpenCode keeps "skills" (on-demand via the skill tool) and "commands" (explicit /slash triggers)
-# as separate things. We only emit the *sub-skills* (the colon-namespaced ones like
-# workflow:continue -> workflow-continue command) as commands. Top-level family
-# overviews (workflow, git, etc.) are not mirrored as commands; they exist for
-# sub-skill discovery in other harnesses and don't map well to OpenCode's command model.
+# OpenCode keeps "skills" (on-demand via the skill tool) and "commands" (explicit /slash
+# triggers) as separate things. We emit:
+#   1. Colon sub-skills (workflow:continue → workflow-continue)
+#   2. Bare family roots that have colon-named children (workflow, swarm, git, …) so
+#      /workflow and /swarm are real slash commands — not fuzzy-matched onto *-continue
+#   3. Special leaf invocables (personify, use-browser)
+# Family roots stay in skills/ (nested refs + skill-tool load). Leaves and
+# colon-named top-level dirs are removed from skills/ after emission (see publish loop).
 emit_commands_for_opencode() {
     local agent="$1"
     local skills_dir="$2"   # e.g. dist/opencode/skills (populated only in real runs)
@@ -196,10 +234,9 @@ emit_commands_for_opencode() {
         mkdir -p "$cmds_dir"
     fi
 
-    log "  Emitting OpenCode commands (sub-skills only) for direct / invocation..."
+    log "  Emitting OpenCode commands (families + sub-skills + leaves) for direct / invocation..."
 
-    # In dry-run the dist trees are not created, so derive the list of sub-skill
-    # commands from src/ (only the flattened colon sub-skills).
+    # In dry-run the dist trees are not created, so derive the list from src/.
     if [[ "$DRY_RUN" == true ]]; then
         for top in "$SRC_ROOT"/*/ ; do
             [[ -d "$top" ]] || continue
@@ -207,7 +244,7 @@ emit_commands_for_opencode() {
             top_name=$(basename "$top")
             [[ ",$SKIP_DIRS," == *",$top_name,"* ]] && continue
 
-            # Only the colon sub-skills (not the top-level family)
+            local has_colon_sub=false
             for sub in "$top"/*/; do
                 [[ -d "$sub" ]] || continue
                 local sub_md="${sub}/SKILL.md"
@@ -215,10 +252,31 @@ emit_commands_for_opencode() {
                 local declared
                 declared=$(get_declared_name "$sub_md")
                 if [[ "$declared" == *:* ]]; then
+                    has_colon_sub=true
                     local flat="${declared//:/-}"
                     echo "    [dry] ${agent}/commands/${flat}.md"
                 fi
             done
+
+            # Bare family root (e.g. /workflow, /swarm) when it has colon-named children
+            local top_md="${top}/SKILL.md"
+            if [ -f "$top_md" ] && $has_colon_sub; then
+                local top_declared
+                top_declared=$(get_declared_name "$top_md")
+                if [[ -n "$top_declared" && "$top_declared" != *:* ]]; then
+                    echo "    [dry] ${agent}/commands/${top_declared}.md"
+                fi
+            fi
+
+            # Top-level colon-named skill dirs (e.g. swarm-test → name: swarm:test)
+            if [ -f "$top_md" ]; then
+                local top_declared
+                top_declared=$(get_declared_name "$top_md")
+                if [[ "$top_declared" == *:* ]]; then
+                    local flat="${top_declared//:/-}"
+                    echo "    [dry] ${agent}/commands/${flat}.md"
+                fi
+            fi
         done
 
         # Special leaf commands (personify, use-browser) - no subskills, direct invocables
@@ -229,50 +287,14 @@ emit_commands_for_opencode() {
     fi
 
     # Real run: scan top-level published skill dirs (families and standalone).
-    # For each, check its own SKILL.md (catches top-level subs like swarm-test).
-    # Also scan direct subdirs inside families (catches nested like workflow/continue).
-    # Emit command only for those whose declared name contains ":" , using the hyphenated flat name.
     for top_dir in "$skills_dir"/*/; do
         [ -d "$top_dir" ] || continue
         local top_name
         top_name=$(basename "$top_dir")
-
-        # Check the top-level dir itself (for standalone sub-skills like swarm-test)
         local top_md="${top_dir}/SKILL.md"
-        if [ -f "$top_md" ]; then
-            local declared
-            declared=$(get_declared_name "$top_md")
-            if [[ "$declared" == *:* ]]; then
-                local flat="${declared//:/-}"
-                local desc
-                desc=$(grep -m1 -i '^description:' "$top_md" | cut -d: -f2- | sed 's/^[[:space:]]*//;s/[[:space:]]*$//')
-                [ -z "$desc" ] && desc="Agent skill: ${flat}"
-                local cmd_file="${cmds_dir}/${flat}.md"
-                {
-                    echo "---"
-                    echo "description: ${desc}"
-                    echo "---"
-                    echo ""
-                    awk '
-                        BEGIN { seen_first = 0; in_frontmatter = 0 }
-                        /^---[ \t]*$/ {
-                            if (seen_first == 0) {
-                                seen_first = 1
-                                in_frontmatter = 1
-                                next
-                            } else if (in_frontmatter) {
-                                in_frontmatter = 0
-                                next
-                            }
-                        }
-                        !in_frontmatter { print }
-                    ' "$top_md"
-                } > "$cmd_file"
-                log "  → Emitted command: commands/${flat}.md"
-            fi
-        fi
+        local has_colon_sub=false
 
-        # Check direct children (for subs nested inside family dirs, e.g. workflow/continue)
+        # Direct children with colon names (e.g. workflow/continue → workflow-continue)
         for sub_dir in "$top_dir"/*/; do
             [ -d "$sub_dir" ] || continue
             local sub_md="${sub_dir}/SKILL.md"
@@ -280,74 +302,37 @@ emit_commands_for_opencode() {
             local declared
             declared=$(get_declared_name "$sub_md")
             if [[ "$declared" == *:* ]]; then
+                has_colon_sub=true
                 local flat="${declared//:/-}"
-                local desc
-                desc=$(grep -m1 -i '^description:' "$sub_md" | cut -d: -f2- | sed 's/^[[:space:]]*//;s/[[:space:]]*$//')
-                [ -z "$desc" ] && desc="Agent skill: ${flat}"
-                local cmd_file="${cmds_dir}/${flat}.md"
-                {
-                    echo "---"
-                    echo "description: ${desc}"
-                    echo "---"
-                    echo ""
-                    awk '
-                        BEGIN { seen_first = 0; in_frontmatter = 0 }
-                        /^---[ \t]*$/ {
-                            if (seen_first == 0) {
-                                seen_first = 1
-                                in_frontmatter = 1
-                                next
-                            } else if (in_frontmatter) {
-                                in_frontmatter = 0
-                                next
-                            }
-                        }
-                        !in_frontmatter { print }
-                    ' "$sub_md"
-                } > "$cmd_file"
-                log "  → Emitted command: commands/${flat}.md"
+                write_opencode_command "$sub_md" "${cmds_dir}/${flat}.md" "$flat" "command"
             fi
         done
+
+        # Top-level dir itself:
+        # - colon-named standalone (swarm-test) → command only (removed from skills later)
+        # - bare family root with colon children (workflow) → command + keep in skills/
+        if [ -f "$top_md" ]; then
+            local declared
+            declared=$(get_declared_name "$top_md")
+            if [[ "$declared" == *:* ]]; then
+                local flat="${declared//:/-}"
+                write_opencode_command "$top_md" "${cmds_dir}/${flat}.md" "$flat" "command"
+            elif [[ -n "$declared" && "$declared" != *:* ]] && $has_colon_sub; then
+                write_opencode_command "$top_md" "${cmds_dir}/${declared}.md" "$declared" "family command"
+            fi
+        fi
     done
 
     # Special leaf commands for opencode (e.g. personify, use-browser).
     # These are top-level skills with no sub-skills. Emit them as commands (using
     # their own name) and they will be removed from skills/ below to avoid duplication.
-    if [[ "$agent" == "opencode" ]]; then
-        for leaf in $OPENCODE_LEAF_AS_COMMANDS; do
-            local leaf_dir="${skills_dir}/${leaf}"
-            if [ -d "$leaf_dir" ]; then
-                local leaf_md="${leaf_dir}/SKILL.md"
-                if [ -f "$leaf_md" ]; then
-                    local desc
-                    desc=$(grep -m1 -i '^description:' "$leaf_md" | cut -d: -f2- | sed 's/^[[:space:]]*//;s/[[:space:]]*$//')
-                    [ -z "$desc" ] && desc="Agent skill: ${leaf}"
-                    local cmd_file="${cmds_dir}/${leaf}.md"
-                    {
-                        echo "---"
-                        echo "description: ${desc}"
-                        echo "---"
-                        echo ""
-                        awk '
-                            BEGIN { seen_first = 0; in_frontmatter = 0 }
-                            /^---[ \t]*$/ {
-                                if (seen_first == 0) {
-                                    seen_first = 1
-                                    in_frontmatter = 1
-                                    next
-                                } else if (in_frontmatter) {
-                                    in_frontmatter = 0
-                                    next
-                                }
-                            }
-                            !in_frontmatter { print }
-                        ' "$leaf_md"
-                    } > "$cmd_file"
-                    log "  → Emitted leaf command: commands/${leaf}.md"
-                fi
-            fi
-        done
-    fi
+    for leaf in $OPENCODE_LEAF_AS_COMMANDS; do
+        local leaf_dir="${skills_dir}/${leaf}"
+        local leaf_md="${leaf_dir}/SKILL.md"
+        if [ -f "$leaf_md" ]; then
+            write_opencode_command "$leaf_md" "${cmds_dir}/${leaf}.md" "$leaf" "leaf command"
+        fi
+    done
 }
 
 # ── Core filtering logic (awk) ───────────────────────────────────────

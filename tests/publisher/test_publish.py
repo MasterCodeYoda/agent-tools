@@ -11,7 +11,9 @@ Covered behaviors, one fixture each:
   - pdf-build/ skip
   - colon-named sub-skill flattening (claude/grok/factory only)
   - Codex nested-only layout (no flattened siblings)
-  - OpenCode commands/ emission + leaf-as-command removal from skills/
+  - OpenCode commands/ emission: colon sub-skills, bare family roots
+    (e.g. /workflow when family has colon children), leaf-as-command removal
+    from skills/
 
 Stdlib unittest (no external deps) so it runs out-of-the-box via
 `python -m unittest`; also discovered by pytest if installed.

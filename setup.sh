@@ -356,11 +356,15 @@ install_commands_for_agent() {
             if [ "$publish_target" = "user-profile" ]; then
                 # Search src/ tree for matching sub (by name with :) and inherit target
                 # from its dir or its parent family dir.
+                # Exact declared-name match only — "swarm" must not hit "swarm:test"
+                # (prefix grep would mis-route bare /swarm into project scope).
                 local src_name="${cmd_name//-/:}"
                 # Process substitution (not a pipe) so the publish_target
                 # assignment survives the loop.
                 while IFS= read -r src_md; do
-                    if grep -q "name:.*${src_name}" "$src_md" 2>/dev/null; then
+                    local declared
+                    declared=$(grep -m1 '^name:' "$src_md" 2>/dev/null | cut -d: -f2- | tr -d ' \t\r\n')
+                    if [ "$declared" = "$src_name" ]; then
                         local src_dir
                         src_dir=$(dirname "$src_md")
                         local pt
