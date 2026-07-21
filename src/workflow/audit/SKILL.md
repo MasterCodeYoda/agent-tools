@@ -60,13 +60,13 @@ Based on auto-detection, activate relevant domains:
 
 | Domain | Activates When | Defers To |
 |--------|---------------|-----------|
-| **Code Quality** | Production source files detected | `audit-code.md` agents |
-| **Test Quality** | Test files detected | `audit-tests.md` agents |
-| **API Design** | API endpoints or spec files detected | `audit-api.md` agents |
-| **Frontend Quality** | Frontend components detected | `audit-frontend.md` agents |
-| **Documentation** | README or docs/ detected | `audit-docs.md` agents |
-| **Repo Infrastructure** | Git repo detected (always) | `audit-repo.md` agents |
-| **QA Coverage** | Any production code detected | QA agents (defined below) |
+| **Code Quality** | Production source files detected | `domains/code.md` agents |
+| **Test Quality** | Test files detected | `domains/tests.md` agents |
+| **API Design** | API endpoints or spec files detected | `domains/api.md` agents |
+| **Frontend Quality** | Frontend components detected | `domains/frontend.md` agents |
+| **Documentation** | README or docs/ detected | `domains/docs.md` agents |
+| **Repo Infrastructure** | Git repo detected (always) | `domains/repo.md` agents |
+| **QA Coverage** | Any production code detected | `domains/qa.md` agents |
 
 If `--focus` is set, only activate the specified domains regardless of detection.
 
@@ -124,13 +124,13 @@ Each domain's agents, skill references, tiered analysis, and check criteria are 
 
 | Domain | Definition | Agents | Skill References |
 |--------|-----------|--------|-----------------|
-| Code Quality | `@audit/domains/code.md` | 4 | @code-patterns, @clean-architecture |
-| Test Quality | `@audit/domains/tests.md` | 2 | @test-strategy |
-| API Design | `@audit/domains/api.md` | 3-5 | @clean-architecture, @code-patterns |
-| Frontend Quality | `@audit/domains/frontend.md` | 3-5 | @code-patterns, @visual-design |
-| Documentation | `@audit/domains/docs.md` | 2-4 | @workflow |
-| Repo Infrastructure | `@audit/domains/repo.md` | 3-6 | @code-patterns, @clean-architecture, @test-strategy |
-| QA Coverage | `@audit/domains/qa.md` | 3 | @qa, @test-strategy |
+| Code Quality | `domains/code.md` | 4 | @code-patterns, @clean-architecture |
+| Test Quality | `domains/tests.md` | 2 | @test-strategy |
+| API Design | `domains/api.md` | 3-5 | @clean-architecture, @code-patterns |
+| Frontend Quality | `domains/frontend.md` | 3-5 | @code-patterns, @visual-design |
+| Documentation | `domains/docs.md` | 2-4 | @workflow |
+| Repo Infrastructure | `domains/repo.md` | 3-6 | @code-patterns, @clean-architecture, @test-strategy |
+| QA Coverage | `domains/qa.md` | 3 | @qa, @test-strategy |
 
 For each active domain: read its domain definition file, spawn the agents defined there at the appropriate depth tier, collect findings tagged with the domain name.
 
@@ -283,7 +283,7 @@ Audit findings inform planning — P1 items become candidates for the next plann
 
 ### With @workflow audit skill (domain definitions)
 
-Domain definitions live in `skills/audit/domains/`. Each file defines the agents, skill references, and check criteria for one domain. The orchestrator reads them; `--focus <domain>` routes to the specific domain definition for focused depth.
+Domain definitions live in `domains/` under this skill (`src/workflow/audit/domains/`). Each file defines the agents, skill references, and check criteria for one domain. The orchestrator reads them; `--focus <domain>` routes to the specific domain definition for focused depth.
 
 ### With /skills:evolve
 
@@ -292,4 +292,4 @@ Evolve ensures the skills that back audit agents are complete and consistent. Wh
 ## References
 
 - [react-doctor](https://github.com/millionco/react-doctor) — Health scoring concept
-- Domain definitions: `skills/audit/domains/{code,tests,api,frontend,docs,repo,qa}.md`
+- Domain definitions: `domains/{code,tests,api,frontend,docs,repo,qa}.md`
