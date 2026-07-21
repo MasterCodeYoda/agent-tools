@@ -116,22 +116,50 @@ Next incomplete plan task; honor steering; parallelize with sub-agents when safe
 
 Quality detail: **load** `quality-checkpoints.md`. Layer order: @workflow
 (`references/decomposition-modes.md`). Testing strategy: @test-strategy. Logging: `logging.md`.
+Context discipline: **load** @workflow (`references/context-engineering.md`) — dumb-zone
+norms, mid-phase intentional compaction, research freshness.
+
+### Pre-loop context load
+
+1. Prefer loading **plan + codebase-research + latest intentional compaction** — not the full
+   prior chat history when resuming after thrash.
+2. If `codebase-research.md` is missing and the unit is not a recorded trivial skip, run
+   **light or full** on-demand research before non-trivial edits (dose per
+   context-engineering.md). Micro: see `references/direct-issue-execution.md`.
+3. If research is stale relative to the branch tip and you are mid-complex work, re-run the
+   affected sections rather than trusting lies.
 
 ### Task Execution Pattern
 
 ```
 while (tasks remain):
   1. Mark task in_progress in TodoWrite
-  2. Read relevant files from plan
-  3. Look for existing patterns in codebase
+  2. Read relevant files from plan (+ research edit sites)
+  3. Look for existing patterns in codebase (sub-agent search when parent window is heavy)
   4. Write tests for next behavior — see @test-strategy
   5. Implement minimal code to pass (Green)
   6. Refactor if needed, run full tests
   7. Mark task completed in TodoWrite
   8. Update plan file ([ ] -> [x])
-  9. Check for story/slice completion
-  10. Check for session boundary
+  9. Check for story/slice completion → mid-phase compaction when more work remains
+  10. If dumb-zone / trajectory triggers fire → intentional compaction (below)
+  11. Check for session boundary
 ```
+
+### Mid-phase intentional compaction
+
+**Do not wait only for session handoff.** When a slice finishes with more work remaining, after
+2+ failed serious attempts, after a trajectory-changing user correction, or when dumb-zone
+triggers fire (context-engineering.md):
+
+1. Write an **Intentional Compaction** snapshot into `session-state.md` (goal, approach, done,
+   current failure/next step, key files, last green verification, dead ends).  
+2. Update plan checkboxes and a short **Status after phase N** note if approach diverged.  
+3. Prefer a **fresh context window** to continue, loading plan + research + latest compaction.  
+4. If the approach is wrong: stop and re-plan — do not push more edits in a polluted window.
+
+Optional: after each major phase, compact even when still “on track” so the next phase starts
+clean (frequent intentional compaction).
 
 ### Story / Slice / Sub-issue Completion Checkpoint
 
@@ -229,12 +257,15 @@ Document; create resolution task; parallelize if possible; escalate if critical 
 
 ### If Lost Context
 
-Read session-state, git log, implementation-plan; ask user if needed.
+Read session-state (especially latest **Intentional Compaction**), git log,
+implementation-plan, and `codebase-research.md`; ask user if needed. Prefer compacting and
+starting a fresh window over replaying a failed thread.
 
 ## Key Principles
 
 - **Ship complete work** — no 80% features  
 - **Maintain continuity** — session state is SoT  
+- **Stay in the smart zone** — compact mid-phase; load research + plan, not noise  
 - **Build knowledge** — compound at boundaries  
 - **Quality built in** — patterns, tests, continuous checks  
 

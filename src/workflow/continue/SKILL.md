@@ -1,15 +1,16 @@
 ---
 name: workflow:continue
-description: Principal workflow entry — resolve portfolio mode (swarm resume/handoff or unit state machine), drive work without inventing path; hard-stop when path is not established
+description: Drive entry for workflow — resolve portfolio mode (swarm resume/handoff or unit state machine), drive work without inventing path; hard-stop when path is not established. Bare /workflow is status-only.
 argument-hint: "[--worktree] [optional: work item ID, planning dir, or blank to auto-pick]"
 user-invocable: true
 ---
 
 # Continue (`/workflow:continue`)
 
-**Principal entry** for `/workflow` sessions (bare `/workflow` routes here). Orients from the
-resolved **planning root** (`.agent-tools/planning/` preferred; else `./planning/` — see
-@workflow `references/planning-root.md`), **never invents a next unit**, then selects a
+**Drive entry** for the workflow family. Bare **`/workflow`** is portfolio **status** only
+(read-only — @workflow `references/status.md`); it does **not** route here. Continue orients
+from the resolved **planning root** (`.agent-tools/planning/` preferred; else `./planning/` —
+see @workflow `references/planning-root.md`), **never invents a next unit**, then selects a
 **portfolio mode**:
 
 | Mode | When |
@@ -25,7 +26,7 @@ ceremony still apply **except** at user-approval stops (see gates).
 Not a recipe engine or horizon author. Phase skills run natively; continue only chooses *mode*,
 *unit*, and *next legal transition*. Multi-unit maps: `/workflow:roadmap`. Multi-item parallel
 **execution**: `/swarm` (auto-entered from here when eligible; still user-invocable as override).
-
+Glance without driving: bare `/workflow`.
 ## User Input
 
 ```text
@@ -50,6 +51,7 @@ $ARGUMENTS
 | After phase-return | @workflow `references/runs-ledger.md` (append event; close-run on done) |
 | Yield-only args | @workflow `references/runs-ledger.md` (regenerate yield.md) |
 | Before review / integrate / recap / merge | `references/gates.md` |
+| Context craft (research artifact, dumb zone, mid-phase compaction) | @workflow `references/context-engineering.md` |
 | Cross-session / multi-agent pause | @workflow `references/handoff-package.md` (optional) |
 | Orientation | `references/soft-checks.md` |
 | Conventions present | `planning/conventions.md` (tracks, gates, merge policy, orientation entrypoint) |
@@ -206,7 +208,7 @@ same-session drive — do not emit-and-stop after plan by default.
 
 ## Related
 
-- **`@workflow`** — family contracts; bare `/workflow` → this skill’s loop
+- **`@workflow`** — family contracts; bare `/workflow` → portfolio **status** (`references/status.md`)
 - **`@workflow:setup`** — `conventions.md`, planning root, runs scaffold
 - **`@workflow:roadmap`** — `→` / `∥` / `⚠` / NEXT maps continue consumes
 - **`@workflow:brainstorm`** · **refine** · **plan** · **execute** · **review** · **compound**

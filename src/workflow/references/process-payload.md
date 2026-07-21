@@ -19,7 +19,8 @@ evidence). Soft doc polish does not bump.
 
 | Contract | Agent-tools home | Runtime obligation |
 |----------|------------------|--------------------|
-| Principal entry | `/workflow:continue` | Orient → portfolio mode → unit SM or swarm; **never invent NEXT** |
+| Status entry | bare `/workflow` | Read-only portfolio status (`references/status.md`); no claim / no drive |
+| Drive entry | `/workflow:continue` | Orient → portfolio mode → unit SM or swarm; **never invent NEXT** |
 | Planning root | `references/planning-root.md` | Resolve `.agent-tools/planning/` then legacy `./planning/` |
 | Tracks | `references/tracks.md` | feature \| micro \| research (+ conventions overrides) |
 | Phase skills | refine, plan, execute, review, compound, … | Same gates; same artifacts |
@@ -48,6 +49,20 @@ evidence). Soft doc polish does not bump.
 | Cron / schedule | Emit claim or continue invocation |
 | Sandbox / cloud workers | Still return structured YAML + disk artifacts |
 | Trace export | May import `.agent-tools/runs/events.ndjson` |
+
+## Should implement (quality — soft contract)
+
+Not a hard gate for payload v1, but runtimes that omit these will re-grow context and slop:
+
+| Practice | Agent-tools home |
+|----------|------------------|
+| Dumb-zone / smart-zone norms | `references/context-engineering.md` |
+| On-demand codebase research (almost all work) | same — `codebase-research.md` |
+| Plan-snippet quality bar | same + `planning/templates.md` |
+| Mid-phase intentional compaction | same + `execution/SKILL.md` |
+| Visual plan grounded in research | `planning/references/visual-approval.md` |
+
+Do **not** confuse the **research track** with on-demand codebase research.
 
 ## Skill graph (families)
 

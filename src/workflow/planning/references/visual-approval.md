@@ -89,11 +89,20 @@ Do **not** skip because some external CLI or MCP is missing.
 ### Inputs
 
 Use the **in-memory draft** of `implementation-plan.md` (not yet saved as the approved
-executable plan) plus requirements context. Preserve task breakdown, DoD, risks, and file
-touch list so the visual surface reflects the same executable plan.
+executable plan) plus requirements context **and** on-demand codebase research
+(`codebase-research.md` or light research). Preserve task breakdown, DoD, risks, file
+touch list, **intended-change snippets**, and **verification steps** so the visual surface
+reflects the same executable plan at the same density.
+
+**Context-engineering fit** (full norms: @workflow `references/context-engineering.md`):
+
+- Architecture / file map / contracts are **grounded in research**, not invented  
+- Weak, essay-only plans should not get a glossy visual that hides missing snippets  
+- Visual remains presentation only; it does not replace research or the markdown plan  
+- Skipping the visual never skips research or plan-snippet quality on the markdown SoT  
 
 **Write permission exception:** you **may** create the project planning directory and write
-**only** `visual-plan.html` before the approval gate. Do **not** write
+`visual-plan.html` and/or `codebase-research.md` before the approval gate. Do **not** write
 `implementation-plan.md` or `session-state.md` until the user chooses Approve.
 
 ### Output path
@@ -111,14 +120,17 @@ absolute path in session-state when useful for reopening.
    Mermaid bootstrap, section scaffold).
 2. Fill every section that has real content from the draft plan. Omit empty sections
    entirely (do not leave “TBD” chrome).
-3. Ground paths, symbols, schema, and endpoints in research — never invent contracts.
-   Label inferred UI/layout as *inferred*.
-4. Write the complete self-contained HTML file to the output path.
-5. Open for review:
+3. Ground paths, symbols, schema, and endpoints in **codebase research** — never invent
+   contracts. Label inferred UI/layout as *inferred*. Prefer linking/citing
+   `codebase-research.md` in the Research section.
+4. Surface **intended changes** (snippet callouts or before→after) and **phase verification**
+   when the markdown plan has them — same intent, scannable form.
+5. Write the complete self-contained HTML file to the output path.
+6. Open for review:
    - macOS: `open <path>`
    - Linux: `xdg-open <path>` when available
    - Always print the absolute path in chat so the user can open it manually.
-6. Keep the path for the Plan Approval Prompt and for session-state after approve.
+7. Keep the path for the Plan Approval Prompt and for session-state after approve.
 
 ### Content shape by work type
 
@@ -135,9 +147,11 @@ Keep the template’s structure so the brief is scannable:
 | Section | Purpose |
 |---------|---------|
 | **Overview** | 2–4 sentence outcome + approach |
-| **Architecture** | One primary Mermaid (or HTML) diagram of the change |
-| **Slices / deliverables** | Ordered units with task counts; optional dependency Mermaid |
+| **Research** | Grounding from `codebase-research.md` — how it works today, confidence, skip only with reason |
+| **Architecture** | One primary Mermaid (or HTML) diagram of the change (research-grounded) |
+| **Slices / deliverables** | Ordered units with task counts + verification cues; optional dependency Mermaid |
 | **Files** | Touch list / tree with add · modify · remove notes |
+| **Intended changes** | Snippet / before→after callouts for non-obvious edits (mirrors plan density) |
 | **Decisions** | Hard-to-reverse bets + rationale |
 | **Risks** | Concrete risks and mitigations |
 | **Open questions** | Unresolved items with recommended defaults when possible |

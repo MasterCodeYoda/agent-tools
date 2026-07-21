@@ -1,7 +1,8 @@
 ---
 name: workflow
-description: Parent skill for the workflow family — principal session entry is /workflow:continue (also bare /workflow). Horizon mapping, brainstorm, refine, plan, execute, review, audit, compound. Vertical-slice and deliverable-partition modes.
+description: Parent skill for the workflow family — bare /workflow is portfolio status (read-only); /workflow:continue drives work. Horizon mapping, brainstorm, refine, plan, execute, review, audit, compound. Vertical-slice and deliverable-partition modes.
 user-invocable: true
+argument-hint: "[no args for portfolio status | unit id/path/slug for focused status | help]"
 ---
 
 # Workflow
@@ -10,24 +11,25 @@ Parent skill for the `workflow` family: high-level philosophy, shared contracts 
 branch naming, conventions), and navigation. **Procedures live in the sub-skills** — load those
 for full detail.
 
-## Principal entry
+## Invocation (like `/swarm`)
 
-**Default session kickoff:** load and run **`/workflow:continue`** (same skill when the user
-invokes bare **`/workflow`** with empty args or continue-like targets: issue id, planning path,
-slug, optional `--worktree`).
+| Invocation | Behavior |
+|------------|----------|
+| **`/workflow`** (no args) | **Portfolio status** — read-only scan → report → **stop** |
+| **`/workflow <id\|path\|slug>`** | **Focused status** on that unit — still read-only |
+| **`/workflow:continue`** | **Drive** — portfolio mode + unit phase machine or swarm handoff/resume |
+| Help / command list only | Summarize this table; do not force a drive hard-stop |
 
-Continue is the control plane: portfolio mode (swarm resume / auto-handoff on explicit roadmap
-`∥` waves / single-unit phase state machine) without inventing NEXT. Direct phase commands
-(`:refine`, `:plan`, …) remain valid when the user already knows the phase.
-
-If the user asks only for family help / command list with no work intent, summarize this parent
-skill’s table and stop — do not force a continue hard-stop.
+Bare `/workflow` does **not** proxy to continue. Status procedure: `references/status.md`
+(mandatory load for bare invocation). Soft-check signals are **advisory** on status;
+continue may **act** on the same checklist.
 
 ## Commands in This Family
 
 | Command | Purpose |
 |---------|---------|
-| `/workflow` or `/workflow:continue` | **Principal entry** — mode resolve + drive work |
+| `/workflow` | **Status** — portfolio glance (read-only); focused status with a unit arg |
+| `/workflow:continue` | **Drive** — mode resolve + claim + phase SM or swarm handoff/resume |
 | `/workflow:setup` | Scaffold `planning/` hygiene + author `conventions.md` + memory link |
 | `/workflow:prune` | Purge confirmed-complete planning items (approval-gated) |
 | `/workflow:roadmap` | Multi-unit horizon map + NEXT + `→`/`∥` notation (user-approved) |
@@ -44,14 +46,29 @@ See each sub-skill for arguments and full procedure.
 **Altitude triage:** @workflow (`references/horizon-altitudes.md`).
 
 ```text
-[multi-unit / path unknown]  /workflow:roadmap   (→ sequential · ∥ parallel · {wave})
-        ↓
-   /workflow:continue   ← principal entry (also bare /workflow)
+   /workflow            ← status (read-only portfolio glance)
+        ↓  (user chooses to drive)
+   /workflow:continue   ← drive entry
         ├─ active swarm / explicit ∥ wave  →  /swarm (auto or resume)
         └─ one claimable unit             →  phase state machine
               brainstorm? ⇄ refine ⇄ plan ⇄ execute ⇄ review → finish → compound
               (cycles when artifact/decision evidence requires)
+
+[multi-unit / path unknown]  /workflow:roadmap   (→ sequential · ∥ parallel · {wave})
 ```
+
+## Behavior — bare `/workflow`
+
+Parse `$ARGUMENTS` and run **`references/status.md`** end-to-end:
+
+1. Resolve planning root; if missing → not-initialized report + offer `:setup` → stop.
+2. Light scan: conventions, swarm `active-run`, claimable units, roadmap/handoff NEXT.
+3. Surface soft-check signals as **advisory only** (no remediation).
+4. Preview which mode `/workflow:continue` would enter — do not enter it.
+5. Emit the status template → **stop**.
+
+Never claim, invoke phases, append the runs ledger, merge, or enter swarm from bare status.
+Direct phase commands (`:refine`, `:plan`, …) remain valid when the user already knows the phase.
 
 ## Philosophy
 
@@ -97,6 +114,10 @@ resolved planning root*. Full rules: `references/planning-root.md`.
 Classification, micro/research process, review depth: `references/tracks.md`. Project
 `conventions.md` may add tracks or adopt the **personal factory** pack (setup template).
 
+**On-demand codebase research** (compress live-code truth for the unit) is **not** the same
+as the research track — it is default context craft for almost all work. Dumb-zone norms,
+plan-snippet quality, mid-phase intentional compaction: `references/context-engineering.md`.
+
 ## Project-Local Conventions
 
 Optional `planning/conventions.md` (via `/workflow:setup`) is a **sparse overlay** of project-local
@@ -124,6 +145,7 @@ in **Out of Scope**, not deferred tasks.
 ├── <project-name>/
 │   ├── brainstorm.md     # optional
 │   ├── requirements.md   # file mode only
+│   ├── codebase-research.md  # on-demand code snapshot (almost all work)
 │   ├── implementation-plan.md
 │   ├── session-state.md
 │   ├── visual-plan.html        # optional; approval presentation only
@@ -172,6 +194,9 @@ thrash_bound_hits: 0
 ## Last Session Summary
 [Handoff context]
 
+## Intentional Compaction
+[Latest mid-phase snapshot when used — see references/context-engineering.md]
+
 ## Session History
 [Append-only log]
 ```
@@ -218,8 +243,10 @@ Examples: `references/decomposition-modes.md`.
 
 | Area | Path |
 |------|------|
+| Portfolio status (bare `/workflow`) | `references/status.md` |
 | Planning root | `references/planning-root.md` |
 | Built-in tracks | `references/tracks.md` |
+| Context engineering (dumb zone, research artifact, plan snippets, mid-phase compaction) | `references/context-engineering.md` |
 | Runs ledger | `references/runs-ledger.md` |
 | Handoff package (unit ↔ swarm) | `references/handoff-package.md` |
 | Process payload (runtime adapters) | `references/process-payload.md` |

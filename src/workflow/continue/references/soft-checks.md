@@ -3,8 +3,14 @@
 Apply on **every** `/workflow:continue` orientation (before portfolio mode resolve), and after
 a completed slice when picking up again.
 
-Soft-checks are **events** for the unit machine / portfolio router: they can force work on a
-prior slice before claiming new work.
+**Severity by entry:**
+
+| Entry | Soft-check role |
+|-------|-----------------|
+| `/workflow:continue` | **Actionable** — events for the unit machine / portfolio router; may force work on a prior slice before claiming new work |
+| bare `/workflow` (status) | **Advisory only** — same detection checklist; surface in the status report; **never** remediate, claim, or block (status does not claim) |
+
+Unless noted otherwise below, procedures describe the **continue (actionable)** path.
 
 ## Review theater
 
@@ -25,6 +31,16 @@ If the claimed (or prior open) unit has `reentry_counts` already at thrash bound
 (`refine_from_execute_or_review` + `plan_from_execute_or_review` re-entries from execute/review
 **> 2** for this `run_id`), or `thrash_bound_hits ≥ 1` unresolved, **diagnose before** another
 refine/plan loop. Offer process memory capture; do **not** edit workflow skills in-place.
+
+## Context craft (advisory)
+
+When claiming or resuming a code-bearing unit, soft-surface if:
+
+- No `codebase-research.md` and no recorded `codebase research: skipped — …` for non-trivial work  
+- Session-state shows repeated failure without an **Intentional Compaction** snapshot  
+
+Do **not** block claim solely for this — fold research/compaction into the next phase skill
+(`plan` / `execute`). Full norms: @workflow `references/context-engineering.md`.
 
 ## Process gap → corpus (not in-loop rewrite)
 

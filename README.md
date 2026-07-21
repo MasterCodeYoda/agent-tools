@@ -90,8 +90,8 @@ Skills are context-aware reference material that Claude loads on demand via `@sk
 
 | Skill | Purpose |
 |-------|---------|
-| **workflow** | Parent for the workflow family — principal entry `/workflow:continue` (also bare `/workflow`); decomposition modes, session continuity, knowledge compounding; phase commands (`:setup`, `:prune`, `:roadmap`, `:brainstorm`, `:refine`, `:plan`, `:execute`, `:review`, `:audit`, `:compound`) |
-| **swarm** | Parallel multi-item orchestration on top of `/workflow` — usually entered via continue when roadmap has explicit `∥` waves; `/swarm <goal>` override; `/swarm:setup` charter + umbrella; `/swarm:continue` resumes a paused run |
+| **workflow** | Parent for the workflow family — bare `/workflow` is portfolio status (read-only); `/workflow:continue` drives work; decomposition modes, session continuity, knowledge compounding; phase commands (`:setup`, `:prune`, `:roadmap`, `:brainstorm`, `:refine`, `:plan`, `:execute`, `:review`, `:audit`, `:compound`) |
+| **swarm** | Parallel multi-item orchestration on top of `/workflow` — usually entered via continue when roadmap has explicit `∥` waves; bare `/swarm` is status; `/swarm <goal>` override; `/swarm:setup` charter + umbrella; `/swarm:continue` resumes a paused run |
 | **git** | Family of safe, conventional git skills — commits, push/PR flows, and worktree-based parallel development (includes `/git` overview + sub-commands reachable via the parent or exact name) |
 | **product** | Parent for the product family — positioning frameworks, competitive research, messaging, go-to-market patterns, briefs, and audits |
 | **qa** | Parent for the QA family — NL spec authoring for Playwright Test Agents, visual inspection tools, discovery; drift detection via `/workflow:audit` |
@@ -112,6 +112,8 @@ Commands are invoked with `/command-name` (or the hyphenated equivalents for sub
 
 | Command | Purpose |
 |---------|---------|
+| `/workflow` | **Status** — read-only portfolio glance (planning root, in-progress/NEXT, soft signals, continue-mode preview); focused status with a unit arg |
+| `/workflow:continue` | **Drive** — orient from `planning/`, portfolio mode (swarm resume/handoff on explicit `∥` waves, or unit phase state machine); never invents NEXT |
 | `/workflow:setup` | Initialize/maintain `planning/` docs and define project-local conventions (tracks, gates, policy) |
 | `/workflow:prune` | Sweep `planning/` for completed work, verify against git + PM, and purge on approval |
 | `/workflow:brainstorm` | Explore a fuzzy idea into a framed concept ready for refinement |
@@ -121,7 +123,6 @@ Commands are invoked with `/command-name` (or the hyphenated equivalents for sub
 | `/workflow:review` | Code review for PRs, git ranges, files, or uncommitted changes |
 | `/workflow:audit` | Unified project audit — 7 domains (code, tests, API, frontend, docs, repo, QA) with cross-domain deduplication |
 | `/workflow:compound` | Capture knowledge from solved problems + maintain memory quality |
-| `/workflow` / `/workflow:continue` | **Principal entry** — orient from `planning/`, portfolio mode (swarm resume/handoff on explicit `∥` waves, or unit phase state machine); never invents NEXT |
 
 #### Swarm Commands
 

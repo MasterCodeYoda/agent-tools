@@ -1,10 +1,11 @@
 # Portfolio router (continue mode selection)
 
-**Load when:** `/workflow:continue` (or bare `/workflow`) has finished orientation soft-checks
-and must choose *how* to drive work — before claiming a single unit into the phase machine.
+**Load when:** `/workflow:continue` has finished orientation soft-checks and must choose *how*
+to drive work — before claiming a single unit into the phase machine. Bare `/workflow` only
+**previews** this table (status report); it never claims or enters a mode.
 
-Continue is the **principal session entry**. This router picks a mode. It does not invent work
-units and does not implement multi-item parallelism itself.
+Continue is the **drive entry**. This router picks a mode. It does not invent work units and
+does not implement multi-item parallelism itself.
 
 ## Mode resolve (first match wins)
 

@@ -331,6 +331,33 @@ parallelizable_with: []     # peer items safe to run concurrently (no shared fil
 [Key architectural decisions]
 [Why this approach was chosen]
 
+## Research grounding
+
+- **Codebase research:** `./planning/<project>/codebase-research.md` (or light / skipped — reason)
+- **Summary:** [2–5 sentences from research — how it works today and edit blast radius]
+- **Discard research if:** [staleness condition]
+
+Do not invent modules or paths that research did not establish. Full craft:
+@workflow (`references/context-engineering.md`).
+
+## Intended changes (snippets)
+
+For each non-obvious edit site, give path + short snippet or precise before→after shape.
+This is compression of **intent**, not the full final PR.
+
+### [path/or/symbol]
+
+```text
+// before (sketch) → after (sketch)
+```
+
+- **Why:** …
+- **Verify:** [test / command / manual check after this step]
+
+### [next edit site]
+
+…
+
 ## Breakdown (use the variant matching selected mode)
 
 ### Variant A: Vertical Slice Breakdown (vertical-slice mode)

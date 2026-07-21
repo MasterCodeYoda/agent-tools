@@ -3,6 +3,11 @@
 Use when the unit’s success is a **decision or scored experiment**, not shipped product code by
 default. Full classification: @workflow `references/tracks.md`.
 
+**Not the same as on-demand codebase research.** Codebase research (`codebase-research.md`)
+compresses live-code truth for almost any unit (feature, micro, or this track when
+code-shaped). This file is the **decision/spike** loop only. Context craft:
+@workflow `references/context-engineering.md`.
+
 ## States
 
 ```text

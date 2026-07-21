@@ -28,14 +28,17 @@ git worktrees per item and (b) the host's native sub-agent dispatch. It stays re
 
 ## Relationship to `/workflow`
 
-- **Principal session entry is `/workflow:continue`** (also bare `/workflow`). Continue’s
-  portfolio router **auto-handoffs** here when the roadmap active head is an explicit `∥` /
-  `{wave}` group (≥2 claimable peers) and swarm is set up; it **resumes** via `/swarm:continue`
-  semantics when `active-run` is live. Explicit `/swarm <goal>` remains the override when you
-  want a swarm without going through continue.
-- **Builds on `/workflow`, not around it.** Each worker runs an ordinary `/workflow` command
-  (`/workflow:plan --worktree`, `/workflow:execute`, `/workflow:review`) inside a per-item
-  worktree. Phase skills are unchanged; continue’s unit state machine is the sequential peer.
+- **Family shape matches workflow.** Bare `/swarm` is status; `/swarm:continue` resumes a
+  paused run; `/swarm <goal>` starts orchestration. Bare `/workflow` is portfolio status;
+  **`/workflow:continue` is the drive entry** — its portfolio router **auto-handoffs** here
+  when the roadmap active head is an explicit `∥` / `{wave}` group (≥2 claimable peers) and
+  swarm is set up; it **resumes** via `/swarm:continue` semantics when `active-run` is live.
+  Explicit `/swarm <goal>` remains the override when you want a swarm without going through
+  continue.
+- **Builds on `/workflow`, not around it.** Each worker runs an ordinary `/workflow` phase
+  command (`/workflow:plan --worktree`, `/workflow:execute`, `/workflow:review`) inside a
+  per-item worktree. Phase skills are unchanged; continue’s unit state machine is the
+  sequential peer.
 - **Refinement is host-side.** The orchestrator runs `/workflow:refine` itself, in the main
   session, conversationally with you — it is not a sub-agent role.
 - **Charter is shared ground truth.** Workers and the orchestrator explicitly read the

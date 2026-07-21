@@ -23,6 +23,7 @@ Scaffold via `/workflow:setup`. Prefer this path always (independent of planning
 | Actor | Writes events? |
 |-------|----------------|
 | `/workflow:continue` host | **Yes — primary** (after each phase-return) |
+| bare `/workflow` (status) | **Never** — read-only portfolio glance |
 | Phase skills outside continue | Append one line if they complete a full phase alone |
 | Human | Never required to fill forms |
 

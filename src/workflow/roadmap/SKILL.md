@@ -152,8 +152,8 @@ Titles are mnemonics when PM owns the issue.
 
 ## Relationship to continue
 
-- Continue is the **principal session entry**; it **consumes** NEXT / order notation; it does
-  **not** author this map.
+- **`/workflow:continue` is the drive entry** — it **consumes** NEXT / order notation; it does
+  **not** author this map. Bare `/workflow` only **previews** the same path (status).
 - Portfolio mode (see `@workflow:continue`): explicit target → active swarm resume →
   **explicit `∥` / `{wave}` auto-handoff** → in_progress → single NEXT → planned queue →
   hard-stop.

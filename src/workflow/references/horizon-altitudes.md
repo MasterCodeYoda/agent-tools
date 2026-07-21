@@ -1,8 +1,8 @@
 # Horizon altitudes (workflow triage)
 
-Shared router for `/workflow:brainstorm`, `/workflow:roadmap`, and `/workflow:continue`
-(principal entry; also bare `/workflow`). Sub-skills enforce refuse rules; this table is the
-product-level triage.
+Shared router for `/workflow` (status), `/workflow:brainstorm`, `/workflow:roadmap`, and
+`/workflow:continue` (drive). Sub-skills enforce refuse rules; this table is the product-level
+triage.
 
 ## Shared invariant
 
@@ -13,6 +13,7 @@ No durable path decision (`Chosen Direction`, stream list, committed NEXT) witho
 
 | User situation | Skill | Notes |
 |----------------|-------|--------|
+| “Where are we?” / portfolio glance / no action | `/workflow` | Read-only status — `references/status.md`; soft signals advisory only |
 | Multi-unit program; streams/order missing or stale | `/workflow:roadmap` | Destination + `→` / `∥` / `{wave}` / NEXT |
 | One fuzzy concept; direction unchosen | `/workflow:brainstorm` | Hard HITL diverge → user converge |
 | One unit; requirements weak | `/workflow:refine` | Skip if track=micro (issue-as-plan) |

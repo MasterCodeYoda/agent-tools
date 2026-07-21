@@ -186,9 +186,11 @@
       <div class="brand">[[PROJECT]]</div>
       <div class="sub">Visual plan · static HTML</div>
       <a href="#overview">Overview</a>
+      <a href="#research">Research</a>
       <a href="#architecture">Architecture</a>
       <a href="#slices">Slices</a>
       <a href="#files">Files</a>
+      <a href="#intended">Intended changes</a>
       <a href="#decisions">Decisions</a>
       <a href="#risks">Risks</a>
       <a href="#questions">Open questions</a>
@@ -205,9 +207,21 @@
         <p>[[OVERVIEW — 2–4 sentences: outcome and approach]]</p>
       </section>
 
+      <section id="research">
+        <h2>Research grounding</h2>
+        <p>
+          Source: <code>[[path/to/codebase-research.md | light | skipped — reason]]</code>
+        </p>
+        <p>[[How it works today for this blast radius — from research, not invention]]</p>
+        <ul>
+          <li>[[Key file / symbol]] — [[role]]</li>
+          <li>[[Key constraint / convention]]</li>
+        </ul>
+      </section>
+
       <section id="architecture">
         <h2>Architecture</h2>
-        <p>[[Short prose on the structural change]]</p>
+        <p>[[Short prose on the structural change — research-grounded]]</p>
         <!-- Prefer flowchart/C4-ish Mermaid grounded in real modules -->
         <pre class="mermaid">
 flowchart LR
@@ -250,6 +264,16 @@ flowchart TD
             </tr>
           </tbody>
         </table>
+      </section>
+
+      <section id="intended">
+        <h2>Intended changes</h2>
+        <p>Mirrors the markdown plan’s snippet density — presentation only.</p>
+        <div class="callout decision">
+          <strong><span class="path">[[path/or/symbol]]</span></strong>
+          <pre style="margin:0.5rem 0 0; white-space:pre-wrap; font-family:var(--mono); font-size:0.85rem;">[[before → after sketch / snippet]]</pre>
+          <p style="margin:0.5rem 0 0; color:var(--muted);">Verify: [[test / command / check]]</p>
+        </div>
       </section>
 
       <section id="decisions">

@@ -107,16 +107,28 @@ basename $(git rev-parse --show-toplevel 2>/dev/null || pwd)
 cat .claude/settings.json 2>/dev/null | grep project_management
 ```
 
-### 2. Research Phase
+### 2. On-demand codebase research (default)
 
-Run parallel exploration using sub-agents to understand context:
+**Load** @workflow (`references/context-engineering.md`) › On-demand codebase research.
 
-**Codebase Analysis** (Task: Explore):
+This is **not** the research *track* — it is default context craft for almost all planned
+work: compress **live code truth** into a disposable-window snapshot so the plan and
+approval surfaces do not invent structure.
 
-- Identify existing patterns
-- Find similar implementations
-- Map architectural structure
-- Note conventions and standards
+1. **Dose:** full for multi-file / multi-layer / ambiguous seams; light only when the unit is
+   already tiny and well-localized. Skip only with an explicit reason (true one-liner /
+   known path). Prefer full when in doubt.
+2. **How:** run exploration in **sub-agents / Task(explore)** so search noise stays out of
+   the parent window. Parent keeps a structured digest.
+3. **Write** (or hold in draft until approval if you prefer the same gate as the plan):
+   `./planning/<project>/codebase-research.md` using the artifact shape in
+   context-engineering.md.
+4. **Human leverage:** if research is wrong, **throw it out** and re-steer — do not build a
+   plan on bad research. Present a short research summary before or with the plan draft when
+   the unit is substantial.
+5. **Freshness:** note commit SHA or date; discard/re-run if the branch moved under you.
+
+**Also gather:**
 
 **Requirements Analysis**:
 
@@ -125,7 +137,7 @@ Run parallel exploration using sub-agents to understand context:
 - Identify stakeholders
 - Note constraints and dependencies
 
-**Technical Research** (if needed):
+**Technical Research** (if needed — external docs, not a substitute for codebase research):
 
 - Framework documentation
 - Best practices
@@ -196,16 +208,29 @@ Proceed to implementation planning once requirements are confirmed.
 ## Implementation Plan
 
 For task breakdown patterns, see @workflow (`planning/task-breakdown.md`).
+For plan density (snippets, verification, research link): @workflow
+(`references/context-engineering.md`) › Plan-snippet quality bar.
 
 ### Create Implementation Plan
 
 **Do not write files to disk yet** — present for approval first (§Plan Approval Gate).
+Exception: you may write `codebase-research.md` and (per visual rules) `visual-plan.html`
+before approval when that improves human review of the draft.
 
 Target: `./planning/<project>/implementation-plan.md`
 
 **Load and fill** @workflow (`planning/templates.md`) › **Implementation Plan Document Template**
-(frontmatter with `blocks` / `blocked_by` / `parallelizable_with`, Approach through Definition of Done,
+(frontmatter with `blocks` / `blocked_by` / `parallelizable_with`, Approach, **Research
+grounding**, **Intended changes (snippets)**, Breakdown through Definition of Done,
 Variant A vertical-slice or Variant B deliverable-partition breakdown). Empty dependency lists when none.
+
+**Plan-snippet quality bar** (substantial / multi-file plans — default unless truly trivial):
+
+- Cite `codebase-research.md` (or light research) under Research grounding  
+- Include **Intended changes** with concrete paths and short code snippets or precise
+  before→after shapes for non-obvious edits  
+- Name **verification** after each phase/slice (command, test, or manual check)  
+- Sweet spot: reliable enough for a weak model to follow; short enough for one human review  
 
 In deliverable-partition mode the breakdown carries parent ACs, AC traceability matrix, verbatim AC
 inheritance per sub-issue, and gap-prevention before parent epic close.
@@ -261,7 +286,9 @@ direction more easily in a browser.
 - **Non-blocking.** Non-substantial plan, policy `never`, or write failure → record
   `visual_plan: skipped — <reason>` and proceed to the approval prompt. Never block the gate.
 - **Same content.** Build the HTML **from** the in-memory draft implementation plan
-  (task breakdown, files, decisions, risks) so approval is of one plan, not two competing ones.
+  (task breakdown, files, decisions, risks, intended-change snippets, verification) **and**
+  ground architecture/file maps in `codebase-research.md` so approval is of one plan, not
+  two competing ones. See context-engineering › Visual plan fit.
 - **Pre-approval write exception:** you may create the project planning directory and write
   **only** `visual-plan.html` before Approve. Still do not write `implementation-plan.md` or
   `session-state.md` until the user chooses Approve.
@@ -345,7 +372,8 @@ what will be recorded in session-state.md.
 
 1. Write `./planning/[project]/implementation-plan.md` — this remains the **only** executable plan artifact for execute/continue/swarm.
 2. Write `./planning/[project]/session-state.md` — include the `worktree:` field set to `WORKTREE_PATH` when in worktree mode; omit it otherwise. Include `visual_plan:` when a visual surface was published or explicitly skipped (schema in templates / visual-approval reference).
-3. Ensure `./planning/[project]/visual-plan.html` is present and current when a visual surface was published (refresh if the approved draft drifted).
+3. Ensure `./planning/[project]/codebase-research.md` is present (or session-state records an explicit skip reason).
+4. Ensure `./planning/[project]/visual-plan.html` is present and current when a visual surface was published (refresh if the approved draft drifted).
 
 #### Step 4: Commit Planning Documents (if `WORKTREE_MODE=true`)
 
@@ -435,10 +463,13 @@ Before presenting plan for approval:
 - [ ] Requirements are clear and testable
 - [ ] Acceptance criteria are specific
 - [ ] Scope boundaries are explicit
-- [ ] Implementation approach is documented
+- [ ] On-demand codebase research written (or explicit skip reason)
+- [ ] Implementation approach is documented and grounded in research
+- [ ] Intended-change snippets / edit sites present for multi-file work
+- [ ] Verification steps after phases/slices
 - [ ] Tasks are broken down and complete (no optional tiers)
 - [ ] Risks are identified
-- [ ] Visual plan HTML attempted or skipped per conventions (non-blocking)
+- [ ] Visual plan HTML attempted or skipped per conventions (non-blocking); grounded in research when published
 - [ ] Plan presented to user for approval (markdown SoT + optional visual-plan.html path)
 - [ ] User has explicitly approved the plan
 

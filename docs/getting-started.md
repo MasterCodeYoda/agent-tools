@@ -76,15 +76,20 @@ Multi-lens review with P1/P2/P3 findings. Fix what's real, then merge. Afterward
 `/workflow:compound` captures anything you learned into project memory so the next
 piece of work starts smarter.
 
-**Or let the loop drive itself (principal entry):** `/workflow:continue` (or bare
-`/workflow`) orients from `planning/`, picks the next known work, and drives it — either a
-single slice through the phase state machine (refine ⇄ plan ⇄ execute ⇄ review, with
-re-entry when evidence requires) or, when the roadmap marks an explicit `∥` wave at the
-head and swarm is set up, auto-handoff into `/swarm`. Stops only where your input is
-genuinely required (plan approval, review triage, merge, path not established).
+**Check status without driving:** bare `/workflow` (same gesture as bare `/swarm`) scans
+`planning/`, surfaces soft signals, and previews what continue would do — then stops.
+
+**Or let the loop drive itself:** `/workflow:continue` orients from `planning/`, picks the
+next known work, and drives it — either a single slice through the phase state machine
+(refine ⇄ plan ⇄ execute ⇄ review, with re-entry when evidence requires) or, when the
+roadmap marks an explicit `∥` wave at the head and swarm is set up, auto-handoff into
+`/swarm`. Stops only where your input is genuinely required (plan approval, review triage,
+merge, path not established).
 
 ## 4. Where to go next
 
+- **Orient first**: `/workflow` for a read-only portfolio glance; `/workflow:continue` when
+  you want the agent to claim and drive.
 - **Scale up**: prefer `/workflow:continue` once the roadmap uses `∥` / `{wave}` groups;
   continue routes into swarm for you. Explicit `/swarm <goal>` remains available as an
   override. Run `/swarm:setup` once per project first.

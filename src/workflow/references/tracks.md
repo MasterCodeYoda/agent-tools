@@ -16,6 +16,17 @@ project-local overrides.
 Project conventions may alias **`direct` → micro**. Extra tracks still override the feature
 table only for units they classify (setup doctrine).
 
+### Codebase research vs research track
+
+The **research track** is a *unit classification* (decision/spike deliverable). Separately,
+**on-demand codebase research** is context craft: a compressed, code-grounded snapshot for
+*this* unit so plan/execute do not re-burn the window on discovery.
+
+- **Almost all work** (feature, micro, and code-shaped research-track units) should produce
+  codebase research at a dose that matches scope — see `references/context-engineering.md`.
+- Skipping is for true trivial cases only (one-line / known path), with an explicit reason.
+- Do not interpret “track ≠ research” as “skip codebase research.”
+
 ## Classification (first match; user override always wins)
 
 User flags: `micro` / `direct` / `small` / `research` / `full` / `plan this` / `heavy`.
@@ -55,6 +66,10 @@ No track → hard-stop + offer `/workflow:roadmap`. Do not stuff a program into 
 
 **Skip** brainstorm, refine shell, and implementation-plan markdown unless escalate.
 
+**Still do light codebase research** before execute (short `codebase-research.md` or
+session-state block) unless skip reason applies — `references/context-engineering.md`.
+Issue-as-plan is not a free pass to invent file locations.
+
 **Mandatory:** branch ≠ main; tests green; real review + evidence schema; escalate when scope
 grows (new contract, multi-module, unclear ACs, thrash). On escalate → reclassify **feature**
 and enter `needs_plan` or `needs_refine` with evidence.
@@ -86,6 +101,10 @@ a positive checklist theater.
 
 **Code spikes:** if commits land, review applies to the spike (`quick`/`standard`); the
 **conclusion doc** remains the primary deliverable. Optional promote to feature units after adopt.
+
+When the decision depends on how the codebase works today, produce **on-demand codebase
+research** as evidence input (same artifact craft as feature/micro) — do not rely only on
+static docs.
 
 Process detail may live in `planning/research-loop.md` when setup authors it; this table is the
 built-in minimum when the file is absent.
