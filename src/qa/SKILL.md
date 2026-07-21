@@ -14,8 +14,9 @@ Quality assurance workflows: NL spec-driven e2e testing with Playwright Test Age
 |---------|---------|
 | `/qa:setup` | Initialize Sentinel + Playwright Test Agents in a project |
 | `/qa:discover` | Author NL test specifications through scanning, import, or conversation |
+| `qa:tools` | Supporting skill for video frame extraction and visual analysis (`tools/SKILL.md`) |
 
-Supporting tools for video frame extraction and visual analysis live under this group.
+Supporting tools for video frame extraction and visual analysis live under this group (not a slash command leaf; load `tools/SKILL.md`).
 
 See the individual sub-skills for full details.
 
