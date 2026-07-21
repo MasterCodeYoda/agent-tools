@@ -64,7 +64,7 @@ Survey what already exists; **read before writing** (@workflow `references/plann
 - `AGENTS.md` / `CLAUDE.md` / `CONTRIBUTING.md` and PM/MCP signals — pre-fill defaults.
 - `.agent-tools/memory/` — maintain or plan create + AGENTS memory-link.
 - `.agent-tools/runs/` — maintain or plan create (README, events, ledger).
-- Legacy `docs/solutions/` — note migrate via `/workflow:compound --maintain --migrate-solutions`.
+- Legacy `docs/solutions/` — note migrate via `/workflow:maintain --migrate-solutions`.
 
 Report what you found and what's missing before changing anything.
 
@@ -247,7 +247,8 @@ Idempotent. Create missing pieces; never clobber non-empty entry/solution files.
 # Project memory index
 
 Agent working knowledge for this repo (patterns, gotchas, lessons, debugging solutions).
-Maintained by `/workflow:compound`. Not a substitute for ADRs, CONTRIBUTING, or Codex/domain docs.
+Capture via `/workflow:compound`; steward via `/workflow:maintain`. Not a substitute for ADRs,
+CONTRIBUTING, or Codex/domain docs.
 
 ## Entries
 
@@ -264,11 +265,17 @@ frontmatter; browse by category. Do not enumerate every solution here.
 ```yaml
 schema_version: 1
 interval_days: 7
+last_stewardship_at: null
+last_yield_at: null
 last_maintain_at: null
 snooze_until: null
 last_maintain_result: null
+last_stewardship_result: null
 solutions_migrated_from_docs: false
 ```
+
+Cadence formula: @workflow `maintain/references/cadence.md`. When refreshing an existing
+`state.yml`, **add** missing keys with null defaults; never overwrite user values.
 
 **Empty dirs:** add `entries/.gitkeep` and `solutions/.gitkeep` if the directories would otherwise be empty.
 
@@ -303,7 +310,7 @@ This project keeps **shared agent working knowledge** under [`.agent-tools/memor
 
 **What it is not:** ADRs (`docs/decisions/`), CONTRIBUTING/gates, Codex/domain docs, planning scratch, or personify voice.
 
-**Loading policy:** Read [`MEMORY.md`](.agent-tools/memory/MEMORY.md) when compounding, debugging, or hitting an unfamiliar seam; open individual entry/solution files on demand. Do **not** auto-import the entire tree every turn. Capture and maintain via `/workflow:compound` (and `/workflow:compound --maintain`).
+**Loading policy:** Read [`MEMORY.md`](.agent-tools/memory/MEMORY.md) when compounding, debugging, or hitting an unfamiliar seam; open individual entry/solution files on demand. Do **not** auto-import the entire tree every turn. Capture via `/workflow:compound`; steward (yield + memory hygiene) via `/workflow:maintain`.
 [[END-MARKER]]
 ```
 
@@ -328,7 +335,7 @@ Idempotent. Create missing pieces; never clobber non-empty `events.ndjson` / `le
 Append-only production-line events (`events.ndjson`) and closed-run rollups (`ledger.yml`).
 Written by `/workflow:continue` from phase-return. Do not hand-edit vanity metrics.
 See agent-tools workflow skill: `references/runs-ledger.md`.
-Regenerate `yield.md` on demand from ledger/events.
+Regenerate `yield.md` via `/workflow:maintain` (or `--yield`).
 ```
 
 **Default `ledger.yml`** (only when missing):
@@ -364,7 +371,7 @@ Also evaluate shared memory + runs:
 - Does **not** author the swarm charter (that's `/swarm:setup`); it may interact with `.agent-tools/` for memory, runs, and planning root.
 - Does **not** invent conventions the project doesn't have (except when user chooses personal factory pack).
 - Does **not** create empty top-level `session-state.md` scaffolding.
-- Does **not** migrate `docs/solutions/` or promote harness-local memories — `/workflow:compound --maintain`.
+- Does **not** migrate `docs/solutions/` or promote harness-local memories — `/workflow:maintain`.
 - Does **not** edit the skill corpus — process gaps → process memory + skill-source
   `/skills:evolve` when available (else upstream; never invent a workflow-local improve command).
 - Does **not** force planning migration without explicit yes — but **does** always run the

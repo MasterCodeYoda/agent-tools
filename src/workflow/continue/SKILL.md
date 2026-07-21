@@ -38,7 +38,7 @@ $ARGUMENTS
 | *(empty)* | Soft-check → portfolio mode resolve → drive |
 | Work item ID / PM URL / planning path / slug | Force **unit** mode on that target |
 | `--worktree` | Isolated worktree for unit mode (see *Workspace*) |
-| `--yield` / `yield` | Regenerate `.agent-tools/runs/yield.md` from ledger; summarize KPIs; **stop** (no unit claim unless also given a target) |
+| `--yield` / `yield` | **Compat shim** → `/workflow:maintain --yield` (stewardship; no unit claim) |
 
 ## Mandatory loads
 
@@ -49,7 +49,7 @@ $ARGUMENTS
 | Before mode select | `references/portfolio-router.md` |
 | Unit mode | `references/unit-state-machine.md`, `references/phase-return.md`, @workflow `references/tracks.md` |
 | After phase-return | @workflow `references/runs-ledger.md` (append event; close-run on done) |
-| Yield-only args | @workflow `references/runs-ledger.md` (regenerate yield.md) |
+| Yield-only args (compat) | `@workflow:maintain` (yield job only) — not drive |
 | Before review / integrate / recap / merge | `references/gates.md` |
 | Context craft (research artifact, dumb zone, mid-phase compaction) | @workflow `references/context-engineering.md` |
 | Cross-session / multi-agent pause | @workflow `references/handoff-package.md` (optional) |
@@ -62,13 +62,14 @@ $ARGUMENTS
 ## Control loop
 
 ```text
-if yield-only args → regenerate yield.md → summarize → stop
+if yield-only args → compat: /workflow:maintain --yield → stop (no claim)
 orient (conventions + soft-checks)
   → load portfolio-router → MODE
   → swarm_resume | swarm_handoff | unit SM | hard_stop*
   → on unit: classify → transition → phase → phase-return → runs append → re-classify … until stop
   → on done: close-run ledger row
   → handoff / recap per gates
+  → stewardship offer when due AND signal (soft-checks) — approval-gated; never auto-run
 ```
 
 ## Orientation
@@ -212,6 +213,7 @@ same-session drive — do not emit-and-stop after plan by default.
 - **`@workflow:setup`** — `conventions.md`, planning root, runs scaffold
 - **`@workflow:roadmap`** — `→` / `∥` / `⚠` / NEXT maps continue consumes
 - **`@workflow:brainstorm`** · **refine** · **plan** · **execute** · **review** · **compound**
+- **`@workflow:maintain`** — stewardship (yield + memory); continue may **offer**, never owns
 - **`/swarm`** · **`/swarm:continue`** · **`/swarm:setup`** — parallel executor; override entry
 - **`/skills:evolve`** — skill-source only; mutates process IP from detected gaps (not published to consumer projects)
 - **`@superpowers:finishing-a-development-branch`** — integrate decision after clean review

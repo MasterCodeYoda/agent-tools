@@ -13,7 +13,7 @@ Even with good memory primitives, agents can still lose or under-utilize valuabl
 - Recurring failure modes that should be turned into durable rules or skills
 - Signals that a skill or memory file is stale or incomplete
 
-This analysis is one of the main inputs to `/workflow:compound --maintain` and the broader evolution of the skill corpus.
+This analysis is one of the main inputs to `/workflow:maintain` (memory hygiene) and the broader evolution of the skill corpus.
 
 ---
 

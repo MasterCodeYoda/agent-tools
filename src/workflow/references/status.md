@@ -37,9 +37,11 @@ Status **may** (and should):
 - Resolve planning root and read conventions, roadmap/handoff, `planning/*/session-state.md`
   frontmatter + Current Focus (light scan — not full history dumps)
 - Read `.agent-tools/swarm/active-run` + light `state.yml` summary when present
-- Peek `.agent-tools/runs/yield.md` age (optional)
+- Peek `.agent-tools/runs/yield.md` age and `.agent-tools/memory/state.yml` stewardship
+  cadence (optional)
 - **Surface** soft-check signals as advisory lines (same checklist as continue
-  `soft-checks.md`, severity = report only)
+  `soft-checks.md`, severity = report only) — including **stewardship due** →
+  `/workflow:maintain` (never run maintain from status)
 - **Preview** which portfolio mode `/workflow:continue` would enter (mode name + target) without entering it
 
 ## Scan procedure
@@ -55,7 +57,8 @@ Status **may** (and should):
 5. **Roadmap / handoff** — NEXT, head notation (`→` / `∥` / `{wave}` / `⚠`), map-only or
    sequencing-choice flags.
 6. **Soft signals** — apply continue soft-check *detection* only (theater review evidence,
-   missing compound disposition, thrash near/at bound, stale yield offer). List; do not fix.
+   missing compound disposition, thrash near/at bound, stewardship due per
+   @workflow `maintain/references/cadence.md`). List; do not fix.
 7. **Mode preview** — dry-run portfolio-router first-match using continue
    `continue/references/portfolio-router.md` rules, as if `$ARGUMENTS` were empty (or the focused unit
    for focused status). Emit mode + target; do not act.
@@ -89,10 +92,11 @@ Stop. Do not invent a queue.
 **NEXT / head:** <unit or roadmap head · notation> | none
 **Claimable (preview):** <short list or “none”>
 **Soft signals (advisory):** <list or “none”>
+**Stewardship:** ok | due — `/workflow:maintain` (<signal one-liner or last date>)
 **Continue would:** `<mode>` → <target or hard_stop reason>
 
 **Drive:** `/workflow:continue` · focused: `/workflow:continue <id|path|slug>`
-**Other:** `/workflow:roadmap` · `/workflow:brainstorm` · `/swarm` · `/workflow:setup`
+**Steward:** `/workflow:maintain` · **Other:** `/workflow:roadmap` · `/workflow:brainstorm` · `/swarm` · `/workflow:setup`
 ```
 
 Keep it **short** — dashboard, not a skill essay. Omit empty optional lines if noisy; never

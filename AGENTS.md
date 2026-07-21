@@ -13,5 +13,5 @@ This project keeps **shared agent working knowledge** under [`.agent-tools/memor
 
 **What it is not:** ADRs (`docs/decisions/`), CONTRIBUTING/gates, Codex/domain docs, planning scratch, or personify voice.
 
-**Loading policy:** Read [`MEMORY.md`](.agent-tools/memory/MEMORY.md) when compounding, debugging, or hitting an unfamiliar seam; open individual entry/solution files on demand. Do **not** auto-import the entire tree every turn. Capture and maintain via `/workflow:compound` (and `/workflow:compound --maintain`).
+**Loading policy:** Read [`MEMORY.md`](.agent-tools/memory/MEMORY.md) when compounding, debugging, or hitting an unfamiliar seam; open individual entry/solution files on demand. Do **not** auto-import the entire tree every turn. Capture via `/workflow:compound`; steward (yield + memory hygiene) via `/workflow:maintain`.
 <!-- agent-tools:memory-link end -->

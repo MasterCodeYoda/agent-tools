@@ -25,11 +25,12 @@ evidence). Soft doc polish does not bump.
 | Tracks | `references/tracks.md` | feature \| micro \| research (+ conventions overrides) |
 | Phase skills | refine, plan, execute, review, compound, … | Same gates; same artifacts |
 | Claim dialect | `planning/pm-integration.md` | Parse/emit `workflow:claim` / egress lines |
-| Runs ledger | `references/runs-ledger.md` | Append events; close-run; optional yield |
+| Runs ledger | `references/runs-ledger.md` | Append events; close-run; yield via maintain |
 | Handoff / return | `references/handoff-package.md` + swarm structured return | Same field names |
 | Review evidence | continue `gates.md` | method, date, verdict, P1–P3, disposition |
 | Merge policy | conventions | Honor autonomous local merge ratchet; no silent push |
-| Memory | `.agent-tools/memory/` + compound | Capture/maintain; no skill mutation |
+| Memory capture | `.agent-tools/memory/` + compound | Capture only; no skill mutation |
+| Stewardship | `/workflow:maintain` | Yield + memory hygiene; cadence; no skill mutation |
 | Corpus change | Skill source only (`/skills:evolve` when installed) | Never edit process IP from run traces; consumers capture evidence + escalate upstream |
 
 ## Must not reimplement
@@ -69,7 +70,7 @@ Do **not** confuse the **research track** with on-demand codebase research.
 
 ```text
 workflow (parent)
-  continue | setup | prune | roadmap | brainstorm | refine | plan | execute | review | audit | compound
+  continue | maintain | setup | prune | roadmap | brainstorm | refine | plan | execute | review | audit | compound
 swarm (parent)
   setup | continue | <goal orchestrator>
 git | personify

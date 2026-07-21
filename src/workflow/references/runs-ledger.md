@@ -128,11 +128,14 @@ disposition (capture or reasoned none).
 
 ## Yield glance (`yield.md`)
 
+**Primary entry:** **`/workflow:maintain`** (full stewardship or `--yield`).
+
 **Triggers (any):**
 
-- User invokes continue with yield intent: `--yield`, `yield`, or “show run yield”
-- Soft weekly offer: glance missing/older than 7d **and** ≥5 closed runs since last generate
-- Optional: after close-run when user is in a recap and asks
+- User invokes `/workflow:maintain` or `/workflow:maintain --yield` (or “show run yield”)
+- Soft stewardship offer when due+signal — @workflow `maintain/references/cadence.md`
+  (status advisory; continue end-of-loop approval-gated; never auto-run)
+- **Compat:** `/workflow:continue --yield` / `yield` → hand off to maintain yield job (no claim)
 
 **Never** block claim for metrics. **Never** hand-edit vanity numbers — regenerate from
 `ledger.yml` (+ open runs from recent events if cheap).

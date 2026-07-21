@@ -59,11 +59,22 @@ improvement — never auto-mutate skills from continue. Soft-mention once when e
 Seed fields (portable — no skill-source file required to record them): `run_ids`, `symptoms`,
 `hypothesized_gap`, `candidate_skills`, optional `severity_guess`.
 
-## Yield glance (optional, non-blocking)
+## Stewardship due (optional, non-blocking)
 
-If `.agent-tools/runs/yield.md` is older than 7 days **and** ≥5 closed runs exist since last
-generate, soft-offer regenerate from ledger (shape in `runs-ledger.md`). User can force with
-`/workflow:continue --yield`. Never block claim for metrics.
+Load due/signal rules from @workflow `maintain/references/cadence.md` (read
+`.agent-tools/memory/state.yml` + ledger counts).
+
+| Host | Behavior |
+|------|----------|
+| **`/workflow:continue`** | On **end-of-loop stop / recap / hard_stop** (not every phase-return): if `due AND signal`, **one** approval prompt — run `/workflow:maintain` now / snooze 3d / skip once. Never auto-run. Never block claim. |
+| Bare **`/workflow`** (status) | Advisory line only when due — do not prompt multi-choice or write state |
+| Mid-drive phase-return | Do **not** interrupt for maintain |
+
+`signal` examples: ≥5 closed runs since last yield; rework/thrash/fidelity flags; memory never
+maintained. Full formula in cadence.md.
+
+**Compat:** `/workflow:continue --yield` still accepted → hand off to
+`/workflow:maintain --yield` (no unit claim).
 
 ## Active swarm
 

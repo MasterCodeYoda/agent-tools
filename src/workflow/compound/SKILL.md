@@ -1,7 +1,7 @@
 ---
 name: workflow:compound
-description: Capture durable knowledge from any engineering work — debugging solutions, refactors, features, design decisions, reusable patterns — and maintain memory quality so each unit of work compounds the next
-argument-hint: "[context about what was solved] | --maintain [--level global|project|memory|shared|local] [--focus staleness|accuracy|scope|gaps] [--migrate-solutions]"
+description: Capture durable knowledge from any engineering work — debugging solutions, refactors, features, design decisions, reusable patterns — so each unit of work compounds the next. Stewardship (yield + memory hygiene) is /workflow:maintain; --maintain is a compat shim.
+argument-hint: "[context about what was solved] | --maintain → /workflow:maintain (compat)"
 user-invocable: true
 ---
 
@@ -9,10 +9,12 @@ user-invocable: true
 
 Compounding is about making **every unit of engineering work make subsequent work easier** — not just debugging. A solved bug, a refactor that revealed a cleaner structure, a feature that established a reusable pattern, a hard-won design decision: all of it is durable knowledge worth capturing. Debugging solutions are one important case, not the whole job. Whenever you finish non-trivial work and think "the next person (or the next me) would save real time knowing this," compound applies — regardless of whether anything was ever broken.
 
-Two modes for managing your team's accumulated intelligence:
+**Primary job:** **Capture** durable knowledge from recently completed work and route it via a
+**deterministic gate** to the right home (shared memory entry/solution, ADR, personify,
+AGENTS.md, or harness-local memory).
 
-- **Capture mode** (default): Capture durable knowledge from recently completed work and route it via a **deterministic gate** to the right home (shared memory entry/solution, ADR, personify, AGENTS.md, or harness-local memory).
-- **Maintain mode** (`--maintain`): Audit and refine agent memory quality across the hierarchy; classify harness-local memories for promotion into project-shared memory; optionally migrate legacy `docs/solutions/`.
+**Stewardship** (run yield + memory quality audit) lives on **`/workflow:maintain`**. Do not
+conflate capture with plant hygiene.
 
 ## Mode Detection
 
@@ -20,20 +22,11 @@ Parse `$ARGUMENTS` to determine mode:
 
 | Input Pattern | Mode | Action |
 |---|---|---|
-| `--maintain` | Maintain | Full memory quality audit (see Maintain Mode) |
-| `--maintain --migrate-solutions` | Maintain + migrate | Full audit **and** legacy `docs/solutions/` migration proposal |
-| `--maintain --level global` | Maintain (scoped) | Audit user-global preferences only |
-| `--maintain --level project` | Maintain (scoped) | Audit `<repo>/AGENTS.md` / `CLAUDE.md` only |
-| `--maintain --level shared` | Maintain (scoped) | Audit `.agent-tools/memory/` only |
-| `--maintain --level local` | Maintain (scoped) | Audit harness-local auto-memory only |
-| `--maintain --level memory` | Maintain (scoped) | Alias: audit **both** L3-shared and L3-local |
-| `--maintain --focus staleness` | Maintain (focused) | Staleness check across levels |
-| `--maintain --focus accuracy` | Maintain (focused) | Accuracy verification across levels |
-| `--maintain --focus scope` | Maintain (focused) | Scope placement analysis |
-| `--maintain --focus gaps` | Maintain (focused) | Gap analysis against codebase |
+| `--maintain` or any `--maintain --…` flags (`--level`, `--focus`, `--migrate-solutions`) | **Compat → maintain** | Run **`/workflow:maintain`** with the same flags (memory-scoped). Prefer telling the user the primary command is `:maintain`. |
 | Any other input or empty | Capture | Capture durable knowledge from recent work |
 
-`--maintain` is **always on-demand** — it runs immediately. Cadence state only drives soft prompts on *other* compound invocations (see [Maintain Due Check](#maintain-due-check-capture-and-bare-compound)).
+`--maintain` remains **on-demand** via the shim (runs maintain immediately). Cadence offers on
+*capture* invocations only soft-point at `/workflow:maintain` — see [Maintain Due Check](#maintain-due-check-capture-and-bare-compound).
 
 ---
 
@@ -211,13 +204,14 @@ $ARGUMENTS
 
 ## Maintain Due Check (capture and bare compound)
 
-Before capture work (not when user already passed `--maintain`):
+Before capture work (not when args already shim to `/workflow:maintain`):
 
-1. Read `.agent-tools/memory/state.yml` if present.
-2. If missing, `last_maintain_at` is null, or older than `interval_days` (default **7**):
-   - Soft-prompt: maintain is due — **run now** / **snooze 3d** (write `snooze_until`) / **skip once**.
+1. Load due rules from @workflow `maintain/references/cadence.md` (or read
+   `.agent-tools/memory/state.yml` with the same formula).
+2. If **due**: soft-prompt stewardship — offer **`/workflow:maintain`** now / snooze 3d /
+   skip once. Do **not** inline the memory audit on capture.
 3. Never block capture if the user declines.
-4. On-demand `--maintain` ignores the interval and always runs.
+4. On-demand `--maintain` shims to `:maintain` and ignores the interval.
 
 ## Undocumented Solution Surfacing
 
@@ -271,12 +265,12 @@ point upstream to the skill source. Compound **never** applies skill patches its
 Thrash / rework close may cite `run_id` from `.agent-tools/runs/` in a process entry’s
 `related:` field. Prefer `type: process` with symptoms + hypothesized skill gap + candidate
 skill paths (portable seed fields; see @workflow `references/runs-ledger.md`). Do not patch
-skills here.
+skills here. Line yield and cadence live on **`/workflow:maintain`**.
 
 ### With docs promote
 
-Stable architecture/product entries may promote to `docs/` (Step 5). Maintain mode may flag
-promote candidates (see `references/maintain.md`).
+Stable architecture/product entries may promote to `docs/` (Step 5). `/workflow:maintain`
+(memory job) may flag promote candidates (see @workflow `maintain/references/memory.md`).
 
 
 ## Success Output
@@ -321,8 +315,8 @@ gotchas and invariants.
 - [ ] Overlap gates passed; no secrets
 
 
-## Maintain Mode
+## Maintain shim
 
-When mode detection routes to `--maintain`, **load and follow** `references/maintain.md` end-to-end
-(auto-detection, tiers, promotion, migration, apply-with-approval, `state.yml` update). Do not improvise
-maintain procedure without that file.
+When mode detection routes to `--maintain` (any maintain flags), **do not** run capture.
+Hand off to **`/workflow:maintain`** with the same flags — load `@workflow:maintain` SKILL.md
+and its references. Pointer only: `references/maintain.md`.

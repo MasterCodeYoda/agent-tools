@@ -2,7 +2,7 @@
 
 A cross-agent reference for long-term context, rules, and memory hygiene practices.
 
-Reference for the file types, settings, hooks, and slash commands that govern what an agent remembers across sessions. Used by `/workflow:compound` (especially `--maintain` mode) and consulted when memory feels stale, bloated, or mis-scoped.
+Reference for the file types, settings, hooks, and slash commands that govern what an agent remembers across sessions. Used by `/workflow:compound` (capture) and `/workflow:maintain` (memory hygiene + yield cadence); consulted when memory feels stale, bloated, or mis-scoped.
 
 The patterns below favor an agent platform’s documented primitives over hand-rolled alternatives. When a primitive exists, prefer it: less prose in memory files, more behavior enforced by the platform.
 
@@ -46,7 +46,7 @@ These are typically scoped by visibility and sharing needs (user-wide, project-w
 | **L3-local** | Harness auto-memory (e.g. Claude project `MEMORY.md` under `~/.claude/projects/…`) | Personal, machine, or session-adjacent; **not** the team SoT |
 | **Docs** | ADRs, runbooks, Codex/domain, CONTRIBUTING | Human + agent durable product corpus |
 
-**L3-shared layout** (authored/maintained by `/workflow:setup` + `/workflow:compound`):
+**L3-shared layout** (authored by `/workflow:setup` + `/workflow:compound`; stewarded by `/workflow:maintain`):
 
 ```text
 .agent-tools/memory/
@@ -71,7 +71,7 @@ Claude Code maintains two independent memory systems:
 - **User-authored**: `CLAUDE.md` files (with scopes: managed policy, project, user, local).
 - **Auto-memory**: `MEMORY.md` + topic files written by Claude (subject to 200-line / 25 KB truncation) — this is **L3-local**, not L3-shared.
 
-Team-shared technical memory for agent-tools projects is **`.agent-tools/memory/`**. Prefer writing project-wide captures there via `/workflow:compound`; keep Claude auto-memory for personal/machine notes or thin pointers.
+Team-shared technical memory for agent-tools projects is **`.agent-tools/memory/`**. Prefer writing project-wide captures there via `/workflow:compound`; steward quality via `/workflow:maintain`; keep Claude auto-memory for personal/machine notes or thin pointers.
 
 See the detailed scopes table and primitive list below for Claude’s current mechanisms.
 
@@ -134,13 +134,13 @@ The `personify` skill provides a specialized, narrow-scope durable profile for *
 
 ### Project shared memory (cross-cutting, from agent-tools)
 
-Installed and maintained by `/workflow:setup` + `/workflow:compound`:
+Installed by `/workflow:setup`; capture via `/workflow:compound`; steward via `/workflow:maintain`:
 
 - **Location:** `.agent-tools/memory/` (see levels table above)
 - **AGENTS link:** marker block `agent-tools:memory-link begin/end` pointing at `MEMORY.md`
 - **Capture routing:** deterministic gate in `/workflow:compound` (solutions → `solutions/`; project-wide patterns/gotchas → `entries/`; decisions → ADRs; voice → personify)
-- **Maintain:** `/workflow:compound --maintain` audits L1–L3, proposes promote/retire, optional `--migrate-solutions` for legacy `docs/solutions/`
-- **Cadence:** `state.yml` `interval_days` (default 7) soft-prompts on capture; `--maintain` is always on-demand
+- **Maintain:** `/workflow:maintain` audits L1–L3 (+ run yield), proposes promote/retire, optional `--migrate-solutions` for legacy `docs/solutions/` (compat: `/workflow:compound --maintain`)
+- **Cadence:** `state.yml` `interval_days` (default 7) — see @workflow `maintain/references/cadence.md`; soft-prompted from status/continue/capture; `:maintain` always on-demand
 
 ---
 
@@ -172,7 +172,7 @@ The table below lists the specific mechanisms Claude Code currently exposes.
 | `claude project purge` (built-in, v2.1.126+) | Command | Nuclear archival: deletes transcripts, task history, file history, project config under `~/.claude/projects/<hash>/`. Use for project handoff or when winding down a stale workspace.   |
 | `InstructionsLoaded` hook              | Hook     | Fires when CLAUDE.md or `.claude/rules/*.md` loads. Matchers: `session_start`, `nested_traversal`, `path_glob_match`, `include`, `compact`. Wire-point for size warnings or audit logging. |
 | `PreCompact` / `PostCompact` hooks     | Hook     | Wrap conversation compaction events. Useful for deciding when to trigger maintenance.                              |
-| `/workflow:compound --maintain`        | Command (this repo) | Three-tier audit across L1 / L2 / L3-shared / L3-local with promote/retire proposals and selective approval. Optional `--migrate-solutions` for legacy `docs/solutions/`. |
+| `/workflow:maintain`                   | Command (this repo) | Stewardship: run yield + three-tier memory audit (promote/retire; optional `--migrate-solutions`). Compat: `/workflow:compound --maintain`. |
 | `.agent-tools/memory/`                 | File set (this repo) | **L3-shared**: committed project memory (`MEMORY.md` + `entries/` + `solutions/`). Preferred home for project-wide captures. |
 
 <!-- /agent:include claude -->
@@ -302,7 +302,7 @@ These patterns are intended to be useful regardless of which agent you use.
 
 <!-- agent:include claude -->
 
-**Claude example**: Use `/memory` to review and delete entries, or `/workflow:compound --maintain --focus staleness`.
+**Claude example**: Use `/memory` to review and delete entries, or `/workflow:maintain --focus staleness`.
 
 <!-- /agent:include claude -->
 
@@ -380,14 +380,15 @@ These patterns are intended to be useful regardless of which agent you use.
 Use a deliberate memory maintenance workflow when:
 
 - Memory files or context are approaching practical limits (bloat, truncation, or degraded agent performance) — including either personify layer approaching its 400-token warn (or combined near 900), shared `MEMORY.md` Entries section past ~120 lines, or Claude local MEMORY.md near 200 lines / 25 KB
-- Maintain due per `.agent-tools/memory/state.yml` (`interval_days`, default 7) — soft-prompted by `/workflow:compound`; run `--maintain` anytime on demand
+- Maintain due per `.agent-tools/memory/state.yml` (`interval_days`, default 7) — soft-prompted from status/continue/capture; run `/workflow:maintain` anytime on demand
 - New contributors or team members are onboarding
 - The project has undergone significant changes that may have invalidated previous decisions or context
 - Before sharing memory/rules with a wider team or repository
 - Harness-local auto-memory has grown project-wide guidance that should be promoted to `.agent-tools/memory/entries/`
-- Legacy `docs/solutions/` still exists and should be migrated (`--maintain --migrate-solutions`)
+- Legacy `docs/solutions/` still exists and should be migrated (`/workflow:maintain --migrate-solutions`)
+- Run yield is stale or ≥5 closed runs since last yield glance
 
-The specific triggers and tools vary by agent platform. Primary tool: `/workflow:compound --maintain`.
+The specific triggers and tools vary by agent platform. Primary tool: **`/workflow:maintain`**.
 
 <!-- agent:include claude -->
 

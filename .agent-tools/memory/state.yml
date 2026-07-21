@@ -1,5 +1,7 @@
 schema_version: 1
 interval_days: 7
+last_stewardship_at: null
+last_yield_at: null
 last_maintain_at: "2026-07-08T22:29:35Z"
 snooze_until: null
 last_maintain_result:
@@ -10,4 +12,5 @@ last_maintain_result:
   retired: 0
   thinned_local: 4
   migrated_solutions: 0
+last_stewardship_result: null
 solutions_migrated_from_docs: false
