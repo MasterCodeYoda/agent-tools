@@ -36,11 +36,11 @@ How multiple sessions execute independent slices of one epic simultaneously in i
    git checkout main
    git merge feat/<slice-a-key>    # Run full test suite
    git merge feat/<slice-b-key>    # Run full test suite again
-6. USER cleans up worktrees (only after all merges succeed):
+6. USER cleans up worktrees (only after all merges succeed) via **@git worktree-delete**
+   (never raw `git worktree remove` — the skill enforces merge-safety and agent path resolution):
    git worktree list               # Verify no sessions are still active
-   git worktree remove <worktree-path-a>   # see @git (worktree-delete) for agent-specific resolution
-   git worktree remove <worktree-path-b>
-   git worktree prune
+   /git:worktree-delete <worktree-path-a>
+   /git:worktree-delete <worktree-path-b>
 ```
 
 ## Branch Naming for Parallel Work
