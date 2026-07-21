@@ -147,6 +147,63 @@ get_publish_target() {
     echo "user-profile"
 }
 
+# Resolve publish-target for a published skill dir, inheriting project scope from the
+# family package when a flattened leaf (e.g. skills-evolve) omits the frontmatter key.
+# Family name is the prefix before the first hyphen: skills-evolve → skills.
+resolve_skill_publish_target() {
+    local agent="$1"
+    local skill_name="$2"
+    local source_skill_dir="$3"
+
+    local publish_target
+    publish_target=$(get_publish_target "$source_skill_dir")
+
+    if [ "$publish_target" = "user-profile" ] && [[ "$skill_name" == *-* ]]; then
+        local family="${skill_name%%-*}"
+        local family_dir="${DIST_BASE}/${agent}/skills/${family}"
+        if [ -d "$family_dir" ]; then
+            local pt
+            pt=$(get_publish_target "$family_dir")
+            if [ "$pt" = "project" ]; then
+                publish_target="project"
+            fi
+        fi
+    fi
+    echo "$publish_target"
+}
+
+# True if path is an agent-tools managed skill install (marker and/or symlink into our dist).
+is_managed_skill_entry() {
+    local entry="$1"
+    local agent="$2"
+    if [ -e "${entry}/${MANAGED_MARKER}" ]; then
+        return 0
+    fi
+    if [ -L "$entry" ]; then
+        local link_target
+        link_target=$(readlink "$entry" 2>/dev/null || true)
+        if [[ -n "$link_target" && "$link_target" == *"/dist/${agent}/skills/"* ]]; then
+            return 0
+        fi
+    fi
+    return 1
+}
+
+# Remove a managed skill install from a scope (used to migrate project-scoped leaves
+# out of the user profile after they were incorrectly installed globally).
+remove_managed_skill_entry() {
+    local entry="$1"
+    local agent="$2"
+    local label="$3"
+    if [ ! -e "$entry" ] && [ ! -L "$entry" ]; then
+        return
+    fi
+    if is_managed_skill_entry "$entry" "$agent"; then
+        echo -e "  ${YELLOW}→${NC} Removing ${label}: ${entry}"
+        rm -rf "$entry"
+    fi
+}
+
 # Install a single skill directory for a given agent
 install_skill() {
     local agent="$1"               # claude, grok, factory, codex, opencode
@@ -154,13 +211,15 @@ install_skill() {
     local source_skill_dir="$3"    # e.g. dist/claude/skills/workflow
 
     local publish_target
-    publish_target=$(get_publish_target "$source_skill_dir")
+    publish_target=$(resolve_skill_publish_target "$agent" "$skill_name" "$source_skill_dir")
 
     local target_base
     local scope_label
+    local other_base
 
     if [ "$publish_target" = "project" ]; then
         target_base=$(get_agent_skills_dir "$agent" "project")
+        other_base=$(get_agent_skills_dir "$agent" "user")
         scope_label="${YELLOW}[project]${NC}"
 
         if [ ! -d "$target_base" ]; then
@@ -175,6 +234,7 @@ install_skill() {
         fi
     else
         target_base=$(get_agent_skills_dir "$agent" "user")
+        other_base=$(get_agent_skills_dir "$agent" "project")
         scope_label="[user]"
     fi
 
@@ -198,6 +258,9 @@ install_skill() {
 
     # Mark this skill as managed by agent-tools so future runs can safely prune it if removed.
     touch "${target}/${MANAGED_MARKER}"
+
+    # Drop a stale copy from the other scope (e.g. project leaf previously leaked to ~/.claude/skills).
+    remove_managed_skill_entry "${other_base}/${skill_name}" "$agent" "wrong-scope install of ${skill_name}"
 }
 
 # Prune skills that were previously installed by this repo (have the marker)
@@ -312,6 +375,55 @@ install_skills_for_agent() {
     echo
 }
 
+# Resolve publish-target for an OpenCode command name (skills-evolve, swarm-test, …).
+resolve_opencode_command_publish_target() {
+    local cmd_name="$1"
+    local corresponding_skill="${DIST_BASE}/opencode/skills/${cmd_name}"
+    local publish_target
+    publish_target=$(get_publish_target "$corresponding_skill")
+
+    if [ "$publish_target" = "user-profile" ]; then
+        # Flattened leaf not in opencode skills/; inherit from family package or src.
+        if [[ "$cmd_name" == *-* ]]; then
+            local family="${cmd_name%%-*}"
+            local family_skill="${DIST_BASE}/opencode/skills/${family}"
+            if [ -d "$family_skill" ]; then
+                local pt
+                pt=$(get_publish_target "$family_skill")
+                if [ "$pt" = "project" ]; then
+                    publish_target="project"
+                fi
+            fi
+        fi
+    fi
+    if [ "$publish_target" = "user-profile" ]; then
+        # Exact declared-name match in src/ — "swarm" must not hit "swarm:test".
+        local src_name="${cmd_name//-/:}"
+        while IFS= read -r src_md; do
+            local declared
+            declared=$(grep -m1 '^name:' "$src_md" 2>/dev/null | cut -d: -f2- | tr -d ' \t\r\n')
+            if [ "$declared" = "$src_name" ]; then
+                local src_dir
+                src_dir=$(dirname "$src_md")
+                local pt
+                pt=$(get_publish_target "$src_dir")
+                if [ "$pt" = "project" ]; then
+                    publish_target="project"
+                    break
+                fi
+                local parent_dir
+                parent_dir=$(dirname "$src_dir")
+                pt=$(get_publish_target "$parent_dir")
+                if [ "$pt" = "project" ]; then
+                    publish_target="project"
+                    break
+                fi
+            fi
+        done < <(find "${SCRIPT_DIR}/src" -name SKILL.md 2>/dev/null)
+    fi
+    echo "$publish_target"
+}
+
 # Install OpenCode command definitions (flat .md files for direct /command invocation).
 # Commands are emitted by the publisher only for the "opencode" target.
 # We respect publish-target the same way as skills (most go to user global;
@@ -328,69 +440,27 @@ install_commands_for_agent() {
 
     echo "Installing commands for ${agent}..."
 
+    local project_cmds="${SCRIPT_DIR}/.opencode/commands"
+    local user_cmds="${HOME}/.config/opencode/commands"
+    local published_cmds=()
+
     for cmd_file in "${dist_cmds_dir}"/*.md; do
         [ -f "$cmd_file" ] || continue
         local cmd_name
         cmd_name=$(basename "$cmd_file" .md)
+        published_cmds+=("$cmd_name")
 
-        # Determine scope from the matching published skill (if present)
-        local corresponding_skill="${DIST_BASE}/${agent}/skills/${cmd_name}"
         local publish_target
-        publish_target=$(get_publish_target "$corresponding_skill")
-
-        if [ "$agent" = "opencode" ] && [ "$publish_target" = "user-profile" ]; then
-            # For opencode we intentionally don't create flat sub-skill dirs in skills/
-            # (to avoid duplicating subs as skills). Fall back to the containing family
-            # or the original source SKILL.md (which may carry the publish-target).
-            if [[ "$cmd_name" == *-* ]]; then
-                local family="${cmd_name%%-*}"
-                local family_skill="${DIST_BASE}/${agent}/skills/${family}"
-                if [ -d "$family_skill" ]; then
-                    local pt
-                    pt=$(get_publish_target "$family_skill")
-                    if [ "$pt" != "user-profile" ]; then
-                        publish_target="$pt"
-                    fi
-                fi
-            fi
-            if [ "$publish_target" = "user-profile" ]; then
-                # Search src/ tree for matching sub (by name with :) and inherit target
-                # from its dir or its parent family dir.
-                # Exact declared-name match only — "swarm" must not hit "swarm:test"
-                # (prefix grep would mis-route bare /swarm into project scope).
-                local src_name="${cmd_name//-/:}"
-                # Process substitution (not a pipe) so the publish_target
-                # assignment survives the loop.
-                while IFS= read -r src_md; do
-                    local declared
-                    declared=$(grep -m1 '^name:' "$src_md" 2>/dev/null | cut -d: -f2- | tr -d ' \t\r\n')
-                    if [ "$declared" = "$src_name" ]; then
-                        local src_dir
-                        src_dir=$(dirname "$src_md")
-                        local pt
-                        pt=$(get_publish_target "$src_dir")
-                        if [ "$pt" != "user-profile" ]; then
-                            publish_target="$pt"
-                            break
-                        fi
-                        # try parent (e.g. for skills subs, the skills/ family declares it)
-                        local parent_dir
-                        parent_dir=$(dirname "$src_dir")
-                        pt=$(get_publish_target "$parent_dir")
-                        if [ "$pt" != "user-profile" ]; then
-                            publish_target="$pt"
-                            break
-                        fi
-                    fi
-                done < <(find "${SCRIPT_DIR}/src" -name SKILL.md 2>/dev/null)
-            fi
-        fi
+        publish_target=$(resolve_opencode_command_publish_target "$cmd_name")
 
         local target_base
+        local other_base
         if [ "$publish_target" = "project" ]; then
-            target_base="${SCRIPT_DIR}/.opencode/commands"
+            target_base="$project_cmds"
+            other_base="$user_cmds"
         else
-            target_base="${HOME}/.config/opencode/commands"
+            target_base="$user_cmds"
+            other_base="$project_cmds"
         fi
 
         mkdir -p "$target_base"
@@ -398,7 +468,48 @@ install_commands_for_agent() {
 
         echo "  ${cmd_name} → ${target}"
         ln -sfn "$cmd_file" "$target"
+
+        # Migrate: remove managed/wrong-scope copy (e.g. stale global swarm-test.md).
+        local other="${other_base}/${cmd_name}.md"
+        if [ -L "$other" ] || [ -f "$other" ]; then
+            local other_link
+            other_link=$(readlink "$other" 2>/dev/null || true)
+            if [[ -z "$other_link" || "$other_link" == *"/dist/opencode/commands/"* ]]; then
+                echo -e "  ${YELLOW}→${NC} Removing wrong-scope command: ${other}"
+                rm -f "$other"
+            fi
+        fi
     done
+
+    # Prune managed user-global commands no longer published (or left after renames).
+    if [ -d "$user_cmds" ]; then
+        local removed=0
+        for entry in "$user_cmds"/*; do
+            [ -e "$entry" ] || [ -L "$entry" ] || continue
+            [[ "$entry" == *.md ]] || continue
+            local name
+            name=$(basename "$entry" .md)
+            local still=false
+            for pub in "${published_cmds[@]}"; do
+                if [ "$pub" = "$name" ]; then
+                    still=true
+                    break
+                fi
+            done
+            if [ "$still" = false ]; then
+                local link_target
+                link_target=$(readlink "$entry" 2>/dev/null || true)
+                if [[ "$link_target" == *"/dist/opencode/commands/"* ]]; then
+                    echo -e "  ${YELLOW}→${NC} Removing stale managed command: ${entry}"
+                    rm -f "$entry"
+                    ((removed++))
+                fi
+            fi
+        done
+        if [ "$removed" -gt 0 ]; then
+            echo -e "  ${GREEN}✓${NC} Pruned ${removed} stale OpenCode command(s) from ${user_cmds}"
+        fi
+    fi
 
     echo
 }

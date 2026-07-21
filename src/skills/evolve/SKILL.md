@@ -2,6 +2,7 @@
 name: skills:evolve
 description: Detect gaps in the canonical skill corpus, propose targeted improvements, validate changes, and present for review. Inventories src/** skill trees; optional run-ledger seeds for process IP gaps.
 user-invocable: true
+publish-target: project
 ---
 
 # Skills: Evolve

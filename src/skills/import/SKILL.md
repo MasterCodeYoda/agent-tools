@@ -2,6 +2,7 @@
 name: skills:import
 description: Import and adapt skills written for other agent platforms into the canonical skill corpus. Detects agent-specific patterns, applies safe generalizations, collaborates on markup decisions, and produces clean, portable, well-structured canonical skills.
 user-invocable: true
+publish-target: project
 ---
 
 # Skills: Import

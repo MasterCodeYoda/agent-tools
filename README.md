@@ -57,13 +57,13 @@ Grok is treated as a first-class target alongside Claude and Factory. Detection 
 
 Most skills should use the default `publish-target: user-profile`.
 
-Use `publish-target: project` only when a skill is tightly coupled to the agent-tools repository itself (for example, the `skills` meta-skill that provides `/skills:import` and `/skills:evolve`).
+Use `publish-target: project` only when a skill is tightly coupled to the agent-tools repository itself (for example, the `skills` meta-skill **and** its invocable leaves `/skills:import` and `/skills:evolve`). Flattened leaves (`skills-evolve/`, `skills-import/`) must declare project scope on their own `SKILL.md` as well — install does not treat “parent is project” as optional. OpenCode also loads `~/.claude/skills/`, so a leaf left on the default `user-profile` target leaks into every project’s autocomplete.
 
-Example frontmatter (for the project-scoped meta-skill):
+Example frontmatter (for the project-scoped meta-skill and each leaf):
 
 ```yaml
 ---
-name: skills
+name: skills          # or skills:evolve / skills:import
 description: Meta-skill for importing and evolving the canonical skill corpus.
 publish-target: project
 user-invocable: true
