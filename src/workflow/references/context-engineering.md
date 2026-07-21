@@ -14,7 +14,7 @@ window** (correctness, completeness, size, **instruction count**, trajectory).
 
 | Term | Meaning | Artifact / path |
 |------|---------|-----------------|
-| **Research track** | Built-in *work track*: success = decision or scored experiment | Frame → evidence → conclusion (`references/tracks.md`, `research-loop.md`) |
+| **Research track** | Built-in *work track*: success = decision or scored experiment | Frame → evidence → conclusion (`references/tracks.md`; optional project copy from `setup/templates/research-loop.md` → `planning/research-loop.md`) |
 | **On-demand codebase research** | Context craft: compress **live code truth** for *this unit* so refine/plan/execute start clean | `codebase-research.md` under the unit (preferred) — see below |
 
 Do **not** treat “micro / no research track” as “skip codebase research.” Codebase research
