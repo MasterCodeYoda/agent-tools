@@ -1,6 +1,6 @@
 ---
 name: code-patterns
-description: Language-specific coding patterns for Python, TypeScript/React, and C#/.NET. Covers type safety, testing strategies, error handling, async patterns, and framework best practices. Routes to the appropriate language guide based on project context.
+description: Language-specific coding patterns for Python, TypeScript/React, C#/.NET, and Rust. Covers type safety, testing strategies, error handling, async patterns, and framework best practices. Routes to the appropriate language guide based on project context.
 ---
 
 # Code Patterns
@@ -9,7 +9,7 @@ This skill provides language-specific coding standards, patterns, and best pract
 
 ## When to Use This Skill
 
-- Writing new code in Python, TypeScript, or C#
+- Writing new code in Python, TypeScript, C#, or Rust
 - Reviewing code for best practices
 - Setting up testing patterns
 - Implementing error handling strategies
@@ -114,6 +114,7 @@ For detailed language-specific patterns (loaded on request only):
 - **Python**: `languages/python.md` - Comprehensive Python patterns and standards
 - **TypeScript**: `languages/typescript.md` - TypeScript/React patterns and best practices
 - **C#**: `languages/csharp.md` - C#/.NET enterprise patterns
+- **Rust**: `languages/rust.md` - Rust/Tauri patterns, structured concurrency, and testing
 
 ## Commands
 
