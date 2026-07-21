@@ -187,6 +187,8 @@
       <div class="sub">Visual plan · static HTML</div>
       <a href="#overview">Overview</a>
       <a href="#research">Research</a>
+      <a href="#design">Design</a>
+      <a href="#structure">Structure</a>
       <a href="#architecture">Architecture</a>
       <a href="#slices">Slices</a>
       <a href="#files">Files</a>
@@ -217,6 +219,33 @@
           <li>[[Key file / symbol]] — [[role]]</li>
           <li>[[Key constraint / convention]]</li>
         </ul>
+      </section>
+
+      <section id="design">
+        <h2>Design</h2>
+        <p>
+          Source: <code>[[path/to/design-discussion.md | light | skipped — reason]]</code>
+        </p>
+        <p>[[Desired end state + key decisions — short]]</p>
+        <ul>
+          <li><strong>Accept pattern:</strong> [[…]]</li>
+          <li><strong>Reject pattern:</strong> [[…]]</li>
+        </ul>
+      </section>
+
+      <section id="structure">
+        <h2>Structure outline</h2>
+        <p>Human deep-read surface — vertical phases with verification (mirrors markdown plan).</p>
+        <ol>
+          <li>
+            <strong>[[Phase 1]]</strong> — [[what lands]]
+            <br /><span style="color:var(--muted)">Verify: [[test / command / check]]</span>
+          </li>
+          <li>
+            <strong>[[Phase 2]]</strong> — [[what lands]]
+            <br /><span style="color:var(--muted)">Verify: [[…]]</span>
+          </li>
+        </ol>
       </section>
 
       <section id="architecture">
@@ -268,7 +297,7 @@ flowchart TD
 
       <section id="intended">
         <h2>Intended changes</h2>
-        <p>Mirrors the markdown plan’s snippet density — presentation only.</p>
+        <p>Tactical segment — mirrors the markdown plan’s snippet density; human spot-check.</p>
         <div class="callout decision">
           <strong><span class="path">[[path/or/symbol]]</span></strong>
           <pre style="margin:0.5rem 0 0; white-space:pre-wrap; font-family:var(--mono); font-size:0.85rem;">[[before → after sketch / snippet]]</pre>

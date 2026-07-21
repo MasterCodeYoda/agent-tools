@@ -220,6 +220,20 @@ Continue host records review phase-return + fidelity; review skill need not writ
 
 ## Quality Principles
 
+### Own the change (human guidance; system eases)
+
+Review is **code-centric**. There is no robotic “read N% of LOC” rule. Depth is risk- and
+track-scaled (`quick` / `standard` / `deep`). Prefer:
+
+- **Always:** intent, blast radius, rollback story are coherent with ACs/plan  
+- **Pattern / seam read:** does the PR match accepted patterns from design/research, or revive
+  rejected legacy paths? Signal prefactor or re-enter refine/plan when structure is wrong  
+- **Never:** treat green tests alone as “reviewed,” or approve production changes with no
+  code-bearing pass  
+
+Early design/structure alignment should reduce surprise volume so this pass stays high-signal.
+Full craft: @workflow `references/context-engineering.md` › Code ownership.
+
 ### Reasoning Rigor
 
 Every finding must be grounded in evidence, not intuition:

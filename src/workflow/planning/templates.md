@@ -340,10 +340,31 @@ parallelizable_with: []     # peer items safe to run concurrently (no shared fil
 Do not invent modules or paths that research did not establish. Full craft:
 @workflow (`references/context-engineering.md`).
 
+## Design
+
+- **Design discussion:** `./planning/<project>/design-discussion.md` (or light / skipped — reason)
+- **Confirm:** design still holds for these ACs — if not, stop and re-enter refine (do not
+  silently rewrite ACs here)
+- **Patterns to follow / reject:** [from design]
+- **Open questions closed for implement:** [list or none]
+
+## Structure outline
+
+**Human deep-read surface.** Vertical phases with verification (vertical-slice mode) or
+deliverable order with per-deliverable verification (deliverable-partition). Not a horizontal
+“all DB → all services → all API → all UI” dump when vertical-slice applies.
+
+| Phase | What lands | Verify before next |
+|-------|------------|--------------------|
+| 1 | … | [test / command / check] |
+| 2 | … | … |
+
+**Seam / signature shape (when useful):** [types, endpoints, interfaces — C-header density]
+
 ## Intended changes (snippets)
 
-For each non-obvious edit site, give path + short snippet or precise before→after shape.
-This is compression of **intent**, not the full final PR.
+**Tactical segment — agent fuel; human spot-check.** For each non-obvious edit site, give path
++ short snippet or precise before→after shape. Compression of **intent**, not the full final PR.
 
 ### [path/or/symbol]
 
@@ -353,6 +374,7 @@ This is compression of **intent**, not the full final PR.
 
 - **Why:** …
 - **Verify:** [test / command / manual check after this step]
+- **Structure phase:** [which phase above]
 
 ### [next edit site]
 

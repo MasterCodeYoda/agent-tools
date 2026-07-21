@@ -56,11 +56,12 @@ Not a hard gate for payload v1, but runtimes that omit these will re-grow contex
 
 | Practice | Agent-tools home |
 |----------|------------------|
-| Dumb-zone / smart-zone norms | `references/context-engineering.md` |
-| On-demand codebase research (almost all work) | same — `codebase-research.md` |
-| Plan-snippet quality bar | same + `planning/templates.md` |
+| Dumb-zone / smart-zone / instruction-budget norms | `references/context-engineering.md` |
+| On-demand codebase research (questions-first, ticket-hidden; almost all work) | same — `codebase-research.md` |
+| Technical design discussion (refine-primary) | same + `refine/templates/design-discussion.md` |
+| Plan segmentation (design → structure → tactical snippets) | same + `planning/templates.md` |
 | Mid-phase intentional compaction | same + `execution/SKILL.md` |
-| Visual plan grounded in research | `planning/references/visual-approval.md` |
+| Visual plan grounded in research + design + structure | `planning/references/visual-approval.md` |
 
 Do **not** confuse the **research track** with on-demand codebase research.
 

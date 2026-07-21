@@ -20,12 +20,28 @@ table only for units they classify (setup doctrine).
 
 The **research track** is a *unit classification* (decision/spike deliverable). Separately,
 **on-demand codebase research** is context craft: a compressed, code-grounded snapshot for
-*this* unit so plan/execute do not re-burn the window on discovery.
+*this* unit so refine/plan/execute do not re-burn the window on discovery.
 
 - **Almost all work** (feature, micro, and code-shaped research-track units) should produce
   codebase research at a dose that matches scope — see `references/context-engineering.md`.
+- Prefer **questions-first + ticket-hidden facts**, then **converge** with the ticket (refine
+  primary). Technical **design discussion** is refine-primary for feature/hard — not the
+  research track and not brainstorm.
 - Skipping is for true trivial cases only (one-line / known path), with an explicit reason.
 - Do not interpret “track ≠ research” as “skip codebase research.”
+
+### QRSPI-shaped dose (map into tracks — do not rename phases)
+
+Conceptual lineage stages map onto **this family’s** tracks and artifacts:
+
+| Conceptual stage | Micro | Feature / hard |
+|------------------|-------|----------------|
+| Questions + ticket-hidden research | Light research block | Full `codebase-research.md` (often during refine) |
+| Technical design discussion | Skip | `design-discussion.md` in refine (default) |
+| Structure outline (vertical + verify) | Skip (issue-as-plan) | Hard section of `implementation-plan.md` |
+| Tactical plan / snippets | Issue body | Plan section + intended changes |
+| Worktree / implement | execute | execute (+ `--worktree` / swarm) |
+| Own the code | review `quick` | review `standard`+ |
 
 ## Classification (first match; user override always wins)
 
@@ -68,7 +84,8 @@ No track → hard-stop + offer `/workflow:roadmap`. Do not stuff a program into 
 
 **Still do light codebase research** before execute (short `codebase-research.md` or
 session-state block) unless skip reason applies — `references/context-engineering.md`.
-Issue-as-plan is not a free pass to invent file locations.
+Issue-as-plan is not a free pass to invent file locations. Micro does **not** require
+`design-discussion.md` or a structure outline.
 
 **Mandatory:** branch ≠ main; tests green; real review + evidence schema; escalate when scope
 grows (new contract, multi-module, unclear ACs, thrash). On escalate → reclassify **feature**

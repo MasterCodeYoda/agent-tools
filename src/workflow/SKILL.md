@@ -115,8 +115,9 @@ Classification, micro/research process, review depth: `references/tracks.md`. Pr
 `conventions.md` may add tracks or adopt the **personal factory** pack (setup template).
 
 **On-demand codebase research** (compress live-code truth for the unit) is **not** the same
-as the research track — it is default context craft for almost all work. Dumb-zone norms,
-plan-snippet quality, mid-phase intentional compaction: `references/context-engineering.md`.
+as the research track — it is default context craft for almost all work. Questions-first /
+ticket-hidden research, refine-primary technical design, plan structure→tactical segmentation,
+dumb-zone norms, mid-phase intentional compaction: `references/context-engineering.md`.
 
 ## Project-Local Conventions
 
@@ -143,10 +144,11 @@ in **Out of Scope**, not deferred tasks.
 ├── roadmap.md            # optional (roadmap skill)
 ├── conventions.md        # optional (setup)
 ├── <project-name>/
-│   ├── brainstorm.md     # optional
-│   ├── requirements.md   # file mode only
-│   ├── codebase-research.md  # on-demand code snapshot (almost all work)
-│   ├── implementation-plan.md
+│   ├── brainstorm.md           # optional (concept seed — not technical design)
+│   ├── requirements.md         # file mode only
+│   ├── codebase-research.md    # on-demand code snapshot (almost all work)
+│   ├── design-discussion.md    # technical design (refine-primary; feature/hard)
+│   ├── implementation-plan.md  # structure + tactical segments (executable SoT)
 │   ├── session-state.md
 │   ├── visual-plan.html        # optional; approval presentation only
 │   └── technical-decisions.md  # optional
@@ -246,7 +248,8 @@ Examples: `references/decomposition-modes.md`.
 | Portfolio status (bare `/workflow`) | `references/status.md` |
 | Planning root | `references/planning-root.md` |
 | Built-in tracks | `references/tracks.md` |
-| Context engineering (dumb zone, research artifact, plan snippets, mid-phase compaction) | `references/context-engineering.md` |
+| Context engineering (dumb zone, ticket-hidden research, design, plan segmentation, compaction) | `references/context-engineering.md` |
+| Design discussion template | `refine/templates/design-discussion.md` |
 | Runs ledger | `references/runs-ledger.md` |
 | Handoff package (unit ↔ swarm) | `references/handoff-package.md` |
 | Process payload (runtime adapters) | `references/process-payload.md` |

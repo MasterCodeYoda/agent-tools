@@ -37,10 +37,14 @@ refine/plan loop. Offer process memory capture; do **not** edit workflow skills 
 When claiming or resuming a code-bearing unit, soft-surface if:
 
 - No `codebase-research.md` and no recorded `codebase research: skipped — …` for non-trivial work  
+- **Feature/hard** unit with no `design-discussion.md` and no recorded
+  `design discussion: skipped — …` when about to plan or execute  
+- Substantial plan missing a **Structure outline** segment (only Approach + task dump)  
 - Session-state shows repeated failure without an **Intentional Compaction** snapshot  
 
-Do **not** block claim solely for this — fold research/compaction into the next phase skill
-(`plan` / `execute`). Full norms: @workflow `references/context-engineering.md`.
+Do **not** block claim solely for this — fold research/design/structure/compaction into the
+next phase skill (`refine` / `plan` / `execute`). Full norms: @workflow
+`references/context-engineering.md`.
 
 ## Process gap → corpus (not in-loop rewrite)
 

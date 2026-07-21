@@ -89,17 +89,20 @@ Do **not** skip because some external CLI or MCP is missing.
 ### Inputs
 
 Use the **in-memory draft** of `implementation-plan.md` (not yet saved as the approved
-executable plan) plus requirements context **and** on-demand codebase research
-(`codebase-research.md` or light research). Preserve task breakdown, DoD, risks, file
-touch list, **intended-change snippets**, and **verification steps** so the visual surface
-reflects the same executable plan at the same density.
+executable plan) plus requirements context, on-demand codebase research
+(`codebase-research.md` or light research), and **design discussion** when present.
+Preserve **design confirm**, **structure outline** (phases + verification), task breakdown,
+DoD, risks, file touch list, **intended-change snippets**, and **verification steps** so the
+visual surface reflects the same **segmented** plan.
 
 **Context-engineering fit** (full norms: @workflow `references/context-engineering.md`):
 
 - Architecture / file map / contracts are **grounded in research**, not invented  
-- Weak, essay-only plans should not get a glossy visual that hides missing snippets  
-- Visual remains presentation only; it does not replace research or the markdown plan  
-- Skipping the visual never skips research or plan-snippet quality on the markdown SoT  
+- **Surface segmentation** — design / rejected patterns, structure (vertical phases + checks),
+  then tactical snippets — do **not** flatten into one mushy overview  
+- Weak, essay-only plans should not get a glossy visual that hides missing structure/snippets  
+- Visual remains presentation only; it does not replace research, design, or the markdown plan  
+- Skipping the visual never skips research, design (when required), structure, or snippet quality  
 
 **Write permission exception:** you **may** create the project planning directory and write
 `visual-plan.html` and/or `codebase-research.md` before the approval gate. Do **not** write
@@ -122,15 +125,17 @@ absolute path in session-state when useful for reopening.
    entirely (do not leave “TBD” chrome).
 3. Ground paths, symbols, schema, and endpoints in **codebase research** — never invent
    contracts. Label inferred UI/layout as *inferred*. Prefer linking/citing
-   `codebase-research.md` in the Research section.
-4. Surface **intended changes** (snippet callouts or before→after) and **phase verification**
-   when the markdown plan has them — same intent, scannable form.
-5. Write the complete self-contained HTML file to the output path.
-6. Open for review:
+   `codebase-research.md` in the Research section and `design-discussion.md` in Design.
+4. Surface **structure outline** (ordered phases + verification) as a first-class section —
+   this is the human deep-read surface.
+5. Surface **intended changes** (snippet callouts or before→after) and **phase verification**
+   when the markdown plan has them — tactical density, scannable form.
+6. Write the complete self-contained HTML file to the output path.
+7. Open for review:
    - macOS: `open <path>`
    - Linux: `xdg-open <path>` when available
    - Always print the absolute path in chat so the user can open it manually.
-7. Keep the path for the Plan Approval Prompt and for session-state after approve.
+8. Keep the path for the Plan Approval Prompt and for session-state after approve.
 
 ### Content shape by work type
 
@@ -148,10 +153,12 @@ Keep the template’s structure so the brief is scannable:
 |---------|---------|
 | **Overview** | 2–4 sentence outcome + approach |
 | **Research** | Grounding from `codebase-research.md` — how it works today, confidence, skip only with reason |
+| **Design** | From `design-discussion.md` — patterns accept/reject, resolved decisions (or skip reason) |
+| **Structure** | Vertical (or mode-correct) phases + verification checkpoints — human deep-read |
 | **Architecture** | One primary Mermaid (or HTML) diagram of the change (research-grounded) |
 | **Slices / deliverables** | Ordered units with task counts + verification cues; optional dependency Mermaid |
 | **Files** | Touch list / tree with add · modify · remove notes |
-| **Intended changes** | Snippet / before→after callouts for non-obvious edits (mirrors plan density) |
+| **Intended changes** | Snippet / before→after callouts for non-obvious edits (tactical density) |
 | **Decisions** | Hard-to-reverse bets + rationale |
 | **Risks** | Concrete risks and mitigations |
 | **Open questions** | Unresolved items with recommended defaults when possible |

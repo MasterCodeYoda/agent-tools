@@ -107,26 +107,26 @@ basename $(git rev-parse --show-toplevel 2>/dev/null || pwd)
 cat .claude/settings.json 2>/dev/null | grep project_management
 ```
 
-### 2. On-demand codebase research (default)
+### 2. On-demand codebase research + design confirm (default)
 
-**Load** @workflow (`references/context-engineering.md`) › On-demand codebase research.
+**Load** @workflow (`references/context-engineering.md`) › On-demand codebase research,
+Technical design discussion, and Plan segmentation.
 
-This is **not** the research *track* — it is default context craft for almost all planned
-work: compress **live code truth** into a disposable-window snapshot so the plan and
-approval surfaces do not invent structure.
+This is **not** the research *track*. Prefer research and technical design already produced
+in **`/workflow:refine`**. Plan **re-verifies** and fills gaps; it does not silently invent a
+second product truth.
 
-1. **Dose:** full for multi-file / multi-layer / ambiguous seams; light only when the unit is
-   already tiny and well-localized. Skip only with an explicit reason (true one-liner /
-   known path). Prefer full when in doubt.
-2. **How:** run exploration in **sub-agents / Task(explore)** so search noise stays out of
-   the parent window. Parent keeps a structured digest.
-3. **Write** (or hold in draft until approval if you prefer the same gate as the plan):
-   `./planning/<project>/codebase-research.md` using the artifact shape in
-   context-engineering.md.
-4. **Human leverage:** if research is wrong, **throw it out** and re-steer — do not build a
-   plan on bad research. Present a short research summary before or with the plan draft when
-   the unit is substantial.
-5. **Freshness:** note commit SHA or date; discard/re-run if the branch moved under you.
+1. **Load existing** `codebase-research.md` and `design-discussion.md` when present.  
+2. **Freshness:** discard/re-run research if the branch moved or research is wrong — prefer
+   **questions-first + ticket-hidden facts** (hide solution intent in the research window).  
+3. **If research missing** on non-trivial work: run full/light research now (sub-agents for
+   search; parent keeps digest); write `./planning/<project>/codebase-research.md`.  
+4. **If design missing** on feature/hard work: produce `design-discussion.md` **before**
+   structure/tactical plan — or **stop and offer re-enter refine** when ACs must change.  
+5. **If design invalidates frozen ACs:** do **not** quietly rewrite acceptance criteria in the
+   plan — stop and offer `/workflow:refine`.  
+6. **Human leverage:** present short research + design confirm before or with the segmented
+   plan draft. Wrong research/design → throw out and re-steer.
 
 **Also gather:**
 
@@ -136,6 +136,7 @@ approval surfaces do not invent structure.
 - Extract acceptance criteria
 - Identify stakeholders
 - Note constraints and dependencies
+- Confirm requirements already **converged** with research (refine primary)
 
 **Technical Research** (if needed — external docs, not a substitute for codebase research):
 
@@ -208,29 +209,40 @@ Proceed to implementation planning once requirements are confirmed.
 ## Implementation Plan
 
 For task breakdown patterns, see @workflow (`planning/task-breakdown.md`).
-For plan density (snippets, verification, research link): @workflow
-(`references/context-engineering.md`) › Plan-snippet quality bar.
+For plan density and **hard segmentation**: @workflow
+(`references/context-engineering.md`) › Plan segmentation.
 
 ### Create Implementation Plan
 
 **Do not write files to disk yet** — present for approval first (§Plan Approval Gate).
-Exception: you may write `codebase-research.md` and (per visual rules) `visual-plan.html`
-before approval when that improves human review of the draft.
+Exception: you may write `codebase-research.md`, `design-discussion.md`, and (per visual rules)
+`visual-plan.html` before approval when that improves human review of the draft.
 
 Target: `./planning/<project>/implementation-plan.md`
 
 **Load and fill** @workflow (`planning/templates.md`) › **Implementation Plan Document Template**
 (frontmatter with `blocks` / `blocked_by` / `parallelizable_with`, Approach, **Research
-grounding**, **Intended changes (snippets)**, Breakdown through Definition of Done,
-Variant A vertical-slice or Variant B deliverable-partition breakdown). Empty dependency lists when none.
+grounding**, **Design**, **Structure outline**, **Intended changes (snippets)**, Breakdown
+through Definition of Done, Variant A vertical-slice or Variant B deliverable-partition
+breakdown). Empty dependency lists when none.
 
-**Plan-snippet quality bar** (substantial / multi-file plans — default unless truly trivial):
+**Hard segmentation (do not weaken)** — substantial / multi-file plans (default unless truly
+trivial). **Do not** race to a finished tactical plan body without structure:
 
-- Cite `codebase-research.md` (or light research) under Research grounding  
-- Include **Intended changes** with concrete paths and short code snippets or precise
-  before→after shapes for non-obvious edits  
-- Name **verification** after each phase/slice (command, test, or manual check)  
-- Sweet spot: reliable enough for a weak model to follow; short enough for one human review  
+1. **Design confirm** — link `design-discussion.md` (or light design / skip reason); state that
+   design still holds or stop for refine.  
+2. **Structure outline** — vertical phases (or deliverable order), signatures/seam shape as
+   needed, **verification after each phase** — this is the **human deep-read** surface.  
+3. **Intended changes (tactical)** — paths + snippets / before→after; **human spot-check**.  
+4. **Breakdown + DoD** — tasks under the structure, not a horizontal layer dump when in
+   vertical-slice mode.
+
+**Quality bar:**
+
+- Cite research + design under Research grounding / Design  
+- Structure must be **vertical** checkpoints unless deliverable-partition mode applies  
+- Tactical snippets + per-step verification for non-obvious edits  
+- Sweet spot: structure scannable in one sitting; tactics reliable for a weaker implementer  
 
 In deliverable-partition mode the breakdown carries parent ACs, AC traceability matrix, verbatim AC
 inheritance per sub-issue, and gap-prevention before parent epic close.
@@ -286,9 +298,10 @@ direction more easily in a browser.
 - **Non-blocking.** Non-substantial plan, policy `never`, or write failure → record
   `visual_plan: skipped — <reason>` and proceed to the approval prompt. Never block the gate.
 - **Same content.** Build the HTML **from** the in-memory draft implementation plan
-  (task breakdown, files, decisions, risks, intended-change snippets, verification) **and**
-  ground architecture/file maps in `codebase-research.md` so approval is of one plan, not
-  two competing ones. See context-engineering › Visual plan fit.
+  (design confirm, **structure outline**, task breakdown, files, decisions, risks,
+  intended-change snippets, verification) **and** ground architecture/file maps in
+  `codebase-research.md` / design so approval is of one plan, not two competing ones. See
+  context-engineering › Visual plan fit — **surface segmentation**, do not flatten.
 - **Pre-approval write exception:** you may create the project planning directory and write
   **only** `visual-plan.html` before Approve. Still do not write `implementation-plan.md` or
   `session-state.md` until the user chooses Approve.
@@ -373,7 +386,8 @@ what will be recorded in session-state.md.
 1. Write `./planning/[project]/implementation-plan.md` — this remains the **only** executable plan artifact for execute/continue/swarm.
 2. Write `./planning/[project]/session-state.md` — include the `worktree:` field set to `WORKTREE_PATH` when in worktree mode; omit it otherwise. Include `visual_plan:` when a visual surface was published or explicitly skipped (schema in templates / visual-approval reference).
 3. Ensure `./planning/[project]/codebase-research.md` is present (or session-state records an explicit skip reason).
-4. Ensure `./planning/[project]/visual-plan.html` is present and current when a visual surface was published (refresh if the approved draft drifted).
+4. Ensure `./planning/[project]/design-discussion.md` is present for feature/hard work (or session-state / plan records skip reason).
+5. Ensure `./planning/[project]/visual-plan.html` is present and current when a visual surface was published (refresh if the approved draft drifted).
 
 #### Step 4: Commit Planning Documents (if `WORKTREE_MODE=true`)
 
@@ -464,12 +478,14 @@ Before presenting plan for approval:
 - [ ] Acceptance criteria are specific
 - [ ] Scope boundaries are explicit
 - [ ] On-demand codebase research written (or explicit skip reason)
-- [ ] Implementation approach is documented and grounded in research
-- [ ] Intended-change snippets / edit sites present for multi-file work
+- [ ] Design confirmed / written for feature/hard (or skip reason); ACs not silently rewritten
+- [ ] **Structure outline** present with vertical (or mode-correct) phases + verification
+- [ ] Implementation approach is documented and grounded in research + design
+- [ ] Intended-change snippets / edit sites present for multi-file work (tactical segment)
 - [ ] Verification steps after phases/slices
 - [ ] Tasks are broken down and complete (no optional tiers)
 - [ ] Risks are identified
-- [ ] Visual plan HTML attempted or skipped per conventions (non-blocking); grounded in research when published
+- [ ] Visual plan HTML attempted or skipped per conventions (non-blocking); surfaces design + structure + tactics when published
 - [ ] Plan presented to user for approval (markdown SoT + optional visual-plan.html path)
 - [ ] User has explicitly approved the plan
 

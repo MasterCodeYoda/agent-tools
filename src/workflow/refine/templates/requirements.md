@@ -53,6 +53,8 @@ per produced item — story or sub-issue. See Phase 3.5 in the refine skill._
 ## Related
 
 - Issue: [ISSUE-ID or "Not created"]
+- Codebase research: `./planning/<project>/codebase-research.md` (or skipped — reason)
+- Design discussion: `./planning/<project>/design-discussion.md` (or skipped — reason)
 - Implementation Plan: [Link when created]
 
 ---

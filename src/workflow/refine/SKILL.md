@@ -119,6 +119,61 @@ Before finalizing, scan the project's decision records (`docs/decisions/`, READM
 record** at close — not add a competing one — and surface the conflict now. Capture rationale +
 rejected alternatives. See @workflow (`references/decision-records.md`).
 
+## Phase 2.5: Codebase research + technical design (default for feature / hard)
+
+**Load** @workflow (`references/context-engineering.md`) › On-demand codebase research and
+Technical design discussion.
+
+This phase is **context craft + feasibility**, not brainstorm (concept seed) and not the research
+*track*. Skip for true micro/trivial refine, pure product-copy, or when the user already provided
+fresh research + design for this unit (cite paths).
+
+### When to run (default on)
+
+- Multi-file / multi-layer / ambiguous seams  
+- New or changed public contracts, auth, schema, ownership boundaries  
+- User says `research this`, `design this`, or requirements depend on how the code works today  
+
+**Skip** with an explicit one-liner in requirements notes when the unit is a one-path fix with known
+files: `codebase research: skipped — <reason>`; `design discussion: skipped — <reason>`.
+
+### 2.5a Questions → ticket-hidden research
+
+1. From the ticket / problem / proposed solution, write **technical research questions** that force
+   the agent to touch the right seams (not a solution brief).  
+2. Prefer a **fresh explore/sub-agent window** that answers those questions with **facts only** —
+   **hide or quarantine** “here is exactly what we will build” so research does not become opinions.  
+3. Write `./planning/<project>/codebase-research.md` (shape in context-engineering).  
+4. Present a short research summary to the user. If research is wrong, **throw it out** and re-steer
+   — do not build requirements on bad research.
+
+### 2.5b Converge facts ⨯ requirements
+
+Fold research into the refinement conversation:
+
+- What assumptions in the ticket or proposed solution are **false**?  
+- Which ACs must **change**, defer, or drop?  
+- What is **out of blast radius** for this unit?  
+
+**Grounded requirements beat fantasy ACs.** Prefer changing the ticket/requirements now over
+discovering impossibility only at plan/execute.
+
+### 2.5c Technical design discussion
+
+For feature/hard work (default), write `./planning/<project>/design-discussion.md` from
+**`templates/design-discussion.md`**:
+
+- Current state / desired end state (research-grounded)  
+- Patterns found with **accept / reject / supersede** (brain surgery before plan)  
+- Resolved decisions + open questions  
+- **Requirements impact** — any AC/scope changes must land in requirements or PM before refine completes  
+
+Present design for human review (short artifact — high leverage). User may revise design and ACs in
+the same refine session. Do **not** race past design into a finished implementation plan here —
+plan owns structure + tactics.
+
+**Not brainstorm:** if the *concept* is still fuzzy, stop and offer `/workflow:brainstorm` first.
+
 ## Phase 3: User Stories (vertical-slice mode)
 
 ### Extract Key User Needs
@@ -224,12 +279,22 @@ Created in both modes for later plan/session-state.
 **Only in file mode.** Write `./planning/<project>/requirements.md` using
 **`templates/requirements.md`** (load that file; fill from phases above).
 
+Also ensure when Phase 2.5 ran:
+
+1. `./planning/<project>/codebase-research.md` present (or skip reason recorded in requirements Related).  
+2. `./planning/<project>/design-discussion.md` present for feature/hard (or skip reason recorded).  
+3. Requirements **Requirements impact** from design is reflected in Must Have / Out of Scope / Open Questions.
+
 ### PM Mode: Write Requirements to PM Issue
 
 **Only in PM mode.** Update or create the PM issue — no `requirements.md`.
 MCP calls and field mappings: @workflow (`planning/pm-integration.md`).
 Description structure: same reference (Issue Update section).
 Multi-item dependencies → native relations + parallelizable_with note/label.
+
+Still write local `codebase-research.md` and `design-discussion.md` under
+`./planning/<project>/` when Phase 2.5 ran — PM holds ACs; research/design stay file artifacts for
+plan.
 
 ## PM Tool Integration (file mode only)
 
@@ -253,10 +318,16 @@ Present summary using **`templates/completion-file.md`** (file mode) or
 
 - Guide through questions, not templates; adapt; skip irrelevant phases
 
+### Ground in live code when seams matter
+
+- Ticket-hidden research then **converge** with the ticket (Phase 2.5) — do not lock fantasy ACs  
+- Technical design is refine-primary so requirements can still change; plan does structure/tactics  
+
 ### Minimum Viable Requirements
 
 - Enough to plan; don't over-specify emergent details; mark unknowns
 
 ### Separate Concerns
 
-- Requirements = what/why; planning = how; this command is requirements only
+- Requirements = what/why (+ feasibility from research/design); planning = structure + how  
+- Brainstorm = concept seed; design discussion = technical alignment in this codebase
