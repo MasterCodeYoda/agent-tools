@@ -59,9 +59,15 @@ Load when emitting the review summary, verdict, and next steps.
 
 ## Verdict
 
-[ ] **APPROVE** - No P1 issues, all acceptance criteria met (if plan available), code is ready
+[ ] **APPROVE** - No unresolved P1-P3 findings, all acceptance criteria met (if plan available), code is ready
 [ ] **REQUEST CHANGES** - P1 issues or unmet acceptance criteria must be addressed
 [ ] **COMMENT** - Suggestions but no blockers
+
+**Integration evidence (required for integration-ready APPROVE):**
+`review: [clean|findings-fixed] | [YYYY-MM-DD] | method=workflow-review | P1=[X] P2=[Y] P3=[Z] | disposition=[none|all fixed in <sha>|deferred to <issue-id>]`
+
+Use `clean` only when no findings were raised. Use `findings-fixed` after every finding is fixed
+or deferred as project conventions permit. Do not emit integration-ready evidence otherwise.
 ```
 
 ### Actionable Next Steps
@@ -69,17 +75,17 @@ Load when emitting the review summary, verdict, and next steps.
 ```markdown
 ## Next Steps
 
-**If P1 issues found:**
-1. Address each P1 finding before merging
+**If findings are present:**
+1. Address each P1-P3 finding, or defer only as project conventions permit with a follow-up issue
 2. Re-run review after fixes: `/workflow:review [target]`
 
 **If approved:**
-1. Merge when ready
-2. Consider P2/P3 items for follow-up
+1. Record the integration evidence above
+2. Merge when ready
 
 **Options:**
-1. **Fix P1 issues** - Address critical findings now
-2. **Create follow-up tasks** - Track P2/P3 for later
+1. **Fix findings** - Address confirmed findings now
+2. **Create permitted follow-ups** - Record convention-approved deferrals
 3. **Re-review** - Run again after changes
 4. **Export findings** - Save to file for tracking
 ```
