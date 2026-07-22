@@ -215,11 +215,12 @@ Observed exit_state vs expected_exit; notes.
    file inside the ignored `runs/` tree). Most runs need no entry — do not archive a clean,
    uneventful run by default. See `tests/swarm/history/README.md`.
 
-   Once an entry is archived, offer to delete the run directory (`rm -rf <run-dir>`) — its
-   durable signal now lives in `history/`, and the rest (the ~28 MB throwaway repo, `.venv`,
-   nested `.git`) is regenerable from the committed scenario. Only offer this **after** the
-   history entry is written, and confirm the run is finished and analyzed first. If the user
-   declined the history entry, do not offer deletion — there would be no surviving record.
+   Once an entry is archived, offer to delete the run directory — its durable signal now lives
+   in `history/`, and the rest is regenerable. Only after explicit confirmation: resolve the
+   run directory to a canonical absolute path, verify its parent is the canonical
+   `tests/swarm/runs/` directory, then run `rm -rf "$ABSOLUTE_RUN_DIR"` with no relative path or
+   glob. Confirm the run is finished and analyzed first. If the user declined the history
+   entry, do not offer deletion — there would be no surviving record.
 
 ## Notes
 
