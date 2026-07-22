@@ -17,6 +17,16 @@ Grounded in research: `./planning/<project>/codebase-research.md` (or light / sk
 |--------------------|---------|-------|
 | | accept / reject / supersede | |
 
+## System flow and premise checks
+
+| State / effect | Authoritative writer | Readers / projections | Transport / round trip | Why required |
+|----------------|----------------------|-----------------------|------------------------|--------------|
+| | | | in-process / persisted / external | |
+
+Ticket or proposed-solution assumptions challenged:
+
+- [Assumption] — [confirmed / overturned] — [evidence and requirements impact]
+
 ## Resolved decisions
 
 - [Decision] — [why]
