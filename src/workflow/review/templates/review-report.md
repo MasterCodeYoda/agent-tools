@@ -42,6 +42,12 @@ Load when emitting the review summary, verdict, and next steps.
 **Planned Tasks**: [X]/[Y] reflected in changes
 **Scope Creep**: [None detected / Items found outside plan scope]
 
+### Remediation Verification (if prior findings exist)
+
+| Prior finding | Remediation range | Code/test evidence | Refutation and sabotage result |
+|---------------|-------------------|--------------------|--------------------------------|
+| [Finding ID] | [base...head] | [file:line / test] | [stands / incomplete / regression found] |
+
 ### Positive Observations
 
 - [Good pattern followed]
@@ -77,4 +83,3 @@ Load when emitting the review summary, verdict, and next steps.
 3. **Re-review** - Run again after changes
 4. **Export findings** - Save to file for tracking
 ```
-
