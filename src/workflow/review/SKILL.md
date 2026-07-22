@@ -138,9 +138,19 @@ between standard and deep, or user previously required always-confirm in convent
 **Load agent menus:** `references/agent-menus.md` for the chosen depth (role lists, synthesis/critic pass).
 For review criteria standards, also reference @workflow (`execution/quality-checkpoints.md`).
 
-**Continue integration:** map verdict to unit events — APPROVE → evidence + `REVIEW_CLEAN`;
-REQUEST CHANGES (code) → `REVIEW_FINDINGS_CODE`; structural → `REVIEW_FINDINGS_STRUCTURAL`.
-Swarm reviewer statuses `APPROVED` / `FIX_REQUESTED` use the same evidence bar
+**Continue integration:** the human-facing verdict and machine evidence are distinct:
+
+- `APPROVE` with no findings → evidence verdict `clean`.
+- `APPROVE` after all findings are fixed or permissibly deferred → evidence verdict
+  `findings-fixed`.
+- `REQUEST CHANGES` or `COMMENT` is not integration-ready evidence; do not emit `clean` or
+  `findings-fixed`.
+
+For integration-ready reviews, emit the exact evidence schema from @workflow
+(`continue/references/gates.md`): method, ISO date, evidence verdict, explicit P1–P3 counts,
+and disposition. Then map `APPROVE` → `REVIEW_CLEAN`; unresolved code findings →
+`REVIEW_FINDINGS_CODE`; structural findings → `REVIEW_FINDINGS_STRUCTURAL`.
+Swarm statuses `APPROVED` / `FIX_REQUESTED` use the same evidence bar
 (@workflow `references/handoff-package.md`).
 
 ### Remediation verification
