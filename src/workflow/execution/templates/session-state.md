@@ -5,6 +5,9 @@ work_item: [ISSUE-ID]
 pm_tool: [linear|jira|manual]
 session_count: [N]
 status: in_progress
+track: [feature|micro|research]
+run_id: r-YYYYMMDD-N
+source_channel: [cli|linear|github|chat|other]
 progress:
   total_tasks: [X]
   completed: [Y]
@@ -12,6 +15,11 @@ progress:
 current_layer: [domain|infrastructure|application|framework]
 branch: <type>/<issue-key or description>
 worktree: <path>  # Only when using --worktree; absolute path
+visual_plan: <path-to-visual-plan.html | skipped — reason>
+reentry_counts:
+  refine_from_execute_or_review: 0
+  plan_from_execute_or_review: 0
+thrash_bound_hits: 0
 last_updated: [timestamp]
 ---
 
@@ -21,10 +29,8 @@ last_updated: [timestamp]
 ## Last Session Summary
 [Detailed summary for handoff - what was done, key decisions, blockers]
 
-## Recommended Next Steps
-1. [Next priority task]
-2. [Following task]
-3. [Future consideration]
+## Intentional Compaction
+[Latest mid-phase snapshot when used; otherwise omit this section]
 
 ## Session History
 ### Session N - [date]
