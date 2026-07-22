@@ -17,10 +17,10 @@ Language-agnostic guide for strict layer boundaries, vertical slicing, and depen
 
 **"Where does this code belong?"** (in order):
 
-1. **Business rule / core concept?** → **Domain** (pure, no external deps) — `references/layer-patterns.md#domain`  
-2. **Orchestrates business operations?** → **Application** — `references/layer-patterns.md#application`  
-3. **Connects to external systems?** → **Infrastructure** — `references/layer-patterns.md#infrastructure`  
-4. **UI / entry point?** → **Frameworks** — `references/layer-patterns.md#frameworks`  
+1. **Business rule / core concept?** → **Domain** (pure, no external deps) — `references/layer-patterns.md#domain-layer`
+2. **Orchestrates business operations?** → **Application** — `references/layer-patterns.md#application-layer`
+3. **Connects to external systems?** → **Infrastructure** — `references/layer-patterns.md#infrastructure-layer`
+4. **UI / entry point?** → **Frameworks** — `references/layer-patterns.md#frameworks-layer`
 5. **Separate packages/crates?** Team >3 or long-lived / strict compliance → yes; prototype/small team → modules OK — `references/polyglot-projects.md`  
 
 ## Core Architectural Rules
