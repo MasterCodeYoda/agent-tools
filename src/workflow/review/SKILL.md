@@ -143,6 +143,19 @@ REQUEST CHANGES (code) → `REVIEW_FINDINGS_CODE`; structural → `REVIEW_FINDIN
 Swarm reviewer statuses `APPROVED` / `FIX_REQUESTED` use the same evidence bar
 (@workflow `references/handoff-package.md`).
 
+### Remediation verification
+
+When prior findings or a `fix_list` exist, treat the pass as remediation verification in
+addition to an ordinary review:
+
+1. Identify the remediation-only range and map every prior finding to its changed code and test.
+2. Try to refute each claimed fix: check whether it closes the full failure class, rejects valid
+   behavior, or moves the failure into a quieter form.
+3. For each remediated P1/P2 with automatable behavior, require sabotage proof: reverting or
+   neutralizing the production fix must make the regression test fail. Explain any exception.
+4. Review adjacent behavior touched by the remediation and report newly introduced findings
+   normally. Do not limit the pass to checking that the original symptom disappeared.
+
 ## Findings Structure
 
 ### Priority Classification
