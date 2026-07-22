@@ -1,6 +1,5 @@
 ---
 name: qa:tools
-user-invocable: true
 description: QA inspection tools for visual testing -- video frame extraction, screenshot analysis
 ---
 
