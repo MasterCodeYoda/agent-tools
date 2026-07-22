@@ -115,9 +115,9 @@ When run via `--focus qa`:
 
 If spec coverage is low, recommend running `/qa:discover` to author NL specs for uncovered flows.
 
-### With QA drift detection
+### With QA execution evidence
 
-`/workflow:audit` (this domain) performs static drift analysis by reading specs and app code. Live drift detection (by actually running tests) is referenced elsewhere as `/qa:audit` (or planned as a dedicated command). They complement each other.
+`/workflow:audit` (this domain) performs static drift analysis by reading specs and app code. It may inspect existing Playwright results, but it does not run tests. No `/qa:audit` leaf currently exists; run the project's Playwright command first when live execution evidence is needed, then include those artifacts in `/workflow:audit --focus qa`.
 
 ### With @test-strategy
 
