@@ -88,7 +88,7 @@ Spawn 4 parallel agents that read production code:
 - Sensitive data exposure in logs
 - Context propagation across boundaries
 
-**data-access-pattern-checker** — References @clean-architecture (`references/layer-patterns.md#infrastructure`):
+**data-access-pattern-checker** — References @clean-architecture (`references/layer-patterns.md#infrastructure-layer`):
 - ORM/query builder usage patterns (raw SQL flagged unless justified)
 - Repository pattern compliance (queries in infrastructure layer, not in controllers/use cases)
 - Migration file hygiene (reversible migrations, no data-destructive operations without guards)
