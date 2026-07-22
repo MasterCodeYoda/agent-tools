@@ -48,7 +48,7 @@ handoff_package:
     Short bullets: merge policy, out of scope, known landmines
   acs_pointer: "PM LIN-123 description" | "planning/.../requirements.md"
   steering_note: <optional one-liner>
-  source_channel: cli | linear | github | chat
+  source_channel: cli | linear | github | chat | other
 ```
 
 **Resume:** next agent loads `paths.session_state`, re-classifies (classify wins over
