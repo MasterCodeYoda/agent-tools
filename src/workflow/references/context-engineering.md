@@ -181,34 +181,11 @@ upstream. Technical design is **how this change sits in this codebase** after fa
 <planning-root>/<unit>/design-discussion.md
 ```
 
-Shape (full):
-
-```markdown
-# Design discussion: [unit]
-
-## Current state
-[From research — how it works today for this blast radius]
-
-## Desired end state
-[What success looks like in the system — still product-grounded]
-
-## Patterns found (accept / reject)
-| Pattern / location | Verdict | Notes |
-|--------------------|---------|-------|
-| … | accept / reject / supersede | … |
-
-## Resolved decisions
-- …
-
-## Open questions
-- [ ] … — recommended default: …
-
-## Requirements impact
-[ACs or scope changes implied by technical reality — must land in requirements/PM]
-
-## Freshness
-- Grounded in research at: [path + commit]
-```
+The authoritative full shape is
+`../refine/templates/design-discussion.md`. It records current and desired state, accepted or
+rejected patterns, authoritative writers/readers and required round trips, challenged premises,
+resolved decisions, open questions, requirements impact, and deliberately undecided plan choices.
+Do not maintain a second template body here.
 
 **Brain surgery:** force the agent to surface wrong patterns and open questions **before**
 structure and tactics. Human (or code owner) can deep-read this short artifact (~1–3 screens).
