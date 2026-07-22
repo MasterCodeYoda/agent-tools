@@ -56,6 +56,7 @@ Based on auto-detection, prompt user for scope confirmation:
 Follow all standards from the orchestrator's Agent Reasoning Standards (cite evidence, check opposite hypothesis, verify absence claims, complete discovery before findings, use full 1M context budget, tag domain, flag cross-domain connections). Additionally:
 
 - **Trace endpoint behavior.** When a finding involves a handler or resolver, follow it to its actual implementation. Don't assume behavior from route names or schema types alone.
+- **Apply standards with precedence.** External guidelines are reference lenses, not universal mandates. Documented project or organization conventions prevail; do not combine incompatible rules from different guides.
 
 ## Three-Tier Analysis
 
@@ -73,7 +74,7 @@ Spawn 2 parallel agents that read API specs and source code:
 - Spec version currency
 
 **api-convention-checker** — Read source code for endpoint patterns:
-- Resource naming (plural nouns, kebab-case URIs, camelCase JSON)
+- Resource naming and casing follow the documented project or organization convention consistently
 - HTTP method semantics (GET is safe/idempotent, POST creates, etc.)
 - HTTP status code correctness (201 for creation, 204 no content, proper 4xx)
 - Error response format (RFC 9457 Problem Details or consistent org format)
@@ -227,4 +228,8 @@ Language-specific API framework best practices (FastAPI, Express, ASP.NET, Axum)
 
 ## References
 
+- [OWASP API Security Top 10 (2023)](https://owasp.org/API-Security/editions/2023/en/0x11-t10/)
+- [RFC 9457: Problem Details for HTTP APIs](https://www.rfc-editor.org/rfc/rfc9457.html)
+- [Zalando RESTful API Guidelines](https://opensource.zalando.com/restful-api-guidelines/)
+- [Microsoft REST API Guidelines](https://github.com/microsoft/api-guidelines)
 - [react-doctor](https://github.com/millionco/react-doctor) — Health scoring concept adapted from this React diagnostic CLI
