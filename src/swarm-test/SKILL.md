@@ -1,6 +1,6 @@
 ---
 name: swarm:test
-description: Drive or analyze a /swarm test-harness run. Given a scenario name, generate a fresh run and hand off the orchestrator step; given a completed run-dir, check the scenario's hard invariants, judge its observation checklist against the role logs, cluster recurring issues, and propose evidence-linked evolve-style improvements to the swarm role templates and skills. Project-scoped repo-development tool for agent-tools.
+description: Drive or analyze a /swarm test-harness run. Given a scenario name, generate a fresh run and hand off the orchestrator step; given a completed run-dir, check hard invariants, judge observations against role logs, cluster recurring issues, and produce evidence-linked seeds for /skills:evolve. Project-scoped repo-development tool for agent-tools.
 publish-target: project
 user-invocable: true
 argument-hint: "<scenario to start a run, or run-dir to analyze>"
@@ -10,15 +10,13 @@ argument-hint: "<scenario to start a run, or run-dir to analyze>"
 
 This is the analyze bookend of the `/swarm` test harness (see `tests/swarm/README.md`). Given
 a generated run directory whose orchestrator pass has completed, it turns the per-dispatch
-**role logs** into evidence-linked, minimal improvements to the swarm **role templates** and
-skills — the log-driven counterpart to `/skills:evolve`.
+**role logs** into evidence-linked seeds for `/skills:evolve`.
 
 It is a repo-development tool for **this repo only** (`publish-target: project`), so it freely
 references repo paths (`tests/swarm/...`, `src/swarm/...`).
 
-**Core principle (from evolve):** every proposed change traces to a concrete, cited gap in the
-run evidence. No vibes-based rewrites, no style preferences. If there's no gap, there's no
-change.
+**Core principle (from evolve):** every seed traces to a concrete, cited gap in the run
+evidence. No vibes-based rewrites, no style preferences. If there is no gap, there is no seed.
 
 ## User Input
 
