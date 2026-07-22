@@ -164,32 +164,29 @@ recurring problems into themes, each with cited instances. Look for:
 
 A cluster is only worth raising if it recurs or maps to a concrete prompt gap.
 
-## Phase 5 — Propose evolve-style improvements
+## Phase 5 — Produce evolve seeds
 
-For the top clusters, generate targeted fix proposals. **Constraints (do not deviate):**
+For the top clusters, produce run-ledger-style gap seeds for `/skills:evolve`. A swarm test
+detects role/process evidence; it does not independently mutate canonical process IP.
+**Constraints (do not deviate):**
 
-1. **One file per proposal.** Usually a `src/swarm/roles/<role>.md`; sometimes
-   `src/swarm/roles/worker-contract.md`, `src/swarm/SKILL.md`, or a `src/swarm/references/*`.
-2. **One gap per proposal**, addressing exactly one clustered finding.
-3. **Minimal diff** — add what's missing / tighten what's ambiguous; don't rewrite
-   surrounding content or "clean up" nearby text.
-4. **Evidence-linked** — cite the run id + specific dispatch logs that show the gap, and why
-   this change closes it.
-5. **Preserve voice and formatting** of the target file.
-6. **Size guard** — > 40 changed lines is "large"; justify or split.
-7. **No literal HTML-comment markers** in any proposed skill content — the publisher strips
-   every complete HTML-comment line (open `<!` `--`, close `--` `>`); describe markers by
-   their inner text instead.
+1. **One clustered gap per seed.** Do not combine unrelated role failures.
+2. **Evidence-linked** — include run id + specific dispatch logs and the candidate
+   `src/swarm/**` / `src/workflow/**` skill paths.
+3. **Corpus-neutral** — describe the symptom and hypothesized gap, not a preselected patch.
+4. **Clustered** — prefer repeated evidence; a single hard-invariant failure may stand alone.
+5. **No direct process edit** — `/skills:evolve` must locate the corpus mismatch, check
+   intentional omission and cross-skill effects, then generate any proposal.
 
-Proposals that would create a new file, span 3+ files, or require a judgment call between
-competing approaches become **recommendations**, not auto-applied changes.
+If a likely fix would span multiple files or require a judgment call, preserve that scope in
+the seed instead of narrowing it to an apparently easy role-file edit.
 
-## Phase 6 — Present, apply, report
+## Phase 6 — Present, hand off, report
 
-1. Present the invariant results (FAILs first), checklist verdicts, clusters, and proposals
-   with their evidence. Get user approval per proposal (or batch-approve).
-2. Apply approved proposals to `src/swarm/...`. Re-running `generate` + a fresh `/swarm` pass
-   afterward tests the improved role content (the loop closes).
+1. Present the invariant results (FAILs first), checklist verdicts, clusters, and seeds with
+   their evidence.
+2. Offer to run `/skills:evolve` with the approved seeds. If it changes canonical content,
+   re-run `generate` + a fresh `/swarm` pass afterward to close the loop.
 3. Write the run report to `<run-dir>/analysis.md`:
 
 ```markdown
@@ -204,8 +201,8 @@ competing approaches become **recommendations**, not auto-applied changes.
 ## Issue clusters
 - <theme> (severity) — <cited instances>
 
-## Proposals
-- <file> — <gap> — <applied | recommended | rejected> — <evidence + rationale>
+## Evolution seeds
+- <seed id> — <candidate skills> — <symptoms + evidence>
 
 ## Exit
 Observed exit_state vs expected_exit; notes.
@@ -233,5 +230,5 @@ Observed exit_state vs expected_exit; notes.
   for evidence; treat sparse decision logs as a minor finding, not a blocker.
 - Never weaken a scenario's hard invariants or its engineered seed to make a run "pass" — if a
   run reveals the scenario itself is wrong, that's a separate, surfaced decision.
-- This skill changes canonical content under `src/swarm/`. After applying, run `setup.sh` so
-  the published trees reflect the edits.
+- This skill does not change canonical process content directly. `/skills:evolve` owns any
+  resulting `src/**` proposal and validation.
