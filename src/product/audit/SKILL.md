@@ -52,28 +52,18 @@ Before analysis, detect the project's product surface:
 
 ## Research Phase (runs before analysis)
 
-**This phase is mandatory.** Before any assessment agents run, conduct primary research to establish market context.
+**This phase is mandatory.** Load and apply @product's **Research Standards** and
+**Competitive Analysis Methodology**; the parent skill owns research breadth, depth,
+recency, attribution, and the per-competitor protocol. This skill assigns audit work.
 
 Spawn 2 parallel research agents:
 
-**market-researcher**:
-1. From the project's README/landing page, identify what problem the product solves and what category it occupies
-2. Web search for: "[product category] tools", "[product category] alternatives", "best [product category] [current year]"
-3. Identify 3-5 direct competitors and 2-3 indirect alternatives (including "do nothing" / manual process)
-4. For each competitor, fetch and read:
-   - Landing page (hero message, value prop, CTA)
-   - Pricing page (model, tiers, free tier)
-   - GitHub repo if open source (stars, last release, activity, contributor count via `gh`)
-   - README (positioning, quickstart quality)
-5. Search for community discussions: "[product name] vs [competitor]", "[product name] review", "[product name] alternative"
-6. Return: competitor profiles, market category definition, community sentiment summary
+- **market-researcher** — identify the category, direct competitors, indirect alternatives,
+  and community signal; return cited competitor profiles and a market-category summary.
+- **comparable-success-researcher** — identify adjacent products with effective positioning;
+  return cited patterns for clarity, differentiation, visual demonstration, and onboarding.
 
-**comparable-success-researcher**:
-1. Identify 2-3 products in adjacent categories known for excellent positioning (not necessarily competitors — products that solve different problems but position exceptionally well)
-2. Analyze what makes their positioning effective: specificity, clarity, differentiation, visual demo, onboarding speed
-3. Return: positioning patterns to benchmark against, specific examples of effective messaging
-
-**Research output feeds all subsequent analysis agents as context.**
+Feed both outputs to every subsequent analysis agent.
 
 ## Product Context Adaptation
 
