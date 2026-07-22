@@ -1,8 +1,7 @@
 # `/swarm` Test Harness
 
 A permanent harness for exercising the `/swarm` orchestrator end-to-end against engineered
-scenarios, and turning the resulting role logs into evidence-linked improvements to the swarm
-role templates and skills.
+scenarios, and turning the resulting role logs into evidence-linked seeds for `/skills:evolve`.
 
 The design rationale is summarized in this README (the original working docs lived in
 untracked `planning/` and were purged after completion — this README and the harness
@@ -56,12 +55,12 @@ generate  →  [agent runs /swarm]  →  analyze
    `/swarm:test <run-dir>`). Either way `/swarm:test` confirms the run finished, then runs the
    deterministic `ingest` (logs → `observations.json`), checks the scenario's hard invariants
    (loud fail on violation), judges the observation checklist with citations, clusters issues,
-   and proposes minimal, evidence-linked evolve-style diffs to `src/swarm/roles/*.md` (and
-   `SKILL.md` / `references/`) for your review. The run report is written to
+   and produces evidence-linked evolution seeds with candidate `src/swarm/**` / `src/workflow/**`
+   paths. The run report is written to
    `tests/swarm/runs/<run-dir>/analysis.md`.
 
-Re-running a fresh `/swarm:test <scenario>` after applying analyze's diffs tests the
-**improved** role content, closing the loop.
+If `/skills:evolve` validates and applies a resulting proposal, re-running a fresh
+`/swarm:test <scenario>` tests the improved process content and closes the loop.
 
 ## Layout
 
