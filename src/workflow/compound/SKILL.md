@@ -1,6 +1,6 @@
 ---
 name: workflow:compound
-description: Capture durable knowledge from any engineering work — debugging solutions, refactors, features, design decisions, reusable patterns — so each unit of work compounds the next. Stewardship (yield + memory hygiene) is /workflow:maintain; --maintain is a compat shim.
+description: Capture durable knowledge from any engineering work — debugging solutions, refactors, features, design decisions, reusable patterns — so each unit of work compounds the next. Stewardship (prune + yield + memory) is /workflow:maintain; --maintain is a compat shim.
 argument-hint: "[context about what was solved] | --maintain → /workflow:maintain (compat)"
 user-invocable: true
 ---
@@ -13,8 +13,8 @@ Compounding is about making **every unit of engineering work make subsequent wor
 **deterministic gate** to the right home (shared memory entry/solution, ADR, personify,
 AGENTS.md, or harness-local memory).
 
-**Stewardship** (run yield + memory quality audit) lives on **`/workflow:maintain`**. Do not
-conflate capture with plant hygiene.
+**Stewardship** (planning prune check, run yield, memory quality audit) lives on
+**`/workflow:maintain`**. Do not conflate capture with plant hygiene.
 
 ## Mode Detection
 

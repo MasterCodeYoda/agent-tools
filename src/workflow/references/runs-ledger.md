@@ -128,7 +128,7 @@ disposition (capture or reasoned none).
 
 ## Yield glance (`yield.md`)
 
-**Primary entry:** **`/workflow:maintain`** (full stewardship or `--yield`).
+**Primary entry:** **`/workflow:maintain`** (ritual when yield due + approved, or force with `--yield` / `--all`).
 
 **Triggers (any):**
 

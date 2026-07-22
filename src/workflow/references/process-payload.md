@@ -30,7 +30,7 @@ evidence). Soft doc polish does not bump.
 | Review evidence | continue `gates.md` | method, date, verdict, P1–P3, disposition |
 | Merge policy | conventions | Honor autonomous local merge ratchet; no silent push |
 | Memory capture | `.agent-tools/memory/` + compound | Capture only; no skill mutation |
-| Stewardship | `/workflow:maintain` | Yield + memory hygiene; cadence; no skill mutation |
+| Stewardship | `/workflow:maintain` | Prune check + yield + memory hygiene; cadence; no skill mutation |
 | Corpus change | Skill source only (`/skills:evolve` when installed) | Never edit process IP from run traces; consumers capture evidence + escalate upstream |
 
 ## Must not reimplement
@@ -70,7 +70,7 @@ Do **not** confuse the **research track** with on-demand codebase research.
 
 ```text
 workflow (parent)
-  continue | maintain | setup | prune | roadmap | brainstorm | refine | plan | execute | review | audit | compound
+  continue | maintain | setup | roadmap | brainstorm | refine | plan | execute | review | audit | compound
 swarm (parent)
   setup | continue | <goal orchestrator>
 git | personify

@@ -66,7 +66,7 @@ Load due/signal rules from @workflow `maintain/references/cadence.md` (read
 
 | Host | Behavior |
 |------|----------|
-| **`/workflow:continue`** | On **end-of-loop stop / recap / hard_stop** (not every phase-return): if `due AND signal`, **one** approval prompt — run `/workflow:maintain` now / snooze 3d / skip once. Never auto-run. Never block claim. |
+| **`/workflow:continue`** | On **end-of-loop stop / recap / hard_stop** (not every phase-return): if `offer_due AND signal`, **one** approval prompt — run `/workflow:maintain` (bare ritual) / snooze 3d / skip once. Never auto-run. Never block claim. Never force `--all`. |
 | Bare **`/workflow`** (status) | Advisory line only when due — do not prompt multi-choice or write state |
 | Mid-drive phase-return | Do **not** interrupt for maintain |
 

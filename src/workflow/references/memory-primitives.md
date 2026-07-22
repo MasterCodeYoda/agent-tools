@@ -2,7 +2,7 @@
 
 A cross-agent reference for long-term context, rules, and memory hygiene practices.
 
-Reference for the file types, settings, hooks, and slash commands that govern what an agent remembers across sessions. Used by `/workflow:compound` (capture) and `/workflow:maintain` (memory hygiene + yield cadence); consulted when memory feels stale, bloated, or mis-scoped.
+Reference for the file types, settings, hooks, and slash commands that govern what an agent remembers across sessions. Used by `/workflow:compound` (capture) and `/workflow:maintain` (stewardship: prune + memory hygiene + yield cadence); consulted when memory feels stale, bloated, or mis-scoped.
 
 The patterns below favor an agent platform’s documented primitives over hand-rolled alternatives. When a primitive exists, prefer it: less prose in memory files, more behavior enforced by the platform.
 
@@ -139,7 +139,7 @@ Installed by `/workflow:setup`; capture via `/workflow:compound`; steward via `/
 - **Location:** `.agent-tools/memory/` (see levels table above)
 - **AGENTS link:** marker block `agent-tools:memory-link begin/end` pointing at `MEMORY.md`
 - **Capture routing:** deterministic gate in `/workflow:compound` (solutions → `solutions/`; project-wide patterns/gotchas → `entries/`; decisions → ADRs; voice → personify)
-- **Maintain:** `/workflow:maintain` audits L1–L3 (+ run yield), proposes promote/retire, optional `--migrate-solutions` for legacy `docs/solutions/` (compat: `/workflow:compound --maintain`)
+- **Maintain:** `/workflow:maintain` ritual prune-checks `planning/`, audits L1–L3 (+ run yield when due), proposes promote/retire, optional `--migrate-solutions` for legacy `docs/solutions/` (compat: `/workflow:compound --maintain`)
 - **Cadence:** `state.yml` `interval_days` (default 7) — see @workflow `maintain/references/cadence.md`; soft-prompted from status/continue/capture; `:maintain` always on-demand
 
 ---
@@ -172,7 +172,7 @@ The table below lists the specific mechanisms Claude Code currently exposes.
 | `claude project purge` (built-in, v2.1.126+) | Command | Nuclear archival: deletes transcripts, task history, file history, project config under `~/.claude/projects/<hash>/`. Use for project handoff or when winding down a stale workspace.   |
 | `InstructionsLoaded` hook              | Hook     | Fires when CLAUDE.md or `.claude/rules/*.md` loads. Matchers: `session_start`, `nested_traversal`, `path_glob_match`, `include`, `compact`. Wire-point for size warnings or audit logging. |
 | `PreCompact` / `PostCompact` hooks     | Hook     | Wrap conversation compaction events. Useful for deciding when to trigger maintenance.                              |
-| `/workflow:maintain`                   | Command (this repo) | Stewardship: run yield + three-tier memory audit (promote/retire; optional `--migrate-solutions`). Compat: `/workflow:compound --maintain`. |
+| `/workflow:maintain`                   | Command (this repo) | Stewardship: planning prune check + run yield + three-tier memory audit (promote/retire; optional `--migrate-solutions`). Compat: `/workflow:compound --maintain`. |
 | `.agent-tools/memory/`                 | File set (this repo) | **L3-shared**: committed project memory (`MEMORY.md` + `entries/` + `solutions/`). Preferred home for project-wide captures. |
 
 <!-- /agent:include claude -->

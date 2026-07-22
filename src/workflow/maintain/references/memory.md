@@ -1,7 +1,7 @@
 # Memory quality maintain
 
-**Load when:** `/workflow:maintain` runs the **memory** job (default full stewardship),
-or a scoped maintain (`--memory`, `--level`, `--focus`, `--migrate-solutions`).
+**Load when:** `/workflow:maintain` runs the **memory** job (ritual when due + approved,
+`--all`, or a scoped force: `--memory`, `--level`, `--focus`, `--migrate-solutions`).
 
 Primary entry: **`/workflow:maintain`**. Compat: `/workflow:compound --maintain` shims here.
 
@@ -19,8 +19,8 @@ Evaluate memory quality across:
 Produce a refinement **proposal**; apply only after user approval.
 
 **Why:** You can't compound on stale, duplicated, or harness-siloed memory. Stewardship
-(line yield + memory hygiene) lives on `/workflow:maintain`, not on drive (`:continue`)
-or capture (`:compound`).
+(prune + line yield + memory hygiene) lives on `/workflow:maintain`, not on drive
+(`:continue`) or capture (`:compound`).
 
 ## Maintain Auto-Detection
 

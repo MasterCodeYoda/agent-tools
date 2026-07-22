@@ -1,6 +1,6 @@
 ---
 name: workflow
-description: Parent skill for the workflow family — bare /workflow is portfolio status (read-only); /workflow:continue drives work; /workflow:maintain stewards yield + memory. Horizon mapping, brainstorm, refine, plan, execute, review, audit, compound. Vertical-slice and deliverable-partition modes.
+description: Parent skill for the workflow family — bare /workflow is portfolio status (read-only); /workflow:continue drives work; /workflow:maintain stewards prune + yield + memory. Horizon mapping, brainstorm, refine, plan, execute, review, audit, compound. Vertical-slice and deliverable-partition modes.
 user-invocable: true
 argument-hint: "[no args for portfolio status | unit id/path/slug for focused status | help]"
 ---
@@ -31,7 +31,6 @@ continue may **act** on the same checklist.
 | `/workflow` | **Status** — portfolio glance (read-only); focused status with a unit arg |
 | `/workflow:continue` | **Drive** — mode resolve + claim + phase SM or swarm handoff/resume |
 | `/workflow:setup` | Scaffold `planning/` hygiene + author `conventions.md` + memory link |
-| `/workflow:prune` | Purge confirmed-complete planning items (approval-gated) |
 | `/workflow:roadmap` | Multi-unit horizon map + NEXT + `→`/`∥` notation (user-approved) |
 | `/workflow:brainstorm` | Single fuzzy concept → framed seed (HITL) |
 | `/workflow:refine` | Requirements discovery (file or PM) |
@@ -40,7 +39,7 @@ continue may **act** on the same checklist.
 | `/workflow:review` | Code review (PR / range / paths / uncommitted) |
 | `/workflow:audit` | Multi-domain project audit |
 | `/workflow:compound` | Capture durable knowledge (`--maintain` → `:maintain` compat) |
-| `/workflow:maintain` | **Steward** — run yield + memory hygiene (cadence / on-demand) |
+| `/workflow:maintain` | **Steward** — ritual prune check + schedule-aware yield/memory (force with flags / `--all`) |
 
 See each sub-skill for arguments and full procedure.
 
@@ -252,7 +251,7 @@ Examples: `references/decomposition-modes.md`.
 | Context engineering (dumb zone, ticket-hidden research, design, plan segmentation, compaction) | `references/context-engineering.md` |
 | Design discussion template | `refine/templates/design-discussion.md` |
 | Runs ledger | `references/runs-ledger.md` |
-| Stewardship (yield + memory) | `@workflow:maintain` |
+| Stewardship (prune + yield + memory) | `@workflow:maintain` |
 | Handoff package (unit ↔ swarm) | `references/handoff-package.md` |
 | Process payload (runtime adapters) | `references/process-payload.md` |
 | Decomposition | `references/decomposition-modes.md` |

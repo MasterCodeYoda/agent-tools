@@ -14,9 +14,9 @@ In this repo, in-progress design specs and planning docs live under `planning/` 
 `docs/superpowers/specs/`.
 
 The carve-out (added 2026-07-09): `planning/` is **transient** — gitignored, purgeable by
-`/workflow:prune` — so **committed files must never cite planning/ paths** (the doc-integrity
-linter enforces this in CI). A design worth keeping after the work ships is promoted to
-`docs/design/` (rewritten for a reader, not a work log) before being cited.
+`/workflow:maintain` (prune job) — so **committed files must never cite planning/ paths**
+(the doc-integrity linter enforces this in CI). A design worth keeping after the work ships is
+promoted to `docs/design/` (rewritten for a reader, not a work log) before being cited.
 
 **Why:** The swarm skill and test-harness README once cited `planning/swarm/*.md` as their
 "authoritative design"; the files were purged and every pointer dangled for months.

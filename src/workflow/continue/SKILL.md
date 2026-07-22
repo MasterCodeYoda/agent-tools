@@ -213,7 +213,7 @@ same-session drive — do not emit-and-stop after plan by default.
 - **`@workflow:setup`** — `conventions.md`, planning root, runs scaffold
 - **`@workflow:roadmap`** — `→` / `∥` / `⚠` / NEXT maps continue consumes
 - **`@workflow:brainstorm`** · **refine** · **plan** · **execute** · **review** · **compound**
-- **`@workflow:maintain`** — stewardship (yield + memory); continue may **offer**, never owns
+- **`@workflow:maintain`** — stewardship (prune + yield + memory); continue may **offer**, never owns
 - **`/swarm`** · **`/swarm:continue`** · **`/swarm:setup`** — parallel executor; override entry
 - **`/skills:evolve`** — skill-source only; mutates process IP from detected gaps (not published to consumer projects)
 - **`@superpowers:finishing-a-development-branch`** — integrate decision after clean review

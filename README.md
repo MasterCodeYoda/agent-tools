@@ -115,14 +115,14 @@ Commands are invoked with `/command-name` (or the hyphenated equivalents for sub
 | `/workflow` | **Status** — read-only portfolio glance (planning root, in-progress/NEXT, soft signals, continue-mode preview); focused status with a unit arg |
 | `/workflow:continue` | **Drive** — orient from `planning/`, portfolio mode (swarm resume/handoff on explicit `∥` waves, or unit phase state machine); never invents NEXT |
 | `/workflow:setup` | Initialize/maintain `planning/` docs and define project-local conventions (tracks, gates, policy) |
-| `/workflow:prune` | Sweep `planning/` for completed work, verify against git + PM, and purge on approval |
+| `/workflow:maintain` | **Steward** — always prune-check `planning/`; schedule-aware yield + memory (force with flags / `--all`) |
 | `/workflow:brainstorm` | Explore a fuzzy idea into a framed concept ready for refinement |
 | `/workflow:refine` | Discover and refine requirements through guided conversation |
 | `/workflow:plan` | Create implementation plans from requirements with approval gates |
 | `/workflow:execute` | Session-based work execution with progress tracking |
 | `/workflow:review` | Code review for PRs, git ranges, files, or uncommitted changes |
 | `/workflow:audit` | Unified project audit — 7 domains (code, tests, API, frontend, docs, repo, QA) with cross-domain deduplication |
-| `/workflow:compound` | Capture knowledge from solved problems + maintain memory quality |
+| `/workflow:compound` | Capture knowledge from solved problems (stewardship → `/workflow:maintain`) |
 
 #### Swarm Commands
 
@@ -176,7 +176,7 @@ Drift detection between specs, generated tests, and app behavior is available vi
 ```
 agent-tools/
 ├── src/                             # Canonical source of truth (agent-agnostic + embedded markup)
-│   ├── workflow/                    # + setup/, prune/, brainstorm/, planning/, execution/, review/, audit/, compound/, continue/, references/
+│   ├── workflow/                    # + setup/, maintain/, brainstorm/, planning/, execution/, review/, audit/, compound/, continue/, references/
 │   ├── git/                         # + commit/, worktree-create/, ... (family overview + subs)
 │   ├── product/                     # + position/, brief/, audit/
 │   ├── qa/                          # + setup/, discover/, tools/, templates/, references/
