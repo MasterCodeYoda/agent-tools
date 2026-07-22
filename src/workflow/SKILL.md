@@ -135,6 +135,10 @@ absent → all built-in defaults. Visual presentation is first-party static HTML
 All planned tasks are required (no priority tiers). Acceptance criteria are binary. Future ideas go
 in **Out of Scope**, not deferred tasks.
 
+Generic workflow labels such as “DTO” are placeholders, not naming requirements. Plans and
+checklists use the target project's established terminology; for C#, defer to @code-patterns
+**Model Terminology (NOT DTOs)**.
+
 ## Session Continuity
 
 ### Planning Directory Structure
