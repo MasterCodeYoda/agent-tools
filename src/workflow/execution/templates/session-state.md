@@ -5,6 +5,7 @@ work_item: [ISSUE-ID]
 pm_tool: [linear|jira|manual]
 session_count: [N]
 status: in_progress
+# Optional orchestration fields: preserve existing values; omit when no continue run exists.
 track: [feature|micro|research]
 run_id: r-YYYYMMDD-N
 source_channel: [cli|linear|github|chat|other]
@@ -16,6 +17,7 @@ current_layer: [domain|infrastructure|application|framework]
 branch: <type>/<issue-key or description>
 worktree: <path>  # Only when using --worktree; absolute path
 visual_plan: <path-to-visual-plan.html | skipped — reason>
+# Preserve existing counters; never reset them while filling this template.
 reentry_counts:
   refine_from_execute_or_review: 0
   plan_from_execute_or_review: 0
