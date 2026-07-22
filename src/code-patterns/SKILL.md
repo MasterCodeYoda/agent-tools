@@ -87,13 +87,10 @@ These principles apply across all languages:
 - Reserve exceptions for truly exceptional circumstances
 - Always handle errors at appropriate boundaries
 
-### Testing by Layer
-- **Domain**: Fast, pure logic tests with no external dependencies
-- **Application**: Test use case orchestration (see @test-strategy for mocking guidance)
-- **Infrastructure**: Integration tests with real resources (test containers)
-- **Frameworks**: E2E tests for critical paths
+### Testing
 
-For strategy selection (TDD vs spec-first vs property-based) and assertion design, see @test-strategy. For *which* layer gets *which* test type, see the Testing by Layer section above.
+For which layer gets which test type, see @clean-architecture **Testing by Layer**.
+For strategy selection, assertion design, and mocking guidance, see @test-strategy.
 
 ### Code Organization
 - Organize by feature/domain, not by technical layer
