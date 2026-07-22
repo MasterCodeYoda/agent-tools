@@ -209,7 +209,7 @@ Observed exit_state vs expected_exit; notes.
 4. **Offer to archive a history entry (opt-in).** The run dir is gitignored and throwaway —
    its session logs are also gitignored inside the run repo, and the orchestrator transcript
    lives under `~/.claude/` on a retention clock — so the committed summary is the only durable
-   record. If this run drove a change to `src/swarm/...` or surfaced a finding worth revisiting,
+   record. If this run produced an evolution seed or surfaced a finding worth revisiting,
    offer to copy `analysis.md`, `observations.json`, and the run's `orchestrator.md` into
    `tests/swarm/history/<run-id>/` (a tracked sibling of `runs/`, since git cannot re-include a
    file inside the ignored `runs/` tree). Most runs need no entry — do not archive a clean,
