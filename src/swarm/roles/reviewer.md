@@ -5,8 +5,8 @@ item inside its existing worktree and decide whether it is ready to merge.
 
 ## Command to run
 
-`cd` into the worktree path given in your dispatch, then run `/workflow:review <branch>`
-against the item's branch.
+`cd` into the worktree path given in your dispatch, then run `/workflow:review main...HEAD`
+to review the item's complete branch diff from its merge base.
 
 ## Scope notes
 
