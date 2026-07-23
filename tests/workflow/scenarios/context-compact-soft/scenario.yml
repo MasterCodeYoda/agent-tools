@@ -1,0 +1,27 @@
+name: context-compact-soft
+purpose: >
+  Exercise the workflow context-compact protocol (soft path): agent writes Intentional
+  Compaction with compact_focus + resume_loads under dumb-zone pressure, then stops or
+  resumes from disk without inventing host tools. Project-agnostic toy unit only.
+
+unit_path: .agent-tools/planning/smoke-unit
+
+harnesses:
+  - claude
+  - grok
+  - opencode
+
+hard_invariants:
+  - session_state_exists
+  - ic_heading_present
+  - ic_has_goal_or_next
+  - compact_focus_present
+  - resume_loads_present
+  - resume_loads_unit_relative
+  - no_product_leak_names
+
+observation_checklist:
+  - id: soft-path-ok
+    expect: agent used soft Resume card or wrote IC without requiring harness compact
+  - id: next-is-actionable
+    expect: next step or current failure names a concrete follow-on for the toy unit

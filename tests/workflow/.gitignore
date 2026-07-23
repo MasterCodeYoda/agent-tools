@@ -1,0 +1,6 @@
+# Generated throwaway repos + per-run analysis. Never committed.
+runs/
+
+__pycache__/
+*.pyc
+.pytest_cache/
