@@ -40,9 +40,10 @@ Custom commands have been largely merged into the skills system.
 
 | Surface | Detail |
 |---------|--------|
-| Host compact | Host-dependent — confirm in current Droid docs before treating any command as compact-with-focus |
-| Agent-invocable as a skill tool | **Default no** — soft Resume card is the portable floor |
-| Soft path | Always valid — write IC, emit Resume card, stop; resume via continue/execute |
+| Host compact | Host-dependent — confirm focus-compact in current Droid docs |
+| Agent-invocable as a skill tool | **Default no** |
+| **Mid-item** | If focus-compact exists: WRITE → compact → RESUME same unit. Else: Continue card → clean session → continue. IC-only stop is incomplete while work remains. |
+| **End-of-item** | Handoff only |
 | Do not | Invent host-specific compact tools; do not create a skill named `compact` |
 
 ---

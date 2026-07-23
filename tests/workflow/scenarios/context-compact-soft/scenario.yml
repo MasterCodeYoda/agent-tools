@@ -1,8 +1,8 @@
 name: context-compact-soft
 purpose: >
-  Exercise the workflow context-compact protocol (soft path): agent writes Intentional
-  Compaction with compact_focus + resume_loads under dumb-zone pressure, then stops or
-  resumes from disk without inventing host tools. Project-agnostic toy unit only.
+  Mid-item context-compact: agent writes IC, reclaims the window (host compact or clean
+  session), then resumes the same unit workstream. IC-only stop without reclaim+continue is
+  incomplete. End-of-item handoff is out of scope (no compact).
 
 unit_path: .agent-tools/planning/smoke-unit
 
@@ -21,7 +21,7 @@ hard_invariants:
   - no_product_leak_names
 
 observation_checklist:
-  - id: soft-path-ok
-    expect: agent used soft Resume card or wrote IC without requiring harness compact
-  - id: next-is-actionable
-    expect: next step or current failure names a concrete follow-on for the toy unit
+  - id: mid-item-not-handoff
+    expect: IC frames remaining work NEXT not unit complete handoff
+  - id: reclaim-then-continue
+    expect: evidence of host compact or continue-after-reclaim same workstream not IC-only stop

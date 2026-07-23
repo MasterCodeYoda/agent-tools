@@ -1,60 +1,54 @@
-# Drive prompt — context-compact-soft
+# Drive prompt — context-compact mid-item (soft-named scenario dir)
 
 Copy everything below the line into a **new** agent session whose **cwd is this run
 directory** (the generated harness repo), not the agent-tools monorepo root.
 
 ---
 
-You are validating the **workflow context-compact protocol** (skill corpus process IP).
+You are validating the **workflow context-compact protocol** for a **mid-item** breakpoint.
+
+## Requirement (read carefully)
+
+This is **not** end-of-item handoff.
+
+- **Mid-item** (this scenario): unit still has work remaining → WRITE IC → **RECLAIM the
+  conversation window** → **RESUME the same workstream** (`/workflow:continue` or execute
+  continue on `smoke-unit`). IC-only “prepared and stopped” is a **FAIL**.
+- **End-of-item** (out of scope here): unit done → session handoff only, **no** compact.
 
 ## Setup
 
-1. Load `@workflow:execute` (or `/workflow:execute continue` if your host uses slash skills).
-2. Also load / follow `@workflow` `references/context-compact.md` when compacting.
-3. Unit planning root is already present:
-
-   - `.agent-tools/planning/smoke-unit/session-state.md`
-   - `.agent-tools/planning/smoke-unit/implementation-plan.md`
-   - `.agent-tools/planning/smoke-unit/codebase-research.md`
-
-4. Toy app code is under `src/` — do **not** implement the remaining plan tasks in this run.
-   This scenario only validates **context compact**, not product delivery.
+1. Load `@workflow:execute` / continue and `@workflow` `references/context-compact.md`.
+2. Unit artifacts already exist under `.agent-tools/planning/smoke-unit/`.
+3. Toy app under `src/` — you may **state** NEXT = Task 2 clamp after resume; do **not** fully
+   implement Tasks 2–4 in this validation run (prove resume steering only).
 
 ## Forced condition
 
-Treat the session as **dumb-zone / heavy context** even if the window feels light:
+Treat as **dumb-zone / heavy context**, **mid-phase execute**, **tasks remain**.
 
-- Mid-phase execute on `smoke-unit`
-- More plan tasks remain
-- You must **not** push through with more exploration or feature edits
+## Required actions
 
-## Required actions (protocol)
-
-Run the context-compact protocol **end-to-end**:
-
-1. **FREEZE** — no new product edits, no broad search.
-2. **WRITE** — update `.agent-tools/planning/smoke-unit/session-state.md` with a full
-   **Intentional Compaction** snapshot (timestamped heading), including at least:
-   - Goal / approach / done so far / current failure or next step / key files / do not re-open
-   - **`compact_focus`** (3–8 lines for a summarizer)
-   - **`resume_loads`** (ordered relative paths under this repo)
-3. Optionally tick nothing on the plan (or leave checkboxes unchanged).
-4. **EMIT** compact_focus + resume_loads clearly in the IC.
-5. **RECLAIM**
-   - Prefer **soft_compact**: print the Resume card from the protocol and **stop the turn**.
-   - Only if this host documents an invocable conversation compact with focus text, you may
-     offer a one-gate harness compact — still only **after** WRITE.
-   - Do **not** invent slash commands or tools that do not exist on this host.
-6. Do **not** implement remaining plan tasks after reclaim in this scenario.
-
-## Constraints
-
-- Stay **project-agnostic**: no references to external product codebases or ticket schemes.
-- Paths in `resume_loads` must be **relative** to this run repo.
-- Do not create a skill named `compact`.
+1. **FREEZE** — no product feature work yet.
+2. **WRITE** — full Intentional Compaction on
+   `.agent-tools/planning/smoke-unit/session-state.md` with `compact_focus` + `resume_loads`.
+3. **RECLAIM**
+   - **Claude Code / Grok Build:** after WRITE, run host compact with focus, **or** output the
+     **exact** command for the user to run immediately:
+     `/compact <paste compact_focus here>`
+     Then, on the next turn after compact (or after user confirms compact), go to RESUME.
+   - **OpenCode / no focus-compact:** emit the protocol **Continue card**, then in a **new**
+     session in this cwd run `/workflow:continue` (or execute continue) on smoke-unit.
+4. **RESUME** — read `resume_loads` in order; restate NEXT from latest IC; do **not** re-explore.
+   Prove you are mid-stream by naming Task 2 only (no full implement required for harness).
 
 ## Done when
 
-- Unit `session-state.md` has a real IC with `compact_focus` and `resume_loads`
-- You have either stopped on a soft Resume card or completed harness compact after WRITE
-- Operator will run: `python -m tests.workflow.harness analyze <this-run-dir>`
+- IC on disk with `compact_focus` + `resume_loads`
+- Window reclaim attempted (host `/compact` with focus, or clean session after Continue card)
+- Post-reclaim: resume_loads read + NEXT restated (same unit workstream)
+- Operator: `python -m tests.workflow.harness analyze <this-run-dir>`
+
+## Constraints
+
+- Project-agnostic; relative paths only; no skill named `compact`.

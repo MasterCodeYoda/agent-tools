@@ -55,15 +55,16 @@ Optional resume check (manual): after soft stop, start a **new** message/session
 “continue from latest IC only,” confirm first tools read `resume_loads` paths. Not in hard
 invariants yet (would need log capture).
 
-## Scenario: `context-compact-soft`
+## Scenario: `context-compact-soft` (mid-item)
 
 | | |
 |--|--|
-| **Purpose** | Soft-path context-compact under forced dumb-zone |
+| **Purpose** | **Mid-item** compact → reclaim window → continue same workstream |
 | **Unit** | `.agent-tools/planning/smoke-unit/` |
 | **Seed** | Toy `src/counter.py` + mid-phase plan (task 1 done, 2–4 open) |
-| **Agent must not** | Finish the remaining plan tasks; invent missing compact tools |
-| **Hard checks** | IC heading, goal/next, `compact_focus`, `resume_loads`, relative paths, no product leak names |
+| **Pass** | WRITE IC + reclaim (`/compact` with focus on Claude/Grok, or clean session on soft hosts) + RESUME (`resume_loads` + NEXT). **IC-only stop is incomplete.** |
+| **Not this scenario** | End-of-item session handoff (no compact) |
+| **Hard checks** | IC fields on disk (automated). Reclaim+continue is operator-judged via session until log ingest exists. |
 
 ## Layout
 

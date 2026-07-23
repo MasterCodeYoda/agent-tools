@@ -42,9 +42,11 @@ Skills replace repeatedly pasting the same instructions and help keep long proce
 
 | Surface | Detail |
 |---------|--------|
-| Host compact | `/compact [instructions]` — optional focus text for what to keep |
-| Agent-invocable as a skill tool | **Usually no** — slash built-in; prefer soft Resume card unless the session can run slash commands |
-| Soft path | Always valid — write IC, emit Resume card, stop; resume via `/workflow:continue` or execute continue |
+| Host compact | `/compact [instructions]` — focus text = IC `compact_focus` |
+| Agent-invocable as a skill tool | **Usually no** — slash built-in |
+| **Mid-item (work remains)** | **Required:** after WRITE, have the user run `/compact <compact_focus>` (or invoke if available), then **RESUME** same unit (`/workflow:continue` / execute continue). IC-only stop is incomplete. |
+| **End-of-item** | Handoff only — do not compact as a substitute |
+| Soft path | Only if compact cannot run — Continue card → new/clean session → continue same unit |
 | Do not | Create a skill named `compact` (built-in wins / collides) |
 
 ---

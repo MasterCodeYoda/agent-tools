@@ -46,9 +46,10 @@ Skills work in the Codex app, CLI, and IDE extension.
 
 | Surface | Detail |
 |---------|--------|
-| Host compact | Host-dependent — do **not** assume a portable `/compact` tool unless the current Codex build documents one |
-| Agent-invocable as a skill tool | **Default no** — use soft path unless host docs confirm in-session compact with focus text |
-| Soft path | Always valid — write IC, emit Resume card, stop; resume via continue/execute |
+| Host compact | Host-dependent — use focus-compact only if this Codex build documents it |
+| Agent-invocable as a skill tool | **Default no** |
+| **Mid-item** | If focus-compact exists: WRITE → compact → RESUME same unit. Else: Continue card → clean session → continue. IC-only stop is incomplete while work remains. |
+| **End-of-item** | Handoff only |
 | Do not | Invent slash commands; do not create a skill named `compact` |
 
 ---

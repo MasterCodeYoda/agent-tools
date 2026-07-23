@@ -1,43 +1,67 @@
 # Context compact protocol
 
-**Load when:** dumb-zone or trajectory triggers fire; a slice/sub-issue completes with more
-work remaining; a trajectory-changing user correction lands; a phase gate needs a clean
-window before the next segment; or resume after thrash when the chat is polluted.
+**Load when:** a **mid-item** breakpoint needs a clean window — dumb-zone / trajectory thrash;
+slice or phase complete with **more work remaining on the same unit**; trajectory-changing
+correction; or polluted chat before the next segment of the **same** workstream.
 
-**Goal:** reclaim conversation context **after** durable steering is on disk, then continue the
-**same** workstream without replaying tool noise. Project-agnostic — use planning-root / unit
-paths only (see @workflow `references/planning-root.md`).
+**Goal:** reclaim conversation context **after** durable steering is on disk, then
+**continue the same workstream** (typically via the execute loop or `/workflow:continue` on
+the same unit) without replaying tool noise.
 
-**Related norms:** dumb-zone bands, IC *content* fields, and when compaction is mandatory —
-@workflow `references/context-engineering.md`. This file owns **control flow** (reclaim +
-resume), not a second copy of product design craft.
+Project-agnostic — planning-root / unit paths only (@workflow `references/planning-root.md`).
+
+**Related norms:** dumb-zone bands and IC *content* fields —
+@workflow `references/context-engineering.md`. This file owns **control flow** (when to
+compact vs hand off, reclaim, resume).
+
+## Mid-item compact vs end-of-item handoff (critical)
+
+| Situation | Compact? | What to do |
+|-----------|----------|------------|
+| **Mid-item** — unit still `in_progress`; plan/slice work remains; breakpoint is for context | **Yes** — full protocol through RESUME | WRITE IC → RECLAIM window → **continue same phase/stream** |
+| **End-of-item** — unit done / ready for review·integrate·compound·session end with no more execute work | **No** | Session handoff only (update session-state, commit, compound offer, handoff summary). Do **not** run this protocol as a substitute for handoff. |
+
+**Anti-pattern:** Mid-item WRITE of Intentional Compaction, then **stop as if the session were
+over**, without reclaiming the window and without continuing the workstream. That is a
+**failed** mid-item compact — preparation without the point of the protocol.
+
+**Anti-pattern:** Running host compact at end-of-item “because the window is big” when the
+correct ritual is handoff. End-of-item does not require compact.
 
 ## Hard rules
 
 1. **Write before reclaim.** Never compact or clear the thread until Intentional Compaction
    (and plan status, when applicable) is written.
 2. **Files beat chat.** After reclaim, steering comes from disk (`resume_loads`), not from
-   pre-compact tool dumps still in memory.
-3. **Soft path always works.** Do not invent a host tool or slash command that is not
-   documented for this agent. If reclaim cannot run in-thread, use **soft_compact**.
-4. **Do not name a skill `compact`.** Many hosts reserve `/compact` as a built-in; a skill
-   with that name collides or is shadowed.
-5. **No product-specific paths or ticket schemes** in this protocol — only unit planning
-   artifacts under the resolved planning root.
+   pre-compact tool dumps.
+3. **Mid-item success = reclaim + continue.** Soft “Resume card and stop forever” is only a
+   **fallback** when the host cannot compact; the operator or next turn must still reclaim
+   then continue — not abandon the unit.
+4. **Do not invent host tools.** If the host documents conversation compact with focus text
+   (e.g. `/compact …`), use that path for mid-item reclaim. If the agent cannot *invoke*
+   slash commands, **instruct the user to run the exact command** with `compact_focus`, then
+   on the next turn run RESUME (do not skip reclaim).
+5. **Do not name a skill `compact`.** Built-in host commands win / collide.
+6. **No product-specific paths or ticket schemes** in this protocol text.
 
-## Steps (run end-to-end)
+## Steps (run end-to-end for mid-item)
+
+### 0. Classify breakpoint
+
+- More work remains on this unit / phase → **mid-item** → continue below.  
+- Unit complete or session ending with no further execute → **end-of-item** → handoff
+  protocol only; **exit this file**.
 
 ### 1. FREEZE
 
-Stop new codebase exploration, speculative edits, and additional MCP/tool dumps. Finish only
-what is required to write an honest snapshot (e.g. note last green test command already run).
+Stop new exploration, speculative edits, and additional MCP/tool dumps. Finish only what is
+required for an honest snapshot.
 
 ### 2. WRITE (durable)
 
-Update unit artifacts under the planning root (paths relative to the **unit** directory):
+Update unit artifacts (paths relative to the **unit** directory):
 
-1. **`session-state.md`** — Current Focus; Last Session Summary if useful; **Intentional
-   Compaction** snapshot (fields below).  
+1. **`session-state.md`** — Current Focus; **Intentional Compaction** (fields below).  
 2. **`implementation-plan.md`** — checkboxes; short **Status after phase N** if approach
    diverged.
 
@@ -57,110 +81,115 @@ Match @workflow `references/context-engineering.md` › Mid-phase intentional co
 - **Do not re-open:** [dead ends]
 ```
 
-#### Operational fields (emit with the snapshot)
+#### Operational fields
 
 ```markdown
-- **compact_focus:** [3–8 lines — what a summarizer or host compact must keep: unit id,
-  phase/NEXT, branch tip or last green, constraints, dead ends to avoid]
-- **resume_loads:** ordered paths the next turn must read, e.g.
-  1. `<unit>/session-state.md` (latest IC only for steering)
+- **compact_focus:** [3–8 lines — unit id, phase/NEXT, last green, constraints, dead ends]
+- **resume_loads:** ordered paths, e.g.
+  1. `<unit>/session-state.md` (latest IC only)
   2. `<unit>/implementation-plan.md`
   3. `<unit>/codebase-research.md` (if present)
   4. `<unit>/design-discussion.md` (if design still open)
 ```
 
-**Latest-IC-wins:** the newest Intentional Compaction block is the resume surface. Older
-blocks are history — do **not** require re-reading the full compaction history to continue.
-Prefer replacing or clearly labeling the latest block rather than unbounded append-only growth.
+**Latest-IC-wins:** newest IC block is the resume surface; do not require re-reading full
+history.
 
 ### 3. EMIT
 
-Derive `compact_focus` from the IC **Current failure or next step** / NEXT and constraints.
-Keep it short enough to pass as host compact instructions or a soft Resume card body.
+Derive `compact_focus` from NEXT / constraints. Keep it short enough for host compact
+instructions.
 
-### 4. RECLAIM
+### 4. RECLAIM (window)
 
 | Mode | When | Behavior |
 |------|------|----------|
-| **harness_compact** | Host documents an in-session conversation compact that accepts **focus / keep** instructions, and you can invoke it in this session | **One-gate** unless the user already ordered compact: offer compact & continue / soft-stop only / keep going. On approve, invoke host compact with `compact_focus` as the keep-instructions. |
-| **soft_compact** | Default; unknown host; compact not invocable; user chose soft-stop | Emit the **Resume card** (below), **stop the turn**. Do not claim the window was reclaimed. |
+| **harness_compact** | Host has conversation compact **with focus/keep text** (see agent quick-refs) | **Required for mid-item** on that host. After WRITE: invoke compact with `compact_focus`, **or** output the exact user command (e.g. `/compact <compact_focus>`) as a **blocking next step**, then proceed to RESUME on the following turn. Do **not** offer “soft-stop only” as the primary outcome. |
+| **soft_compact** | Host has **no** documented focus-compact, or compact truly cannot run | Emit **Continue card** (below): durable paths + instruction that the **operator or next session** must open a clean window (new session / clear) and run `/workflow:continue` or execute continue on the **same unit**. Do not pretend the window was reclaimed in-thread. |
 
-**Toxic trajectory** (apology loops, repeated failed corrections): prefer soft_compact or a
-full clear/new session over a weak in-thread summary — still only after WRITE.
+**Toxic trajectory** (apology loops): prefer a hard clear/new session after WRITE, then
+RESUME via continue — still mid-item continue, not end-of-item handoff theater.
 
-### 5. RESUME
+### 5. RESUME (same workstream)
 
-After successful harness compact **or** on the first turn of a new/soft session:
+After reclaim (harness compact completed, or new/clean session after soft path):
 
-1. Load **only** `resume_loads` (plus minimal skill procedure for the current phase).  
+1. Load **only** `resume_loads` (+ thin phase skill procedure).  
 2. Restate **NEXT** from the **latest** IC.  
-3. Continue the **same** phase/stream (execute loop, continue phase machine, etc.) — do not
-   re-run portfolio discovery unless the unit is unclaimed or path is not established.  
-4. Do **not** re-dump large prior tool results into the parent window.
+3. **Continue the same phase** — execute loop, or `/workflow:continue` / execute continue on
+   the same unit. Do **not** re-run portfolio discovery unless the unit is unclaimed.  
+4. Do **not** re-dump pre-compact tool noise into the parent window.
 
-## Resume card (soft_compact template)
+Mid-item is **incomplete** until this step is in progress or complete — not when WRITE alone
+finishes.
 
-Present to the user (and stop):
+## Continue card (soft_compact / blocked harness — mid-item only)
+
+When reclaim cannot finish in-thread, present this and **pause only until a clean window
+exists** — the workstream is **not** closed:
 
 ```markdown
-## Context compact — resume card
+## Context compact — continue (mid-item)
 
-**Why:** [dumb-zone / slice complete / thrash / phase gate]
+**Breakpoint:** mid-item (work remains) — not end-of-item handoff.
 
 **Durable steering written:**
 - Unit: `<planning-root>/<unit>/`
-- Latest IC: in `session-state.md`
+- Latest IC: `session-state.md`
 - Plan status: [updated / unchanged]
 
-**compact_focus** (for host `/compact` or next-session paste):
+**compact_focus** (paste into host compact if available):
 > …
 
 **resume_loads** (read in order after reclaim):
 1. …
 2. …
 
-**Continue same workstream:**
-- Same session after host compact: re-read resume_loads, then continue the phase.
-- New session: `/workflow:continue` or `/workflow:execute continue` with the unit path
-  (or claim via continue if that is the project drive entry).
+**Required next (same workstream):**
+1. Reclaim window: run host compact with the focus above, **or** start a **new** session
+   in the same repo cwd (soft hosts).
+2. Then: `/workflow:continue` (or `/workflow:execute continue`) on this unit — load
+   resume_loads, restate NEXT, keep executing.
 
-**Do not:** replay pre-compact search dumps; reopen dead ends listed in the IC.
+**Do not:** treat this card as end-of-item handoff; do not invent portfolio NEXT; do not
+replay pre-compact dumps.
 ```
 
 ## Adapters (host capability)
 
-Portable rule: **if the agent quick-ref or host docs list a conversation-compact command with
-optional focus text, you may use harness_compact; otherwise soft_compact only.**
+| Host class | Mid-item reclaim |
+|------------|------------------|
+| Documents `/compact` (or equivalent) **with focus text** | **harness_compact** required — invoke or exact user command, then RESUME |
+| No focus-compact | **soft_compact** Continue card → new/clean session → `/workflow:continue` |
 
-Do not guess slash commands. Agent capability notes live under `@skills`
-`references/agents/` (compact row). Refresh those refs when host behavior changes — do not
-fork long host manuals into this protocol.
+Agent capability rows: `@skills` `references/agents/`. Do not guess slash names.
 
-## Call sites (who runs this)
+## Call sites
 
 | Skill | When |
 |-------|------|
-| **execute** (primary) | Mid-phase triggers; lost-context recovery |
-| **continue** | Resume of `in_progress` unit (load latest IC); optional full protocol when dumb-zone / thrash fires mid-drive |
-| **refine / plan / review** | Optional at heavy phase gates only — same protocol, do not re-embed |
+| **execute** (primary) | Mid-phase triggers while tasks remain; lost-context recovery mid-unit |
+| **continue** | After reclaim, claim/`in_progress` resume from latest IC; re-enter protocol if thrash mid-drive |
+| **Session handoff** (execute boundary) | End-of-item / user ending session — **not** this protocol |
 
-Discovery-heavy skills (audit, large search) should prefer **subagent digests** into the parent
-rather than compacting the parent first.
+Discovery-heavy skills should prefer **subagent digests** over parent compact when the parent
+is not mid-implement.
 
 ## Anti-patterns
 
+- Mid-item IC write + stop without reclaim + continue  
+- End-of-item host compact instead of handoff  
 - Compacting before writing IC  
 - “I’ll forget that” without disk write  
-- Soft path that still continues heavy edits in the same polluted turn  
-- Requiring the full session-state history to resume  
+- Soft path that keeps editing in the polluted turn  
+- Treating auto-compact at high % utilization as a substitute for WRITE + intentional focus  
 - Product- or repo-specific examples in protocol text  
-- Treating auto-compact at high % utilization as a substitute for this protocol  
 
 ## Related
 
 | Topic | Path |
 |-------|------|
-| Dumb zone, IC field norms, research/design craft | `context-engineering.md` |
-| Planning root resolution | `planning-root.md` |
-| Execute loop | `@workflow:execute` |
+| Dumb zone, IC field norms | `context-engineering.md` |
+| Planning root | `planning-root.md` |
+| Execute | `@workflow:execute` |
 | Drive / resume | `@workflow:continue` |

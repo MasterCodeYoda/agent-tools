@@ -148,18 +148,25 @@ while (tasks remain):
   11. Check for session boundary
 ```
 
-### Mid-phase context compact
+### Mid-phase context compact (mid-item only)
 
-**Do not wait only for session handoff.** When a slice finishes with more work remaining, after
-2+ failed serious attempts, after a trajectory-changing user correction, or when dumb-zone
-triggers fire (context-engineering.md):
+**Not** the same as session handoff. When work **remains** on this unit and a breakpoint hits
+(slice/phase done with more tasks, dumb-zone, 2+ failed attempts, trajectory-changing
+correction — context-engineering.md):
 
-1. **Load and run** @workflow `references/context-compact.md` end-to-end (FREEZE → WRITE IC +
-   plan status → EMIT compact_focus/resume_loads → RECLAIM → RESUME).  
-2. Do **not** stop at “prefer a fresh window” without running reclaim (harness or soft path).  
+1. **Load and run** @workflow `references/context-compact.md` **end-to-end**: FREEZE → WRITE
+   IC → EMIT → **RECLAIM window** → **RESUME same workstream** (execute continue / keep the
+   loop).  
+2. Mid-item success requires **reclaim + continue**, not IC-only “prepared for later.” On
+   hosts with focus-compact (e.g. `/compact`), use that path (invoke or exact user command),
+   then resume from `resume_loads`.  
 3. If the approach is wrong: stop and re-plan — do not push more edits in a polluted window.
 
-Optional: after each major phase, run the protocol even when still “on track” so the next
+When the **unit is complete** or the user is ending the session with no further execute work:
+use **Session Handoff Protocol** below — update state / commit / compound / handoff — **do not**
+run mid-item compact as a substitute.
+
+Optional: after each major phase with work remaining, run the mid-item protocol so the next
 phase starts clean.
 
 ### Story / Slice / Sub-issue Completion Checkpoint
@@ -227,6 +234,9 @@ Finish remaining work if possible; else handoff; if blocked, document in session
 Slice complete; milestone; user ending; context stale.
 
 ### Session Handoff Protocol
+
+Use for **end-of-item** or **user-ended session** — not for mid-item dumb-zone breakpoints
+(those use context-compact → continue).
 
 0. **Completion Verification** (above) first  
 1. **Update session state** — write `./planning/<project>/session-state.md` using

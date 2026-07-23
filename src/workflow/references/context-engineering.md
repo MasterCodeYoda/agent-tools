@@ -263,15 +263,15 @@ Minimum snapshot fields:
 - **resume_loads:** …    # operational — ordered paths; see context-compact.md
 ```
 
-### After writing the snapshot — reclaim and resume
+### After writing the snapshot — reclaim and resume (mid-item)
 
-Writing IC is not enough. **Load and run** @workflow `references/context-compact.md`
-end-to-end: emit `compact_focus` + `resume_loads`, reclaim the window (harness compact with
-focus when available, else soft Resume card), then resume by reloading only those paths —
-**not** the full failed chat.
+Writing IC is not enough when **work remains** on the unit. **Load and run** @workflow
+`references/context-compact.md` end-to-end: emit `compact_focus` + `resume_loads`, **reclaim
+the window**, then **continue the same workstream** from `resume_loads` — not end-of-item
+handoff theater.
 
-- Continue / execute treat the **latest** Intentional Compaction as high-priority steering
-  (latest-IC-wins — see the protocol).  
+- Mid-item: compact → continue. End-of-item: handoff only (no compact protocol).  
+- Latest Intentional Compaction is high-priority resume steering (latest-IC-wins).  
 - If approach is wrong: stop → re-plan or re-enter refine when ACs/design break; do not
   “patch vibes” in the dumb zone.
 

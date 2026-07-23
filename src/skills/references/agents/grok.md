@@ -39,9 +39,11 @@ Grok Build (xAI) uses a flexible **skills** system where skills are folders cont
 
 | Surface | Detail |
 |---------|--------|
-| Host compact | `/compact [context]` — optional focus text for what to keep; auto-compact at high utilization (not a substitute for Intentional Compaction) |
-| Agent-invocable as a skill tool | **Usually no** — built-in slash; PreCompact/PostCompact hooks exist for host config, not skill control flow |
-| Soft path | Always valid — write IC, emit Resume card, stop; resume via continue/execute |
+| Host compact | `/compact [context]` — focus text = IC `compact_focus`; auto-compact ≠ intentional protocol |
+| Agent-invocable as a skill tool | **Usually no** — built-in slash; hooks are host config, not skill control flow |
+| **Mid-item (work remains)** | **Required:** after WRITE, `/compact` with focus (invoke or exact user command), then **RESUME** same unit. IC-only stop is incomplete. |
+| **End-of-item** | Handoff only — do not compact as a substitute |
+| Soft path | Only if compact cannot run — Continue card → clean session → continue same unit |
 | Do not | Name a skill `compact` (built-in wins) |
 
 ---
