@@ -51,7 +51,8 @@ $ARGUMENTS
 | After phase-return | @workflow `references/runs-ledger.md` (append event; close-run on done) |
 | Yield-only args (compat) | `@workflow:maintain` (yield job only) — not drive |
 | Before review / integrate / recap / merge | `references/gates.md` |
-| Context craft (research artifact, dumb zone, mid-phase compaction) | @workflow `references/context-engineering.md` |
+| Context craft (research artifact, dumb zone, IC content) | @workflow `references/context-engineering.md` |
+| Context compact (reclaim + resume control flow) | @workflow `references/context-compact.md` |
 | Cross-session / multi-agent pause | @workflow `references/handoff-package.md` (optional) |
 | Orientation | `references/soft-checks.md` |
 | Conventions present | `planning/conventions.md` (tracks, gates, merge policy, orientation entrypoint) |
@@ -89,6 +90,19 @@ Keep handoffs **light** — scan state, do not read a heavyweight narrative.
    `workflow:claim` body → explicit unit (portfolio row 1).
 3. **Portfolio mode** (`references/portfolio-router.md`) **before** unit claim. Do not invent
    a pseudo-slice to enter the machine.
+
+### Resume steering (unit claim / in_progress)
+
+When claiming or resuming an `in_progress` unit, prefer **disk steering** over chat history:
+
+1. Latest **Intentional Compaction** in the unit `session-state.md` (latest-IC-wins) and any
+   `resume_loads` / `compact_focus` on that snapshot.  
+2. `implementation-plan.md` + `codebase-research.md` / design as listed.  
+3. Do **not** hard-stop claim solely because IC is missing — soft-check and fold into execute.
+
+If dumb-zone or thrash soft-check fires **mid-drive** (polluted window, apology loops, heavy
+tool noise), **load and run** @workflow `references/context-compact.md` before more production
+edits (WRITE if needed → RECLAIM soft or harness → RESUME from `resume_loads`).
 
 ### Path / invent rules (always on)
 

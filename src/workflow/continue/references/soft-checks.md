@@ -41,10 +41,13 @@ When claiming or resuming a code-bearing unit, soft-surface if:
   `design discussion: skipped — …` when about to plan or execute  
 - Substantial plan missing a **Structure outline** segment (only Approach + task dump)  
 - Session-state shows repeated failure without an **Intentional Compaction** snapshot  
+- Mid-drive dumb-zone / thrash with a polluted window (heavy tool noise, apology loops) and no
+  recent context-compact protocol run  
 
 Do **not** block claim solely for this — fold research/design/structure/compaction into the
-next phase skill (`refine` / `plan` / `execute`). Full norms: @workflow
-`references/context-engineering.md`.
+next phase skill (`refine` / `plan` / `execute`). When mid-drive thrash + heavy window: prefer
+running @workflow `references/context-compact.md` (soft path always valid) before more edits.
+Full norms: @workflow `references/context-engineering.md` + `references/context-compact.md`.
 
 ## Process gap → corpus (not in-loop rewrite)
 
