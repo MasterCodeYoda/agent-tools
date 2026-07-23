@@ -42,6 +42,15 @@ Skills work in the Codex app, CLI, and IDE extension.
 - First-class AGENTS.md + Skills combination for memory + procedures.
 - Plugin distribution model for sharing skills beyond a single machine/repo.
 
+### Conversation compact (workflow context-compact protocol)
+
+| Surface | Detail |
+|---------|--------|
+| Host compact | Host-dependent — do **not** assume a portable `/compact` tool unless the current Codex build documents one |
+| Agent-invocable as a skill tool | **Default no** — use soft path unless host docs confirm in-session compact with focus text |
+| Soft path | Always valid — write IC, emit Resume card, stop; resume via continue/execute |
+| Do not | Invent slash commands; do not create a skill named `compact` |
+
 ---
 
 ## Environment & Context Assumptions

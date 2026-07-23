@@ -35,6 +35,15 @@ Grok Build (xAI) uses a flexible **skills** system where skills are folders cont
 - Very strong at multi-agent research and parallel workflows.
 - `grok inspect` gives excellent visibility into the current environment.
 
+### Conversation compact (workflow context-compact protocol)
+
+| Surface | Detail |
+|---------|--------|
+| Host compact | `/compact [context]` — optional focus text for what to keep; auto-compact at high utilization (not a substitute for Intentional Compaction) |
+| Agent-invocable as a skill tool | **Usually no** — built-in slash; PreCompact/PostCompact hooks exist for host config, not skill control flow |
+| Soft path | Always valid — write IC, emit Resume card, stop; resume via continue/execute |
+| Do not | Name a skill `compact` (built-in wins) |
+
 ---
 
 ## Environment & Context Assumptions

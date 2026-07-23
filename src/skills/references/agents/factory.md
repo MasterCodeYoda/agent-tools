@@ -36,6 +36,15 @@ Custom commands have been largely merged into the skills system.
 - Very good at encoding team process and safety guardrails.
 - Cookbook of high-quality, opinionated skill templates available.
 
+### Conversation compact (workflow context-compact protocol)
+
+| Surface | Detail |
+|---------|--------|
+| Host compact | Host-dependent — confirm in current Droid docs before treating any command as compact-with-focus |
+| Agent-invocable as a skill tool | **Default no** — soft Resume card is the portable floor |
+| Soft path | Always valid — write IC, emit Resume card, stop; resume via continue/execute |
+| Do not | Invent host-specific compact tools; do not create a skill named `compact` |
+
 ---
 
 ## Environment & Context Assumptions

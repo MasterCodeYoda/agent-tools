@@ -38,6 +38,15 @@ Skills replace repeatedly pasting the same instructions and help keep long proce
 - Skills are still subject to the model’s context window.
 - Very large skills can still be expensive if loaded frequently.
 
+### Conversation compact (workflow context-compact protocol)
+
+| Surface | Detail |
+|---------|--------|
+| Host compact | `/compact [instructions]` — optional focus text for what to keep |
+| Agent-invocable as a skill tool | **Usually no** — slash built-in; prefer soft Resume card unless the session can run slash commands |
+| Soft path | Always valid — write IC, emit Resume card, stop; resume via `/workflow:continue` or execute continue |
+| Do not | Create a skill named `compact` (built-in wins / collides) |
+
 ---
 
 ## Environment & Context Assumptions
