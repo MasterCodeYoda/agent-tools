@@ -1,18 +1,23 @@
 ---
 name: skills:evolve
-description: Detect gaps in the canonical skill corpus, propose targeted improvements, validate changes, and present for review. Inventories src/** skill trees; optional run-ledger seeds for process IP gaps.
+description: Detect gaps in the canonical skill corpus, propose targeted improvements, validate, review, land on main, and remove the evolve branch. Inventories src/** skill trees; optional run-ledger seeds for process IP gaps. Abort is an explicit exception.
 user-invocable: true
 publish-target: project
 ---
 
 # Skills: Evolve
 
-Apply the autoresearch pattern — detect → propose → validate → present — to iteratively improve
-the canonical skills under `src/` (all families: workflow, swarm, git, skills, …).
+Apply the autoresearch pattern — detect → propose → validate → **review → land** — to iteratively
+improve the canonical skills under `src/` (all families: workflow, swarm, git, skills, …).
 
 **Core principle:** Every proposed change must trace to a concrete, detected gap. No vibes-based
 rewrites. No style preferences. If there's no gap, there's no change. **Process IP**
 (workflow/swarm) changes only through this skill — never mid-loop from `/workflow:continue`.
+
+**Completion is mandatory.** A run that stops at “present for review” or leaves
+`evolve/YYYY-MM-DD` unmerged is **incomplete**. Default end state: changes reviewed, merged to
+`main`, history recorded as `merged`, branch deleted. **Abort is the exception** — only when the
+user explicitly opts out (reject proposals, discard the branch, or stop mid-land).
 
 This is the canonical version of the evolve capability, now operating as a sub-skill of the
 `skills` meta-skill.
@@ -222,7 +227,8 @@ Mark each proposal:
 
 ### Branch Setup
 
-1. Create branch: `evolve/YYYY-MM-DD`
+1. Create branch from up-to-date `main`: `evolve/YYYY-MM-DD`
+2. All apply commits land on this branch only — never commit evolve proposals directly to `main`
 
 ### Iteration Loop
 
@@ -237,13 +243,81 @@ for iteration in 1..N:
   5. Apply validated proposals: edit files, commit individually
 ```
 
-After all iterations (or early convergence), present a final summary of changes made, health score improvement, and any remaining gaps.
+After all iterations (or early convergence), **do not stop**. Produce the final summary, then enter
+**Completion** below.
+
+### Final summary (before review)
+
+Present: changes made, health score improvement, remaining gaps/recommendations, branch name, and
+commit list. Then continue into Completion without waiting for a separate “please review” prompt
+unless the user has already aborted.
+
+## Completion (required — default path)
+
+A run is **done** only when one of these terminal states is recorded:
+
+| Terminal state | When |
+|----------------|------|
+| **merged** | Review APPROVE (or APPROVE after remediation); branch merged to `main`; history updated; branch deleted |
+| **aborted** | User explicitly rejects landing (or discards all proposals); history updated; branch deleted or left only if user asks to keep it |
+| **dry-run** | `--dry-run`: gap report only; no branch; no commits |
+
+**Incomplete (forbidden as a stopping point):** “pending review”, unmerged `evolve/*` branch,
+history left at pending after the session ends, or “hand off for later” without explicit abort.
+
+### Completion steps (drive through these in order)
+
+1. **History draft** — Append `history.md` entry for this run (score, iterations, branch, key
+   changes, recommendations). Set **Status**: `in review` while landing. Commit on the evolve
+   branch.
+2. **Review** — Run `@workflow:review` on `main...HEAD` (standard depth unless the diff is
+   tiny → quick). Emit a real verdict + evidence when integration-ready. Do not treat green
+   `doc_lint` alone as reviewed.
+3. **Remediate if needed** — On REQUEST CHANGES or unresolved findings: fix on the evolve
+   branch (prefer one-file commits), re-run review until APPROVE **or** the user explicitly aborts.
+4. **Land** — Merge into `main` (fast-forward preferred when possible). If project policy requires
+   a PR, open it, merge it, and confirm `main` contains the tip. Do not leave an open PR as the
+   session end state unless the user aborts further land steps.
+5. **History finalize** — On `main`, set history **Status**: `merged` (include merge tip or date).
+   Never leave stale `pending review` / `in review` after a successful land.
+6. **Branch cleanup** — Delete the local `evolve/YYYY-MM-DD` branch. Delete the remote branch if
+   one was pushed. Confirm no leftover evolve branch for this date.
+7. **Publish** — If `src/**` changed, remind or run `./setup.sh` so installed agent trees match
+   canonical (project convention).
+8. **Report complete** — State terminal status (`merged` / `aborted`), final score, merge tip,
+   and that the branch is gone.
+
+### Abort (exception only)
+
+Abort only on **explicit user direction** (e.g. “discard these changes”, “don't merge”, “stop”).
+
+On abort:
+
+1. Do **not** merge.
+2. Update `history.md` **Status**: `aborted` with a one-line reason (commit on the branch if it
+   still exists, or on `main` if history-only).
+3. Default cleanup: delete the evolve branch after confirming the user does not need it. If they
+   want to keep the branch for later, record that in history and still mark the **run** aborted
+   (not “pending review”).
+4. Report aborted — incomplete land is intentional.
+
+Silence, session end, or “looks good” without merge is **not** abort — continue Completion.
+
+### Zero-change runs
+
+If detection finds no actionable P1/P2 and no proposals apply: no branch required (or delete an
+empty branch). Optionally append a short history note (`no-op` / converged). Terminal state is
+complete without merge.
 
 ## Integration Points
 
 - Uses agent capability quick-references from `src/skills/references/agents/`
 - Uses the embedded markup system defined in `src/skills/references/MARKUP.md` when proposing portable changes
 - Operates under the `skills` meta-skill (`src/skills/SKILL.md`)
+- **Review / land:** `@workflow:review` for the branch gate; git merge (or project PR flow) +
+  branch delete for land — same completion bar as above
 - **Run ledger / process lessons:** `@workflow` `references/runs-ledger.md`, compound `type: process`
   entries, `references/run-ledger-seeds.md` — seeds in; proposals out only via this skill
 - **Process payload** (what runtimes must honor): `@workflow` `references/process-payload.md`
+- **History log:** `history.md` in this skill directory — append-only run record; status must
+  reflect the true terminal state (`merged` / `aborted` / dry-run note)

@@ -20,7 +20,7 @@ This is the meta-skill for the overall skill system. Its purpose is to maintain 
 | Capability       | Command          | Description |
 |------------------|------------------|-----------|
 | Import           | `/skills:import` | Import and adapt skills written for other agents into the canonical format. |
-| Evolve           | `/skills:evolve` | Analyze and iteratively improve skills already in the corpus. |
+| Evolve           | `/skills:evolve` | Detect, fix, review, and land corpus improvements (merge + branch cleanup). |
 
 ## Structure
 
