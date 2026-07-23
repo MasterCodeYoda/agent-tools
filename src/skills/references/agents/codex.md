@@ -42,15 +42,14 @@ Skills work in the Codex app, CLI, and IDE extension.
 - First-class AGENTS.md + Skills combination for memory + procedures.
 - Plugin distribution model for sharing skills beyond a single machine/repo.
 
-### Conversation compact (workflow context-compact protocol)
+### Conversation reclaim (workflow context-compact protocol)
 
 | Surface | Detail |
 |---------|--------|
-| Host compact | Host-dependent — use focus-compact only if this Codex build documents it |
-| Agent-invocable as a skill tool | **Default no** |
-| **Mid-item** | If focus-compact exists: WRITE → compact → RESUME same unit. Else: Continue card → clean session → continue. IC-only stop is incomplete while work remains. |
+| **Default mid-item reclaim** | New/clear session (host docs) → continue same unit from disk IC |
+| Optional | Host focus-compact only if documented |
 | **End-of-item** | Handoff only |
-| Do not | Invent slash commands; do not create a skill named `compact` |
+| Do not | Invent slash commands; skill named `compact` |
 
 ---
 

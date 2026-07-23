@@ -38,16 +38,16 @@ Skills replace repeatedly pasting the same instructions and help keep long proce
 - Skills are still subject to the model’s context window.
 - Very large skills can still be expensive if loaded frequently.
 
-### Conversation compact (workflow context-compact protocol)
+### Conversation reclaim (workflow context-compact protocol)
 
 | Surface | Detail |
 |---------|--------|
-| Host compact | `/compact [instructions]` — focus text = IC `compact_focus` |
-| Agent-invocable as a skill tool | **Usually no** — slash built-in |
-| **Mid-item (work remains)** | **Required:** after WRITE, have the user run `/compact <compact_focus>` (or invoke if available), then **RESUME** same unit (`/workflow:continue` / execute continue). IC-only stop is incomplete. |
-| **End-of-item** | Handoff only — do not compact as a substitute |
-| Soft path | Only if compact cannot run — Continue card → new/clean session → continue same unit |
-| Do not | Create a skill named `compact` (built-in wins / collides) |
+| **Default mid-item reclaim** | **`/clear`** — clean session; then `/workflow:continue` (or execute continue) on same unit |
+| Optional stay-in-thread | `/compact [instructions]` with IC `compact_focus` |
+| Agent-invocable | **Usually no** — emit exact `host_command` in `workflow_reclaim` signal |
+| **End-of-item** | Handoff only — no reclaim protocol |
+| Hooks | Optional Stop + SessionStart(`clear`) — see @workflow `references/hooks/reclaim-hooks.md` |
+| Do not | Skill named `compact`; claim agent ran `/clear` without user/orchestrator |
 
 ---
 

@@ -35,16 +35,16 @@ Grok Build (xAI) uses a flexible **skills** system where skills are folders cont
 - Very strong at multi-agent research and parallel workflows.
 - `grok inspect` gives excellent visibility into the current environment.
 
-### Conversation compact (workflow context-compact protocol)
+### Conversation reclaim (workflow context-compact protocol)
 
 | Surface | Detail |
 |---------|--------|
-| Host compact | `/compact [context]` — focus text = IC `compact_focus`; auto-compact ≠ intentional protocol |
-| Agent-invocable as a skill tool | **Usually no** — built-in slash; hooks are host config, not skill control flow |
-| **Mid-item (work remains)** | **Required:** after WRITE, `/compact` with focus (invoke or exact user command), then **RESUME** same unit. IC-only stop is incomplete. |
-| **End-of-item** | Handoff only — do not compact as a substitute |
-| Soft path | Only if compact cannot run — Continue card → clean session → continue same unit |
-| Do not | Name a skill `compact` (built-in wins) |
+| **Default mid-item reclaim** | **`/new`** (alias `/clear`) — then `/workflow:continue` on same unit |
+| Optional stay-in-thread | `/compact [context]` with IC `compact_focus`; auto-compact ≠ protocol |
+| Agent-invocable | **Usually no** — emit `workflow_reclaim` + exact `host_command` |
+| **End-of-item** | Handoff only |
+| Hooks | Stop + SessionStart — `references/hooks/reclaim-hooks.md`; Stop has `lastAssistantMessage` |
+| Do not | Skill named `compact`; fake auto-`/new` from shell hooks |
 
 ---
 

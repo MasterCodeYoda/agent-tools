@@ -265,15 +265,13 @@ Minimum snapshot fields:
 
 ### After writing the snapshot — reclaim and resume (mid-item)
 
-Writing IC is not enough when **work remains** on the unit. **Load and run** @workflow
-`references/context-compact.md` end-to-end: emit `compact_focus` + `resume_loads`, **reclaim
-the window**, then **continue the same workstream** from `resume_loads` — not end-of-item
-handoff theater.
+Writing IC is not enough when **work remains**. **Load and run** @workflow
+`references/context-compact.md`: emit signal + **clean-session** host command (default
+`/clear` or `/new`), then **continue** from `resume_loads`. Optional host `/compact` is
+stay-in-thread only. End-of-item: handoff only (no reclaim protocol).
 
-- Mid-item: compact → continue. End-of-item: handoff only (no compact protocol).  
-- Latest Intentional Compaction is high-priority resume steering (latest-IC-wins).  
-- If approach is wrong: stop → re-plan or re-enter refine when ACs/design break; do not
-  “patch vibes” in the dumb zone.
+- Latest IC is high-priority resume steering (latest-IC-wins).  
+- If approach is wrong: re-plan / refine — do not “patch vibes” in the dumb zone.
 
 ### When mid-phase compaction is mandatory
 
@@ -324,14 +322,16 @@ micro                 → light research · issue-as-plan · quick review · no 
 feature               → questions + ticket-hidden research → design in refine → structure + tactical plan → execute → review
 hard / multi-seam     → fuller design/structure · vertical checkpoints · re-enter refine if design falsifies ACs
 research track        → decision evidence; add codebase research when code-shaped
-any track, dumb zone  → intentional compaction → context-compact protocol (reclaim + resume)
+any track, mid-item dumb zone → IC write → clean-session reclaim → continue same unit
+any track, end-of-item → handoff (no reclaim protocol)
 ```
 
 ## Related
 
 | Topic | Path |
 |-------|------|
-| Context compact protocol (reclaim + resume control flow) | `references/context-compact.md` |
+| Context compact protocol (mid-item reclaim + continue) | `references/context-compact.md` |
+| Optional reclaim hooks | `references/hooks/reclaim-hooks.md` |
 | Tracks (feature / micro / research) | `references/tracks.md` |
 | Refine skill | `refine/SKILL.md` |
 | Design discussion template | `refine/templates/design-discussion.md` |

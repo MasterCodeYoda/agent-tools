@@ -59,12 +59,16 @@ invariants yet (would need log capture).
 
 | | |
 |--|--|
-| **Purpose** | **Mid-item** compact → reclaim window → continue same workstream |
+| **Purpose** | Mid-item: durable IC + clean-session reclaim path + continue same unit |
 | **Unit** | `.agent-tools/planning/smoke-unit/` |
-| **Seed** | Toy `src/counter.py` + mid-phase plan (task 1 done, 2–4 open) |
-| **Pass** | WRITE IC + reclaim (`/compact` with focus on Claude/Grok, or clean session on soft hosts) + RESUME (`resume_loads` + NEXT). **IC-only stop is incomplete.** |
-| **Not this scenario** | End-of-item session handoff (no compact) |
-| **Hard checks** | IC fields on disk (automated). Reclaim+continue is operator-judged via session until log ingest exists. |
+| **Default reclaim** | **`/clear`** (Claude) or **`/new`** (Grok) — not `/compact` |
+| **Pass (agent)** | WRITE IC + `workflow_reclaim` signal + exact `host_command` + Continue card |
+| **Pass (driver)** | Run host_command, then `/workflow:continue` / execute continue; resume_loads + NEXT |
+| **Not automated** | Invoking `/clear`/`/new` (user or outer orchestrator / software-factory later) |
+| **Not this scenario** | End-of-item handoff |
+| **Hard checks** | IC fields on disk (analyze). Signal/continue judged by operator or logs. |
+
+Optional host hooks: @workflow `references/hooks/reclaim-hooks.md` (Stop coach + SessionStart re-seed).
 
 ## Layout
 

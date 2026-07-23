@@ -25,6 +25,9 @@ command code-review
 # Host conversation compact (Claude/Grok slash; not a corpus skill). Referenced by
 # context-compact protocol + agent capability rows — never ship a skill named compact.
 command compact
+# Host clean-session reclaim (Claude /clear, Grok /new; not corpus skills).
+command clear
+command new
 
 # Planned-but-unimplemented command, referenced as explicit future work
 # (docs disclose the status). Remove this entry when /qa:audit ships.

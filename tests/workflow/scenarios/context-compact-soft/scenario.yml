@@ -1,8 +1,8 @@
 name: context-compact-soft
 purpose: >
-  Mid-item context-compact: agent writes IC, reclaims the window (host compact or clean
-  session), then resumes the same unit workstream. IC-only stop without reclaim+continue is
-  incomplete. End-of-item handoff is out of scope (no compact).
+  Mid-item reclaim: durable IC + workflow_reclaim signal with clean-session host_command
+  (/clear or /new), then continue same unit after user/orchestrator clears. Default is clean
+  session not /compact. End-of-item handoff out of scope.
 
 unit_path: .agent-tools/planning/smoke-unit
 
@@ -23,5 +23,7 @@ hard_invariants:
 observation_checklist:
   - id: mid-item-not-handoff
     expect: IC frames remaining work NEXT not unit complete handoff
-  - id: reclaim-then-continue
-    expect: evidence of host compact or continue-after-reclaim same workstream not IC-only stop
+  - id: clean-session-host-command
+    expect: host_command clear or new or clean-session reclaim signal
+  - id: continue-same-unit
+    expect: workflow continue same unit after reclaim not portfolio invent

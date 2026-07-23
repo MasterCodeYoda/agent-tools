@@ -100,10 +100,10 @@ When claiming or resuming an `in_progress` unit, prefer **disk steering** over c
 2. `implementation-plan.md` + `codebase-research.md` / design as listed.  
 3. Do **not** hard-stop claim solely because IC is missing — soft-check and fold into execute.
 
-If dumb-zone or thrash soft-check fires **mid-drive** (polluted window, apology loops, heavy
-tool noise) **and the unit still has work remaining**, **load and run** @workflow
-`references/context-compact.md` end-to-end (WRITE → RECLAIM window → **RESUME** same unit).
-Do not treat IC-only stop as success. End-of-item / session end uses handoff, not compact.
+If dumb-zone or thrash soft-check fires **mid-drive** **and the unit still has work remaining**,
+**load and run** @workflow `references/context-compact.md` (WRITE → signal + clean-session
+host command → after reclaim, RESUME same unit). IC-only stop is incomplete. End-of-item uses
+handoff, not reclaim.
 
 ### Path / invent rules (always on)
 

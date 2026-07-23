@@ -1,54 +1,56 @@
-# Drive prompt — context-compact mid-item (soft-named scenario dir)
+# Drive prompt — mid-item reclaim (clean-session default)
 
 Copy everything below the line into a **new** agent session whose **cwd is this run
-directory** (the generated harness repo), not the agent-tools monorepo root.
+directory**.
 
 ---
 
-You are validating the **workflow context-compact protocol** for a **mid-item** breakpoint.
+Validate the **workflow context-compact protocol** for a **mid-item** breakpoint.
 
-## Requirement (read carefully)
+## Requirement
 
-This is **not** end-of-item handoff.
+| Mid-item (this run) | End-of-item (out of scope) |
+|---------------------|----------------------------|
+| WRITE IC → reclaim → continue same unit | Handoff only — **no** reclaim |
 
-- **Mid-item** (this scenario): unit still has work remaining → WRITE IC → **RECLAIM the
-  conversation window** → **RESUME the same workstream** (`/workflow:continue` or execute
-  continue on `smoke-unit`). IC-only “prepared and stopped” is a **FAIL**.
-- **End-of-item** (out of scope here): unit done → session handoff only, **no** compact.
+**Default reclaim = clean session**, not host `/compact`:
+
+| Host | After WRITE, tell the user to run |
+|------|-----------------------------------|
+| Claude Code | `/clear` |
+| Grok Build | `/new` (or `/clear`) |
+| OpenCode | new/clear session per host |
+
+Then: `/workflow:continue` or execute continue on `smoke-unit` (read `resume_loads`, restate
+NEXT). Optional `/compact` with focus only if staying in-thread is preferred — not required.
+
+**IC-only stop without reclaim path is incomplete.**
+
+Full auto-clear is **not** required (user or outer orchestrator runs host_command). Agent must
+emit the `workflow_reclaim` YAML signal + Continue card.
 
 ## Setup
 
-1. Load `@workflow:execute` / continue and `@workflow` `references/context-compact.md`.
-2. Unit artifacts already exist under `.agent-tools/planning/smoke-unit/`.
-3. Toy app under `src/` — you may **state** NEXT = Task 2 clamp after resume; do **not** fully
-   implement Tasks 2–4 in this validation run (prove resume steering only).
+- Load execute/continue + `context-compact.md`.
+- Unit: `.agent-tools/planning/smoke-unit/`.
+- Do **not** fully implement plan Tasks 2–4; prove checkpoint + reclaim instructions + (after
+  clear) resume steering only.
 
 ## Forced condition
 
-Treat as **dumb-zone / heavy context**, **mid-phase execute**, **tasks remain**.
+Dumb-zone / mid-phase / **tasks remain**.
 
 ## Required actions
 
-1. **FREEZE** — no product feature work yet.
-2. **WRITE** — full Intentional Compaction on
-   `.agent-tools/planning/smoke-unit/session-state.md` with `compact_focus` + `resume_loads`.
-3. **RECLAIM**
-   - **Claude Code / Grok Build:** after WRITE, run host compact with focus, **or** output the
-     **exact** command for the user to run immediately:
-     `/compact <paste compact_focus here>`
-     Then, on the next turn after compact (or after user confirms compact), go to RESUME.
-   - **OpenCode / no focus-compact:** emit the protocol **Continue card**, then in a **new**
-     session in this cwd run `/workflow:continue` (or execute continue) on smoke-unit.
-4. **RESUME** — read `resume_loads` in order; restate NEXT from latest IC; do **not** re-explore.
-   Prove you are mid-stream by naming Task 2 only (no full implement required for harness).
+1. FREEZE  
+2. WRITE full IC with `compact_focus` + `resume_loads`  
+3. EMIT fenced `workflow_reclaim` block (`reclaim: clean-session`, correct `host_command`)  
+4. Present Continue card: run host_command, then continue  
+5. After operator clears (or in a follow-up clean session): RESUME — resume_loads + NEXT = Task 2  
 
 ## Done when
 
-- IC on disk with `compact_focus` + `resume_loads`
-- Window reclaim attempted (host `/compact` with focus, or clean session after Continue card)
-- Post-reclaim: resume_loads read + NEXT restated (same unit workstream)
-- Operator: `python -m tests.workflow.harness analyze <this-run-dir>`
-
-## Constraints
-
-- Project-agnostic; relative paths only; no skill named `compact`.
+- IC on disk  
+- Signal + host_command present in final mid-item message  
+- After clear: continue same unit from disk (manual or second session)  
+- `python -m tests.workflow.harness analyze <run-dir>`  

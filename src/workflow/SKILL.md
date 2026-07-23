@@ -118,7 +118,7 @@ Classification, micro/research process, review depth: `references/tracks.md`. Pr
 as the research track — it is default context craft for almost all work. Questions-first /
 ticket-hidden research, refine-primary technical design, plan structure→tactical segmentation,
 dumb-zone norms, mid-phase intentional compaction: `references/context-engineering.md`.
-Reclaim window + resume same workstream: `references/context-compact.md`.
+Mid-item reclaim (clean session default) + continue: `references/context-compact.md`.
 
 ## Project-Local Conventions
 
@@ -255,7 +255,8 @@ Examples: `references/decomposition-modes.md`.
 | Planning root | `references/planning-root.md` |
 | Built-in tracks | `references/tracks.md` |
 | Context engineering (dumb zone, ticket-hidden research, design, plan segmentation, IC content) | `references/context-engineering.md` |
-| Context compact protocol (reclaim window + resume from disk) | `references/context-compact.md` |
+| Context compact protocol (mid-item clean-session reclaim + continue) | `references/context-compact.md` |
+| Optional reclaim Stop/SessionStart hooks | `references/hooks/reclaim-hooks.md` |
 | Design discussion template | `refine/templates/design-discussion.md` |
 | Runs ledger | `references/runs-ledger.md` |
 | Stewardship (prune + yield + memory) | `@workflow:maintain` |

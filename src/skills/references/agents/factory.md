@@ -36,15 +36,14 @@ Custom commands have been largely merged into the skills system.
 - Very good at encoding team process and safety guardrails.
 - Cookbook of high-quality, opinionated skill templates available.
 
-### Conversation compact (workflow context-compact protocol)
+### Conversation reclaim (workflow context-compact protocol)
 
 | Surface | Detail |
 |---------|--------|
-| Host compact | Host-dependent — confirm focus-compact in current Droid docs |
-| Agent-invocable as a skill tool | **Default no** |
-| **Mid-item** | If focus-compact exists: WRITE → compact → RESUME same unit. Else: Continue card → clean session → continue. IC-only stop is incomplete while work remains. |
+| **Default mid-item reclaim** | New/clear session → continue same unit from disk IC |
+| Optional | Focus-compact only if Droid docs confirm |
 | **End-of-item** | Handoff only |
-| Do not | Invent host-specific compact tools; do not create a skill named `compact` |
+| Do not | Invent compact tools; skill named `compact` |
 
 ---
 
