@@ -32,7 +32,9 @@ last_updated: [timestamp]
 [Detailed summary for handoff - what was done, key decisions, blockers]
 
 ## Intentional Compaction
-[Latest mid-phase snapshot when used; otherwise omit this section]
+[Latest mid-phase snapshot when used; otherwise omit this section.
+ Latest-IC-wins for resume. Include operational fields when compacting:
+ compact_focus, resume_loads — see @workflow references/context-compact.md]
 
 ## Session History
 ### Session N - [date]

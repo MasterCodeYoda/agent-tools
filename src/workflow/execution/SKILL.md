@@ -117,12 +117,14 @@ Next incomplete plan task; honor steering; parallelize with sub-agents when safe
 Quality detail: **load** `quality-checkpoints.md`. Layer order: @workflow
 (`references/decomposition-modes.md`). Testing strategy: @test-strategy. Logging: `logging.md`.
 Context discipline: **load** @workflow (`references/context-engineering.md`) — dumb-zone
-norms, mid-phase intentional compaction, research freshness.
+norms, IC content fields, research freshness. **Reclaim/resume control flow:** **load**
+@workflow (`references/context-compact.md`).
 
 ### Pre-loop context load
 
-1. Prefer loading **plan + codebase-research + latest intentional compaction** — not the full
-   prior chat history when resuming after thrash.
+1. Prefer loading **plan + codebase-research + latest intentional compaction** (and any
+   `resume_loads` listed on that IC) — not the full prior chat history when resuming after
+   thrash or after a context compact.
 2. If `codebase-research.md` is missing and the unit is not a recorded trivial skip, run
    **light or full** on-demand research before non-trivial edits (dose per
    context-engineering.md). Micro: see `references/direct-issue-execution.md`.
@@ -141,25 +143,24 @@ while (tasks remain):
   6. Refactor if needed, run full tests
   7. Mark task completed in TodoWrite
   8. Update plan file ([ ] -> [x])
-  9. Check for story/slice completion → mid-phase compaction when more work remains
-  10. If dumb-zone / trajectory triggers fire → intentional compaction (below)
+  9. Check for story/slice completion → context compact protocol when more work remains
+  10. If dumb-zone / trajectory triggers fire → context compact protocol (below)
   11. Check for session boundary
 ```
 
-### Mid-phase intentional compaction
+### Mid-phase context compact
 
 **Do not wait only for session handoff.** When a slice finishes with more work remaining, after
 2+ failed serious attempts, after a trajectory-changing user correction, or when dumb-zone
 triggers fire (context-engineering.md):
 
-1. Write an **Intentional Compaction** snapshot into `session-state.md` (goal, approach, done,
-   current failure/next step, key files, last green verification, dead ends).  
-2. Update plan checkboxes and a short **Status after phase N** note if approach diverged.  
-3. Prefer a **fresh context window** to continue, loading plan + research + latest compaction.  
-4. If the approach is wrong: stop and re-plan — do not push more edits in a polluted window.
+1. **Load and run** @workflow `references/context-compact.md` end-to-end (FREEZE → WRITE IC +
+   plan status → EMIT compact_focus/resume_loads → RECLAIM → RESUME).  
+2. Do **not** stop at “prefer a fresh window” without running reclaim (harness or soft path).  
+3. If the approach is wrong: stop and re-plan — do not push more edits in a polluted window.
 
-Optional: after each major phase, compact even when still “on track” so the next phase starts
-clean (frequent intentional compaction).
+Optional: after each major phase, run the protocol even when still “on track” so the next
+phase starts clean.
 
 ### Story / Slice / Sub-issue Completion Checkpoint
 
@@ -257,15 +258,17 @@ Document; create resolution task; parallelize if possible; escalate if critical 
 
 ### If Lost Context
 
-Read session-state (especially latest **Intentional Compaction**), git log,
-implementation-plan, and `codebase-research.md`; ask user if needed. Prefer compacting and
-starting a fresh window over replaying a failed thread.
+Read session-state (especially latest **Intentional Compaction** and its `resume_loads`), git
+log, implementation-plan, and `codebase-research.md`; ask user if needed. Prefer running the
+**context-compact protocol** (write if stale, then reclaim + resume) over replaying a failed
+thread.
 
 ## Key Principles
 
 - **Ship complete work** — no 80% features  
 - **Maintain continuity** — session state is SoT  
-- **Stay in the smart zone** — compact mid-phase; load research + plan, not noise  
+- **Stay in the smart zone** — run context-compact mid-phase; load research + plan + latest IC,
+  not noise  
 - **Build knowledge** — compound at boundaries  
 - **Quality built in** — patterns, tests, continuous checks  
 
