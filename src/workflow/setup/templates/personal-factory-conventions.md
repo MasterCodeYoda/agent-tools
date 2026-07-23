@@ -47,6 +47,13 @@ Then: **merge to main locally**, compound (or `compound: none — <reason>`), ad
 Still **stop** when: review missing/invalid, gates red, genuine judgment call, doubt about DoD,
 or push/PR needed. **Pushing and opening PRs remain user-initiated.**
 
+### Automation overlay (optional)
+
+When an **unattended / always-PR agent** works this repo, it may apply a **stricter integrate
+path** (open PR; stop at merge/E-MERGE; no silent local merge) without changing the phase
+dialect. Human continue keeps the local-merge defaults above. Record overlay on the run when
+used. Process detail: @workflow `references/approval-boundaries.md`.
+
 ## Agent collaboration (HITL / session drive)
 
 Process contract for how agents present work and ask for decisions — complements user-space

@@ -56,6 +56,10 @@ These are typically scoped by visibility and sharing needs (user-wide, project-w
   solutions/<category>/<slug>.md
 ```
 
+**Incident-class / dated rules:** entries may carry `incident_date`, `job_phases`, and body
+sections Rule + Mandatory verify + Load when (`/workflow:compound` → `templates/dated-rule.md`).
+Use when a concrete mistake must bind every future session of a job — not for ordinary patterns.
+
 **Non-goals for L3-shared:** restating ADRs or CONTRIBUTING; personify voice; planning scratch; secrets; product docs under `docs/`. Debugging post-mortems live under `.agent-tools/memory/solutions/`, **not** `docs/solutions/`.
 
 **Loading:** `AGENTS.md` carries a marker-bounded pointer to `MEMORY.md` (installed by `/workflow:setup`). Agents read the index on demand (compound, unfamiliar seams, debugging); they do **not** `@`-import every satellite every turn.

@@ -269,6 +269,17 @@ Every finding must be grounded in evidence, not intuition:
 - **Check the opposite hypothesis** — before P1/P2, ask what would make the code correct; downgrade if refuted.
 - **Distinguish crash sites from root causes** — trace to where incorrect behavior begins.
 
+### Claim-class facts in the change surface
+
+When the PR/description/commit messages assert product state (“shipped,” “live,” “we don’t
+have X,” customer-visible numbers):
+
+- Prefer findings that the claim is **unverified against live SoT** (repo, CI, deploy, project
+  console) — memory and training data are not citations.  
+- **Code on the branch ≠ feature live** (flags, ramps, unmerged). Flag overclaim as P2/P3
+  (P1 if customer-facing falsehood risk).  
+- Full process: @workflow `references/approval-boundaries.md` › Claim-class live verification.
+
 ### Focus on Impact
 
 - P1 blockers; P2 quality; P3 suggestions — don't overwhelm with minor issues.

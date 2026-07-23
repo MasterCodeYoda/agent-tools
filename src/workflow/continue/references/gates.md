@@ -3,10 +3,15 @@
 **Load when:** unit mode is active — before review, integrate, autonomous merge, or end-of-loop
 recap. These contracts are **not optional**; skipping them is a process bug.
 
+**Also load (integrate / automation / claim-class ship):** @workflow
+`references/approval-boundaries.md` — Autonomous vs Draft-first vs Escalate; automation merge
+overlays must not skip the review ratchet below.
+
 ## Path not established
 
 Continue never invents a next unit (no fatigue “you decide,” no residual-only initiative).
 Scaffolding `planning/<slug>/` for a **named** NEXT is allowed. Named-without-shell is claimable.
+Silence when nothing is claimable is correct; inventing work is not.
 
 Hard-stop template (portfolio `hard_stop` mode):
 
@@ -71,6 +76,12 @@ When conventions authorize autonomous local merge (personal factory profile does
 
 "Clean validation pass" in conventions means (1)+(2)+(3)+(4), never gates alone.
 Push/PR remain user-initiated unless push policy explicitly allows.
+
+**Automation overlay:** an agent/host may require always-PR (no local merge) even when project
+conventions authorize autonomous local merge for humans. That is an **overlay**, not a second
+dialect — still requires valid review evidence before any integrate-equivalent. On escalate or
+human veto of a proposed integrate/ship action, append runs events per `runs-ledger.md`
+(`ESCALATE`, `HUMAN_VETO`) and stop without re-driving the same gate.
 
 ## Compound after integrate
 

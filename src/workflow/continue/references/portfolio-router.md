@@ -7,6 +7,11 @@ to drive work — before claiming a single unit into the phase machine. Bare `/w
 Continue is the **drive entry**. This router picks a mode. It does not invent work units and
 does not implement multi-item parallelism itself.
 
+**Automation / scheduled entries:** if pre-wake would fail closed (no claimable unit, unsafe
+cwd, missing isolation), prefer **hard_stop** (row 9) or status-only report — never invent a
+unit to keep the job “busy.” See @workflow `references/pre-wake-checklist.md` and
+`references/approval-boundaries.md`.
+
 ## Mode resolve (first match wins)
 
 | # | Condition | Mode | Action |

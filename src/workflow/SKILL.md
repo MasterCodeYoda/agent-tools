@@ -131,6 +131,10 @@ default** (e.g. visual plan stays `on-substantial` when the file never mentions 
 absent → all built-in defaults. Visual presentation is first-party static HTML
 (`visual-plan.html`) and is non-blocking when skipped.
 
+**Automation overlays:** a host or agent profile may require always-PR (or stricter escalate)
+while project conventions keep human local-merge defaults. That is still **one process dialect**
+— see `references/approval-boundaries.md`. Do not invent a second phase table for bots.
+
 ## Task Planning
 
 All planned tasks are required (no priority tiers). Acceptance criteria are binary. Future ideas go
@@ -276,6 +280,8 @@ Examples: `references/decomposition-modes.md`.
 | Memory | `references/memory-primitives.md` |
 | Decisions | `references/decision-records.md` |
 | Critic pass | `references/critic-pass.md` |
+| Approval boundaries (autonomous / draft-first / escalate) | `references/approval-boundaries.md` |
+| Pre-wake checklist (automation entry) | `references/pre-wake-checklist.md` |
 | Planning example | `references/planning-example.md` |
 | Conversation analysis | `references/conversation-analysis.md` |
 

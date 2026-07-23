@@ -117,11 +117,15 @@ Light check only: skim AGENTS.md, CONTRIBUTING.md (if present), `docs/decisions/
 1. Ensure `.agent-tools/memory/` exists (scaffold via setup conventions if needed).
 2. **Solutions** → write using `templates/solution.md`; categories in `references/debug-agent-panel.md`. Do **not** add every solution to `MEMORY.md` (index is entries-only + a solutions pointer).
 3. **Entries** → frontmatter + body with **Why** and **How to apply**; add exactly one index line in `MEMORY.md`.
-4. **No full-body dual-write.** Project-wide content goes to L3-shared only. Do not also write the full text into Claude/Codex auto-memory. Optional: thin L3-local pointer to the shared path if the harness needs a stub.
-5. If L3-shared tree is missing and user declines scaffold, fall back to L3-local with an explicit note that shared memory is uninitialized.
-6. Legacy `docs/solutions/`: **never** write new files there. If it still has content, soft-warn once and point at `--maintain --migrate-solutions`.
-7. **Docs promote (optional, user-gated):** when an entry is stable product/architecture knowledge
+4. **Dated rules / incident-class lessons** (wrong public claim, skipped verify, automation isolation miss, policy miss with a concrete date): load **`templates/dated-rule.md`**. Require `incident_date`, the imperative **Rule**, **Mandatory verify** (or `n/a — not claim-class`), and **Load when** / `job_phases`. Prefer this over a diary-only Why when the point is “every future session must obey X.”
+5. **No full-body dual-write.** Project-wide content goes to L3-shared only. Do not also write the full text into Claude/Codex auto-memory. Optional: thin L3-local pointer to the shared path if the harness needs a stub.
+6. If L3-shared tree is missing and user declines scaffold, fall back to L3-local with an explicit note that shared memory is uninitialized.
+7. Legacy `docs/solutions/`: **never** write new files there. If it still has content, soft-warn once and point at `--maintain --migrate-solutions`.
+8. **Docs promote (optional, user-gated):** when an entry is stable product/architecture knowledge
    (not a ticket diary), offer promote to committed docs — see Step 5.
+9. **Script promote signal:** if the lesson is a *deterministic* check done twice by hand, note
+   “promote to script” in Prevention and soft-offer a host/project script path — do not invent
+   skill patches (skills = how; scripts = do).
 
 ### Step 5 — Promote L3 → durable docs (OpenWiki-lite)
 
@@ -156,6 +160,8 @@ description: <one-line, actionable>
 type: pattern | gotcha | lesson | process
 applicability: project
 related: []          # optional: ADR paths, solution paths, code paths, run_ids
+incident_date: null  # YYYY-MM-DD when dated-rule / incident-class (see templates/dated-rule.md)
+job_phases: []       # optional: continue | review | pre-wake | channel-reply | …
 promoted_at: null    # set when promoted from harness-local
 promoted_to: null    # docs path when promoted L3 → durable docs
 source_harness: null # optional: claude | codex | factory | …
@@ -313,6 +319,7 @@ gotchas and invariants.
 - [ ] Why + How to apply
 - [ ] MEMORY.md one-liner present
 - [ ] Overlap gates passed; no secrets
+- [ ] Incident-class: `incident_date` + rule + verify (or n/a) + load-when (`templates/dated-rule.md`)
 
 
 ## Maintain shim

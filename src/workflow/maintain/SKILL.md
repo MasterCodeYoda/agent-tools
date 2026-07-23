@@ -171,6 +171,19 @@ On session complete: update `.agent-tools/memory/state.yml` per `references/cade
 | `/workflow:continue --yield` / `yield` | Redirect: run **this** skill yield-only (or tell user to `/workflow:maintain --yield`) — do **not** claim a unit |
 | `/workflow:compound --maintain …` | Redirect: run **this** skill with the same maintain flags |
 
+## Process invariants (stewardship reminders)
+
+Surface lightly when yield or memory jobs run (do not invent a second drive loop):
+
+1. **Script promote-on-second-use** — if the same deterministic gate/check (pre-wake, green-before-claim,
+   close-shipped, disk hygiene) was hand-rolled twice, soft-recommend a **named script** under
+   host or project `scripts/`. Skills describe *how*; scripts *do*. See
+   @workflow `references/pre-wake-checklist.md`.  
+2. **Escalate receipts** — veto/escalate stops should appear in `.agent-tools/runs/` events, not
+   only chat (`runs-ledger.md`).  
+3. **Dated rules** — incident-class lessons should use compound `templates/dated-rule.md` shape
+   when missing date/verify/load-when.
+
 ## What `/workflow:maintain` does not do
 
 - Does **not** drive work (`:continue`) or invent NEXT

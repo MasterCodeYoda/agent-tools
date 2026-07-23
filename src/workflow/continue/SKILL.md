@@ -55,6 +55,8 @@ $ARGUMENTS
 | Context compact (reclaim + resume control flow) | @workflow `references/context-compact.md` |
 | Cross-session / multi-agent pause | @workflow `references/handoff-package.md` (optional) |
 | Orientation | `references/soft-checks.md` |
+| Approval tiers / claim-class / automation overlay | @workflow `references/approval-boundaries.md` (orientation; mandatory before integrate, draft-first ship, or automation entry) |
+| Scheduled / unattended entry | @workflow `references/pre-wake-checklist.md` (before claim when automation-shaped) |
 | Conventions present | `planning/conventions.md` (tracks, gates, merge policy, orientation entrypoint) |
 | Schema / family contracts | `@workflow` (session-state, branch naming, PM mode, claim dialect) |
 
@@ -111,6 +113,7 @@ handoff, not reclaim.
 - **Scaffolding ≠ inventing** — creating `planning/<slug>/` for a **named** unit is normal.
 - **Named-without-shell** → claim and enter unit SM (usually `needs_refine`).
 - **Fatigue without a unit id/path/slug** → hard_stop.
+- **Silence is valid** when nothing is claimable (esp. automation entries) — do not invent work.
 - Auto-invoke brainstorm/roadmap **only** when the unit SM routes there for a *claimed* unit;
   otherwise stop + offer.
 
@@ -221,6 +224,9 @@ same-session drive — do not emit-and-stop after plan by default.
 - Does **not** edit the skill corpus mid-loop — process gaps → process memory + skill-source
   `/skills:evolve` when available (else upstream escalate; see `references/soft-checks.md`).
 - Does **not** invent NEXT from open PM backlog scrape (PM queue only with conventions filter).
+- Does **not** ship draft-first / escalate-tier actions as if autonomous
+  (`references/approval-boundaries.md`).
+- Does **not** re-drive the same await_user / escalate gate on a tight automation loop.
 
 ## Related
 

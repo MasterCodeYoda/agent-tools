@@ -2,6 +2,14 @@
 
 The workflow commands work with any tracking system: Linear, Jira, or manual.
 
+## Automation merge overlay (not a second dialect)
+
+Project `conventions.md` owns **human** integrate defaults (e.g. autonomous local merge). An
+**automation instance** (cron continue, always-PR factory agent) may overlay “open PR; do not
+local-merge” via host profile / controller policy while still using the same claim dialect
+(`workflow:claim` / phase table). Record the overlay on the run when it differs. Full tiers:
+@workflow `references/approval-boundaries.md`.
+
 ## Issue Creation (from /workflow:refine, file mode)
 
 When requirements are complete in file mode, `/workflow:refine` can optionally create a tracking issue.

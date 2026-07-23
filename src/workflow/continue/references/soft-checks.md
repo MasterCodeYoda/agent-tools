@@ -12,6 +12,33 @@ a completed slice when picking up again.
 
 Unless noted otherwise below, procedures describe the **continue (actionable)** path.
 
+## Approval boundaries (orientation)
+
+On every continue orientation (and automation/scheduled entries especially), classify the
+**job class** against @workflow `references/approval-boundaries.md`:
+
+| Tier | Soft-check behavior |
+|------|---------------------|
+| **Autonomous** | Proceed when path + disk guards allow |
+| **Draft-first** | Do not ship broadcast-shaped or irreversible outward actions; prepare + stop for approval |
+| **Escalate** | Stage evidence; `await_user` / hard_stop; append runs receipt (`ESCALATE` / `HUMAN_VETO`) |
+
+**Claimable-only / silence:** inventing NEXT, “find something,” or reply-noise when no unit is
+claimable is an **escalate** class failure — use path-not-established hard_stop, never invent.
+Full tiers + claim-class live verify: `approval-boundaries.md`.
+
+## Automation / scheduled entry
+
+When the entry is unattended, cron, gateway-wake, or operator-marked automation:
+
+1. Prefer a completed **pre-wake** pass (@workflow `references/pre-wake-checklist.md`) — plant
+   root, isolation/worktree, claimable unit, approvals floor.  
+2. If pre-wake would fail closed (dirty primary when isolation required, zero claimable,
+   YOLO approvals) → **do not claim**; escalate/report once; **do not** re-drive the same gate
+   on a tight loop.  
+3. Record effective merge overlay when it differs from project conventions
+   (`approval-boundaries.md` › Automation vs project merge convention).
+
 ## Review theater
 
 If the most recently completed code-bearing slice has a `review:` line missing `method=` or
@@ -31,6 +58,17 @@ If the claimed (or prior open) unit has `reentry_counts` already at thrash bound
 (`refine_from_execute_or_review` + `plan_from_execute_or_review` re-entries from execute/review
 **> 2** for this `run_id`), or `thrash_bound_hits ≥ 1` unresolved, **diagnose before** another
 refine/plan loop. Offer process memory capture; do **not** edit workflow skills in-place.
+
+## Claim-class product facts (advisory → blocking on broadcast)
+
+When about to assert product/ops facts others will act on (PR “fixed/shipped/live,” channel
+replies, capability presence/absence):
+
+- Soft-surface if the claim was not verified against **live SoT** this session (repo, CI,
+  deploy, project console — memory is not the citation).  
+- **Code exists ≠ feature live** (flags, ramps, unmerged branches).  
+- On continue for draft-first/broadcast actions: **block ship** until verify or escalate.  
+- Full rule: @workflow `references/approval-boundaries.md` › Claim-class live verification.
 
 ## Context craft (advisory)
 

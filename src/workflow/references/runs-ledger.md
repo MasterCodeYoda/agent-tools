@@ -70,16 +70,40 @@ One object per line; justified by phase-return evidence only — never invent ti
 | `evidence` | ≤120 chars locatable fact |
 | `channel` | Ingress channel if known |
 | `fidelity` | optional: review_ok \| review_theater \| compound_ok \| compound_none \| compound_missing |
+| `judgment` | optional: escalate \| human_veto \| draft_pending — **receipts for stop/veto** (not chat-only) |
+
+### Escalate / veto receipts (required when they happen)
+
+Judgment stops must leave a **disk receipt**, not only a chat line. When continue (or an
+automation entry) hits escalate-tier stop, human/reviewer veto, or draft-first hold:
+
+1. Set phase_return `status: await_user` (or `blocked`) with event `ESCALATE`, `HUMAN_VETO`,
+   and/or `DRAFT_PENDING` (@workflow `continue/references/unit-state-machine.md`).  
+2. Append an NDJSON line with that event + ≤120 char evidence (what was proposed, why stopped).  
+3. Optionally set `"judgment":"escalate"|"human_veto"|"draft_pending"`.  
+4. Update session-state `pending_gate` / Current Focus with the staged recommendation.  
+5. **Do not** re-drive the same red gate in a tight cron/automation loop — deliver once; wait
+   for human or disk change.
+
+Example:
+
+```json
+{"ts":"2026-07-23T10:00:00-06:00","run_id":"r-20260723-1","unit":"SPEC-900","mode":"unit","track":"feature","phase":"integrate","status":"await_user","events":["ESCALATE","USER_GATE"],"from":"needs_integrate","to":"await_user","evidence":"always-PR overlay; E-MERGE stop — human merge","channel":"cron","judgment":"escalate","fidelity":null}
+```
+
+These rows feed yield (escalate rate) and process seeds; they are production-line scoreboard,
+not L3 memory.
 
 ### Host recipe (after each phase-return)
 
 ```text
 1. Ensure run_id (+ track, reentry_counts) on session-state
 2. Append one NDJSON line = phase_return + from/to + run_id + channel + track
-3. If refine/plan reentry from execute/review → bump reentry_counts
-4. If THRASH_BOUND → thrash_bound_hits += 1
-5. On MERGED + COMPOUND_DONE → close run, append ledger.yml row (below)
-6. Soft-fail if FS write fails — never hard-stop work for telemetry
+3. If ESCALATE / HUMAN_VETO / DRAFT_PENDING → include events + optional judgment field
+4. If refine/plan reentry from execute/review → bump reentry_counts
+5. If THRASH_BOUND → thrash_bound_hits += 1
+6. On MERGED + COMPOUND_DONE → close run, append ledger.yml row (below)
+7. Soft-fail if FS write fails — never hard-stop work for telemetry
 ```
 
 **Do not** emit per-task, per-file-edit, or per-tool events (log bloat).
