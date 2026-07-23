@@ -208,9 +208,12 @@ When emitting the summary, verdict, and next steps, **load and use** `templates/
 
 Verdict options:
 
-- **APPROVE** — No P1 issues, all acceptance criteria met (if plan available)
-- **REQUEST CHANGES** — P1 issues or unmet acceptance criteria
-- **COMMENT** — Suggestions but no blockers
+- **APPROVE** — No unresolved findings (or all fixed / permissibly deferred with
+  disposition), all acceptance criteria met (if plan available); emit integration
+  evidence when integration-ready
+- **REQUEST CHANGES** — Unresolved P1 issues, unmet acceptance criteria, or
+  incomplete remediation
+- **COMMENT** — Suggestions but no blockers (not integration-ready)
 
 ## Special Review Modes
 

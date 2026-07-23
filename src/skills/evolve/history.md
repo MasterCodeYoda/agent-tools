@@ -2,6 +2,21 @@
 
 Historical, append-only run log from the legacy `/evolve` command era (predates `/skills:evolve` and the src/ layout); paths and command names are preserved as written.
 
+## 2026-07-22
+
+- **Score**: not scored end-to-end (focused remediation of residual dual-residence / grounding gaps from 2026-07-21 recommendations)
+- **Iterations**: single apply pass (25 single-file commits)
+- **Proposals**: 25 applied (validated via doc_lint 0 findings on land); 1 review remediation (verdict language aligned with integration evidence)
+- **Branch**: `evolve/2026-07-22`
+- **Status**: merged
+- **Key changes**:
+  - Swarm-test emits evolve seeds only (no direct process IP edits); safer run-dir cleanup
+  - Review: remediation verification, verdict vs integration evidence split, report template alignment
+  - Audit: named API standards + project-convention precedence; layer-anchor repairs; QA execution boundary
+  - Product audit defers research protocol to parent @product; Testing by Layer sole authority @clean-architecture
+  - Session-state preserves optional orchestration fields; design-discussion premise/flow checks; handoff `source_channel: other`
+- **Review**: APPROVE (2026-07-23) — no P1/P2; one P3 fixed before land (SKILL.md APPROVE text lagged template)
+
 ## 2026-07-21
 
 - **Score**: 45 → 88/100 (Good)
@@ -10,7 +25,7 @@ Historical, append-only run log from the legacy `/evolve` command era (predates 
 - **Proposals**: 19 applied (19 validated, 0 failed); `doc_lint` 0 findings throughout
 - **Effectiveness**: audit domain load paths fixed (agent procedure); observability/logging field alignment; heuristic labeling on ungrounded numeric audit gates
 - **Branch**: `evolve/2026-07-21`
-- **Status**: pending review
+- **Status**: merged (fast-forward to main 2026-07-21)
 - **No runs ledger** — `.agent-tools/runs/` absent; Tier 0 seeds skipped
 - **Key changes**:
   - `workflow:audit` domain paths: `domains/*.md` (was `audit-*.md` / `skills/audit/` / `@audit/`)
@@ -35,7 +50,7 @@ Historical, append-only run log from the legacy `/evolve` command era (predates 
 - **Proposals**: 3 applied (3 validated, 0 with caveats)
 - **Effectiveness**: 0 checks run (all fixes were structural — sub-file indexing, terminology crosswalk, removal of misplaced doc; no agent behavior modified)
 - **Branch**: evolve/2026-05-07
-- **Status**: pending review
+- **Status**: merged (commit 8894b2e)
 - **Detection noise**: 5 spurious findings rejected during validation (Tier 2a flagged visual-design as P1 scope gap — false; raw SQL ungrounded — false; mutation-testing unbacked — false; audit:code wrong logging path — false; TypeScript depth asymmetry — intentional). Documented to inform future Tier 2 reasoning standards.
 - **Key changes**:
   - Indexed workflow-guide internal sub-files in SKILL.md References section (covered both newly-added `references/memory-primitives.md` and existing `references/conversation-analysis.md` discoverability gap)
