@@ -259,14 +259,19 @@ Minimum snapshot fields:
 - **Key files:** …
 - **Tests / verification last green:** …
 - **Do not re-open:** [dead ends]
+- **compact_focus:** …   # operational — see context-compact.md
+- **resume_loads:** …    # operational — ordered paths; see context-compact.md
 ```
 
-### After compacting
+### After writing the snapshot — reclaim and resume
 
-- Prefer a **fresh context window** (new session / clear thread) loaded with:
-  design + structure + plan + latest compaction + research — **not** the full failed chat.  
-- Continue / execute resume paths should treat the latest compaction as high-priority
-  steering.  
+Writing IC is not enough. **Load and run** @workflow `references/context-compact.md`
+end-to-end: emit `compact_focus` + `resume_loads`, reclaim the window (harness compact with
+focus when available, else soft Resume card), then resume by reloading only those paths —
+**not** the full failed chat.
+
+- Continue / execute treat the **latest** Intentional Compaction as high-priority steering
+  (latest-IC-wins — see the protocol).  
 - If approach is wrong: stop → re-plan or re-enter refine when ACs/design break; do not
   “patch vibes” in the dumb zone.
 
@@ -319,13 +324,14 @@ micro                 → light research · issue-as-plan · quick review · no 
 feature               → questions + ticket-hidden research → design in refine → structure + tactical plan → execute → review
 hard / multi-seam     → fuller design/structure · vertical checkpoints · re-enter refine if design falsifies ACs
 research track        → decision evidence; add codebase research when code-shaped
-any track, dumb zone  → intentional compaction → fresh window
+any track, dumb zone  → intentional compaction → context-compact protocol (reclaim + resume)
 ```
 
 ## Related
 
 | Topic | Path |
 |-------|------|
+| Context compact protocol (reclaim + resume control flow) | `references/context-compact.md` |
 | Tracks (feature / micro / research) | `references/tracks.md` |
 | Refine skill | `refine/SKILL.md` |
 | Design discussion template | `refine/templates/design-discussion.md` |
