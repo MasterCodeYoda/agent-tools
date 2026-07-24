@@ -181,8 +181,9 @@ Surface lightly when yield or memory jobs run (do not invent a second drive loop
    @workflow `references/pre-wake-checklist.md`.  
 2. **Escalate receipts** — veto/escalate stops should appear in `.agent-tools/runs/` events, not
    only chat (`runs-ledger.md`).  
-3. **Dated rules** — incident-class lessons should use compound `templates/dated-rule.md` shape
-   when missing date/verify/load-when.
+3. **Dated rules** — incident-class lessons should use the compound dated-rule template
+   ([compound/templates/dated-rule.md](../compound/templates/dated-rule.md)) when missing
+   date/verify/load-when.
 
 ## What `/workflow:maintain` does not do
 

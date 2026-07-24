@@ -4,7 +4,7 @@ Load when capturing a **lesson from a concrete mistake or near-miss** that futur
 obey (claim-class errors, policy misses, automation failures). Prefer `type: lesson` or
 `type: process` under `.agent-tools/memory/entries/<slug>.md`.
 
-Debugging root-cause narratives still use `templates/solution.md`. Pure patterns without an
+Debugging root-cause narratives still use sibling `solution.md`. Pure patterns without an
 incident may use the generic entry shape in compound SKILL (Why + How to apply only).
 
 ## Output
