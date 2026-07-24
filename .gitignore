@@ -2,6 +2,7 @@
 .claude/skills/
 .grok/skills/
 .factory/skills/
+.hermes/skills/
 .codex/skills/
 factory-commands/
 dist/
