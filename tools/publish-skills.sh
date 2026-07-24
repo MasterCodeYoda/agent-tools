@@ -13,7 +13,7 @@
 #   tools/publish-skills.sh [--agents LIST] [--quiet] [--dry-run]
 #
 #   --agents   Comma-separated list of target agents
-#              (default: claude,grok,factory,codex,opencode)
+#              (default: claude,grok,factory,hermes,codex,opencode)
 #   --quiet    Reduce output (only errors and warnings)
 #   --dry-run  Show what would be published without writing files
 #
@@ -39,7 +39,8 @@ DIST_ROOT="${AGENT_TOOLS_DIST_ROOT:-${REPO_ROOT}/dist}"
 # Directories under src/ that are not skills and should be ignored during publishing
 SKIP_DIRS="pdf-build"
 
-DEFAULT_AGENTS="claude,grok,factory,codex,opencode"
+# factory = Factory coding agent (~/.factory). hermes = Hermes host for Kevin etc. (~/.hermes).
+DEFAULT_AGENTS="claude,grok,factory,hermes,codex,opencode"
 
 # Leaf skills (no sub-skills) that should be emitted only as direct commands for OpenCode
 # (not as loadable skills). These are single-purpose invocables like /personify.

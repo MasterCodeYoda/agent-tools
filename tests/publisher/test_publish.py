@@ -22,7 +22,7 @@ To regenerate goldens after an intentional publisher change:
   rm -rf tests/publisher/expected
   AGENT_TOOLS_SRC_ROOT=$PWD/tests/publisher/fixtures/src \
   AGENT_TOOLS_DIST_ROOT=$PWD/tests/publisher/expected \
-  tools/publish-skills.sh --quiet --agents claude,grok,factory,codex,opencode
+  tools/publish-skills.sh --quiet --agents claude,grok,factory,hermes,codex,opencode
 then review the diff before committing.
 """
 
@@ -37,7 +37,7 @@ PUBLISHER = REPO_ROOT / "tools" / "publish-skills.sh"
 FIXTURE_SRC = Path(__file__).resolve().parent / "fixtures" / "src"
 EXPECTED_ROOT = Path(__file__).resolve().parent / "expected"
 
-AGENTS = ["claude", "grok", "factory", "codex", "opencode"]
+AGENTS = ["claude", "grok", "factory", "hermes", "codex", "opencode"]
 
 
 def _tree(root: Path) -> dict[str, bytes]:

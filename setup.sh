@@ -11,8 +11,11 @@ for arg in "$@"; do
             echo ""
             echo "  Re-publishes skills from src/ into dist/<agent>/skills/,"
             echo "  then installs (symlinks) them into your user profile for any"
-            echo "  detected agents (Claude, Grok, Factory, OpenCode)."
+            echo "  detected agents (Claude, Grok, Factory, Hermes, Codex, OpenCode)."
             echo "  For OpenCode, sub-skills are also emitted as native commands."
+            echo ""
+            echo "  Hermes (Kevin): managed skills under ~/.hermes/skills/ when ~/.hermes exists."
+            echo "  factory remains the Factory coding agent (~/.factory) — not Kevin."
             echo ""
             echo "Options:"
             echo "  --help, -h       Show this help message"
@@ -39,6 +42,9 @@ GROK_DIR="${HOME}/.grok"
 # Grok also supports ~/.grok/skills directly in some installations
 GROK_SKILLS_DIR="${HOME}/.grok/skills"
 FACTORY_DIR="${HOME}/.factory"
+# Hermes host (Kevin profile binds external_dirs here). Not the Factory coding agent.
+HERMES_DIR="${HOME}/.hermes"
+HERMES_SKILLS_DIR="${HOME}/.hermes/skills"
 CODEX_DIR="${HOME}/.codex"
 
 # OpenCode uses XDG-style config for global files. Project layout is .opencode/
@@ -206,7 +212,7 @@ remove_managed_skill_entry() {
 
 # Install a single skill directory for a given agent
 install_skill() {
-    local agent="$1"               # claude, grok, factory, codex, opencode
+    local agent="$1"               # claude, grok, factory, hermes, codex, opencode
     local skill_name="$2"          # e.g. "workflow", "skills"
     local source_skill_dir="$3"    # e.g. dist/claude/skills/workflow
 
@@ -532,7 +538,7 @@ validate_sources() {
 run_publisher() {
     local publisher="${SCRIPT_DIR}/tools/publish-skills.sh"
 
-    echo "Publishing skills for all agents (claude, grok, factory, codex, opencode)..."
+    echo "Publishing skills for all agents (claude, grok, factory, hermes, codex, opencode)..."
     # Unset the test-seam overrides: setup.sh symlinks from its own dist/,
     # so a leaked override would silently publish elsewhere and install
     # stale trees.
@@ -573,6 +579,25 @@ if [ -d "$FACTORY_DIR" ]; then
     install_skills_for_agent "factory"
 fi
 
+# Hermes: detect host install dir (or existing skills path). Install managed
+# skills alongside any Hermes-native hub trees; prune only .agent-tools-marked entries.
+if [ -d "$HERMES_DIR" ] || [ -d "$HERMES_SKILLS_DIR" ]; then
+    install_skills_for_agent "hermes"
+    # Revision stamp for doctor / control plane (agent-tools SHA at install time).
+    if [ -d "$HERMES_SKILLS_DIR" ] || mkdir -p "$HERMES_SKILLS_DIR" 2>/dev/null; then
+        rev="unknown"
+        if command -v git >/dev/null 2>&1; then
+            rev="$(git -C "$SCRIPT_DIR" rev-parse HEAD 2>/dev/null || echo unknown)"
+        fi
+        {
+            echo "agent-tools-rev=${rev}"
+            echo "installed-at=$(date -u +%Y-%m-%dT%H:%M:%SZ)"
+            echo "publish-agent=hermes"
+        } > "${HERMES_SKILLS_DIR}/.agent-tools-revision"
+        echo -e "${GREEN}✓${NC} Wrote ${HERMES_SKILLS_DIR}/.agent-tools-revision"
+    fi
+fi
+
 if [ -d "$CODEX_DIR" ]; then
     install_skills_for_agent "codex"
 fi
@@ -609,9 +634,17 @@ if [ -d "$GROK_DIR" ] || [ -d "$GROK_SKILLS_DIR" ]; then
     echo "    - This project : ./.grok/skills/     (project-scoped skills only)"
 fi
 if [ -d "$FACTORY_DIR" ]; then
-    echo "  Factory:"
+    echo "  Factory (coding agent — not Kevin):"
     echo "    - User profile : ~/.factory/skills/"
     echo "    - This project : ./.factory/skills/  (project-scoped skills only)"
+fi
+if [ -d "$HERMES_DIR" ] || [ -d "$HERMES_SKILLS_DIR" ]; then
+    echo "  Hermes (Kevin host bind):"
+    echo "    - User profile : ~/.hermes/skills/   (managed + optional hub trees)"
+    echo "    - This project : ./.hermes/skills/   (project-scoped skills only)"
+    echo "    - Revision     : ~/.hermes/skills/.agent-tools-revision"
+    echo "    - Update ritual: pull agent-tools if needed, then ./setup.sh"
+    echo "    - Missing skills: re-run setup (no silent pull on Hermes start/cron)"
 fi
 if [ -d "$CODEX_DIR" ]; then
     echo "  Codex:"
