@@ -1,18 +1,39 @@
 schema_version: 1
 interval_days: 7
-last_stewardship_at: null
+last_stewardship_at: "2026-07-25T13:00:00Z"
 last_yield_at: null
-last_maintain_at: "2026-07-08T22:29:35Z"
-last_prune_at: null
+last_maintain_at: "2026-07-25T13:00:00Z"
+last_prune_at: "2026-07-25T13:00:00Z"
+last_agents_at: "2026-07-25T13:00:00Z"
 snooze_until: null
 last_maintain_result:
-  p1: 2
-  p2: 4
-  p3: 2
-  promoted: 4
+  p1: 0
+  p2: 0
+  p3: 0
+  promoted: 0
   retired: 0
-  thinned_local: 4
+  thinned_local: 0
   migrated_solutions: 0
-last_prune_result: null
-last_stewardship_result: null
+  notes: "entries healthy; frontier + phase-skill captures this session; no retire"
+last_prune_result:
+  confirmed_complete: 11
+  needs_migration: 0
+  kept: 3
+  purged: 0
+  cancelled: true
+  notes: "report only — purge awaits user confirm; many skill-corpus + frontier complete"
+last_agents_result:
+  lines: 17
+  orienting: 1
+  corrective: 0
+  proposed: 0
+  applied: 0
+  cancelled: false
+  notes: "AGENTS.md is memory-link only — orienting pointers; no apply"
+last_stewardship_result:
+  prune: proposed
+  agents: clean
+  yield: skipped_missing_scaffold
+  memory: ok
+  process_seeds: 0
 solutions_migrated_from_docs: false

@@ -13,6 +13,7 @@ Maintained by `/workflow:compound`. Not a substitute for ADRs, CONTRIBUTING, or 
 - [Specs go in planning/](entries/specs-go-in-planning.md) — working specs in transient `planning/`; durable designs promote to `docs/design/`; committed files never cite planning/ paths
 - [No push or ahead-of-main reminders](entries/no-push-or-ahead-of-main-reminders.md) — never prompt push or report commits-ahead-of-origin
 - [Frontier process: Type B keep, Type A prune](entries/frontier-process-type-b-not-type-a.md) — process harness vs behavior mega-prompts; thin/decontaminate not wipe; Sol effort caps
+- [Phase skill control-plane budget](entries/phase-skill-control-plane-budget.md) — execute/plan ≤~150 lines; recovery/gathering in references/
 
 ## Solutions
 
