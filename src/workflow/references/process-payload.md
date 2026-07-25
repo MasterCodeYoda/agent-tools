@@ -47,6 +47,7 @@ evidence). Soft doc polish does not bump.
 |---------|--------|
 | Multi-channel gateway | Maps channel events → `workflow:claim` only |
 | Model routing | Operator vs implementer models |
+| **Thinking / effort ceiling** | Cap high effort for unattended + Sol-class implementers — see `model-runtime-policy.md` |
 | Cron / schedule | Emit claim or continue invocation |
 | Sandbox / cloud workers | Still return structured YAML + disk artifacts |
 | Trace export | May import `.agent-tools/runs/events.ndjson` |

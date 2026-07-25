@@ -19,6 +19,11 @@ phase_return:
   events: []   # from unit-state-machine.md event names
   evidence: "" # one line: artifact path, SHA, review counts, gate name, etc.
   next_hint: "" # optional; classify() still wins over this hint
+  # Optional dose (when research/design/structure apply to this phase):
+  dose:
+    research: full | light | skip   # + reason if skip
+    design: full | light | skip
+    structure: full | light | skip
 ```
 
 ### Examples

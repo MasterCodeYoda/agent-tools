@@ -86,6 +86,7 @@ decision is.
 | `PROBLEM_REFRAMED` | code/tests/seams or human show the ticket framing is wrong |
 | `DESIGN_FALSIFIED` | implementation falsifies design/structure (not only stale ACs) |
 | `HUMAN_STEER` | human course-correct mid-loop with trajectory change |
+| `RESEARCH_STALE` | branch tip moved under complex work; research no longer trustworthy |
 | `CODE_READY_FOR_REVIEW` | execute done or enough code for review gate |
 | `REVIEW_CLEAN` | review pass + valid evidence, findings fixed per policy |
 | `REVIEW_FINDINGS_CODE` | findings fixable in code |
@@ -116,6 +117,7 @@ decision is.
 | `ready_execute` | `DESIGN_FALSIFIED` + design/AC issue | `needs_refine` | re-refine |
 | `ready_execute` | `DESIGN_FALSIFIED` + plan structure only | `needs_plan` | re-plan |
 | `ready_execute` | `HUMAN_STEER` | re-classify from evidence | phase per classify (often refine/plan) |
+| `ready_execute` | `RESEARCH_STALE` mid-complex | stay `ready_execute` after refresh | re-run affected research sections before more edits |
 | `ready_execute` | `CODE_READY_FOR_REVIEW` | `needs_review` | — |
 | `needs_review` | — | (run) | `/workflow:review` (depth from track; infer, don't ask) |
 | `needs_review` | `REVIEW_FINDINGS_CODE` | `ready_execute` | fix, then re-review |

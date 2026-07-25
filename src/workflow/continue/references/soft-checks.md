@@ -75,6 +75,11 @@ replies, capability presence/absence):
 When claiming or resuming a code-bearing unit, soft-surface if:
 
 - No `codebase-research.md` and no recorded `codebase research: skipped — …` for non-trivial work  
+- **Micro / trivial** unit running full design + structure ceremony without user force (dose
+  over-apply — prefer light/skip per context-engineering)  
+- **Research stale:** mid-complex work and research SHA/date lags branch tip (emit
+  `RESEARCH_STALE` before more non-trivial edits)  
+
 - **Feature/hard** unit with no `design-discussion.md` and no recorded
   `design discussion: skipped — …` when about to plan or execute  
 - Substantial plan missing a **Structure outline** segment (only Approach + task dump)  

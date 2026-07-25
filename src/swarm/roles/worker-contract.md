@@ -17,6 +17,9 @@ appended after this contract and carries only the role's deltas.
 - Do not expand scope beyond what is specified in your task.
 - Complete your task and return the structured status below. Do not continue beyond your
   task or speculate about subsequent steps.
+- Scope freeze: nits and adjacent issues — report in summary/concerns; do not fix unless
+  leaving them open means the assigned task is genuinely incomplete. If scope must expand
+  significantly, return NEEDS_CONTEXT or BLOCKED rather than freelancing.
 ```
 
 You know **your own role identity** (stated in the role section). You do **not** reference

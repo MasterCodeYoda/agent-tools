@@ -29,6 +29,7 @@ Run as deterministic script/steps when possible; model only after green.
 | 8 | **Approvals floor** — host tool approvals fail-closed for unattended (e.g. cron deny YOLO) | Do not start if host is YOLO |
 | 9 | **Delivery path** — on escalate/await_user, channel or operator report target known | Prefer silent fail-safe over undelivered escalate |
 | 10 | **Pre-collected context** — attach fresh queue/status/ledger snippets the job needs (not stale chat) | Prefer re-fetch over memory |
+| 11 | **Effort ceiling** — unattended runs use ≤ medium thinking/effort; Sol-class high/ultra force-down when host can detect — `model-runtime-policy.md` | Stop or force-down; do not start unattended high-effort freelancing |
 
 ## After model wake
 
@@ -54,8 +55,9 @@ the host’s script home (or project `scripts/`). Skills describe *how*; scripts
 
 | Host concern | Example |
 |--------------|---------|
-| Hermes factory | `hermes -p factory cron` + workdir=worktree; profile terminal.cwd never dirty primary |
+| Hermes factory | `hermes -p factory cron` + workdir=worktree; profile terminal.cwd never dirty primary; **effort ≤ medium** hard cap |
 | CLI operator | Optional: run checklist manually before long unattended continue |
 | Controller product | Parse checklist exits → continue \| escalate \| idle |
+| Effort / model policy | Bind host knobs to `model-runtime-policy.md` (do not fork phase tables) |
 
 Process pack does **not** ship host cron YAML as SoT.

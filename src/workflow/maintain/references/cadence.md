@@ -15,10 +15,12 @@ last_stewardship_at: null   # ISO-8601 — last /workflow:maintain session that 
 last_yield_at: null         # ISO-8601 — last successful yield.md regenerate
 last_maintain_at: null      # ISO-8601 — last memory-quality job (compat + scoped --memory)
 last_prune_at: null         # ISO-8601 — last prune check completed (report and/or purge)
+last_agents_at: null        # ISO-8601 — last AGENTS.md hygiene check (report and/or apply)
 snooze_until: null          # ISO-8601 — suppress due offers until this time
 last_maintain_result: null  # memory job summary (p1/p2/p3/promoted/…)
 last_prune_result: null     # { confirmed_complete, needs_migration, kept, purged, cancelled }
-last_stewardship_result: null  # optional: { prune, yield, memory, process_seeds }
+last_agents_result: null    # { lines, orienting, corrective, proposed, applied, cancelled }
+last_stewardship_result: null  # optional: { prune, agents, yield, memory, process_seeds }
 solutions_migrated_from_docs: false
 ```
 
@@ -38,17 +40,18 @@ now = current time
 yield_due   = (last_yield_at is null) OR (now - last_yield_at >= interval)
 memory_due  = (last_maintain_at is null) OR (now - last_maintain_at >= interval)
 
-# prune is state-driven, not calendar-driven:
-# bare ritual always runs the prune CHECK (not a due clock)
+# prune + agents hygiene are state-driven, not calendar-driven:
+# bare ritual always runs prune CHECK + AGENTS CHECK (not due clocks)
 ```
 
 Bare `/workflow:maintain` (ritual):
 
 1. Always run prune **check**.
-2. If `yield_due` and/or `memory_due`: **ask** (one gate) before running those jobs.
-3. If not due: **state the skip** with last age + force path
+2. Always run AGENTS.md hygiene **check** (same schedule as prune; apply still gated).
+3. If `yield_due` and/or `memory_due`: **ask** (one gate) before running those jobs.
+4. If not due: **state the skip** with last age + force path
    (`/workflow:maintain --yield` / `--memory` / `--all`).
-4. Flags and `--all` **force** the selected jobs and **ignore** these clocks.
+5. Flags and `--all` **force** the selected jobs and **ignore** these clocks.
 
 ## Offer due (status / continue / compound soft prompts)
 
@@ -129,14 +132,16 @@ Or when not due: omit, or one quiet "last maintain <date>" only if useful.
    or intentionally stopped after announce).
 2. If prune job ran (check finished, even if purge cancelled or clean): set `last_prune_at`;
    set `last_prune_result` per prune.md.
-3. If yield job ran (including "insufficient N" write with honest summary): set `last_yield_at`
+3. If agents hygiene job ran (check finished, even if apply cancelled or clean): set
+   `last_agents_at`; set `last_agents_result` per agents-hygiene.md.
+4. If yield job ran (including "insufficient N" write with honest summary): set `last_yield_at`
    when `yield.md` was regenerated; if skipped for missing scaffold, leave `last_yield_at`
    unchanged.
-4. If memory job ran to completion (proposal shown, even if user approved zero writes): set
+5. If memory job ran to completion (proposal shown, even if user approved zero writes): set
    `last_maintain_at` to now; update `last_maintain_result` per memory procedure.
-5. Clear `snooze_until` unless user chose snooze mid-run.
-6. Optionally set `last_stewardship_result` with per-job outcomes, e.g.
-   `{ prune: clean|proposed|purged|skipped, yield: ok|skipped|n/a, memory: ok|skipped|n/a, process_seeds: N }`.
+6. Clear `snooze_until` unless user chose snooze mid-run.
+7. Optionally set `last_stewardship_result` with per-job outcomes, e.g.
+   `{ prune: …, agents: clean|proposed|applied|skipped, yield: …, memory: …, process_seeds: N }`.
 
 Partial runs (user aborts after prune, before yield): still stamp prune fields; only stamp
 `last_stewardship_at` when the user ends the maintain session or completes remaining jobs /

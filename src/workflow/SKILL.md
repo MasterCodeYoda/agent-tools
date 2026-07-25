@@ -122,7 +122,7 @@ worktree-delete.
 | Family contracts | `references/family-contracts.md` |
 | Tracks / root / ledger | `references/tracks.md`, `planning-root.md`, `runs-ledger.md` |
 | Steward | `@workflow:maintain` |
-| Runtime adapters | `references/process-payload.md` |
+| Runtime adapters / effort | `references/process-payload.md`, `model-runtime-policy.md` |
 | Plan templates / visual | `planning/templates.md`, `planning/references/visual-approval.md` |
 | Approval / pre-wake | `references/approval-boundaries.md`, `pre-wake-checklist.md` |
 
