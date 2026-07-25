@@ -16,7 +16,7 @@ It is not a deterministic function a test runner can call and await. So the harn
 the middle.
 
 ```
-generate  →  [agent runs /swarm]  →  analyze
+generate  →  [agent runs /work:continue parallel]  →  analyze
 (Python)        (a session)          (swarm:test skill + Python ingest)
 ```
 
@@ -44,10 +44,10 @@ generate  →  [agent runs /swarm]  →  analyze
    /swarm backlog.md
    ```
 
-   A separate session is required: `/swarm` is agent-driven — it interprets the skill,
+   A separate session is required: parallel mode via `/work:continue` is agent-driven — it interprets the skill,
    dispatches sub-agents, and makes in-flight decisions — so it can't be run or backgrounded
    from the analysis session, and it must run in the generated repo's working directory.
-   Init-first scenarios begin with `/work:setup` before `/swarm backlog.md`. This produces
+   Init-first scenarios begin with `/work:setup` before `/work:continue` with multi-item goal. This produces
    per-dispatch session logs under
    `.agent-tools/parallel/sessions/<run-id>/<item>/<function>-<n>.md`.
 
@@ -104,7 +104,7 @@ Create `tests/swarm/scenarios/<name>/` with:
   / `parallelizable_with` dependency metadata).
 - `charter/` — **optional**, and it toggles the bootstrap mode:
   - **present → seeded:** `generate` writes the full `.agent-tools/` umbrella (charter +
-    `config.yml` + current roles). The run starts directly at `/swarm backlog.md`. Use this
+    `config.yml` + current functions). The run starts directly at `/work:continue` with multi-item goal. Use this
     when you want a *controlled, repeatable* orchestrator input (the common case — e.g.
     `cli-task-manager`).
   - **absent → init-first:** `generate` produces a **bare** repo (no `.agent-tools/`). The run
@@ -118,6 +118,6 @@ Create `tests/swarm/scenarios/<name>/` with:
 ## Note: the first dogfood run is a separate session
 
 Building the harness (tooling + skill + scenario + unit tests) is independent of *running* a
-full orchestrator dogfood. The first real `/swarm` run against `cli-task-manager` is a
+full orchestrator dogfood. The first real parallel run against `cli-task-manager` is a
 deliberately deferred, separate session — the harness exists so that run is repeatable and its
 output is analyzable.

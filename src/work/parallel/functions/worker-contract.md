@@ -35,7 +35,7 @@ Your entire return MUST be a single YAML document inside one fenced ```yaml code
 unparseable return is treated as `BLOCKED`.
 
 **Shared dialect:** field names align with `/work` unit handoff
-(`@work` `references/handoff-package.md`) and `references/structured-return-schema.md`.
+(`@work` `references/handoff-package.md`) and `../references/structured-return-schema.md`.
 Do not invent alternate artifact keys. Optional `run_id` / `track` help the runs ledger.
 
 ```yaml

@@ -105,7 +105,7 @@ cp tests/work/runs/<run-id>/results.json tests/work/history/<run-id>/
 
 | | swarm | workflow |
 |--|-------|----------|
-| Middle step | `/swarm` multi-agent | context-compact / work skills |
+| Middle step | `/work:continue` parallel | context-compact / work skills |
 | Evidence | role session logs | unit `session-state.md` IC fields |
 | Skill front-end | `/swarm:test` | none yet (CLI + README is enough) |
 

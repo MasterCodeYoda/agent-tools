@@ -5,7 +5,7 @@ Machine-managed per-run orchestrator state at
 writes it **atomically** (temp file + rename) after each wave and merge-sweep cycle.
 
 `state.yml` is a **hint, not gospel** — disk (worktrees, branches, commits, session-state
-files) and PM truth take precedence. `/swarm:continue` always reconciles against ground truth
+files) and PM truth take precedence. `/work:continue` (parallel_resume) always reconciles against ground truth
 before resuming.
 
 ## Schema

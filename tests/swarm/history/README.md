@@ -1,6 +1,6 @@
 # Run history
 
-Committed, compacted summaries of `/swarm` test runs worth remembering.
+Committed, compacted summaries of parallel-mode test harness runs worth remembering.
 
 `runs/` is gitignored — generated repos are throwaway (28 MB each, mostly `.venv`, plus a
 nested `.git`). Worse, the evidence is *doubly transient*: the session logs under

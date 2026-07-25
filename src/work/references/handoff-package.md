@@ -18,7 +18,7 @@ field names** for artifacts and status. Unit continue does not invent a second s
 | Swarm orchestrator | Worker | Dispatch prompt + worker-contract |
 | Worker / phase host | Orchestrator or continue | Structured return YAML (worker-contract) |
 
-Canonical return schema authority for swarm: `@work parallel` `references/structured-return-schema.md`
+Canonical return schema authority for parallel: @work `parallel/references/structured-return-schema.md`
 (and `@work parallel` `functions/worker-contract.md`). Unit mode **maps** phase-return events into the same
 status vocabulary when emitting a package.
 
@@ -111,7 +111,7 @@ Same agent may play both in one session (default). Split only when useful.
 ## Swarm alignment
 
 - Orchestrator continues to prepend full `@work parallel` `functions/worker-contract.md` on dispatch (boundaries + brevity).
-- Do **not** dual-maintain a forked return schema in workflow — change `@work parallel` structured-return-schema
+- Do **not** dual-maintain a forked return schema in workflow — change @work `parallel/references/structured-return-schema.md`
   + worker-contract together; this file only maps unit continue ↔ that schema.
 - Unit continue **never** writes swarm `state.yml`; swarm never owns unit phase-return.
 

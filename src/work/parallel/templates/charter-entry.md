@@ -16,5 +16,5 @@ conflict-resolution only; most content is additive.
 - `workflow.md` — how we move (PM, branching, commits, merge, review, release, docs).
 
 ## Maintenance
-Authored by `/swarm:setup`. Re-run `/swarm:setup` to update; it reconciles section by section.
+Authored by `/work:setup`. Re-run `/work:setup` to update; it reconciles section by section.
 ```

@@ -1,7 +1,7 @@
 # Reference: Item Classification Rules
 
 How the orchestrator determines each backlog item's current **stage**. Used at run start
-(full classification) and on `/swarm:continue` (reconciliation). After each wave,
+(full classification) and on `/work:continue` (parallel_resume) (reconciliation). After each wave,
 classification is **incremental** — only re-classify items whose workers returned, plus
 unrefined items that might gate the next wave.
 
@@ -42,7 +42,7 @@ as concurrency scales.
 | `NEEDS_CONTEXT` | stage unchanged; raise IN_FLIGHT_DECISION |
 | `BLOCKED` | stage unchanged; TERMINAL_PAUSE |
 
-## Reconciliation (`/swarm:continue`)
+## Reconciliation (parallel_resume)
 
 Never trust `state.yml`. Re-classify every non-`merged` item from the sources above, compare
 to `state.yml`, and surface drifts to the user, e.g.:
