@@ -6,7 +6,7 @@ run, or soft-offering maintain from status / continue / compound capture.
 ## State file
 
 Canonical clock: **`.agent-tools/memory/state.yml`** (same file memory maintain already
-updates — one plant clock, not a second tree).
+updates — one stewardship clock, not a second tree).
 
 ```yaml
 schema_version: 1

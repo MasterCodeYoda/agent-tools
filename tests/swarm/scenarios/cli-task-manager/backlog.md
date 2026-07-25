@@ -1,6 +1,6 @@
 # taskcli Backlog
 
-Local backlog (file mode) for the `/swarm` orchestrator. Items carry dependency metadata so
+Local backlog (file mode) for the parallel-mode orchestrator. Items carry dependency metadata so
 the scheduler can build parallel waves. `taskcli/cli.py` already has a `COMMANDS` registry and
 a `version` command; `tests/test_integration.py` has shared invariants every item keeps green.
 

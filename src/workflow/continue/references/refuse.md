@@ -13,9 +13,9 @@ Continue **does not**:
 6. Skip review or invent review evidence; gates green ≠ reviewed.
 7. Skip compound after integrate without explicit `compound: none`.
 8. Push/PR unless project push policy allows — never production promotion.
-9. Implement multi-item parallelism itself — **routes** to `/swarm` when eligible; does not
-   grab items an active swarm worker owns when in unit mode.
-10. Invent a swarm wave without explicit `∥` / `{wave}` grouping.
+9. Implement multi-item parallelism itself — **routes** to parallel mode when eligible; does not
+   grab items an active parallel-mode worker owns when in unit mode.
+10. Invent a parallel wave without explicit `∥` / `{wave}` grouping.
 11. Free-form thrash phases without artifact/decision evidence (thrash bound).
 12. Emit end-of-loop recap on user-approval stops.
 13. Edit the skill corpus mid-loop — process gaps → process memory + skill-source

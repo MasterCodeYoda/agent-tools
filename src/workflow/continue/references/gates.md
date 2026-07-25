@@ -121,7 +121,7 @@ other approve/choose UI). At approval stops: phase prompt only — no recap.
 | **Phases run** | Phases actually run this invocation (may include re-entries) |
 | **Where left** | Next state / gate / pickup |
 | **Branch / commits** | If code moved |
-| **Mode** | `unit` · `swarm_handoff` · `swarm_resume` · `path-not-established` · … |
+| **Mode** | `unit` · `parallel_handoff` · `parallel_resume` · `path-not-established` · … |
 | **Steering** | When relevant: silent · offered steering_note · user choice |
 
 ### Review findings & disposition (code path)

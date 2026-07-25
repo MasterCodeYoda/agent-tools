@@ -11,13 +11,13 @@ Parent skill for the `workflow` family: high-level philosophy, shared contracts,
 **Procedures live in the sub-skills** — load those for full detail. Bare `/workflow` is
 **status only** — load `references/status.md`, not the family-contract encyclopedia.
 
-## Invocation (like `/swarm`)
+## Invocation
 
 | Invocation | Behavior |
 |------------|----------|
 | **`/workflow`** (no args) | **Portfolio status** — read-only scan → report → **stop** |
 | **`/workflow <id\|path\|slug>`** | **Focused status** on that unit — still read-only |
-| **`/workflow:continue`** | **Drive** — portfolio mode + unit phase machine or swarm handoff/resume |
+| **`/workflow:continue`** | **Drive** — portfolio mode + unit phase machine or parallel multi-item mode |
 | Help / command list only | Summarize this table; do not force a drive hard-stop |
 
 Bare `/workflow` does **not** proxy to continue. Status procedure: `references/status.md`
@@ -29,8 +29,8 @@ continue may **act** on the same checklist.
 | Command | Purpose |
 |---------|---------|
 | `/workflow` | **Status** — portfolio glance (read-only); focused status with a unit arg |
-| `/workflow:continue` | **Drive** — mode resolve + claim + phase SM or swarm handoff/resume |
-| `/workflow:setup` | Scaffold `planning/` hygiene + author `conventions.md` + memory link |
+| `/workflow:continue` | **Drive** — mode resolve + claim + phase SM or parallel multi-item mode |
+| `/workflow:setup` | Scaffold planning, conventions, memory, runs, charter, parallel config |
 | `/workflow:roadmap` | Multi-unit horizon map + NEXT + `→`/`∥` notation (user-approved) |
 | `/workflow:brainstorm` | Single fuzzy concept → framed seed (HITL) |
 | `/workflow:refine` | Requirements discovery (file or PM) |
@@ -49,8 +49,9 @@ See each sub-skill for arguments and full procedure.
    /workflow            ← status (read-only portfolio glance)
         ↓  (user chooses to drive)
    /workflow:continue   ← drive entry
-        ├─ active swarm / explicit ∥ wave  →  /swarm (auto or resume)
-        └─ one claimable unit             →  phase state machine
+        ├─ active parallel run / explicit ∥ wave / multi-item args
+        │     → parallel mode (workflow/parallel/*)
+        └─ one claimable unit → phase state machine
               brainstorm? ⇄ refine ⇄ plan ⇄ execute ⇄ review → finish → compound
               (cycles when artifact/decision evidence requires)
 
@@ -62,12 +63,12 @@ See each sub-skill for arguments and full procedure.
 Parse `$ARGUMENTS` and run **`references/status.md`** end-to-end:
 
 1. Resolve planning root; if missing → not-initialized report + offer `:setup` → stop.
-2. Light scan: conventions, swarm `active-run`, claimable units, roadmap/handoff NEXT.
+2. Light scan: conventions, parallel `active-run`, claimable units, roadmap/handoff NEXT.
 3. Surface soft-check signals as **advisory only** (no remediation).
 4. Preview which mode `/workflow:continue` would enter — do not enter it.
 5. Emit the status template → **stop**.
 
-Never claim, invoke phases, append the runs ledger, merge, or enter swarm from bare status.
+Never claim, invoke phases, append the runs ledger, merge, or enter parallel mode from bare status.
 Direct phase commands (`:refine`, `:plan`, …) remain valid when the user already knows the phase.
 
 ## Philosophy
@@ -118,6 +119,7 @@ worktree-delete.
 |------|------|
 | Bare status | `references/status.md` |
 | Drive / SM | `@workflow:continue` + its refs |
+| Parallel multi-item | `parallel/MODE.md` + orchestrator/resume |
 | Context craft / research / compact | `references/context-engineering.md`, `context-compact.md` |
 | Family contracts | `references/family-contracts.md` |
 | Tracks / root / ledger | `references/tracks.md`, `planning-root.md`, `runs-ledger.md` |
@@ -134,3 +136,4 @@ Secondary refs (memory, critic, examples, conversation analysis, hooks, …) liv
 - **clean-architecture** · **code-patterns** · **test-strategy** · **qa**
 - **skills:evolve** — only path that *edits* process IP (`publish-target: project`); consumers
   capture evidence and escalate upstream.
+- Decision: parallel mode collapse — `docs/decisions/001-swarm-collapse-into-workflow.md`

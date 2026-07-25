@@ -54,5 +54,5 @@ severity_guess: P1 | P2 | P3
   # after compound process entry with related: [r-…]
 ```
 
-When seeds target workflow/swarm, inventory **must** include `src/workflow/**` and
-`src/swarm/**` SKILL.md trees (not only `src/skills/`).
+When seeds target workflow (incl. parallel mode), inventory **must** include `src/workflow/**` and
+`src/workflow/parallel/**` SKILL.md trees (not only `src/skills/`).

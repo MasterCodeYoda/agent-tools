@@ -56,12 +56,12 @@ paths) — surfaced for a separate decision; the seed was not weakened.
   review and was caught only by a post-run live smoke test (`orchestrator.md:73-75`, fix `@37a02d1`).
 
 ## Proposals
-- `src/swarm/roles/reviewer.md` — **C4** — **applied** — added one scope bullet: a green suite is
+- `src/parallel/roles/reviewer.md` — **C4** — **applied** — added one scope bullet: a green suite is
   necessary but not sufficient; verify each AC behaviorally, with special attention to ACs that
   reference another command's contract (e.g. an index "feedable to" another command), by
   exercising the commands together. Evidence: `orchestrator.md:73-75` + the bare CTM-4 reviewer
   return.
-- `src/swarm/roles/worker-contract.md` — **C1 (worker side) / C2 / C3** — **applied** — workers now
+- `src/parallel/roles/worker-contract.md` — **C1 (worker side) / C2 / C3** — **applied** — workers now
   also persist their structured return (leading frontmatter + `## Return` block) into their
   `<role>-N.md` log, so a run can be summarized deterministically from session logs alone.
 - `tests/swarm/harness/ingest.py` — **C1 (harness side)** — **applied** — added a transcript

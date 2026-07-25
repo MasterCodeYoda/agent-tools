@@ -1,6 +1,6 @@
-# `/swarm` Test Harness
+# Parallel-mode test harness (`tests/swarm/`)
 
-A permanent harness for exercising the `/swarm` orchestrator end-to-end against engineered
+A permanent harness for exercising the parallel-mode orchestrator end-to-end against engineered
 scenarios, and turning the resulting role logs into evidence-linked seeds for `/skills:evolve`.
 
 The design rationale is summarized in this README (the original working docs lived in
@@ -9,10 +9,10 @@ code are authoritative).
 
 ## Why a harness (and not a `pytest`)
 
-`/swarm <goal>` is **agent-driven** — running it means an agent interprets the skill,
+parallel mode via `/workflow:continue` is **agent-driven** — running it means an agent interprets the skill,
 dispatches sub-agents, makes IN_FLIGHT decisions, and runs host-side refinement with a human.
 It is not a deterministic function a test runner can call and await. So the harness uses a
-**bookends** model: deterministic Python on each side, with the agent-driven `/swarm` run in
+**bookends** model: deterministic Python on each side, with the agent-driven parallel-mode run in
 the middle.
 
 ```
@@ -29,7 +29,7 @@ generate  →  [agent runs /swarm]  →  analyze
 
    It runs `tests/swarm/new-run.sh <scenario>` under the hood to build
    `tests/swarm/runs/<name>-<timestamp>/` — a real git repo seeded with the scenario's
-   sources, a charter, swarm `config.yml`, the **current** `src/swarm/roles/*` (so you always
+   sources, a charter, swarm `config.yml`, the **current** `src/parallel/roles/*` (so you always
    test live role content), and the backlog. It then hands you a copy-paste block for a new
    terminal and waits.
 
@@ -47,15 +47,15 @@ generate  →  [agent runs /swarm]  →  analyze
    A separate session is required: `/swarm` is agent-driven — it interprets the skill,
    dispatches sub-agents, and makes in-flight decisions — so it can't be run or backgrounded
    from the analysis session, and it must run in the generated repo's working directory.
-   Init-first scenarios begin with `/swarm:setup` before `/swarm backlog.md`. This produces
+   Init-first scenarios begin with `/workflow:setup` before `/swarm backlog.md`. This produces
    per-dispatch session logs under
-   `.agent-tools/swarm/sessions/<run-id>/<item>/<role>-<n>.md`.
+   `.agent-tools/parallel/sessions/<run-id>/<item>/<role>-<n>.md`.
 
 3. **Analyze** — tell the conversation the run is done (or, in a fresh session, run
    `/swarm:test <run-dir>`). Either way `/swarm:test` confirms the run finished, then runs the
    deterministic `ingest` (logs → `observations.json`), checks the scenario's hard invariants
    (loud fail on violation), judges the observation checklist with citations, clusters issues,
-   and produces evidence-linked evolution seeds with candidate `src/swarm/**` / `src/workflow/**`
+   and produces evidence-linked evolution seeds with candidate `src/workflow/parallel/**` / `src/workflow/**`
    paths. The run report is written to
    `tests/swarm/runs/<run-dir>/analysis.md`.
 
@@ -108,8 +108,8 @@ Create `tests/swarm/scenarios/<name>/` with:
     when you want a *controlled, repeatable* orchestrator input (the common case — e.g.
     `cli-task-manager`).
   - **absent → init-first:** `generate` produces a **bare** repo (no `.agent-tools/`). The run
-    begins with `/swarm:setup`, which detects the stack, authors the charter, and bootstraps
-    the umbrella itself. Use this to exercise `/swarm:setup` (e.g. `greenfield-init`). Note the
+    begins with `/workflow:setup`, which detects the stack, authors the charter, and bootstraps
+    the umbrella itself. Use this to exercise `/workflow:setup` (e.g. `greenfield-init`). Note the
     charter then varies run-to-run, so it's a less controlled input — keep these scenarios
     focused on init + a simple orchestrator pass.
 - `seed/` — initial application sources, including any files deliberately engineered to force

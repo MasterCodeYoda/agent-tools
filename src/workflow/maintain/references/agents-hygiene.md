@@ -35,7 +35,7 @@ Marker-bounded blocks from setup (`agent-tools:memory-link`, `agent-tools:charte
 ## Procedure
 
 1. **Locate** `AGENTS.md` at repo root (and CLAUDE.md as above). If missing → report
-   “no AGENTS.md — optional `/workflow:setup` / `/swarm:setup`” and stop job (not an error).  
+   “no AGENTS.md — optional `/workflow:setup` / `/workflow:setup`” and stop job (not an error).  
 2. **Inventory** sections / major blocks; rough line count.  
 3. **Classify** each block: `orienting` · `pointer` · `corrective` · `process_duplicate` ·
    `stale` · `marker_block`.  

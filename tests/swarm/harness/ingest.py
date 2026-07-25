@@ -1,7 +1,7 @@
 """Summarize a /swarm run's session logs into structured observations (deterministic).
 
 Second bookend of the harness. Walks the generated repo's
-`.agent-tools/swarm/sessions/<run-id>/<item>/<role>-<n>.md` logs and emits an
+`.agent-tools/parallel/sessions/<run-id>/<item>/<role>-<n>.md` logs and emits an
 `observations.json` the `swarm:test` skill reasons over.
 
 Dependency-free: PyYAML is intentionally NOT required. The authoritative
@@ -106,7 +106,7 @@ def _git_remotes(run_dir: Path) -> list[str]:
 
 
 def _sessions_root(run_dir: Path) -> Path | None:
-    sess = run_dir / ".agent-tools" / "swarm" / "sessions"
+    sess = run_dir / ".agent-tools" / "parallel" / "sessions"
     if not sess.is_dir():
         return None
     runs = [d for d in sorted(sess.iterdir()) if d.is_dir()]

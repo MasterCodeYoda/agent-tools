@@ -12,7 +12,7 @@ improve the canonical skills under `src/` (all families: workflow, swarm, git, s
 
 **Core principle:** Every proposed change must trace to a concrete, detected gap. No vibes-based
 rewrites. No style preferences. If there's no gap, there's no change. **Process IP**
-(workflow/swarm) changes only through this skill — never mid-loop from `/workflow:continue`.
+(workflow (incl. parallel mode)) changes only through this skill — never mid-loop from `/workflow:continue`.
 
 **Completion is mandatory.** A run that stops at “present for review” or leaves
 `evolve/YYYY-MM-DD` unmerged is **incomplete**. Default end state: changes reviewed, merged to
@@ -45,7 +45,7 @@ Gap Report findings with file evidence — still no proposal without a corpus mi
 Based on inventory size:
 - **Standard** (current repo size): Run all tiers automatically
 - **If repo grows significantly**: Run Tier 1 automatically, prompt before Tier 2/3
-- **Process-seed run**: Always include `src/workflow/**` and `src/swarm/**` even if narrowing
+- **Process-seed run**: Always include `src/workflow/**` and `src/workflow/parallel/**` even if narrowing
   other families
 
 ## Agent Reasoning Standards

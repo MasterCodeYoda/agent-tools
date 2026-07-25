@@ -100,7 +100,7 @@ Do **not** migrate on silence or “continue the other work.” Require explicit
 Compare top-level names. Detect:
 
 - Same logical files in both (conventions/roadmap) → content conflict risk  
-- Active units only under legacy → **legacy has the live plant**  
+- Active units only under legacy → **legacy has the live planning work**  
 - Preferred empty or only scaffolding → treat as incomplete migrate  
 
 ### D2. Repair options (user picks one)

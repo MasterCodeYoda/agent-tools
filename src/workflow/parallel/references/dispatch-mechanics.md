@@ -100,7 +100,7 @@ have no `BLOCKED`/`NEEDS_CONTEXT` — only `DONE`/`FAILED`.
 
 ## Session logs
 
-Per-dispatch files at `.agent-tools/swarm/sessions/<run-id>/<item>/<role>-<n>.md` (orchestrator
+Per-dispatch files at `.agent-tools/parallel/sessions/<run-id>/<item>/<role>-<n>.md` (orchestrator
 captures the dispatch prompt + the returned YAML; worker appends a best-effort decision log).
 The orchestrator's own log is `orchestrator.md` (goal, classification, waves, decisions).
 Run-id format: `<YYYY-MM-DD>-<5-char-nonce>-<goal-slug>`.

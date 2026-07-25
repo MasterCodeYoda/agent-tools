@@ -498,7 +498,6 @@ note: optional one-liner steering
 | `channel:` | yes | `terminal` \| `linear` \| `github` \| `chat` \| `other` |
 | `note:` | no | candidate `steering_note` (ack once) |
 
-Legacy synonym: `plant:claim` / `plant:resume` (same fields) — accept, prefer `workflow:`.
 
 **Continue behavior:** paste or issue key → portfolio **explicit unit** (row 1). Soft-checks
 first. Never “pick something interesting” from the backlog.
@@ -520,8 +519,8 @@ workflow:hard_stop reason=path_not_established
 | `workflow:claimable` | Eligible for conventions PM queue when NEXT empty |
 | `workflow:blocked` | Do not claim as next work |
 
-Legacy: `plant:claimable` / `plant:blocked`. Queue filter must be **closed-world** (label + state
-+ assignee); multi-match → hard_stop_choice. See continue `portfolio-router.md` row 8b.
+Queue filter must be **closed-world** (label + state + assignee); multi-match →
+hard_stop_choice. See continue `portfolio-router.md` row 8b.
 
 ### North-star test
 

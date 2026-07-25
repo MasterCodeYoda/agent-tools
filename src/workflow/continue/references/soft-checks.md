@@ -31,8 +31,8 @@ Full tiers + claim-class live verify: `approval-boundaries.md`.
 
 When the entry is unattended, cron, gateway-wake, or operator-marked automation:
 
-1. Prefer a completed **pre-wake** pass (@workflow `references/pre-wake-checklist.md`) — plant
-   root, isolation/worktree, claimable unit, approvals floor.  
+1. Prefer a completed **pre-wake** pass (@workflow `references/pre-wake-checklist.md`) —
+   planning root, isolation/worktree, claimable unit, approvals floor.  
 2. If pre-wake would fail closed (dirty primary when isolation required, zero claimable,
    YOLO approvals) → **do not claim**; escalate/report once; **do not** re-drive the same gate
    on a tight loop.  

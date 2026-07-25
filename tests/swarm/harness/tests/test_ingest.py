@@ -56,7 +56,7 @@ class IngestTests(unittest.TestCase):
     def setUp(self):
         self.tmp = Path(tempfile.mkdtemp())
         self.addCleanup(shutil.rmtree, self.tmp, ignore_errors=True)
-        self.sess = self.tmp / ".agent-tools/swarm/sessions/r1"
+        self.sess = self.tmp / ".agent-tools/parallel/sessions/r1"
 
     def _write(self, item, name, content):
         d = self.sess / item

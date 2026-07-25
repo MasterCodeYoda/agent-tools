@@ -16,7 +16,7 @@ asks for yield. This is the production-line scoreboard — not product-code logg
 
 Scaffold via `/workflow:setup`. Prefer this path always (independent of planning-root migration).
 
-**Language:** say **runs**, **run ledger**, **production line** — not “plant.”
+**Language:** say **runs**, **run ledger**, **production line**.
 
 ## Single writer
 
@@ -28,7 +28,7 @@ Scaffold via `/workflow:setup`. Prefer this path always (independent of planning
 | Human | Never required to fill forms |
 
 Do **not** create a second per-unit orchestrator file. Session-state remains SoT for resume;
-runs/ is plant-level (line-level) instrumentation that **survives** item prune via ledger rows.
+runs/ is line-level instrumentation that **survives** item prune via ledger rows.
 
 ## run_id
 

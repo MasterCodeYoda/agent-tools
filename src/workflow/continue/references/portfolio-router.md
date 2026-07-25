@@ -5,7 +5,8 @@ to drive work — before claiming a single unit into the phase machine. Bare `/w
 **previews** this table (status report); it never claims or enters a mode.
 
 Continue is the **drive entry**. This router picks a mode. It does not invent work units and
-does not implement multi-item parallelism itself.
+does not implement multi-item parallelism itself — parallel mode loads
+@workflow `parallel/MODE.md` + `orchestrator.md` / `resume.md`.
 
 **Automation / scheduled entries:** if pre-wake would fail closed (no claimable unit, unsafe
 cwd, missing isolation), prefer **hard_stop** (row 9) or status-only report — never invent a
@@ -16,10 +17,11 @@ unit to keep the job “busy.” See @workflow `references/pre-wake-checklist.md
 
 | # | Condition | Mode | Action |
 |---|-----------|------|--------|
-| 1 | Explicit target in `$ARGUMENTS` (issue id, PM URL, planning path, stable slug) | **unit** | Claim that unit (warn if leaving another `in_progress` behind). Skip auto-swarm. |
-| 2 | `.agent-tools/swarm/active-run` present and run is `in_progress` or `terminal_pause` (or equivalent paused status) | **swarm_resume** | Run `/swarm:continue` semantics in this session (reconcile + orchestration loop). Do not claim a sequential unit from under the run. |
-| 3 | Active roadmap/handoff **frontier** is an **explicit parallel group** (see eligibility) with **≥2 claimable** peers, and swarm is **ready** | **swarm_handoff** | Auto-handoff: start `/swarm` with goal = that wave’s item list (or resume if the same wave is already the active run). Announce one line: wave ids + “entering swarm.” |
-| 4 | Same as row 3 but swarm **not** ready (no charter / no `.agent-tools/swarm` setup) | **fallback** | **One** ask: run `/swarm:setup` then handoff, **or** proceed sequential on the first claimable peer. If sequential, claim one unit only. |
+| 1 | Explicit **single** target in `$ARGUMENTS` (issue id, PM URL, planning path, stable slug) | **unit** | Claim that unit (warn if leaving another `in_progress` behind). Skip auto-parallel. |
+| 1b | Explicit **multi-item** goal in `$ARGUMENTS` (≥2 issue keys, milestone, backlog file, or peer list) | **parallel** | Enter @workflow `parallel/orchestrator.md` with that goal (pre-launch confirmation still applies). Require parallel **ready** or one-ask setup. |
+| 2 | `.agent-tools/parallel/active-run` present and run is `in_progress` or `terminal_pause` (or equivalent paused status) | **parallel_resume** | Load @workflow `parallel/resume.md` then re-enter orchestrator. Do not claim a sequential unit from under the run. |
+| 3 | Active roadmap/handoff **frontier** is an **explicit parallel group** (see eligibility) with **≥2 claimable** peers, and parallel is **ready** | **parallel_handoff** | Start parallel mode with goal = that wave’s item list (or resume if the same wave is already the active run). Announce one line: wave ids + “entering parallel mode.” |
+| 4 | Same as row 3 but parallel **not** ready (no charter / no `.agent-tools/parallel` setup) | **fallback** | **One** ask: run `/workflow:setup` then handoff, **or** proceed sequential on the first claimable peer. If sequential, claim one unit only. |
 | 5 | Live `status: in_progress` slice (project rules for live branch) | **unit** | Resume that unit’s phase machine. |
 | 6 | Conventions / handoff / roadmap names a **resolvable single** NEXT (not map-only, not sequencing-choice-only) | **unit** | Claim that unit. |
 | 7 | NEXT is **map-only**, **user sequencing choice**, or multi-option without a single resolvable unit | **hard_stop_choice** | Surface the choices (up to a short list). Do not invent a wave or a unit. |
@@ -29,13 +31,14 @@ unit to keep the job “busy.” See @workflow `references/pre-wake-checklist.md
 
 **Authority notes**
 
-- Explicit args always win over roadmap `∥` auto-handoff.
-- `in_progress` (row 5) wins over a parallel NEXT that would otherwise auto-swarm, so a live
+- Explicit **single** args always win over roadmap `∥` auto-handoff.
+- Explicit **multi-item** args enter parallel without requiring roadmap notation.
+- `in_progress` (row 5) wins over a parallel NEXT that would otherwise auto-parallel, so a live
   sequential slice is not abandoned for a wave.
-- When mode is **swarm_resume** or **swarm_handoff**, do not also run the unit machine for a
-  peer from the same wave.
+- When mode is **parallel_resume**, **parallel_handoff**, or **parallel**, do not also run the
+  unit machine for a peer from the same wave.
 
-## Explicit parallel-group eligibility (auto-swarm)
+## Explicit parallel-group eligibility (auto-parallel)
 
 Auto-handoff **only** when **all** of the following hold:
 
@@ -56,28 +59,27 @@ Auto-handoff **only** when **all** of the following hold:
 Same as continue’s resolvable unit: issue id / PM URL, existing `planning/<slug>/`, or stable
 slug/name from the map — planning dir optional.
 
-### Swarm ready
+### Parallel ready
 
 - `.agent-tools/charter/charter.md` exists (or project’s documented charter path), **and**
-- `.agent-tools/swarm/` has been set up (`config.yml` and/or roles/references present per
-  `/swarm:setup`).
+- `.agent-tools/parallel/` has been set up (`config.yml` and/or roles present per
+  `/workflow:setup`).
 
 If charter missing → row 4 fallback.
 
-## Handoff package (swarm_handoff)
+## Handoff package (parallel_handoff)
 
-Build a concrete goal string for `/swarm`:
+Build a concrete goal string for the orchestrator:
 
 1. List peer ids from the explicit group (stable order: left-to-right in the notation).
 2. Prefer issue keys when present (`SPEC-823, SPEC-828`).
-3. One-line announce, then enter swarm orchestrator procedure (`@swarm`) with that goal.
-4. Pre-launch confirmation inside swarm still applies (swarm’s own y/n) — continue does not
-   strip swarm safety; it only removes the need for the *user* to guess `/swarm` vs
-   `/workflow:continue`.
+3. One-line announce, then load @workflow `parallel/orchestrator.md` with that goal.
+4. Pre-launch confirmation inside the orchestrator still applies (y/n) — continue does not
+   strip safety; it only removes the need for a separate slash family.
 
 ## Channel / claim addresses (explicit unit)
 
-These count as **explicit target** (row 1) — not backlog invention:
+These count as **explicit single target** (row 1) — not backlog invention:
 
 - Issue key, PM URL, planning path, stable slug in `$ARGUMENTS`
 - Pasted greppable claim block (see @workflow `planning/pm-integration.md`):
@@ -90,7 +92,7 @@ channel: linear
 note: optional steering
 ```
 
-(`plant:claim` accepted as legacy synonym.) Resume: `workflow:resume` + `unit:`.
+Resume: `workflow:resume` + `unit:`.
 
 ## PM queue (row 8b)
 
@@ -100,14 +102,14 @@ inventor. Multi-match → hard_stop_choice; never silent “most interesting.”
 
 ## Coexistence while sequential (unit mode)
 
-When mode is **unit** and a swarm run is **also** `in_progress` on *other* items:
+When mode is **unit** and a parallel run is **also** `in_progress` on *other* items:
 
 1. Read `sessions/<run-id>/state.yml`.
 2. Treat items with live `in_flight` role or unmerged worktree as **off-limits**.
-3. Claim only a disjoint unit; if none free, stop and say so (suggest letting swarm finish).
+3. Claim only a disjoint unit; if none free, stop and say so (suggest letting parallel finish).
 
 Separate state stores remain: continue → `planning/**/session-state.md` (under planning root);
-swarm → `.agent-tools/swarm/`; runs → `.agent-tools/runs/`. Never write the other’s files.
+parallel → `.agent-tools/parallel/`; runs → `.agent-tools/runs/`. Never write the other’s files.
 
 ## Notation quick reference
 
@@ -116,6 +118,5 @@ Full dialect: `@workflow:roadmap`. Summary:
 | Token | Meaning |
 |-------|---------|
 | `→` | Sequential dependency |
-| `∥` or `||` | Parallelizable peers (swarm-wave candidates when grouped at head) |
+| `∥` or `||` | Parallelizable peers (wave candidates when grouped at head) |
 | `{A ∥ B}` | Named wave package |
-| `⚠ A ∥ B` | Collision / same-layer watch — not auto-launch |

@@ -73,6 +73,5 @@ Process contract for how agents present work and ask for decisions — complemen
 ## Orientation / queue
 
 - Primary NEXT SoT: `planning/roadmap.md` (or top-level handoff pointer) when multi-unit
-- PM queue (only when NEXT empty): issues with label `workflow:claimable` (or `plant:claimable`
-  legacy) AND state in {Todo, In Progress} AND assignee = me — order priority then updatedAt;
+- PM queue (only when NEXT empty): issues with label `workflow:claimable` AND state in {Todo, In Progress} AND assignee = me — order priority then updatedAt;
   **never invent** if zero matches; multi-match → hard_stop_choice with named list

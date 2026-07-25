@@ -67,6 +67,6 @@ native block relations + `parallelizable_with`. Do not warn about missing `requi
 3. Run `/workflow:refine` first?  
 
 Echo `blocks` / `blocked_by` / `parallelizable_with` (or absence) for confirm — written to plan
-frontmatter for `/swarm` waves.
+frontmatter for parallel mode waves.
 
 Proceed once requirements are confirmed.

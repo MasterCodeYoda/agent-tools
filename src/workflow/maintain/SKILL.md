@@ -1,6 +1,6 @@
 ---
 name: workflow:maintain
-description: Steward the workflow plant — always prune-check planning/ + AGENTS.md hygiene, schedule-aware yield + memory (ask or skip), optional process seeds. Not drive (continue) and not capture (compound).
+description: Steward workflow scaffolding — always prune-check planning/ + AGENTS.md hygiene, schedule-aware yield + memory (ask or skip), optional process seeds. Not drive (continue) and not capture (compound).
 argument-hint: "[blank ritual | --all | --prune | --agents | --yield | --memory | --migrate-solutions | --level … | --focus … | scope path]"
 user-invocable: true
 ---

@@ -97,7 +97,7 @@ collapse its context over a multi-wave run.
 ## Session Log (best-effort, do this as you work)
 
 Your dispatch prompt names a log file at
-`.agent-tools/swarm/sessions/<run-id>/<item>/<role>-<n>.md`. As you work, append brief
+`.agent-tools/parallel/sessions/<run-id>/<item>/<role>-<n>.md`. As you work, append brief
 decision-point entries under a `## Decision log` heading — timestamp + one-line decision, NOT
 a transcript:
 

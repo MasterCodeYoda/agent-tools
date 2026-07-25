@@ -1,6 +1,6 @@
 name: cli-task-manager
 purpose: >
-  Exercise the full /swarm lifecycle on a small real Python CLI: dependency-aware parallel
+  Exercise the full parallel-mode lifecycle on a small real Python CLI: dependency-aware parallel
   waves, host-side refinement of an unrefined item, a merge conflict (conflict-resolver), a
   post-merge integration-test failure (integration-fixer), and at least one review fix loop.
 stack: python                   # generate seeds a pytest project; test_command: pytest -q

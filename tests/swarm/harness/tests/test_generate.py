@@ -31,7 +31,7 @@ def _make_fake_repo(tmp: Path, *, with_seed=True, with_charter=True,
         (scn / "seed" / "app.py").write_text("print('hi')\n")
     if scenario_config is not None:
         (scn / "config.yml").write_text(scenario_config)
-    roles = tmp / "src" / "swarm" / "roles"
+    roles = tmp / "src" / "workflow" / "parallel" / "roles"
     roles.mkdir(parents=True)
     (roles / "worker-contract.md").write_text("# canonical contract v1\n")
     (roles / "planner.md").write_text("# canonical planner v1\n")
@@ -49,13 +49,13 @@ class GenerateTests(unittest.TestCase):
         self.assertTrue((run / "backlog.md").is_file())
         self.assertEqual((run / "app.py").read_text().strip(), "print('hi')")
         self.assertTrue((run / ".agent-tools/charter/charter.md").is_file())
-        self.assertIn("schema_version: 1", (run / ".agent-tools/swarm/config.yml").read_text())
-        self.assertIn("swarm/sessions/", (run / ".agent-tools/.gitignore").read_text())
+        self.assertIn("schema_version: 1", (run / ".agent-tools/parallel/config.yml").read_text())
+        self.assertIn("parallel/sessions/", (run / ".agent-tools/.gitignore").read_text())
 
     def test_copies_live_roles_verbatim(self):
         _make_fake_repo(self.tmp)
         run = generate("demo", root=self.tmp, now=FIXED)
-        dest = run / ".agent-tools/swarm/roles"
+        dest = run / ".agent-tools/parallel/roles"
         self.assertEqual((dest / "worker-contract.md").read_text(), "# canonical contract v1\n")
         self.assertEqual((dest / "planner.md").read_text(), "# canonical planner v1\n")
 
@@ -74,7 +74,7 @@ class GenerateTests(unittest.TestCase):
     def test_scenario_config_override(self):
         _make_fake_repo(self.tmp, scenario_config="schema_version: 1\ncustom: yes\n")
         run = generate("demo", root=self.tmp, now=FIXED)
-        self.assertIn("custom: yes", (run / ".agent-tools/swarm/config.yml").read_text())
+        self.assertIn("custom: yes", (run / ".agent-tools/parallel/config.yml").read_text())
 
     def test_missing_scenario_raises(self):
         _make_fake_repo(self.tmp)
@@ -102,13 +102,13 @@ class GenerateTests(unittest.TestCase):
         from tests.swarm.harness.generate import format_next_step
         _make_fake_repo(self.tmp, with_charter=False)
         run = generate("demo", root=self.tmp, now=FIXED)
-        self.assertIn("/swarm:setup", format_next_step(run))
+        self.assertIn("/workflow:setup", format_next_step(run))
 
     def test_seeded_next_step_omits_init(self):
         from tests.swarm.harness.generate import format_next_step
         _make_fake_repo(self.tmp)
         run = generate("demo", root=self.tmp, now=FIXED)
-        self.assertNotIn("/swarm:setup", format_next_step(run))
+        self.assertNotIn("/workflow:setup", format_next_step(run))
 
     def test_next_step_exposes_parse_anchors(self):
         # The /swarm:test skill parses this output: the `Generated:` line gives the
@@ -120,7 +120,7 @@ class GenerateTests(unittest.TestCase):
         out = format_next_step(run)
         self.assertIn(f"Generated: {run}", out)
         self.assertIn(f"cd {run}", out)
-        self.assertIn("/swarm backlog.md", out)
+        self.assertIn("/workflow:continue", out)
         self.assertNotIn("  claude", out)  # block must stay agent-agnostic — no launcher binary
 
     def test_seedless_scenario_ok(self):

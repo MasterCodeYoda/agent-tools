@@ -1,6 +1,6 @@
 # Default swarm config.yml
 
-Write to `.agent-tools/swarm/config.yml` (parameterize backlog source).
+Write to `.agent-tools/parallel/config.yml` (parameterize backlog source).
 
 ```yaml
 schema_version: 1

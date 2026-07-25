@@ -1,7 +1,7 @@
 # greeter Backlog
 
-Local backlog (file mode). This scenario has **no seeded charter** — run `/swarm:setup` first;
-it authors the charter from the detected stack, then `/swarm backlog.md` runs the orchestrator.
+Local backlog (file mode). This scenario has **no seeded charter** — run `/workflow:setup` first;
+it authors the charter from the detected stack, then `/workflow:continue` with the backlog goal runs the orchestrator.
 
 Commands auto-discover from `greeter/commands/` (each module exposes `NAME` + `run(argv)`), so
 the two items below touch different files and run as a clean parallel wave.

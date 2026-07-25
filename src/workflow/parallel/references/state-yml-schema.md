@@ -1,7 +1,7 @@
 # Reference: `state.yml` Schema (per-run)
 
 Machine-managed per-run orchestrator state at
-`.agent-tools/swarm/sessions/<run-id>/state.yml`. **Gitignored** by default. The orchestrator
+`.agent-tools/parallel/sessions/<run-id>/state.yml`. **Gitignored** by default. The orchestrator
 writes it **atomically** (temp file + rename) after each wave and merge-sweep cycle.
 
 `state.yml` is a **hint, not gospel** — disk (worktrees, branches, commits, session-state
@@ -36,12 +36,12 @@ items:
     in_flight:                # set when a worker dispatch is active
       role: implementer
       dispatched_at: 2026-05-28T11:00:00Z
-      log_file: .agent-tools/swarm/sessions/<run-id>/AER-101/implementer-1.md
+      log_file: .agent-tools/parallel/sessions/<run-id>/AER-101/implementer-1.md
     last_completed:           # set when most recent dispatch returned
       role: planner
       completed_at: 2026-05-28T10:58:33Z
       status: DONE
-      log_file: .agent-tools/swarm/sessions/<run-id>/AER-101/planner-1.md
+      log_file: .agent-tools/parallel/sessions/<run-id>/AER-101/planner-1.md
     fix_list: []              # populated when stage=fix-requested
 
 merge_queue: []  # item keys in stage=approved, awaiting merge sweep
@@ -55,7 +55,7 @@ last_handoff: null
 #     - "Inspect failed tests in worktree X"
 #     - "Decide: revert AER-115 or fix forward"
 #   diagnostic_files:
-#     - .agent-tools/swarm/sessions/<run-id>/AER-115/integration-fixer-1.md
+#     - .agent-tools/parallel/sessions/<run-id>/AER-115/integration-fixer-1.md
 ```
 
 ## Notes

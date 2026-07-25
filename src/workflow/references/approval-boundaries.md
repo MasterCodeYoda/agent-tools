@@ -77,10 +77,10 @@ actions. Do not invent numbers or capability absences from training data.
 
 ## Automation vs project merge convention
 
-**One process dialect.** Project `conventions.md` states plant defaults (e.g. autonomous
+**One process dialect.** Project `conventions.md` states process defaults (e.g. autonomous
 local-merge for human continue). **Agent / host overlays** (profile, SOUL, controller policy)
 may require always-PR for unattended workers **without** renaming phases or inventing a second
-plant.
+process dialect.
 
 | Actor | Typical integrate path |
 |-------|------------------------|
@@ -94,4 +94,4 @@ not fork skill text.
 ## Host binding (not process SoT)
 
 Hosts may bind this file into profile identity (e.g. Hermes SOUL) or pre-wake prompts. **Process
-SoT remains this reference + gates/soft-checks.** Host MEMORY is not a substitute plant ledger.
+SoT remains this reference + gates/soft-checks.** Host MEMORY is not a substitute runs ledger.

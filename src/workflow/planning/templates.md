@@ -313,7 +313,7 @@ For vertical slices that fix issues:
 
 ## Implementation Plan Document Template
 
-The plan document written by `/workflow:plan` to `./planning/<project>/implementation-plan.md`. The YAML frontmatter carries dependency metadata (`blocks` / `blocked_by` / `parallelizable_with`) that downstream orchestration (`/swarm`) reads to schedule parallel waves. The Breakdown section has both mode variants — Variant A (vertical-slice) and Variant B (deliverable-partition); use the one matching the selected decomposition mode (see @workflow for selection criteria).
+The plan document written by `/workflow:plan` to `./planning/<project>/implementation-plan.md`. The YAML frontmatter carries dependency metadata (`blocks` / `blocked_by` / `parallelizable_with`) that downstream orchestration (parallel mode) reads to schedule parallel waves. The Breakdown section has both mode variants — Variant A (vertical-slice) and Variant B (deliverable-partition); use the one matching the selected decomposition mode (see @workflow for selection criteria).
 
 ```markdown
 ---

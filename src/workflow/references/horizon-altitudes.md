@@ -20,7 +20,7 @@ No durable path decision (`Chosen Direction`, stream list, committed NEXT) witho
 | Requirements clear; need how | `/workflow:plan` | Skip if track=micro |
 | Research / evaluate / decide (not ship-by-default) | `/workflow:continue` on research track | Built-in research process — `references/tracks.md` |
 | Session kickoff / drive known work | `/workflow:continue` | Portfolio mode: swarm resume/handoff or unit SM; track classify first |
-| Explicit parallel wave at roadmap head | continue → `/swarm` | Auto when `∥` / `{wave}` + swarm ready |
+| Explicit parallel wave at roadmap head | continue → parallel mode | Auto when `∥` / `{wave}` + swarm ready |
 | Empty continue; no **named** resolvable unit | continue **hard-stop** | Offer brainstorm / roadmap / name a unit — never invent. Missing `planning/<slug>/` alone is **not** hard-stop |
 
 ## Offer ≠ invoke

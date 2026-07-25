@@ -1,19 +1,19 @@
 ---
 name: swarm:test
-description: Drive or analyze a /swarm test-harness run. Given a scenario name, generate a fresh run and hand off the orchestrator step; given a completed run-dir, check hard invariants, judge observations against role logs, cluster recurring issues, and produce evidence-linked seeds for /skills:evolve. Project-scoped repo-development tool for agent-tools.
+description: Drive or analyze a parallel-mode test-harness run (tests/swarm/). Given a scenario name, generate a fresh run and hand off the orchestrator step via /workflow:continue; given a completed run-dir, check hard invariants, judge observations against role logs, cluster recurring issues, and produce evidence-linked seeds for /skills:evolve. Project-scoped repo-development tool for agent-tools.
 publish-target: project
 user-invocable: true
 argument-hint: "<scenario to start a run, or run-dir to analyze>"
 ---
 
-# Analyze a Swarm Test Run (`/swarm:test`)
+# Analyze a Parallel-Mode Test Run (`/swarm:test`)
 
-This is the analyze bookend of the `/swarm` test harness (see `tests/swarm/README.md`). Given
+This is the analyze bookend of the parallel-mode test harness (see `tests/swarm/README.md`). Given
 a generated run directory whose orchestrator pass has completed, it turns the per-dispatch
 **role logs** into evidence-linked seeds for `/skills:evolve`.
 
 It is a repo-development tool for **this repo only** (`publish-target: project`), so it freely
-references repo paths (`tests/swarm/...`, `src/swarm/...`).
+references repo paths (`tests/swarm/...`, `src/workflow/parallel/...`).
 
 **Core principle (from evolve):** every seed traces to a concrete, cited gap in the run
 evidence. No vibes-based rewrites, no style preferences. If there is no gap, there is no seed.
@@ -56,14 +56,14 @@ bare scenario name can never collide with a run dir.
 
    Next: run from the generated repo:
      cd <run-dir>
-     /swarm backlog.md
+     /workflow:continue  # multi-item goal from backlog.md / roadmap wave
 
    Then analyze the run:
      /swarm:test <run-dir>
    ```
 
-   For **init-first** scenarios the middle block lists two prompts (`/swarm:setup`, then
-   `/swarm backlog.md`). Parse the run-dir from the `Generated:` line and keep it in context.
+   For **init-first** scenarios the middle block lists two prompts (`/workflow:setup`, then
+   `/workflow:continue` with the multi-item goal). Parse the run-dir from the `Generated:` line and keep it in context.
 
 2. Hand off to the user. The generator's block is **already agent-agnostic** (just `cd` +
    slash commands — no launcher binary like `claude`), matching the convention in other `src/`
@@ -75,14 +75,15 @@ bare scenario name can never collide with a run dir.
    > ```
    > Start your agent there and send this prompt:
    > ```
-   > /swarm backlog.md
+   > /workflow:continue
    > ```
-   > (init-first scenarios: send `/swarm:setup` first, let it finish, then `/swarm backlog.md`.)
+   > with a multi-item goal (e.g. contents of `backlog.md` or the scenario wave). Init-first:
+   > send `/workflow:setup` first, let it finish, then continue into parallel mode.
 
-   Explain why a separate terminal: `/swarm` is an interactive agent session that dispatches
-   sub-agents — this conversation can't run it or background it, and running it here would
-   anchor it in the wrong working directory. Ask the user to come back and say when the run is
-   done.
+   Explain why a separate terminal: parallel mode is an interactive agent session that
+   dispatches sub-agents — this conversation can't run it or background it, and running it
+   here would anchor it in the wrong working directory. Ask the user to come back and say when
+   the run is done.
 
 3. When the user says it's done, **converge to analyze mode** for the captured run-dir: proceed
    to Phase 0 exactly as if invoked with that run-dir. Phase 0's checks (run happened + run
@@ -92,9 +93,9 @@ bare scenario name can never collide with a run dir.
 
 1. The run dir name is `<scenario>-<timestamp>`. Derive `<scenario>` (strip the trailing
    `-<YYYYMMDD>-<HHMMSS>`) and load `tests/swarm/scenarios/<scenario>/scenario.yml`.
-2. Confirm the run actually happened: it must contain `.agent-tools/swarm/sessions/<run-id>/`.
+2. Confirm the run actually happened: it must contain `.agent-tools/parallel/sessions/<run-id>/`.
    If not, report that the orchestrator hasn't been run yet and stop.
-3. Confirm the run actually **finished**: the `exit_state` field in `.agent-tools/swarm/sessions/<run-id>/state.yml` must be a terminal value
+3. Confirm the run actually **finished**: the `exit_state` field in `.agent-tools/parallel/sessions/<run-id>/state.yml` must be a terminal value
    (`GOAL_COMPLETE` or `TERMINAL_PAUSE`). If it is null, missing, or non-terminal, report that
    the run looks unfinished or hung — cite the observed `exit_state` — and stop. Do not analyze
    a mid-flight run on the user's word alone. (This is the same condition Phase 2 checks as the
@@ -110,7 +111,7 @@ python -m tests.swarm.harness ingest <run-dir>
 
 This writes `<run-dir>/observations.json` (per-role dispatch counts, status tallies,
 malformed returns, return sizes, missing decision logs, and safety signals). Read it. Also
-read the run's `state.yml` (`.agent-tools/swarm/sessions/<run-id>/state.yml`) and
+read the run's `state.yml` (`.agent-tools/parallel/sessions/<run-id>/state.yml`) and
 `orchestrator.md` for stage/exit-state ground truth.
 
 ## Phase 2 — Hard invariants (loud FAIL on violation)
@@ -164,13 +165,13 @@ A cluster is only worth raising if it recurs or maps to a concrete prompt gap.
 
 ## Phase 5 — Produce evolve seeds
 
-For the top clusters, produce run-ledger-style gap seeds for `/skills:evolve`. A swarm test
+For the top clusters, produce run-ledger-style gap seeds for `/skills:evolve`. A harness test
 detects role/process evidence; it does not independently mutate canonical process IP.
 **Constraints (do not deviate):**
 
 1. **One clustered gap per seed.** Do not combine unrelated role failures.
 2. **Evidence-linked** — include run id + specific dispatch logs and the candidate
-   `src/swarm/**` / `src/workflow/**` skill paths.
+   `src/workflow/parallel/**` / `src/workflow/**` skill paths.
 3. **Corpus-neutral** — describe the symptom and hypothesized gap, not a preselected patch.
 4. **Clustered** — prefer repeated evidence; a single hard-invariant failure may stand alone.
 5. **No direct process edit** — `/skills:evolve` must locate the corpus mismatch, check
@@ -184,7 +185,7 @@ the seed instead of narrowing it to an apparently easy role-file edit.
 1. Present the invariant results (FAILs first), checklist verdicts, clusters, and seeds with
    their evidence.
 2. Offer to run `/skills:evolve` with the approved seeds. If it changes canonical content,
-   re-run `generate` + a fresh `/swarm` pass afterward to close the loop.
+   re-run `generate` + a fresh `/workflow:continue` parallel pass afterward to close the loop.
 3. Write the run report to `<run-dir>/analysis.md`:
 
 ```markdown

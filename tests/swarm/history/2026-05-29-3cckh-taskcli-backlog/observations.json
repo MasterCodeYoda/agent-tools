@@ -34,39 +34,39 @@
   },
   "malformed_returns": [
     {
-      "file": ".agent-tools/swarm/sessions/2026-05-29-3cckh-taskcli-backlog/CTM-1/implementer-1.md",
+      "file": ".agent-tools/parallel/sessions/2026-05-29-3cckh-taskcli-backlog/CTM-1/implementer-1.md",
       "reason": "missing/!malformed frontmatter"
     },
     {
-      "file": ".agent-tools/swarm/sessions/2026-05-29-3cckh-taskcli-backlog/CTM-1/planner-1.md",
+      "file": ".agent-tools/parallel/sessions/2026-05-29-3cckh-taskcli-backlog/CTM-1/planner-1.md",
       "reason": "missing/!malformed frontmatter"
     },
     {
-      "file": ".agent-tools/swarm/sessions/2026-05-29-3cckh-taskcli-backlog/CTM-2/implementer-1.md",
+      "file": ".agent-tools/parallel/sessions/2026-05-29-3cckh-taskcli-backlog/CTM-2/implementer-1.md",
       "reason": "missing/!malformed frontmatter"
     },
     {
-      "file": ".agent-tools/swarm/sessions/2026-05-29-3cckh-taskcli-backlog/CTM-2/planner-1.md",
+      "file": ".agent-tools/parallel/sessions/2026-05-29-3cckh-taskcli-backlog/CTM-2/planner-1.md",
       "reason": "missing/!malformed frontmatter"
     },
     {
-      "file": ".agent-tools/swarm/sessions/2026-05-29-3cckh-taskcli-backlog/CTM-3/implementer-1.md",
+      "file": ".agent-tools/parallel/sessions/2026-05-29-3cckh-taskcli-backlog/CTM-3/implementer-1.md",
       "reason": "missing/!malformed frontmatter"
     },
     {
-      "file": ".agent-tools/swarm/sessions/2026-05-29-3cckh-taskcli-backlog/CTM-4/implementer-1.md",
+      "file": ".agent-tools/parallel/sessions/2026-05-29-3cckh-taskcli-backlog/CTM-4/implementer-1.md",
       "reason": "missing/!malformed frontmatter"
     },
     {
-      "file": ".agent-tools/swarm/sessions/2026-05-29-3cckh-taskcli-backlog/CTM-4/planner-1.md",
+      "file": ".agent-tools/parallel/sessions/2026-05-29-3cckh-taskcli-backlog/CTM-4/planner-1.md",
       "reason": "missing/!malformed frontmatter"
     },
     {
-      "file": ".agent-tools/swarm/sessions/2026-05-29-3cckh-taskcli-backlog/CTM-5/implementer-1.md",
+      "file": ".agent-tools/parallel/sessions/2026-05-29-3cckh-taskcli-backlog/CTM-5/implementer-1.md",
       "reason": "missing/!malformed frontmatter"
     },
     {
-      "file": ".agent-tools/swarm/sessions/2026-05-29-3cckh-taskcli-backlog/orchestrator.md",
+      "file": ".agent-tools/parallel/sessions/2026-05-29-3cckh-taskcli-backlog/orchestrator.md",
       "reason": "missing/!malformed frontmatter"
     }
   ],

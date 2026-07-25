@@ -14,7 +14,7 @@ Compounding is about making **every unit of engineering work make subsequent wor
 AGENTS.md, or harness-local memory).
 
 **Stewardship** (planning prune check, run yield, memory quality audit) lives on
-**`/workflow:maintain`**. Do not conflate capture with plant hygiene.
+**`/workflow:maintain`**. Do not conflate capture with scaffolding hygiene.
 
 ## Mode Detection
 

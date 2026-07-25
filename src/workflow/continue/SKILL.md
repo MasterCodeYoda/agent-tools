@@ -1,7 +1,7 @@
 ---
 name: workflow:continue
-description: Drive entry for workflow — resolve portfolio mode (swarm resume/handoff or unit state machine), drive work without inventing path; hard-stop when path is not established. Bare /workflow is status-only.
-argument-hint: "[--worktree] [optional: work item ID, planning dir, or blank to auto-pick]"
+description: Drive entry for workflow — resolve portfolio mode (unit phase machine or parallel multi-item orchestrator), drive work without inventing path; hard-stop when path is not established. Bare /workflow is status-only.
+argument-hint: "[--worktree] [optional: work item ID, planning dir, multi-item goal, or blank to auto-pick]"
 user-invocable: true
 ---
 
@@ -15,8 +15,8 @@ see @workflow `references/planning-root.md`), **never invents a next unit**, the
 
 | Mode | When |
 |------|------|
-| **swarm_resume** | Active swarm run in progress / paused |
-| **swarm_handoff** | Explicit roadmap `∥` / `{wave}` group at head (≥2 claimable) + swarm ready |
+| **parallel_resume** | Active parallel run (`.agent-tools/parallel/active-run`) in progress / paused |
+| **parallel_handoff** / **parallel** | Explicit roadmap `∥` / `{wave}` (≥2 claimable) + ready, or multi-item continue args |
 | **unit** | One claimable slice → **phase state machine** (cycles allowed under evidence guards) |
 | **hard_stop** / **hard_stop_choice** | Nothing named, or sequencing choice / map-only |
 
@@ -24,8 +24,8 @@ When path is clear, run **silently** (no portfolio monologue). End-of-loop recap
 ceremony still apply **except** at user-approval stops (see gates).
 
 Not a recipe engine or horizon author. Phase skills run natively; continue only chooses *mode*,
-*unit*, and *next legal transition*. Multi-unit maps: `/workflow:roadmap`. Multi-item parallel
-**execution**: `/swarm` (auto-entered from here when eligible; still user-invocable as override).
+*unit* or *wave*, and *next legal transition*. Multi-unit maps: `/workflow:roadmap`. Multi-item
+parallel **execution** is a continue mode (`parallel/*`) — not a separate slash family.
 Glance without driving: bare `/workflow`.
 ## User Input
 
@@ -37,6 +37,7 @@ $ARGUMENTS
 |-------|---------|
 | *(empty)* | Soft-check → portfolio mode resolve → drive |
 | Work item ID / PM URL / planning path / slug | Force **unit** mode on that target |
+| Multi-item goal (≥2 keys, milestone, backlog file) | Force **parallel** mode (`parallel/orchestrator.md`) |
 | `--worktree` | Isolated worktree for unit mode (see *Workspace*) |
 | `--yield` / `yield` | **Compat shim** → `/workflow:maintain --yield` (stewardship; no unit claim) |
 
@@ -49,6 +50,7 @@ $ARGUMENTS
 | Family contracts (session-state / branch) | @workflow `references/family-contracts.md` (when writing state or branching) |
 | Path roots | @workflow `references/planning-root.md` |
 | Before mode select | `references/portfolio-router.md` |
+| Parallel modes | @workflow `parallel/MODE.md` + `orchestrator.md` / `resume.md` as selected |
 | Unit mode | `references/unit-state-machine.md`, `references/phase-return.md`, @workflow `references/tracks.md` |
 | After phase-return | @workflow `references/runs-ledger.md` (append event; close-run on done) |
 | Yield-only args (compat) | `@workflow:maintain` (yield job only) — not drive |
@@ -70,7 +72,7 @@ $ARGUMENTS
 if yield-only args → compat: /workflow:maintain --yield → stop (no claim)
 orient (conventions + soft-checks)
   → load portfolio-router → MODE
-  → swarm_resume | swarm_handoff | unit SM | hard_stop*
+  → parallel_resume | parallel_handoff | parallel | unit SM | hard_stop*
   → on unit: classify → transition → phase → phase-return → runs append → re-classify … until stop
   → on done: close-run ledger row
   → handoff / recap per gates
@@ -141,15 +143,16 @@ affects whether to claim it, present at most one offer; on proceed, ack the note
 
 Full rules: `references/portfolio-router.md`.
 
-1. Explicit args → **unit** (skip auto-swarm).
-2. Active swarm run → **swarm_resume** (`/swarm:continue` semantics).
-3. Explicit `∥` / `{wave}` at head, ≥2 claimable, swarm ready → **swarm_handoff** (auto).
-4. Same but swarm not set up → one ask: setup then handoff, or sequential first peer.
-5. Else single-unit claim order: `in_progress` → handoff/roadmap NEXT → planned queue.
-6. map-only / sequencing choice without a resolvable unit → **hard_stop_choice**.
-7. Nothing named → **hard_stop**.
+1. Explicit **single** args → **unit** (skip auto-parallel).
+2. Explicit **multi-item** args → **parallel**.
+3. Active parallel run → **parallel_resume** (`parallel/resume.md`).
+4. Explicit `∥` / `{wave}` at head, ≥2 claimable, parallel ready → **parallel_handoff** (auto).
+5. Same but not set up → one ask: `/workflow:setup` then handoff, or sequential first peer.
+6. Else single-unit claim order: `in_progress` → handoff/roadmap NEXT → planned queue.
+7. map-only / sequencing choice without a resolvable unit → **hard_stop_choice**.
+8. Nothing named → **hard_stop**.
 
-**Auto-swarm eligibility is narrow:** only explicit parallel groups at the active head — not
+**Auto-parallel eligibility is narrow:** only explicit parallel groups at the active head — not
 “several units that look independent.” `⚠ A ∥ B` is a collision watch, not a launch package.
 
 ## Unit phase state machine (summary)
@@ -222,10 +225,10 @@ load anytime orientation is ambiguous).
 ## Related
 
 - **`@workflow`** — family contracts; bare `/workflow` → portfolio **status** (`references/status.md`)
-- **`@workflow:setup`** — `conventions.md`, planning root, runs scaffold
+- **`@workflow:setup`** — planning, conventions, memory, runs, charter, parallel config/roles
 - **`@workflow:roadmap`** — `→` / `∥` / `⚠` / NEXT maps continue consumes
 - **`@workflow:brainstorm`** · **refine** · **plan** · **execute** · **review** · **compound**
 - **`@workflow:maintain`** — stewardship (prune + yield + memory); continue may **offer**, never owns
-- **`/swarm`** · **`/swarm:continue`** · **`/swarm:setup`** — parallel executor; override entry
+- **Parallel mode** — @workflow `parallel/*` (entered only from this skill’s portfolio router)
 - **`/skills:evolve`** — skill-source only; mutates process IP from detected gaps (not published to consumer projects)
 - **`@superpowers:finishing-a-development-branch`** — integrate decision after clean review

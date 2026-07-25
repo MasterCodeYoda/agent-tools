@@ -27,7 +27,7 @@ unless an absolute or repo-root path is explicit. Examples:
 |------|------|
 | `.agent-tools/memory/` | L3 shared agent knowledge |
 | `.agent-tools/runs/` | Run event spine + closed-run ledger (see `runs-ledger.md`); yield via `/workflow:maintain` |
-| `.agent-tools/charter/`, `.agent-tools/swarm/` | Swarm setup |
+| `.agent-tools/charter/`, `.agent-tools/parallel/` | Charter + parallel-mode setup |
 
 ## Migration (legacy `./planning/`)
 

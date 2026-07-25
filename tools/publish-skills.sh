@@ -217,8 +217,8 @@ write_opencode_command() {
 # OpenCode keeps "skills" (on-demand via the skill tool) and "commands" (explicit /slash
 # triggers) as separate things. We emit:
 #   1. Colon sub-skills (workflow:continue → workflow-continue)
-#   2. Bare family roots that have colon-named children (workflow, swarm, git, …) so
-#      /workflow and /swarm are real slash commands — not fuzzy-matched onto *-continue
+#   2. Bare family roots that have colon-named children (workflow, git, …) so
+#      /workflow and /git are real slash commands — not fuzzy-matched onto *-continue
 #   3. Special leaf invocables (personify, use-browser)
 # Family roots stay in skills/ (nested refs + skill-tool load). Leaves and
 # colon-named top-level dirs are removed from skills/ after emission (see publish loop).
@@ -259,7 +259,7 @@ emit_commands_for_opencode() {
                 fi
             done
 
-            # Bare family root (e.g. /workflow, /swarm) when it has colon-named children
+            # Bare family root (e.g. /workflow, /git) when it has colon-named children
             local top_md="${top}/SKILL.md"
             if [ -f "$top_md" ] && $has_colon_sub; then
                 local top_declared

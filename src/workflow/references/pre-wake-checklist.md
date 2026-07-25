@@ -10,7 +10,7 @@ scripts; this file is the portable contract.
 
 ## Principle
 
-Hydrate **current** plant inputs **before** the model invents context. Pre-run collection beats
+Hydrate **current** process inputs **before** the model invents context. Pre-run collection beats
 assumptions. Fail closed when isolation or claimability is unsafe.
 
 ## Checklist (ordered)
@@ -38,7 +38,7 @@ Same loop as interactive continue:
 ```text
 read policy (approval-boundaries + conventions)
   → soft-checks → portfolio mode → claimable only
-  → act within tier → write plant disk → runs append
+  → act within tier → write planning disk → runs append
   → report / escalate without re-driving the same red gate
 ```
 

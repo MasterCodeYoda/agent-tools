@@ -1,6 +1,6 @@
 ---
 name: workflow:setup
-description: Initialize and maintain planning root (.agent-tools/planning preferred), conventions (tracks, gates, integration), runs ledger scaffold, and shared memory under .agent-tools/memory/ (AGENTS.md memory-link) for the workflow family.
+description: Initialize and maintain planning root, conventions, runs ledger, shared memory, project charter, and parallel-mode config/roles for the workflow family.
 argument-hint: "[optional: 'maintain' to refresh existing conventions, or blank to initialize]"
 user-invocable: true
 ---
@@ -8,21 +8,23 @@ user-invocable: true
 # Project Workflow Setup (`/workflow:setup`)
 
 `/workflow:setup` is the **idempotent initializer and maintainer** for a project's `/workflow`
-scaffolding. Run it once to bootstrap, and any time afterward to refresh. It does three things:
+scaffolding. Run it once to bootstrap, and any time afterward to refresh. It owns:
 
-1. **Ensures planning-root git hygiene** under the preferred root **`.agent-tools/planning/`**
-   (legacy `./planning/` still honored until migrated — @workflow `references/planning-root.md`).
-   `.gitkeep` + directory-local `.gitignore` so the area stays low-churn. Creates `conventions.md`
-   *only when* the project has actual custom conventions. Top-level `session-state.md` only for
-   live cross-slice handoff. Per-item state under `planning/<item>/` from plan/execute.
-2. **Collaborates on project-local conventions** (non-defaults only) — tracks, gates, merge
-   policy, orientation/PM queue, visual plan. Optional **personal factory** profile pack.
-3. **Scaffolds** `.agent-tools/memory/` (+ AGENTS memory-link) and **`.agent-tools/runs/`**
-   (events spine + empty ledger — @workflow `references/runs-ledger.md`).
+1. **Planning-root git hygiene** under preferred **`.agent-tools/planning/`** (legacy
+   `./planning/` still honored — @workflow `references/planning-root.md`).
+2. **Project-local conventions** (non-defaults only) — tracks, gates, merge, orientation/PM
+   queue, visual plan. Optional **personal factory** profile pack.
+3. **`.agent-tools/memory/`** (+ AGENTS memory-link) and **`.agent-tools/runs/`**.
+4. **Project charter** (`.agent-tools/charter/`) + AGENTS charter-link + optional agent
+   memory symlinks — required for parallel mode; useful ground truth for any session that
+   loads it.
+5. **Parallel-mode readiness** under `.agent-tools/parallel/` (config.yml + role templates +
+   umbrella gitignore). On-disk path retained; operator entry is continue’s parallel mode
+   only — @workflow `parallel/MODE.md`. Decision:
+   `docs/decisions/001-swarm-collapse-into-workflow.md`.
 
-It is **non-destructive** and **minimalist**: it never creates empty or default-only scaffolding.
-It never clobbers existing real content. In maintain mode it diffs detected reality against
-what's recorded (and removes default-only files if the user approves).
+It is **non-destructive** and **minimalist**: never creates empty or default-only scaffolding;
+never clobbers existing real content without consent. Maintain mode diffs reality vs recorded.
 
 ## User Input
 
@@ -35,21 +37,12 @@ through to maintain if docs already exist).
 
 ## Relationship to other skills
 
-- **`/swarm:setup`** — complementary, not overlapping. `/workflow:setup` is **swarm-independent**
-  for `planning/` conventions; it also owns the **project shared-memory scaffold** under
-  `.agent-tools/memory/` and the AGENTS.md memory-link block. It may reference other
-  `.agent-tools/` config (e.g. personify). If you also use `/swarm`, run `/swarm:setup` for
-  the shared charter (`.agent-tools/charter/`). Swarm does not invent a second memory-link format.
-- **`/workflow`** (bare) — read-only portfolio **status**; scans conventions / planning root but
-  never claims. Drive with **`/workflow:continue`**.
-- **`/workflow:continue`** — the primary **drive** consumer of `planning/conventions.md`. It
-  classifies the next slice into the right track, routes per the conventions, and applies the
-  project gates. Path resolution may also consume a horizon map (`roadmap.md` or workstreams)
-  when present.
-- **`/workflow:roadmap`** — user-only multi-unit map author; default dialect `planning/roadmap.md`.
-  Setup does **not** require a roadmap; record a non-default dialect only if the project already
-  uses something else (e.g. `initiatives/` + `workstreams/`).
-- **All `/workflow:*` phases** honor the project gates and integration policy recorded here.
+- **`/workflow`** (bare) — read-only portfolio **status**; never claims. Drive with
+  **`/workflow:continue`**.
+- **`/workflow:continue`** — primary drive consumer of conventions; parallel mode when eligible.
+- **`/workflow:roadmap`** — multi-unit map author; setup does not require a roadmap.
+- **All `/workflow:*` phases** honor project gates and integration policy recorded here.
+- **No second setup command** for charter/parallel — this skill is the only owner.
 
 ## Procedure
 
@@ -64,6 +57,8 @@ Survey what already exists; **read before writing** (@workflow `references/plann
 - `AGENTS.md` / `CLAUDE.md` / `CONTRIBUTING.md` and PM/MCP signals — pre-fill defaults.
 - `.agent-tools/memory/` — maintain or plan create + AGENTS memory-link.
 - `.agent-tools/runs/` — maintain or plan create (README, events, ledger).
+- `.agent-tools/charter/` — present → charter re-setup path in §5.3; absent → offer charter.
+- `.agent-tools/parallel/config.yml` + `roles/` — parallel-mode readiness.
 - Legacy `docs/solutions/` — note migrate via `/workflow:maintain --migrate-solutions`.
 
 Report what you found and what's missing before changing anything.
@@ -82,7 +77,7 @@ Report what you found and what's missing before changing anything.
 **Hard refuses:**
 
 - Do **not** create empty `.agent-tools/planning/` while live work remains only under `./planning/`
-  (resolution would hide the live plant).
+  (resolution would hide the live planning work).
 - Do **not** migrate or delete a non-empty root without explicit confirmation.
 - Do **not** skip this check in maintain mode — every setup run re-detects.
 
@@ -205,7 +200,8 @@ These rules are **directory-local** inside the planning root’s `.gitignore` an
 
 In initialize mode: ensure planning-root hygiene. Create `conventions.md` or a top-level
 `session-state.md` **only when there is actual content to record**. **Always** run §5 / §5.1
-(memory) and **§5.2 (runs)** — independent of conventions content.
+(memory), **§5.2 (runs)**, and **§5.3 (charter + parallel readiness)** — independent of
+conventions content (charter may be deferred if user declines, but always offer).
 
 ### 4. Handoff scaffold (top-level `session-state.md`) — optional
 
@@ -285,7 +281,7 @@ If `MEMORY.md` or `state.yml` already exist with real content, leave them; only 
 
 ### 5.1 AGENTS.md memory-link block
 
-`AGENTS.md` is the canonical agent orientation file. Insert (or refresh) a **marker-bounded** block for shared memory — same mechanism as the charter-link from `/swarm:setup`, different markers.
+`AGENTS.md` is the canonical agent orientation file. Insert (or refresh) a **marker-bounded** block for shared memory — same mechanism as the charter-link (§5.3), different markers.
 
 Emit each marker as a standard HTML comment whose inner content is exactly:
 
@@ -349,6 +345,93 @@ runs: []
 
 Touch empty `events.ndjson` if absent. Full schema: @workflow `references/runs-ledger.md`.
 
+### 5.3 Charter + parallel-mode readiness
+
+Owns project charter and parallel orchestrator scaffolding. Templates live under
+@workflow `parallel/templates/`; canonical roles under @workflow `parallel/roles/`. Detailed
+orchestrator behavior: @workflow `parallel/MODE.md`.
+
+**Hard refuses:** never `git -C`; never overwrite charter/role content without consent; never
+move `./planning/` or QA artifacts under `.agent-tools/`.
+
+#### Detection (evidence before questions)
+
+Scan package manifests, lockfiles, test/lint/format/CI config, existing AGENTS/CLAUDE, git
+remote + recent commits, README head, ADRs, PM tool signals, agent dirs (`.claude/`, …).
+Summarize findings; let the user correct misdetections.
+
+#### Charter files (`.agent-tools/charter/`)
+
+Each file: frontmatter `last_updated: <YYYY-MM-DD>`; stable headers; sparse bodies.
+
+| File | Role |
+|------|------|
+| `charter.md` | Entry + precedence + index — skeleton `parallel/templates/charter-entry.md` |
+| `project.md` | Identity, stack, surfaces, vocabulary, stakeholders, out of scope |
+| `engineering.md` | Testing, types, lint/format, architecture, gates, security, DoD |
+| `workflow.md` | PM, branching, commits, merge, review, release, docs |
+
+Fresh: author from evidence + dialogue (< ~8 questions). Re-setup when charter exists: per
+section keep / replace / edit (default **keep**); refresh AGENTS charter-link every re-setup.
+
+#### Parallel config + roles (`.agent-tools/parallel/`)
+
+**Legacy path migrate (mandatory when present):** if `.agent-tools/swarm/` exists and
+`.agent-tools/parallel/` does not, rename `swarm` → `parallel` (`git mv` when tracked;
+plain `mv` otherwise). If **both** exist, stop and ask (do not merge silently). If only
+`parallel/` exists, continue. Do not invent dual trees.
+
+- Write `config.yml` from `parallel/templates/config.yml.md`; set `backlog.default_source`
+  from detected PM (else `file`). On re-setup: add missing keys only; never overwrite values.
+- Copy six role templates into `.agent-tools/parallel/roles/` from skill `parallel/roles/`
+  (`worker-contract`, `planner`, `implementer`, `reviewer`, `conflict-resolver`,
+  `integration-fixer`). On re-setup: for locally edited files offer keep-local /
+  replace-with-canonical / merge / show-diff.
+- Do **not** create `sessions/` or `active-run` (runtime, gitignored).
+
+#### Umbrella gitignore
+
+Create/update `.agent-tools/.gitignore` with **add-don't-remove** from
+`parallel/templates/umbrella-gitignore.md`. Does not modify repo-root `.gitignore`.
+
+#### AGENTS.md charter-link block
+
+Markers (HTML comments): `agent-tools:charter-link begin` / `agent-tools:charter-link end`.
+Insert or refresh (never duplicate). Canonical body:
+
+```markdown
+## Project Charter
+
+This project uses a structured charter at `.agent-tools/charter/`.
+
+The charter captures durable project identity, engineering standards, and workflow conventions.
+Shared ground truth when parallel mode or any session loads project conventions.
+
+Files (load in order when needed; earlier take precedence on conflict):
+
+1. [`.agent-tools/charter/charter.md`](.agent-tools/charter/charter.md) — entry + precedence + index
+2. [`.agent-tools/charter/project.md`](.agent-tools/charter/project.md) — identity, stack, surfaces
+3. [`.agent-tools/charter/engineering.md`](.agent-tools/charter/engineering.md) — standards, DoD
+4. [`.agent-tools/charter/workflow.md`](.agent-tools/charter/workflow.md) — PM, branch, merge, review
+
+**Loading policy:** Parallel mode and roles **explicitly read** needed charter files during
+orientation. Pure unit-mode `/workflow:*` sessions (including continue in unit mode) do **not**
+auto-load the full charter set. Use textual references only — no `@` auto-import of charter.
+```
+
+#### Conditional agent-memory symlinks
+
+| Condition | Action |
+|-----------|--------|
+| `.claude/` present | `CLAUDE.md → AGENTS.md` automatically |
+| `.gemini/` present | **Ask** before `GEMINI.md → AGENTS.md` |
+| other agent dirs | No symlink unless user opts in |
+
+Relative symlink from repo root. Never clobber a regular file — ask.
+
+**Optional deferral:** if the user wants planning/memory only and declines charter for now,
+record that parallel mode is **not ready** and continue; re-run setup later for §5.3.
+
 ### 6. Maintain mode
 
 When conventions already exist: show the current conventions, diff against detected reality
@@ -362,17 +445,19 @@ Also evaluate the planning structure:
 - If `conventions.md` is default-only, offer to delete it.
 - If top-level `session-state.md` has no active content, offer to delete it.
 
-Also evaluate shared memory + runs:
+Also evaluate shared memory + runs + charter + parallel readiness:
 - `.agent-tools/memory/` tree + AGENTS memory-link
 - `.agent-tools/runs/` README + events + ledger
+- Charter re-setup drift (§5.3) when charter exists
+- `parallel/config.yml` + roles integrity
 - Legacy `docs/solutions/` migrate note as before
 
 ## What `/workflow:setup` does not do
 
 - Does **not** plan, refine, or execute work — it sets up the scaffolding those phases use.
-- Does **not** author the swarm charter (that's `/swarm:setup`); it may interact with `.agent-tools/` for memory, runs, and planning root.
 - Does **not** invent conventions the project doesn't have (except when user chooses personal factory pack).
 - Does **not** create empty top-level `session-state.md` scaffolding.
+- Does **not** start a parallel run or create `active-run` / sessions.
 - Does **not** migrate `docs/solutions/` or promote harness-local memories — `/workflow:maintain`.
 - Does **not** edit the skill corpus — process gaps → process memory + skill-source
   `/skills:evolve` when available (else upstream; never invent a workflow-local improve command).

@@ -9,7 +9,7 @@ Do not invent emit-and-stop as the default path.
 
 ## One dialect
 
-Swarm `@swarm` `roles/worker-contract.md` structured return and this package share the **same
+Swarm `@workflow parallel` `roles/worker-contract.md` structured return and this package share the **same
 field names** for artifacts and status. Unit continue does not invent a second schema.
 
 | Producer | Consumer | Shape |
@@ -18,8 +18,8 @@ field names** for artifacts and status. Unit continue does not invent a second s
 | Swarm orchestrator | Worker | Dispatch prompt + worker-contract |
 | Worker / phase host | Orchestrator or continue | Structured return YAML (worker-contract) |
 
-Canonical return schema authority for swarm: `@swarm` `references/structured-return-schema.md`
-(and `@swarm` `roles/worker-contract.md`). Unit mode **maps** phase-return events into the same
+Canonical return schema authority for swarm: `@workflow parallel` `references/structured-return-schema.md`
+(and `@workflow parallel` `roles/worker-contract.md`). Unit mode **maps** phase-return events into the same
 status vocabulary when emitting a package.
 
 ## `handoff_package` (outbound — work to resume)
@@ -110,8 +110,8 @@ Same agent may play both in one session (default). Split only when useful.
 
 ## Swarm alignment
 
-- Orchestrator continues to prepend full `@swarm` `roles/worker-contract.md` on dispatch (boundaries + brevity).
-- Do **not** dual-maintain a forked return schema in workflow — change `@swarm` structured-return-schema
+- Orchestrator continues to prepend full `@workflow parallel` `roles/worker-contract.md` on dispatch (boundaries + brevity).
+- Do **not** dual-maintain a forked return schema in workflow — change `@workflow parallel` structured-return-schema
   + worker-contract together; this file only maps unit continue ↔ that schema.
 - Unit continue **never** writes swarm `state.yml`; swarm never owns unit phase-return.
 

@@ -1,6 +1,6 @@
 # Process payload (runtime adapter contract)
 
-**Load when:** packaging `/workflow` + `/swarm` for another agent runtime (Hermes, custom
+**Load when:** packaging `/workflow` + parallel mode for another agent runtime (Hermes, custom
 operator shell, CI bot), or checking that a harness implements the production line without
 rewriting phases.
 
@@ -90,7 +90,7 @@ silent process-IP skill edits.
   planning/          # preferred planning root
   memory/            # L3-shared
   runs/              # events + ledger + yield
-  charter/ swarm/    # when swarm used
+  charter/ parallel/    # when swarm used
 ```
 
 ## Compatibility checklist (dogfood a runtime)
@@ -106,4 +106,4 @@ silent process-IP skill edits.
 ## Related
 
 - Wave 1–2 notes in consumer projects (e.g. software-factory `docs/process-ip-wave*.md`)
-- Swarm worker contract: `src/swarm/roles/worker-contract.md`
+- Swarm worker contract: `src/workflow/parallel/roles/worker-contract.md`
