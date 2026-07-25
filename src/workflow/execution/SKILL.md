@@ -15,292 +15,127 @@ Execute work plans while maintaining session continuity and capturing knowledge.
 $ARGUMENTS
 ```
 
-## Flag Extraction
+## Flags & input
 
-Before interpreting input, extract the `--worktree` flag if present:
+Extract `--worktree` → `WORKTREE_MODE=true` and strip from `$ARGUMENTS`; else false.
 
-1. **Check for `--worktree`** in `$ARGUMENTS`
-2. If found, set `WORKTREE_MODE=true` and strip `--worktree` from `$ARGUMENTS` before Input Interpretation
-3. If not found, set `WORKTREE_MODE=false`
+**Hard refuse / surface exact ERROR strings:**
 
-**Validation** (stop with error if any fail):
+| Condition | Error gist |
+|-----------|------------|
+| `--worktree continue` | Cannot create worktree for existing session — cd to worktree, run execute continue |
+| Nested worktree (CWD already worktree) | Cannot nest — run without `--worktree` |
+| `--worktree` but `session-state` already has `worktree:` | Omit flag; enter existing path |
 
-- **`--worktree continue` is invalid**: Creating a new worktree for an existing session is nonsensical. Error:
-  ```
-  ERROR: --worktree cannot be used with 'continue'.
-  To resume work in an existing worktree, cd to the worktree directory and run:
-    /workflow:execute continue
-  ```
-- **Already inside a worktree**: If `git rev-parse --show-toplevel` differs from the main repo root (CWD is already a worktree), error:
-  ```
-  ERROR: Already inside a git worktree. Cannot nest worktrees.
-  Run /workflow:execute without --worktree from this worktree.
-  ```
-- **Worktree already recorded in session-state**: If `--worktree` is passed AND `session-state.md` already has a `worktree:` path, error:
-  ```
-  ERROR: A worktree is already recorded in session-state.md: <path>
-  Run /workflow:execute without --worktree — it will detect and enter the existing worktree automatically.
-  ```
-
-## Input Interpretation
-
-| Input Pattern | Interpretation |
-|---------------|----------------|
-| `./planning/<project>/` | Start/continue project from planning subdirectory |
-| `./planning/` or empty | Auto-detect from `./planning/*.md` or `./planning/*/` |
-| `*.md` file path | Execute specific plan file |
+| Input | Meaning |
+|-------|---------|
+| `./planning/<project>/` | Start/continue that unit |
+| `./planning/` or empty | Auto-detect from session-state / plan files |
+| `*.md` plan path | Execute that plan |
 | `continue` | Resume last active session |
-| `LIN-[0-9]+` or `[A-Z]+-[0-9]+` | Fetch via Issue Retrieval Strategy, then direct execution |
-| Text summary | Steering input for next session |
+| Issue key | Micro/direct issue → `references/direct-issue-execution.md` |
+| Text | Steering for next session |
 
-## Direct Issue Execution (micro track)
+## Micro / direct issue
 
-For simple tasks that don't need full planning docs (clear bugs, small enhancements, issue-as-plan).
-Also the process used when `/workflow:continue` classifies track **micro**.
+**When:** clear scope; issue-as-plan; or continue track **micro**.  
+**Flow:** load `references/direct-issue-execution.md`.  
+**Escalation:** complexity grows → reclassify feature; pause; plan/refine; resume via continue.  
+PM: @workflow `planning/pm-integration.md`. Tracks: @workflow `references/tracks.md`.
 
-- **When:** clear scope; issue description is enough; planning overhead not justified — or track=micro
-- **Flow:** **load** `references/direct-issue-execution.md` (fetch issue, confirm, execute, quick review, integrate, compound disposition)
-- **Escalation:** if complexity grows — reclassify feature; pause; `/workflow:plan` or refine; resume via continue
+## Session initialization
 
-PM retrieval: @workflow (`planning/pm-integration.md`). Tracks: @workflow `references/tracks.md`.
+1. **Locate docs** — prefer `planning/*/session-state.md`; support flat `planning/`. Both modes
+   use `implementation-plan.md` + `session-state.md` (`requirements.md` file mode only).
+   `visual_plan:` is approval metadata only — execute follows markdown plan SoT only.  
+2. **Worktree** — if `worktree:` or `WORKTREE_MODE`: load `references/worktree-enter.md` end-to-end.  
+3. **Session state** — read/show progress; create if missing (`session_count: 1`); multi-dir → ask;
+   PM mode: no warn for missing requirements.  
+4. **Branch** — never implement on `main`/`master` (**hard refuse**). Honor `branch:`; create/switch
+   via @workflow `references/family-contracts.md`. Worktree enter may already set branch.  
+5. **Context review** — project, session #, progress, focus, last summary.  
+6. **Task select** — next incomplete plan task; honor steering; parallelize when safe.
 
-## Session Initialization
+## Execution loop
 
-### 1. Locate Planning Documents
+**Mandatory loads:** `quality-checkpoints.md` · @workflow `decomposition-modes.md` · @test-strategy ·
+`logging.md` · @workflow `context-engineering.md` · @workflow `context-compact.md`.
 
-Precedence:
+### Pre-loop
 
-```bash
-ls ./planning/*/session-state.md 2>/dev/null
-ls ./planning/*.md 2>/dev/null
-```
+1. Prefer **plan + codebase-research + latest IC** (+ `resume_loads`) over full chat replay.  
+2. Missing research (non-trivial, no skip reason) → light/full on-demand research (dose in
+   context-engineering). Micro → direct-issue ref.  
+3. Stale research vs tip mid-complex work → re-run affected sections (`RESEARCH_STALE`).
 
-Support project subdirs (`planning/<project>/`) and flat `planning/` files. Both modes use
-`implementation-plan.md` + `session-state.md`; `requirements.md` is file mode only.
-Optional `visual_plan:` in session-state is **approval metadata only** — execute always follows
-the markdown `implementation-plan.md`, never `visual-plan.html` or any other presentation file.
-
-### 1.25–1.5 Worktree detect / enter
-
-If `session-state.md` has `worktree:` or `WORKTREE_MODE=true`, **load and follow**
-`references/worktree-enter.md` (detect existing, create via @git worktree-create, rename branch,
-dependency restore via `dependency-establishment.md`, validate planning docs committed, record path).
-
-Surface the ERROR strings defined there (including planning-docs-missing-in-worktree).
-
-### 2. Load Session State
-
-- **If session-state exists:** read, show progress, confirm continuation
-- **If planning docs but no state:** read plan (+ requirements or PM issue); create session-state;
-  `session_count: 1`
-- **If multiple project dirs:** list and ask which to continue
-- PM mode: do not warn about missing `requirements.md` when `work_item` / PM source is set
-
-### 2.5. Ensure Working Branch
-
-- Worktree just entered: branch already set — record and skip create
-- Else: honor `branch:` in session-state; never start implementation on `main`/`master`
-- Create/switch using Branch Naming Convention from @workflow
-  (`references/family-contracts.md`)
-
-**Hard refuse:** never begin implementation work on `main`/`master` — create or switch to a
-working branch first.
-
-### 3. Context Review
-
-Show project, session #, progress, current focus, last session summary.
-
-### 4. Task Selection
-
-Next incomplete plan task; honor steering; parallelize with sub-agents when safe; confirm if unclear.
-
-## Execution Loop
-
-Quality detail: **load** `quality-checkpoints.md`. Layer order: @workflow
-(`references/decomposition-modes.md`). Testing strategy: @test-strategy. Logging: `logging.md`.
-Context discipline: **load** @workflow (`references/context-engineering.md`) — dumb-zone
-norms, IC content fields, research freshness. **Reclaim/resume control flow:** **load**
-@workflow (`references/context-compact.md`).
-
-### Pre-loop context load
-
-1. Prefer loading **plan + codebase-research + latest intentional compaction** (and any
-   `resume_loads` listed on that IC) — not the full prior chat history when resuming after
-   thrash or after a context compact.
-2. If `codebase-research.md` is missing and the unit is not a recorded trivial skip, run
-   **light or full** on-demand research before non-trivial edits (dose per
-   context-engineering.md). Micro: see `references/direct-issue-execution.md`.
-3. If research is stale relative to the branch tip and you are mid-complex work, re-run the
-   affected sections rather than trusting lies.
-
-### Task Execution Pattern
+### Task pattern
 
 ```
-while (tasks remain):
-  1. Mark task in_progress in TodoWrite
-  2. Read relevant files from plan (+ research edit sites)
-  3. Look for existing patterns in codebase (sub-agent search when parent window is heavy)
-  4. Write tests for next behavior — see @test-strategy
-  5. Implement minimal code to pass (Green)
-  6. Refactor if needed, run full tests
-  7. Mark task completed in TodoWrite
-  8. Update plan file ([ ] -> [x])
-  9. Check for story/slice completion → context compact protocol when more work remains
-  10. If dumb-zone / trajectory triggers fire → context compact protocol (below)
-  11. Check for session boundary
+while tasks remain:
+  in_progress → read plan/research sites → patterns (sub-agent search if heavy) →
+  tests (@test-strategy) → minimal green → refactor + full tests →
+  complete + plan checkbox → slice done? → compact if more work →
+  dumb-zone/trajectory? → compact → session boundary?
 ```
 
-### Mid-phase context reclaim (mid-item only)
+### Mid-item reclaim (work remains)
 
-**Not** the same as session handoff. When work **remains** on this unit and a breakpoint hits
-(slice/phase done with more tasks, dumb-zone, 2+ failed attempts, trajectory-changing
-correction — context-engineering.md):
+Breakpoints: slice done with more tasks, dumb-zone, 2+ failed attempts, trajectory correction
+(context-engineering). **Load and run** `context-compact.md` end-to-end (FREEZE → IC →
+`workflow_reclaim` + clean-session host command → RESUME). Success = IC **and** reclaim **and**
+`resume_loads` — not IC-only. Wrong approach → reclassify; no push in polluted window.
 
-1. **Load and run** @workflow `references/context-compact.md` **end-to-end**: FREEZE → WRITE
-   IC → EMIT `workflow_reclaim` signal + host command → pause for RECLAIM → RESUME same unit.  
-2. **Default reclaim = clean session** (`/clear` on Claude, `/new` on Grok, new/clear on
-   OpenCode). Emit the exact `host_command`; user or outer orchestrator runs it. Optional
-   stay-in-thread: `/compact` with `compact_focus` only if preferred.  
-3. Mid-item success = durable IC **and** reclaim path **and** continue from `resume_loads` —
-   not IC-only stop.  
-4. If the approach is wrong: stop and re-plan — do not push edits in a polluted window.
+**End-of-item / user end:** Session Handoff below — **not** mid-item reclaim.  
+Optional hooks: @workflow `hooks/reclaim-hooks.md`.
 
-When the **unit is complete** or the user ends the session with no further execute work: use
-**Session Handoff Protocol** below — **do not** run mid-item reclaim.
+### Slice complete
 
-Optional hooks: @workflow `references/hooks/reclaim-hooks.md` (coach + SessionStart re-seed;
-not full auto-clear).
+**Load** `references/slice-checkpoint.md` — independent commit per unit; verbatim parent ACs in
+deliverable-partition.
 
-### Story / Slice / Sub-issue Completion Checkpoint
+### Quality triggers (before task complete)
 
-**Hard refuse:** do not batch unrelated decomposition units into one commit — commit each
-story/slice or sub-issue/deliverable independently.
+Matches plan · tests pass · no new lint/type errors · focused patterns · mutation on domain if
+tool. Full checklists: `quality-checkpoints.md`. Update plan + session-state at milestones.
 
-For each unit:
+## Completion verification
 
-1. Implement end-to-end (vertical-slice) or comprehensively against owned ACs (deliverable-partition)
-2. Run full test suite
-3. Mark TodoWrite complete
-4. **Deliverable-partition only:** verify every **inherited verbatim parent AC** against test/CI evidence
-5. Commit: `feat(scope): description (ISSUE-ID)`
-6. Update PM story/sub-issue Done
-7. Next unit
+**Run when:** tasks appear done / about to hand off / stop mid-execution.  
+**Skip when:** user stop; question-only; plan/review-only.
 
-**Anti-patterns:** one big commit at the end; closing a sub-issue with a **paraphrased** AC instead of
-the verbatim parent AC.
+Checklist: request vs delivered · TodoWrite clean · plan checkboxes · tests/lint/types green ·
+no half-edited files. Finish remaining if possible; else handoff or document block.
 
-### Quality Gates (triggers)
+## Session handoff (end-of-item)
 
-Before marking a task complete:
+Not for mid-item dumb-zone (use compact → continue).
 
-- [ ] Matches plan requirements
-- [ ] Tests pass for new functionality
-- [ ] No new lint/type errors
-- [ ] Follows existing patterns; changes focused/atomic
-- [ ] Mutation testing on domain logic if tool available (changed files only)
+0. Completion verification  
+1. Session state via **`templates/session-state.md`**  
+2. Git commit (session #, tasks)  
+3. Compound offer via **`templates/session-learnings.md`**  
+4. Handoff via **`templates/session-complete.md`**  
 
-Run project-appropriate checks (pytest/mypy/ruff, npm test/tsc/eslint, etc.). Full checklists:
-`quality-checkpoints.md`.
+Do **not** remove worktrees on handoff — user after parallel sessions finish
+(`worktree-enter.md` + @git worktree-delete).
 
-### Progress Tracking
+## Error recovery
 
-Update plan checkboxes and `session-state.md` after significant milestones.
-
-## Completion Verification
-
-Before stopping or generating a handoff:
-
-### When to Run
-
-- All tasks appear done / about to hand off / about to stop during active execution
-
-### When NOT to Run
-
-- User said stop; question-only; planning/review-only session
-
-### Checklist
-
-1. Re-read original requests vs delivered
-2. TodoWrite all complete (none stuck in_progress)
-3. Targeted plan checkboxes done
-4. Last tests/lint/types clean
-5. No loose TODOs / half-edited files from this session
-
-### After
-
-Finish remaining work if possible; else handoff; if blocked, document in session state then handoff.
-
-## Session Boundaries
-
-### Detecting Boundary Conditions
-
-Slice complete; milestone; user ending; context stale.
-
-### Session Handoff Protocol
-
-Use for **end-of-item** or **user-ended session** — not for mid-item dumb-zone breakpoints
-(those use context-compact → continue).
-
-0. **Completion Verification** (above) first  
-1. **Update session state** — write `./planning/<project>/session-state.md` using
-   **`templates/session-state.md`** (load and fill)  
-2. **Git commit** progress with clear message (session #, tasks done)  
-3. **Compound prompt** — load **`templates/session-learnings.md`**; on Yes run `/workflow:compound`  
-4. **Handoff summary** — load **`templates/session-complete.md`** (includes worktree status/cleanup rules)
-
-Do **not** remove worktrees during handoff — user-initiated after all parallel sessions finish
-(see template + `references/worktree-enter.md` + @git worktree-delete).
-
-## Error Recovery
-
-### If Tests Fail
-
-1. Distinguish crash site from root cause — trace back  
-2. Trace to actual definitions — don't assume from names  
-3. Check the opposite hypothesis before concluding  
-4. Fix before next task; if out of scope, document evidence in session state  
-5. Do not proceed with failing tests  
-
-### If Approach Diverges or Code Pushes Back
-
-Plans and requirements are **working hypotheses** (context-engineering › Provisional artifacts).
-
-1. **Stop** non-trivial further edits on the wrong path.  
-2. **Record evidence** (what the code/tests/human showed) in session-state / phase-return.  
-3. **Emit the right event** for continue re-classification — do not only “push through” the
-   approved plan:
-   - Wrong problem / ticket framing → `PROBLEM_REFRAMED` → re-refine  
-   - Design/structure falsified → `DESIGN_FALSIFIED` → re-plan or re-refine  
-   - Human trajectory change → `HUMAN_STEER` → re-classify from evidence  
-   - Plan structure only (ACs still hold) → `EXECUTE_GAP` → re-plan  
-4. Resume from the revised phase artifacts, not from a polluted “force the old plan” window.
-
-If continue is not driving this session: document and run `/workflow:plan` or `/workflow:refine`
-as the event implies, then resume execute.
-
-### If Blocked
-
-Document; create resolution task; parallelize if possible; escalate if critical path.
-
-### If Lost Context
-
-Read session-state (especially latest **Intentional Compaction** and its `resume_loads`), git
-log, implementation-plan, and `codebase-research.md`; ask user if needed. Prefer running the
-**context-compact protocol** (write if stale, then reclaim + resume) over replaying a failed
-thread.
+**Load** `references/error-recovery.md` on test failure, approach diverge / code pushback,
+blocked, or lost context. Provisional plans: emit `PROBLEM_REFRAMED` / `DESIGN_FALSIFIED` /
+`HUMAN_STEER` / `EXECUTE_GAP` rather than forcing the approved plan.
 
 ## Definition of Done
 
-**Per task:** implemented + tests green + plan checkbox + session-state progress + focused
-changes + mutation survivors checked (domain, if tool) + commit on story/slice close +
-decision-reconciliation (`quality-checkpoints.md`) + PM update when applicable.
+**Per task:** implemented + tests green + plan checkbox + session-state + focused changes +
+mutation survivors (domain, if tool) + slice commit + decision-reconciliation
+(`quality-checkpoints.md`) + PM when applicable.
 
-**Per session:** completion verification · targeted tasks done or documented · ACs checked ·
-session-state updated · work committed · compound offered · handoff summary.
+**Per session:** verification · tasks done/documented · ACs checked · state updated · committed ·
+compound offered · handoff summary.
 
 ## Integration
 
 `/workflow:plan` · `/workflow:compound` · @test-strategy · PM via session-state ·
 `quality-checkpoints.md` · `dependency-establishment.md` · `logging.md` ·
 @workflow `references/family-contracts.md`
-
