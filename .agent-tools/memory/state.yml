@@ -1,9 +1,9 @@
 schema_version: 1
 interval_days: 7
-last_stewardship_at: "2026-07-25T13:00:00Z"
+last_stewardship_at: "2026-07-25T13:30:00Z"
 last_yield_at: null
 last_maintain_at: "2026-07-25T13:00:00Z"
-last_prune_at: "2026-07-25T13:00:00Z"
+last_prune_at: "2026-07-25T13:30:00Z"
 last_agents_at: "2026-07-25T13:00:00Z"
 snooze_until: null
 last_maintain_result:
@@ -14,14 +14,19 @@ last_maintain_result:
   retired: 0
   thinned_local: 0
   migrated_solutions: 0
-  notes: "entries healthy; frontier + phase-skill captures this session; no retire"
+  notes: "entries healthy; frontier + phase-skill captures prior session"
 last_prune_result:
-  confirmed_complete: 11
+  confirmed_complete: 14
   needs_migration: 0
-  kept: 3
-  purged: 0
-  cancelled: true
-  notes: "report only — purge awaits user confirm; many skill-corpus + frontier complete"
+  kept: 2
+  purged: 14
+  cancelled: false
+  notes: >-
+    User-approved purge 2026-07-25: continue-principal-state-machine,
+    workflow-horizon-skills, doc-integrity-and-corpus-health,
+    frontier-process-decontaminate, skill-corpus-* units (8 dirs),
+    workflow-context-compact, skill-corpus-thin-routing-horizon.md, roadmap.md.
+    Kept: conventions.md, .gitkeep/.gitignore. Knowledge already in src/ + memory.
 last_agents_result:
   lines: 17
   orienting: 1
@@ -29,9 +34,9 @@ last_agents_result:
   proposed: 0
   applied: 0
   cancelled: false
-  notes: "AGENTS.md is memory-link only — orienting pointers; no apply"
+  notes: "AGENTS.md memory-link only — clean"
 last_stewardship_result:
-  prune: proposed
+  prune: purged
   agents: clean
   yield: skipped_missing_scaffold
   memory: ok
