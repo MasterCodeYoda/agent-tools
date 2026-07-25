@@ -165,8 +165,10 @@ Feature states: `fuzzy` · `needs_refine` · `needs_plan` · `ready_execute` · 
 `needs_integrate` · `needs_compound` · `done` · `await_user` · `blocked`.
 
 **Cycles are legal** when evidence says so (e.g. execute → refine on decision drift; review →
-execute on code findings; review → plan on structural findings). Happy path is still one walk.
-After plan approve → **same-session execute** (no emit-and-stop default).
+execute on code findings; review → plan on structural findings; `PROBLEM_REFRAMED` /
+`DESIGN_FALSIFIED` / `HUMAN_STEER` mid-execute). Happy path is still one walk. Plan approve =
+**proceed with hypothesis**, not freeze. After plan approve → **same-session execute** (no
+emit-and-stop default).
 
 **Skip** refine/plan only when track is micro (issue-as-plan) or artifacts match the **current
 governing decision**. Stale artifact vs moved decision → re-enter refine (resize). Thrash bound:

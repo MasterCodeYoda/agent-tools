@@ -6,11 +6,13 @@ description: Delete a git worktree with merge safety checks
 argument-hint: "<name-or-path> [--force] [--keep-branch]"
 ---
 
-## CRITICAL: Git Command Rules
+## Hard refuse: git commands
 
-**NEVER use `git -C <path>` in any git command.** The session is already active in the correct working directory. Always use plain `git` commands (e.g., `git status`, `git worktree list`). This rule is absolute and has no exceptions. Violating this rule will produce incorrect results.
+**Hard refuse:** never use `git -C <path>`. The session is already in the correct working
+directory. Use plain `git` commands only (e.g. `git status`, `git worktree list`).
 
-**NEVER change CWD.** Do not use `cd` at any point during this command. All operations must run from the current working directory.
+**Hard refuse:** do not change CWD (`cd`) during this command. All operations run from the
+current working directory.
 
 ## User Input
 

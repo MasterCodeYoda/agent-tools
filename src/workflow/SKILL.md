@@ -241,15 +241,7 @@ At session boundaries: update session state → commit → offer compound → ha
 Use for 2+ independent slices; not for sequential/shared-file work. Full rules:
 `references/parallel-worktrees.md`. @git worktree-create / worktree-delete for agent mechanics.
 
-## Common Pitfalls
-
-- Over-engineering the first slice  
-- Horizontal infra inside a vertical slice (N/A in deliverable-partition)  
-- Premature abstraction  
-- Skipping quality gates  
-- 80% done syndrome  
-
-Examples: `references/decomposition-modes.md`.
+Decomposition pitfalls and mode selection: `references/decomposition-modes.md`.
 
 ## Extended Guidance (load on demand)
 
@@ -293,9 +285,5 @@ Examples: `references/decomposition-modes.md`.
 - **qa** — E2E / NL specs  
 - **skills:evolve** — skill-source only (`publish-target: project`); only path that *edits*
   process IP skills. Consumer projects capture process evidence and escalate upstream.
-
-## Remember
-
-YAGNI in-mode · ship early · refactor continuously · stay in mode · test behavior · compound
-knowledge · never ad-hoc skill rewrites — evolve the corpus in the skill source via
-`/skills:evolve` when installed, else capture evidence and take the gap upstream.
+  Never rewrite process IP ad-hoc mid-loop — evolve the skill source, else capture evidence
+  and take the gap upstream.

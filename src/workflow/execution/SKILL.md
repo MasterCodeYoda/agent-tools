@@ -102,7 +102,8 @@ Surface the ERROR strings defined there (including planning-docs-missing-in-work
 - Else: honor `branch:` in session-state; never start implementation on `main`/`master`
 - Create/switch using Branch Naming Convention from @workflow (`<type>/<ISSUE-KEY>` or short description)
 
-**IMPORTANT**: Never begin implementation work on main/master. Always create or switch to a working branch first.
+**Hard refuse:** never begin implementation work on `main`/`master` — create or switch to a
+working branch first.
 
 ### 3. Context Review
 
@@ -171,7 +172,8 @@ not full auto-clear).
 
 ### Story / Slice / Sub-issue Completion Checkpoint
 
-**CRITICAL**: Commit each decomposition unit independently (story/slice or sub-issue/deliverable).
+**Hard refuse:** do not batch unrelated decomposition units into one commit — commit each
+story/slice or sub-issue/deliverable independently.
 
 For each unit:
 
@@ -258,9 +260,22 @@ Do **not** remove worktrees during handoff — user-initiated after all parallel
 4. Fix before next task; if out of scope, document evidence in session state  
 5. Do not proceed with failing tests  
 
-### If Approach Diverges
+### If Approach Diverges or Code Pushes Back
 
-Stop; document; re-plan with `/workflow:plan`; resume from revised plan.
+Plans and requirements are **working hypotheses** (context-engineering › Provisional artifacts).
+
+1. **Stop** non-trivial further edits on the wrong path.  
+2. **Record evidence** (what the code/tests/human showed) in session-state / phase-return.  
+3. **Emit the right event** for continue re-classification — do not only “push through” the
+   approved plan:
+   - Wrong problem / ticket framing → `PROBLEM_REFRAMED` → re-refine  
+   - Design/structure falsified → `DESIGN_FALSIFIED` → re-plan or re-refine  
+   - Human trajectory change → `HUMAN_STEER` → re-classify from evidence  
+   - Plan structure only (ACs still hold) → `EXECUTE_GAP` → re-plan  
+4. Resume from the revised phase artifacts, not from a polluted “force the old plan” window.
+
+If continue is not driving this session: document and run `/workflow:plan` or `/workflow:refine`
+as the event implies, then resume execute.
 
 ### If Blocked
 

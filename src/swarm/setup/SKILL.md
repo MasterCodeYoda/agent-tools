@@ -41,12 +41,12 @@ What it produces:
 > per-run transient state created by the orchestrator (`/swarm <goal>`) at runtime and are
 > gitignored.
 
-## Critical Rules
+## Hard refuses
 
-- **NEVER use `git -C <path>`.** The session is already in the correct working directory;
+- **Hard refuse:** never use `git -C <path>`. The session is already in the correct working directory;
   use plain `git`.
-- **Never destructive.** Never overwrite a user's charter content, role file, or
-  agent-memory file without explicit consent. When in doubt, stop and ask.
+- **Hard refuse:** never overwrite a user's charter content, role file, or agent-memory file
+  without explicit consent. When in doubt, stop and ask.
 - **`./planning/` and QA artifacts are carve-outs.** Do not move `./planning/` or any QA
   test artifacts (`sentinel.config.yaml`, NL specs, Playwright config) under `.agent-tools/`.
   They stay in their natural locations.

@@ -314,13 +314,18 @@ session-state after approve.
 
 ## Plan Approval Gate
 
-**CRITICAL**: When planning is complete, you MUST stop and present the plan to the user for approval. **NEVER begin
-execution, save planning documents, or update PM tools until the user explicitly approves the plan.** This is a hard
-gate — no exceptions.
+**Hard refuse:** when planning is complete, stop and present the plan for approval. Do not
+begin execution, save planning documents, or update PM tools until the user explicitly approves.
+No exceptions.
 
 ### Present Plan for Approval
 
 Show the plan summary and ask the user to approve, using the Plan Approval Prompt from @workflow (`planning/templates.md`). It summarizes project, source, approach, slices with task counts, required vs out-of-scope task counts, and key technical decisions; states where the plan will be saved; includes the **Visual plan** link or skip line when the visual-approval step ran; and offers exactly three options: **1. Approve & Save**, **2. Approve & Execute**, **3. Revise**.
+
+**Approval meaning:** approve = **proceed with this plan as the current working hypothesis**.
+It does **not** freeze requirements or design forever. Mid-execute learning (code pushback,
+wrong framing, design falsified, human steer) may re-enter refine/plan under the unit state
+machine — that is expected process, not a failed plan.
 
 The three options always approve or revise the **markdown implementation plan** that will be
 saved. The visual surface is optional context for that decision — not a fourth option and not

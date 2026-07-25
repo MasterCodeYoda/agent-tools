@@ -83,6 +83,9 @@ decision is.
 | `PLAN_REVISE` | user requested revise |
 | `CODE_PROGRESSED` | execute made commits / task progress |
 | `EXECUTE_GAP` | AC/plan gap, scope invalid mid-execute |
+| `PROBLEM_REFRAMED` | code/tests/seams or human show the ticket framing is wrong |
+| `DESIGN_FALSIFIED` | implementation falsifies design/structure (not only stale ACs) |
+| `HUMAN_STEER` | human course-correct mid-loop with trajectory change |
 | `CODE_READY_FOR_REVIEW` | execute done or enough code for review gate |
 | `REVIEW_CLEAN` | review pass + valid evidence, findings fixed per policy |
 | `REVIEW_FINDINGS_CODE` | findings fixable in code |
@@ -105,10 +108,14 @@ decision is.
 | `needs_refine` | `REQUIREMENTS_READY` | `needs_plan` | — |
 | `needs_plan` | — | (run) | `/workflow:plan` |
 | `needs_plan` | `PLAN_DRAFTED` | `await_user` | plan approval prompt only (no recap) |
-| `needs_plan` | `PLAN_APPROVED` | `ready_execute` | — (same-session execute next; no emit-and-stop default) |
+| `needs_plan` | `PLAN_APPROVED` | `ready_execute` | — (same-session execute next; approval = proceed with hypothesis, not freeze) |
 | `ready_execute` | — | (run) | `/workflow:execute` |
 | `ready_execute` | `EXECUTE_GAP` + requirements/decision issue | `needs_refine` | re-refine (resize) |
 | `ready_execute` | `EXECUTE_GAP` + plan structure only | `needs_plan` | re-plan |
+| `ready_execute` | `PROBLEM_REFRAMED` | `needs_refine` | re-refine; evidence of wrong framing |
+| `ready_execute` | `DESIGN_FALSIFIED` + design/AC issue | `needs_refine` | re-refine |
+| `ready_execute` | `DESIGN_FALSIFIED` + plan structure only | `needs_plan` | re-plan |
+| `ready_execute` | `HUMAN_STEER` | re-classify from evidence | phase per classify (often refine/plan) |
 | `ready_execute` | `CODE_READY_FOR_REVIEW` | `needs_review` | — |
 | `needs_review` | — | (run) | `/workflow:review` (depth from track; infer, don't ask) |
 | `needs_review` | `REVIEW_FINDINGS_CODE` | `ready_execute` | fix, then re-review |

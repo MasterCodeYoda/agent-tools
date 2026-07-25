@@ -10,6 +10,24 @@ software-factory `docs/research-context-craft-lineage.md`.
 codebases without slop. The only durable lever per turn is the **quality of the context
 window** (correctness, completeness, size, **instruction count**, trajectory).
 
+## Provisional artifacts (anti-BDUF)
+
+Requirements, design discussion, and the implementation plan are **working hypotheses**, not
+frozen truth. Learning during coding is expected — that is success, not process failure.
+
+| Signal | Response |
+|--------|----------|
+| Code / tests / seams push back on the ticket framing | Reclassify → refine (`PROBLEM_REFRAMED`) — do not force the approved plan |
+| Implementation falsifies design or structure | Reclassify → plan or refine (`DESIGN_FALSIFIED`) |
+| Human course-corrects mid-loop | Record evidence → reclassify (`HUMAN_STEER`) |
+| Plan still holds; only local edit mistakes | Fix in execute; no phase re-entry |
+
+**Plan approval** means *proceed with this hypothesis*, not *never re-enter refine/plan*.
+Back-edges in the unit state machine are normal when evidence supports them. Thrash bound still
+stops silent oscillation without new external decision evidence.
+
+See @workflow (`continue/references/unit-state-machine.md`) for events and transitions.
+
 ## Two different “research” words
 
 | Term | Meaning | Artifact / path |

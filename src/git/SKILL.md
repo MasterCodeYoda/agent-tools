@@ -10,7 +10,7 @@ A coordinated set of skills for everyday git work that prioritize safety, conven
 
 ## Critical Shared Rules
 
-**NEVER use `git -C <path>`** in any git command. The session is already active in the correct working directory. Always use plain `git` commands.
+**Hard refuse:** never use `git -C <path>`. Session is already in the correct working directory; use plain `git` only.
 
 All skills in this family follow this rule strictly.
 

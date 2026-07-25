@@ -183,7 +183,7 @@ Present findings using the standard prioritized format:
 
 For the top N gaps (default 5), generate targeted fix proposals.
 
-### Proposal Constraints (CRITICAL — do not deviate)
+### Proposal Constraints (hard — do not deviate)
 
 1. **One file per proposal.** Each proposal edits exactly one file.
 2. **One gap per proposal.** Each proposal addresses exactly one detected gap.

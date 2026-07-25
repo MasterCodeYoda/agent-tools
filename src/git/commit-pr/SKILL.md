@@ -6,9 +6,10 @@ description: Commit, push, and open a PR
 argument-hint: "[optional context about changes and PR details]"
 ---
 
-## CRITICAL: Git Command Rules
+## Hard refuse: git commands
 
-**NEVER use `git -C <path>` in any git command.** The session is already active in the correct working directory. Always use plain `git` commands (e.g., `git status`, `git add`, `git commit`, `git push`). This rule is absolute and has no exceptions. Violating this rule will produce incorrect results.
+**Hard refuse:** never use `git -C <path>`. The session is already in the correct working
+directory. Use plain `git` commands only (e.g. `git status`, `git add`, `git commit`, `git push`).
 
 ## Your task
 

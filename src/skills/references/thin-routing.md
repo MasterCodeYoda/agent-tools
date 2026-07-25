@@ -8,6 +8,11 @@ horizon extractions that move content between `SKILL.md`, `templates/`, and `ref
 > **Thin always-on surface (skills + prompts). Thick, modular, *available* context. Skills stay
 > procedurally complete enough to force the right loads and checks — not empty routers.**
 
+**Shouting is not a gate.** Prefer plain **Hard refuse** / **Guard** one-liners over
+`IMPORTANT` / `CRITICAL` / all-caps MUST theater. If agents miss a rule, fix load point or
+structure — do not bold harder. Process skills define **repeatable process** (when, order,
+evidence, stop conditions), not model personality or persistence cheerleading.
+
 | Layer | Role | Shape |
 |-------|------|--------|
 | **Skill (`SKILL.md`)** | When to run, order of steps, gates, refuse lists, mandatory loads | Thin control plane |

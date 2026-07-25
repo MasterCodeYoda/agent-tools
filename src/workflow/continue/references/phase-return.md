@@ -52,6 +52,33 @@ phase_return:
 
 ```yaml
 phase_return:
+  phase: execute
+  status: blocked
+  events: [PROBLEM_REFRAMED]
+  evidence: "auth middleware shape shows ticket assumed session cookies; system is token-only"
+  next_hint: needs_refine
+```
+
+```yaml
+phase_return:
+  phase: execute
+  status: blocked
+  events: [DESIGN_FALSIFIED]
+  evidence: "design-discussion chose shared DB write; FK constraints require outbox pattern"
+  next_hint: needs_plan
+```
+
+```yaml
+phase_return:
+  phase: execute
+  status: await_user
+  events: [HUMAN_STEER]
+  evidence: "user: stop feature X; fix billing edge first"
+  next_hint: needs_refine
+```
+
+```yaml
+phase_return:
   phase: review
   status: completed
   events: [REVIEW_FINDINGS_CODE]

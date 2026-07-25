@@ -6,9 +6,10 @@ description: Create a git worktree and enter it for immediate work
 argument-hint: "[name] [from <ref>] [--type feat|fix|chore] [--branch <name>]"
 ---
 
-## CRITICAL: Git Command Rules
+## Hard refuse: git commands
 
-**NEVER use `git -C <path>` in any git command.** The session is already active in the correct working directory. Always use plain `git` commands (e.g., `git status`, `git worktree add`). This rule is absolute and has no exceptions. Violating this rule will produce incorrect results.
+**Hard refuse:** never use `git -C <path>`. The session is already in the correct working
+directory. Use plain `git` commands only (e.g. `git status`, `git worktree add`).
 
 ## User Input
 
