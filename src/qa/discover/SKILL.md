@@ -97,7 +97,7 @@ When in doubt, ask the user rather than guess. A spec based on real knowledge is
 
 Discover depends on `sentinel.config.yaml` produced by setup. If config is missing, direct user to run `/qa:setup` first. Config provides `app.base_url`, `specs.nl_dir`, `specs.seed`, and auth settings.
 
-### With /workflow:audit (qa domain) and planned `/qa:audit`
+### With /work:audit (qa domain) and planned `/qa:audit`
 
 Discover produces NL specs. Audit evaluates them for drift against the app. When audit finds gaps, it recommends discover to author new specs.
 

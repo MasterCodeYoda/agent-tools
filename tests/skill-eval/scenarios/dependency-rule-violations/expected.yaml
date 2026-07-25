@@ -1,4 +1,4 @@
-# Expected findings when running /workflow:audit-code against this scenario.
+# Expected findings when running /work:audit-code against this scenario.
 # Each entry maps to a specific planted issue in the code.
 # The evolve effectiveness loop checks: did the audit find these?
 

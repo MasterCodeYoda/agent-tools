@@ -1,4 +1,4 @@
-# Expected findings when running /workflow:audit-api against this scenario.
+# Expected findings when running /work:audit-api against this scenario.
 
 findings:
   - id: ADV-01

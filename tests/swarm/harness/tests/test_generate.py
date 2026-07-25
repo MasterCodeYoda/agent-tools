@@ -102,13 +102,13 @@ class GenerateTests(unittest.TestCase):
         from tests.swarm.harness.generate import format_next_step
         _make_fake_repo(self.tmp, with_charter=False)
         run = generate("demo", root=self.tmp, now=FIXED)
-        self.assertIn("/workflow:setup", format_next_step(run))
+        self.assertIn("/work:setup", format_next_step(run))
 
     def test_seeded_next_step_omits_init(self):
         from tests.swarm.harness.generate import format_next_step
         _make_fake_repo(self.tmp)
         run = generate("demo", root=self.tmp, now=FIXED)
-        self.assertNotIn("/workflow:setup", format_next_step(run))
+        self.assertNotIn("/work:setup", format_next_step(run))
 
     def test_next_step_exposes_parse_anchors(self):
         # The /swarm:test skill parses this output: the `Generated:` line gives the
@@ -120,7 +120,7 @@ class GenerateTests(unittest.TestCase):
         out = format_next_step(run)
         self.assertIn(f"Generated: {run}", out)
         self.assertIn(f"cd {run}", out)
-        self.assertIn("/workflow:continue", out)
+        self.assertIn("/work:continue", out)
         self.assertNotIn("  claude", out)  # block must stay agent-agnostic — no launcher binary
 
     def test_seedless_scenario_ok(self):

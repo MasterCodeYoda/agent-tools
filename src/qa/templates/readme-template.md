@@ -14,4 +14,4 @@ The 12 sections the generated Sentinel `README.md` must cover. Used by
 9. **Authoring Adapters** — Explain that `.claude/`, `.opencode/`, `.mcp.json`, and similar files are generated boilerplate from `/qa:setup`; project facts live in `sentinel.config.yaml`; rerun setup to regenerate adapters.
 10. **Common Workflows** — Adding a new test, investigating a failure, converting a fixme
 11. **Troubleshooting** — Common issues: overlay blocking, infrastructure port conflicts, stale bridge state
-12. **Sentinel Skills** — Table of `/qa:setup`, `/qa:discover` (drift via `/workflow:audit`)
+12. **Sentinel Skills** — Table of `/qa:setup`, `/qa:discover` (drift via `/work:audit`)

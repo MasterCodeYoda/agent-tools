@@ -137,14 +137,14 @@ Use when: complex rules, multi-team, long life, tech may change, testability cri
 
 ## Commands
 
-- `/workflow:audit` — architectural compliance (code/api domains)  
-- `/workflow:review` — dependency direction and layer compliance  
+- `/work:audit` — architectural compliance (code/api domains)  
+- `/work:review` — dependency direction and layer compliance  
 
 ## Related Skills
 
 - **code-patterns** — language implementation of these patterns  
 - **test-strategy** — testing methodology within layers  
-- **workflow** — vertical slicing / ordering in the workflow family  
+- **workflow** — vertical slicing / ordering in the work family  
 
 ## Credits
 

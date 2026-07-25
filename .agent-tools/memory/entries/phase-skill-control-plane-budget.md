@@ -5,8 +5,8 @@ type: process
 applicability: project
 related:
   - src/skills/references/thin-routing.md
-  - src/workflow/execution/SKILL.md
-  - src/workflow/planning/SKILL.md
+  - src/work/execution/SKILL.md
+  - src/work/planning/SKILL.md
   - entries/frontier-process-type-b-not-type-a.md
 promoted_at: 2026-07-25
 source_harness: null

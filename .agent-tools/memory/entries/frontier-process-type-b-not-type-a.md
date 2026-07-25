@@ -5,9 +5,9 @@ type: process
 applicability: project
 related:
   - src/skills/references/thin-routing.md
-  - src/workflow/references/model-runtime-policy.md
-  - src/workflow/references/context-engineering.md
-  - src/workflow/maintain/references/agents-hygiene.md
+  - src/work/references/model-runtime-policy.md
+  - src/work/references/context-engineering.md
+  - src/work/maintain/references/agents-hygiene.md
 promoted_at: 2026-07-25
 source_harness: null
 ---
@@ -25,7 +25,7 @@ research, progressive disclosure). Comparing the two is apples/oranges.
 
 - Provisional plans + listen-to-code reclassify (`PROBLEM_REFRAMED`, `DESIGN_FALSIFIED`, `HUMAN_STEER`)
 - Hard refuse one-liners instead of IMPORTANT/CRITICAL shouting
-- Thin always-on parents (especially bare `/workflow` for OpenCode command inject)
+- Thin always-on parents (especially bare `/work` for OpenCode command inject)
 - AGENTS.md orienting pointers only (maintain always-check hygiene with prune)
 - Sol-class high effort derails — runtime **≤ medium** for unattended (Hermes-first)
 
@@ -34,4 +34,4 @@ research, progressive disclosure). Comparing the two is apples/oranges.
 1. New process text: control flow, evidence, stop conditions — not model personality.  
 2. doc_lint `emphasis` guard on workflow/git/swarm/skills after decontaminate.  
 3. Effort ceilings in host/runtime (`model-runtime-policy.md`), not model ranking tables in skills.  
-4. Steward AGENTS via `/workflow:maintain` agents job — extract corrective sludge to memory/skills.  
+4. Steward AGENTS via `/work:maintain` agents job — extract corrective sludge to memory/skills.  

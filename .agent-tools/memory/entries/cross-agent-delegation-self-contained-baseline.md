@@ -13,7 +13,7 @@ source_harness: claude
 
 `tools/publish-skills.sh` is a static publish-time filter. Its only cross-agent lever is `agent:include` / `agent:exclude` markup. It gates content **by agent identity** (claude/grok/factory/codex) and strips comments. There is **no runtime skill-availability detection**.
 
-When a corpus skill wants to prefer-delegate to a companion skill (e.g. `/workflow:brainstorm` preferring an external brainstorming skill), handle two independent axes:
+When a corpus skill wants to prefer-delegate to a companion skill (e.g. `/work:brainstorm` preferring an external brainstorming skill), handle two independent axes:
 
 1. **Agent axis** — gate the delegation mention behind `agent:include` for agents that can load the companion; Factory/Codex cannot be assumed to have Claude plugins.
 2. **Plugin-presence axis** — even on Claude/Grok the companion may not be installed; phrase as conditional-on-availability ("if present, prefer…").

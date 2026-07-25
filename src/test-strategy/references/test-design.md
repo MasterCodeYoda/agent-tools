@@ -194,7 +194,7 @@ When the contract is known upfront — from an API spec, a requirements document
 | **Design role** | Tests drive the interface | Tests verify the interface |
 | **Refactoring** | Interface may evolve | Interface is stable |
 
-### Workflow
+### Work
 
 ```
 1. Read the specification (API doc, acceptance criteria, contract)

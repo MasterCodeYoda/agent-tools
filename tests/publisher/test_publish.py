@@ -12,7 +12,7 @@ Covered behaviors, one fixture each:
   - colon-named sub-skill flattening (claude/grok/factory only)
   - Codex nested-only layout (no flattened siblings)
   - OpenCode commands/ emission: colon sub-skills, bare family roots
-    (e.g. /workflow when family has colon children), leaf-as-command removal
+    (e.g. /work when family has colon children), leaf-as-command removal
     from skills/
 
 Stdlib unittest (no external deps) so it runs out-of-the-box via

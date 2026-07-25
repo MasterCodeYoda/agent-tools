@@ -1,4 +1,4 @@
-# Expected findings when running /workflow:audit-tests against this scenario.
+# Expected findings when running /work:audit-tests against this scenario.
 
 findings:
   - id: WTS-01

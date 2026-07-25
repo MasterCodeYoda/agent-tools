@@ -1,4 +1,4 @@
-# Expected findings when running /workflow:audit-code against this scenario.
+# Expected findings when running /work:audit-code against this scenario.
 
 findings:
   - id: CPV-01

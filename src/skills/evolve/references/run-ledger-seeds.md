@@ -12,7 +12,7 @@ corpus (evidence that the skill text is wrong/missing) before a proposal is writ
 |--------|----------------|
 | Events spine | `.agent-tools/runs/events.ndjson` |
 | Closed runs | `.agent-tools/runs/ledger.yml` |
-| Yield glance | `.agent-tools/runs/yield.md` (from `/workflow:maintain`) |
+| Yield glance | `.agent-tools/runs/yield.md` (from `/work:maintain`) |
 | Process memory | `.agent-tools/memory/entries/*` with `type: process` and `related:` run_ids |
 | Soft-checks | thrash_bound, review theater, missing compound (session-state) |
 
@@ -30,8 +30,8 @@ evidence:
 hypothesized_gap: |
   continue unit SM does not classify micro when label=bug
 candidate_skills:
-  - src/workflow/continue/references/unit-state-machine.md
-  - src/workflow/references/tracks.md
+  - src/work/continue/references/unit-state-machine.md
+  - src/work/references/tracks.md
 severity_guess: P1 | P2 | P3
 ```
 
@@ -54,5 +54,5 @@ severity_guess: P1 | P2 | P3
   # after compound process entry with related: [r-…]
 ```
 
-When seeds target workflow (incl. parallel mode), inventory **must** include `src/workflow/**` and
-`src/workflow/parallel/**` SKILL.md trees (not only `src/skills/`).
+When seeds target work family (incl. parallel mode), inventory **must** include `src/work/**` and
+`src/work/parallel/**` SKILL.md trees (not only `src/skills/`).

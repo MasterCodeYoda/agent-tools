@@ -1,4 +1,4 @@
-# Expected findings when running /workflow:audit --focus frontend against this scenario.
+# Expected findings when running /work:audit --focus frontend against this scenario.
 
 findings:
   - id: VDV-01

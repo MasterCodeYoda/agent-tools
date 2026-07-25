@@ -42,11 +42,11 @@ Skills replace repeatedly pasting the same instructions and help keep long proce
 
 | Surface | Detail |
 |---------|--------|
-| **Default mid-item reclaim** | **`/clear`** — clean session; then `/workflow:continue` (or execute continue) on same unit |
+| **Default mid-item reclaim** | **`/clear`** — clean session; then `/work:continue` (or execute continue) on same unit |
 | Optional stay-in-thread | `/compact [instructions]` with IC `compact_focus` |
 | Agent-invocable | **Usually no** — emit exact `host_command` in `workflow_reclaim` signal |
 | **End-of-item** | Handoff only — no reclaim protocol |
-| Hooks | Optional Stop + SessionStart(`clear`) — see @workflow `references/hooks/reclaim-hooks.md` |
+| Hooks | Optional Stop + SessionStart(`clear`) — see @work `references/hooks/reclaim-hooks.md` |
 | Do not | Skill named `compact`; claim agent ran `/clear` without user/orchestrator |
 
 ---
@@ -102,7 +102,7 @@ Skills replace repeatedly pasting the same instructions and help keep long proce
 - **2026-07 frontier:** Opus 5 / Fable 5 era — lean always-on text; avoid persistence cheerleading
   and emphasis theater. Prefer medium effort for long drive; high only with scope freeze.
   Process skills should stay Type B (gates, artifacts), not model-personality steering.
-  Effort policy: @workflow `references/model-runtime-policy.md` (runtime-owned).
+  Effort policy: @work `references/model-runtime-policy.md` (runtime-owned).
 
 ---
 

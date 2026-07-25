@@ -1,4 +1,4 @@
-# Expected findings when running /workflow:audit-frontend against this scenario.
+# Expected findings when running /work:audit-frontend against this scenario.
 
 findings:
   - id: FQV-01

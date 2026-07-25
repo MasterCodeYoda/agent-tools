@@ -198,12 +198,12 @@ Apply patterns starting with P1, verify each against its audit checklist, and mo
 
 ## Commands
 
-- `/workflow:audit` — Frontend domain references visual-design patterns for design polish assessment
+- `/work:audit` — Frontend domain references visual-design patterns for design polish assessment
 
 ## Related Skills
 
 - **code-patterns**: TypeScript/React component patterns complement visual design patterns
-- **audit**: Frontend audit domain (@workflow `audit/domains/frontend.md`) checks accessibility and UX completeness
+- **audit**: Frontend audit domain (@work `audit/domains/frontend.md`) checks accessibility and UX completeness
 
 ## Attribution
 

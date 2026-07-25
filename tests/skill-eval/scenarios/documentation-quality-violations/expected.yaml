@@ -1,4 +1,4 @@
-# Expected findings when running /workflow:audit-docs against this scenario.
+# Expected findings when running /work:audit-docs against this scenario.
 
 findings:
   - id: DQV-01

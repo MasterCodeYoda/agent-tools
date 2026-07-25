@@ -26,5 +26,5 @@ README.md       <- quick-reference guide
 1. **Discover features** — Run `/qa:discover` to create NL specs
 2. **Generate tests** — Use Playwright Planner/Generator to convert NL specs to .spec.ts
 3. **Run tests** — `npx playwright test` to execute generated tests
-4. **Audit drift** — Run `/workflow:audit` (qa domain) to check spec-test-app alignment (planned dedicated `/qa:audit`)
+4. **Audit drift** — Run `/work:audit` (qa domain) to check spec-test-app alignment (planned dedicated `/qa:audit`)
 ```

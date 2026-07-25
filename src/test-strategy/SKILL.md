@@ -11,9 +11,9 @@ A framework for selecting and applying the right testing approach for each situa
 
 Activate this skill when:
 
-- Executing work via `/workflow:execute` — testing integrates with the execution loop
+- Executing work via `/work:execute` — testing integrates with the execution loop
 - Writing tests for new functionality
-- Planning test strategy during `/workflow:plan`
+- Planning test strategy during `/work:plan`
 - Refactoring existing code while preserving behavior
 - Designing interfaces for testability
 - Evaluating test quality beyond coverage percentages
@@ -97,8 +97,8 @@ When the interface is unclear or tests should drive design, use TDD. **Load** `r
 
 ## Commands
 
-- `/workflow:audit` — test suite quality (tests domain)  
-- `/workflow:review` — test quality in reviews  
+- `/work:audit` — test suite quality (tests domain)  
+- `/work:review` — test quality in reviews  
 
 ## Related Skills
 

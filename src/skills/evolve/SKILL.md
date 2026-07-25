@@ -12,7 +12,7 @@ improve the canonical skills under `src/` (all families: workflow, swarm, git, s
 
 **Core principle:** Every proposed change must trace to a concrete, detected gap. No vibes-based
 rewrites. No style preferences. If there's no gap, there's no change. **Process IP**
-(workflow (incl. parallel mode)) changes only through this skill — never mid-loop from `/workflow:continue`.
+(work family incl. parallel mode) changes only through this skill — never mid-loop from `/work:continue`.
 
 **Completion is mandatory.** A run that stops at “present for review” or leaves
 `evolve/YYYY-MM-DD` unmerged is **incomplete**. Default end state: changes reviewed, merged to
@@ -45,7 +45,7 @@ Gap Report findings with file evidence — still no proposal without a corpus mi
 Based on inventory size:
 - **Standard** (current repo size): Run all tiers automatically
 - **If repo grows significantly**: Run Tier 1 automatically, prompt before Tier 2/3
-- **Process-seed run**: Always include `src/workflow/**` and `src/workflow/parallel/**` even if narrowing
+- **Process-seed run**: Always include `src/work/**` and `src/work/parallel/**` even if narrowing
   other families
 
 ## Agent Reasoning Standards
@@ -270,7 +270,7 @@ history left at pending after the session ends, or “hand off for later” with
 1. **History draft** — Append `history.md` entry for this run (score, iterations, branch, key
    changes, recommendations). Set **Status**: `in review` while landing. Commit on the evolve
    branch.
-2. **Review** — Run `@workflow:review` on `main...HEAD` (standard depth unless the diff is
+2. **Review** — Run `@work:review` on `main...HEAD` (standard depth unless the diff is
    tiny → quick). Emit a real verdict + evidence when integration-ready. Do not treat green
    `doc_lint` alone as reviewed.
 3. **Remediate if needed** — On REQUEST CHANGES or unresolved findings: fix on the evolve
@@ -314,10 +314,10 @@ complete without merge.
 - Uses agent capability quick-references from `src/skills/references/agents/`
 - Uses the embedded markup system defined in `src/skills/references/MARKUP.md` when proposing portable changes
 - Operates under the `skills` meta-skill (`src/skills/SKILL.md`)
-- **Review / land:** `@workflow:review` for the branch gate; git merge (or project PR flow) +
+- **Review / land:** `@work:review` for the branch gate; git merge (or project PR flow) +
   branch delete for land — same completion bar as above
-- **Run ledger / process lessons:** `@workflow` `references/runs-ledger.md`, compound `type: process`
+- **Run ledger / process lessons:** `@work` `references/runs-ledger.md`, compound `type: process`
   entries, `references/run-ledger-seeds.md` — seeds in; proposals out only via this skill
-- **Process payload** (what runtimes must honor): `@workflow` `references/process-payload.md`
+- **Process payload** (what runtimes must honor): `@work` `references/process-payload.md`
 - **History log:** `history.md` in this skill directory — append-only run record; status must
   reflect the true terminal state (`merged` / `aborted` / dry-run note)

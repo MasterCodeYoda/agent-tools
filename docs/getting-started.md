@@ -17,7 +17,7 @@ it detects on your machine. Re-run it any time after pulling changes — it's id
 prunes any skills it previously installed that no longer exist. (OpenCode command symlinks
 are not yet pruned automatically.)
 
-Open your agent and type `/` — you should see families like `/workflow`, `/git`, `/qa`
+Open your agent and type `/` — you should see families like `/work`, `/git`, `/qa`
 in the slash menu.
 
 ## 2. What you just installed
@@ -27,7 +27,7 @@ Two kinds of skills:
 - **Knowledge skills** load on demand when relevant — `clean-architecture`,
   `code-patterns`, `test-strategy`, `visual-design`, `use-browser`. You don't invoke
   these; the agent pulls them in when the work calls for them.
-- **Process skills** are commands you invoke — the `workflow` family is the core loop,
+- **Process skills** are commands you invoke — the `work` family is the core loop,
   `git` for commits/PRs/worktrees, `qa` for NL-spec testing, `product` for positioning
   work.
 
@@ -39,7 +39,7 @@ project directory, in your agent:
 **Refine** — turn the idea into concrete requirements:
 
 ```
-/workflow:refine add a --json flag that emits machine-readable output
+/work:refine add a --json flag that emits machine-readable output
 ```
 
 The skill interviews you briefly (what's in scope, what's not, acceptance criteria) and
@@ -50,7 +50,7 @@ issue instead). Refine prints the path it saved — use that path in the next tw
 **Plan** — turn requirements into an implementation plan:
 
 ```
-/workflow:plan ./planning/add-json-flag/
+/work:plan ./planning/add-json-flag/
 ```
 
 You get a task breakdown, technical decisions, and a testing strategy — and a hard
@@ -59,7 +59,7 @@ approval gate: nothing is saved or executed until you approve.
 **Execute** — do the work with session tracking:
 
 ```
-/workflow:execute ./planning/add-json-flag/
+/work:execute ./planning/add-json-flag/
 ```
 
 The agent works the plan task-by-task, runs tests as it goes, updates
@@ -69,17 +69,17 @@ this one stopped, and commits per completed slice.
 **Review and finish**:
 
 ```
-/workflow:review main..HEAD
+/work:review main..HEAD
 ```
 
 Multi-lens review with P1/P2/P3 findings. Fix what's real, then merge. Afterwards,
-`/workflow:compound` captures anything you learned into project memory so the next
+`/work:compound` captures anything you learned into project memory so the next
 piece of work starts smarter.
 
-**Check status without driving:** bare `/workflow` scans `planning/`, surfaces soft signals,
+**Check status without driving:** bare `/work` scans `planning/`, surfaces soft signals,
 and previews what continue would do — then stops.
 
-**Or let the loop drive itself:** `/workflow:continue` orients from `planning/`, picks the
+**Or let the loop drive itself:** `/work:continue` orients from `planning/`, picks the
 next known work, and drives it — either a single slice through the phase state machine
 (refine ⇄ plan ⇄ execute ⇄ review, with re-entry when evidence requires) or, when the
 roadmap marks an explicit `∥` wave at the head and parallel mode is ready (charter + config
@@ -88,13 +88,13 @@ input is genuinely required (plan approval, review triage, merge, path not estab
 
 ## 4. Where to go next
 
-- **Orient first**: `/workflow` for a read-only portfolio glance; `/workflow:continue` when
+- **Orient first**: `/work` for a read-only portfolio glance; `/work:continue` when
   you want the agent to claim and drive.
-- **Scale up**: prefer `/workflow:continue` once the roadmap uses `∥` / `{wave}` groups;
+- **Scale up**: prefer `/work:continue` once the roadmap uses `∥` / `{wave}` groups;
   continue enters parallel mode for you. A multi-item goal in continue args also forces
-  parallel mode. Run `/workflow:setup` once per project first (planning + charter + parallel
+  parallel mode. Run `/work:setup` once per project first (planning + charter + parallel
   readiness).
-- **Teach it your project**: `/workflow:setup` records project-local conventions
+- **Teach it your project**: `/work:setup` records project-local conventions
   (tracks, gates, merge policy) and the charter that every later command can honor.
 - **Test with natural-language specs**: `/qa:setup` wires Playwright Test Agents;
   `/qa:discover` authors specs by scanning your app.

@@ -1,6 +1,6 @@
 ---
 name: swarm:test
-description: Drive or analyze a parallel-mode test-harness run (tests/swarm/). Given a scenario name, generate a fresh run and hand off the orchestrator step via /workflow:continue; given a completed run-dir, check hard invariants, judge observations against role logs, cluster recurring issues, and produce evidence-linked seeds for /skills:evolve. Project-scoped repo-development tool for agent-tools.
+description: Drive or analyze a parallel-mode test-harness run (tests/swarm/). Given a scenario name, generate a fresh run and hand off the orchestrator step via /work:continue; given a completed run-dir, check hard invariants, judge observations against role logs, cluster recurring issues, and produce evidence-linked seeds for /skills:evolve. Project-scoped repo-development tool for agent-tools.
 publish-target: project
 user-invocable: true
 argument-hint: "<scenario to start a run, or run-dir to analyze>"
@@ -13,7 +13,7 @@ a generated run directory whose orchestrator pass has completed, it turns the pe
 **role logs** into evidence-linked seeds for `/skills:evolve`.
 
 It is a repo-development tool for **this repo only** (`publish-target: project`), so it freely
-references repo paths (`tests/swarm/...`, `src/workflow/parallel/...`).
+references repo paths (`tests/swarm/...`, `src/work/parallel/...`).
 
 **Core principle (from evolve):** every seed traces to a concrete, cited gap in the run
 evidence. No vibes-based rewrites, no style preferences. If there is no gap, there is no seed.
@@ -56,14 +56,14 @@ bare scenario name can never collide with a run dir.
 
    Next: run from the generated repo:
      cd <run-dir>
-     /workflow:continue  # multi-item goal from backlog.md / roadmap wave
+     /work:continue  # multi-item goal from backlog.md / roadmap wave
 
    Then analyze the run:
      /swarm:test <run-dir>
    ```
 
-   For **init-first** scenarios the middle block lists two prompts (`/workflow:setup`, then
-   `/workflow:continue` with the multi-item goal). Parse the run-dir from the `Generated:` line and keep it in context.
+   For **init-first** scenarios the middle block lists two prompts (`/work:setup`, then
+   `/work:continue` with the multi-item goal). Parse the run-dir from the `Generated:` line and keep it in context.
 
 2. Hand off to the user. The generator's block is **already agent-agnostic** (just `cd` +
    slash commands — no launcher binary like `claude`), matching the convention in other `src/`
@@ -75,10 +75,10 @@ bare scenario name can never collide with a run dir.
    > ```
    > Start your agent there and send this prompt:
    > ```
-   > /workflow:continue
+   > /work:continue
    > ```
    > with a multi-item goal (e.g. contents of `backlog.md` or the scenario wave). Init-first:
-   > send `/workflow:setup` first, let it finish, then continue into parallel mode.
+   > send `/work:setup` first, let it finish, then continue into parallel mode.
 
    Explain why a separate terminal: parallel mode is an interactive agent session that
    dispatches sub-agents — this conversation can't run it or background it, and running it
@@ -137,7 +137,7 @@ the evidence, and cite it (file paths, dispatch log names, `state.yml` fields,
 
 - "conflict-resolver fired" → a `conflict-resolver-*.md` dispatch log exists; corroborated by
   `observations.by_role`.
-- "host-side refinement happened" → `orchestrator.md` records a `/workflow:refine` step for
+- "host-side refinement happened" → `orchestrator.md` records a `/work:refine` step for
   the unrefined item; the item's stage advanced past `unrefined`.
 - "review fix loop" → an `implementer-2.md` exists after a `reviewer-1.md` returning
   `FIX_REQUESTED`.
@@ -171,7 +171,7 @@ detects role/process evidence; it does not independently mutate canonical proces
 
 1. **One clustered gap per seed.** Do not combine unrelated role failures.
 2. **Evidence-linked** — include run id + specific dispatch logs and the candidate
-   `src/workflow/parallel/**` / `src/workflow/**` skill paths.
+   `src/work/parallel/**` / `src/work/**` skill paths.
 3. **Corpus-neutral** — describe the symptom and hypothesized gap, not a preselected patch.
 4. **Clustered** — prefer repeated evidence; a single hard-invariant failure may stand alone.
 5. **No direct process edit** — `/skills:evolve` must locate the corpus mismatch, check
@@ -185,7 +185,7 @@ the seed instead of narrowing it to an apparently easy role-file edit.
 1. Present the invariant results (FAILs first), checklist verdicts, clusters, and seeds with
    their evidence.
 2. Offer to run `/skills:evolve` with the approved seeds. If it changes canonical content,
-   re-run `generate` + a fresh `/workflow:continue` parallel pass afterward to close the loop.
+   re-run `generate` + a fresh `/work:continue` parallel pass afterward to close the loop.
 3. Write the run report to `<run-dir>/analysis.md`:
 
 ```markdown

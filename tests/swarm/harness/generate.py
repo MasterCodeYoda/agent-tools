@@ -3,7 +3,7 @@
 This is the first bookend of the harness. It lays down the scenario's seed
 sources, charter, swarm config, the *current* canonical role templates, and the
 backlog, then initialises a real git repo with a `main` branch and an initial
-commit — leaving a project that is ready for an agent to run `/workflow:continue` (parallel multi-item goal)
+commit — leaving a project that is ready for an agent to run `/work:continue` (parallel multi-item goal)
 against.
 
 Dependency-free (stdlib only). Pure file/git operations; no YAML parsing.
@@ -94,7 +94,7 @@ def generate(
 
     # Bootstrap mode is keyed on whether the scenario ships a charter:
     #   charter/ present  → SEEDED: generate writes the full .agent-tools/ umbrella.
-    #   charter/ absent   → INIT-FIRST: bare repo; the run begins with /workflow:setup, which
+    #   charter/ absent   → INIT-FIRST: bare repo; the run begins with /work:setup, which
     #                       authors the charter + umbrella + roles itself.
     charter_src = scenario_dir / "charter"
     seeded = charter_src.is_dir()
@@ -127,7 +127,7 @@ def generate(
     shutil.copy2(backlog_src, run_dir / "backlog.md")
 
     # 3. .agent-tools umbrella — only in SEEDED mode. In init-first mode the repo is left
-    #    bare; /workflow:setup authors the umbrella when the run begins.
+    #    bare; /work:setup authors the umbrella when the run begins.
     if seeded:
         agent_tools = run_dir / ".agent-tools"
         shutil.copytree(charter_src, agent_tools / "charter")
@@ -158,12 +158,12 @@ def format_next_step(run_dir: Path) -> str:
     run_steps = f"  cd {run_dir}\n"
     if init_first:
         run_steps += (
-            "  /workflow:setup          # bare repo: author the charter + umbrella first\n"
-            "  /workflow:continue    # multi-item goal (e.g. backlog.md wave)\n"
+            "  /work:setup          # bare repo: author the charter + umbrella first\n"
+            "  /work:continue    # multi-item goal (e.g. backlog.md wave)\n"
         )
     else:
         run_steps += (
-            "  /workflow:continue    # multi-item goal (e.g. backlog.md wave)\n"
+            "  /work:continue    # multi-item goal (e.g. backlog.md wave)\n"
         )
     return (
         f"Generated: {run_dir}\n\n"

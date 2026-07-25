@@ -209,8 +209,8 @@ cargo mutants $(git diff --name-only main -- '*.rs' | sed 's/^/--file /')
 
 ### When to Run
 
-- **During `/workflow:execute`**: On each vertical slice, mutate the domain files you changed
-- **During `/workflow:audit --focus tests`**: On the targeted scope (directory or file glob)
+- **During `/work:execute`**: On each vertical slice, mutate the domain files you changed
+- **During `/work:audit --focus tests`**: On the targeted scope (directory or file glob)
 - **In CI**: As a PR gate on domain/critical paths only — not infrastructure or framework layers
 
 ## Mutation Score Thresholds

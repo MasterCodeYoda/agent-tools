@@ -1,4 +1,4 @@
-# Project Workflow Conventions
+# Project Work Conventions
 
 ## Requirements source
 
@@ -6,7 +6,7 @@ File mode default for agent-tools corpus work unless an issue key is given.
 
 ## Integration / merge policy
 
-**Autonomous local merge is authorized** for `/workflow:continue` (and the same standard
+**Autonomous local merge is authorized** for `/work:continue` (and the same standard
 for standalone execute→finish) when **all** of the following hold:
 
 1. Review completed with **valid evidence** (method, date, verdict, P1–P3 counts, disposition)

@@ -1,4 +1,4 @@
-# Expected findings when running /workflow:audit --focus tests against this scenario.
+# Expected findings when running /work:audit --focus tests against this scenario.
 # The scrap-analyst agent should detect all planted SCRAP violations.
 
 findings:

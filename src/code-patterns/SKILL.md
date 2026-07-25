@@ -115,8 +115,8 @@ For detailed language-specific patterns (loaded on request only):
 
 ## Commands
 
-- `/workflow:audit` — Audit production code against these patterns (code and frontend domains)
-- `/workflow:review` — Code review references these patterns for quality assessment
+- `/work:audit` — Audit production code against these patterns (code and frontend domains)
+- `/work:review` — Code review references these patterns for quality assessment
 
 ## Related Skills
 

@@ -239,7 +239,7 @@ Examples:
 ## Related Skills
 
 - **workflow** — Personify complements session continuity and `planning/conventions.md` (process; not voice).
-- **workflow** — Use after `/workflow:setup` for communication preferences (including parallel mode).
+- **workflow** — Use after `/work:setup` for communication preferences (including parallel mode).
 - **skills** — The personify skill itself can be evolved like other skills.
 
 ## References

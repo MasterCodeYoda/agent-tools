@@ -23,7 +23,7 @@ and the complete Claude Code session history under
   (`orchestrator.md:49-55`; 2 resolver returns recovered from transcript).
 - `host-refinement`: **satisfied** — CTM-4 entered `unrefined`; orchestrator refined host-side,
   wrote `planning/CTM-4/requirements.md`, advanced `unrefined→refined` (`orchestrator.md:32-34`).
-  Note: the log describes the refinement decisions but does not name a `/workflow:refine`
+  Note: the log describes the refinement decisions but does not name a `/work:refine`
   invocation explicitly.
 - `integration-fixer-fires`: **not satisfied** — the CTM-5 planner pre-empted the intended
   empty-store divide-by-zero with an `if total==0` early return (`orchestrator.md:60,63`), so the

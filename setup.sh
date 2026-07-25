@@ -139,7 +139,7 @@ create_symlink() {
 
 # Extract publish-target from a skill's SKILL.md (defaults to user-profile)
 get_publish_target() {
-    local skill_path="$1"          # e.g. dist/claude/skills/workflow or src/...
+    local skill_path="$1"          # e.g. dist/claude/skills/work or src/...
     local skill_md="${skill_path}/SKILL.md"
 
     if [ -f "$skill_md" ]; then
@@ -214,7 +214,7 @@ remove_managed_skill_entry() {
 install_skill() {
     local agent="$1"               # claude, grok, factory, hermes, codex, opencode
     local skill_name="$2"          # e.g. "workflow", "skills"
-    local source_skill_dir="$3"    # e.g. dist/claude/skills/workflow
+    local source_skill_dir="$3"    # e.g. dist/claude/skills/work
 
     local publish_target
     publish_target=$(resolve_skill_publish_target "$agent" "$skill_name" "$source_skill_dir")

@@ -9,7 +9,7 @@ code are authoritative).
 
 ## Why a harness (and not a `pytest`)
 
-parallel mode via `/workflow:continue` is **agent-driven** — running it means an agent interprets the skill,
+parallel mode via `/work:continue` is **agent-driven** — running it means an agent interprets the skill,
 dispatches sub-agents, makes IN_FLIGHT decisions, and runs host-side refinement with a human.
 It is not a deterministic function a test runner can call and await. So the harness uses a
 **bookends** model: deterministic Python on each side, with the agent-driven parallel-mode run in
@@ -47,7 +47,7 @@ generate  →  [agent runs /swarm]  →  analyze
    A separate session is required: `/swarm` is agent-driven — it interprets the skill,
    dispatches sub-agents, and makes in-flight decisions — so it can't be run or backgrounded
    from the analysis session, and it must run in the generated repo's working directory.
-   Init-first scenarios begin with `/workflow:setup` before `/swarm backlog.md`. This produces
+   Init-first scenarios begin with `/work:setup` before `/swarm backlog.md`. This produces
    per-dispatch session logs under
    `.agent-tools/parallel/sessions/<run-id>/<item>/<role>-<n>.md`.
 
@@ -55,7 +55,7 @@ generate  →  [agent runs /swarm]  →  analyze
    `/swarm:test <run-dir>`). Either way `/swarm:test` confirms the run finished, then runs the
    deterministic `ingest` (logs → `observations.json`), checks the scenario's hard invariants
    (loud fail on violation), judges the observation checklist with citations, clusters issues,
-   and produces evidence-linked evolution seeds with candidate `src/workflow/parallel/**` / `src/workflow/**`
+   and produces evidence-linked evolution seeds with candidate `src/work/parallel/**` / `src/work/**`
    paths. The run report is written to
    `tests/swarm/runs/<run-dir>/analysis.md`.
 
@@ -108,8 +108,8 @@ Create `tests/swarm/scenarios/<name>/` with:
     when you want a *controlled, repeatable* orchestrator input (the common case — e.g.
     `cli-task-manager`).
   - **absent → init-first:** `generate` produces a **bare** repo (no `.agent-tools/`). The run
-    begins with `/workflow:setup`, which detects the stack, authors the charter, and bootstraps
-    the umbrella itself. Use this to exercise `/workflow:setup` (e.g. `greenfield-init`). Note the
+    begins with `/work:setup`, which detects the stack, authors the charter, and bootstraps
+    the umbrella itself. Use this to exercise `/work:setup` (e.g. `greenfield-init`). Note the
     charter then varies run-to-run, so it's a less controlled input — keep these scenarios
     focused on init + a simple orchestrator pass.
 - `seed/` — initial application sources, including any files deliberately engineered to force

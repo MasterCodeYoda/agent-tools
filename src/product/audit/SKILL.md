@@ -138,7 +138,7 @@ Spawn 3 parallel agents that read product-facing artifacts + research context:
 Spawn 3 parallel agents:
 
 **developer-experience-auditor** (runs if developer-facing product detected):
-- For API design correctness (REST conventions, schema completeness, security), defer to `/workflow:audit --focus api`. This agent focuses on the *onboarding and adoption path*, not API design quality.
+- For API design correctness (REST conventions, schema completeness, security), defer to `/work:audit --focus api`. This agent focuses on the *onboarding and adoption path*, not API design quality.
 - Trace the zero-to-value path: install → configure → first success — how many steps? (Flag if > 5 steps)
 - Is the quickstart copy-pasteable and does it produce a visible result?
 - Are prerequisites stated upfront (runtime versions, dependencies, accounts)?
@@ -183,7 +183,7 @@ Spawn 2 parallel agents:
 - Technical due diligence lens: what would an acquirer or investor flag from readable artifacts?
 - Is the product differentiation defensible against well-resourced competitors?
 - Does the documentation quality suggest a mature or early-stage organization?
-- For technical debt signals that would concern a buyer, reference `/workflow:audit --focus code` findings rather than duplicating analysis here
+- For technical debt signals that would concern a buyer, reference `/work:audit --focus code` findings rather than duplicating analysis here
 - Is the product story coherent from README to architecture to deployment?
 - Is the codebase organized with clear separation of concerns, consistent patterns, and documentation that would enable a new engineer to navigate it independently?
 - Overall narrative: is there a clear, compelling story from problem → solution → traction → scale?
@@ -196,7 +196,7 @@ Produce a prioritized findings report (tiers 1–3 analysis). For actionable nex
 
 ## Integration Points
 
-Division of labor with `/workflow:audit` focus areas:
+Division of labor with `/work:audit` focus areas:
 
 | Focus | audit-product examines | The focus agent examines | Why both matter |
 |---|---|---|---|
@@ -209,8 +209,8 @@ Division of labor with `/workflow:audit` focus areas:
 
 Beyond audit focuses:
 
-- **/workflow:plan and /workflow:refine** — Product audit findings can inform requirements refinement and planning — P1/P2 findings become inputs for the next planning cycle.
-- **/workflow:compound** — Product audit insights about positioning, messaging, and competitive stance are excellent candidates for knowledge capture via compound.
+- **/work:plan and /work:refine** — Product audit findings can inform requirements refinement and planning — P1/P2 findings become inputs for the next planning cycle.
+- **/work:compound** — Product audit insights about positioning, messaging, and competitive stance are excellent candidates for knowledge capture via compound.
 
 ## References
 

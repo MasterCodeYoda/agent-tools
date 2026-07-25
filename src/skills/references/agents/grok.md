@@ -39,11 +39,11 @@ Grok Build (xAI) uses a flexible **skills** system where skills are folders cont
 
 | Surface | Detail |
 |---------|--------|
-| **Default mid-item reclaim** | **`/new`** (alias `/clear`) — then `/workflow:continue` on same unit |
+| **Default mid-item reclaim** | **`/new`** (alias `/clear`) — then `/work:continue` on same unit |
 | Optional stay-in-thread | `/compact [context]` with IC `compact_focus`; auto-compact ≠ protocol |
 | Agent-invocable | **Usually no** — emit `workflow_reclaim` + exact `host_command` |
 | **End-of-item** | Handoff only |
-| Hooks | Stop + SessionStart — @workflow `references/hooks/reclaim-hooks.md`; Stop has `lastAssistantMessage` |
+| Hooks | Stop + SessionStart — @work `references/hooks/reclaim-hooks.md`; Stop has `lastAssistantMessage` |
 | Do not | Skill named `compact`; fake auto-`/new` from shell hooks |
 
 ---

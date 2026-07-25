@@ -1,7 +1,7 @@
 # Project memory index
 
 Agent working knowledge for this repo (patterns, gotchas, lessons, debugging solutions).
-Maintained by `/workflow:compound`. Not a substitute for ADRs, CONTRIBUTING, or Codex/domain docs.
+Maintained by `/work:compound`. Not a substitute for ADRs, CONTRIBUTING, or Codex/domain docs.
 
 ## Entries
 

@@ -1,4 +1,4 @@
-# Output quality criteria for /workflow:plan.
+# Output quality criteria for /work:plan.
 # Unlike detection scenarios, these define what the OUTPUT must contain
 # (or must not contain) rather than what planted issues to detect.
 

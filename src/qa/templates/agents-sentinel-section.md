@@ -16,7 +16,7 @@ This project uses Sentinel for NL spec-driven QA testing with Playwright Test Ag
 
 - `/qa:setup` — Initialize Sentinel (already done)
 - `/qa:discover` — Scan app and author NL specs
-- Drift detection via `/workflow:audit` (qa domain)
+- Drift detection via `/work:audit` (qa domain)
 
 ### Running Tests
 ```

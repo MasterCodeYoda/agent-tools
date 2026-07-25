@@ -106,8 +106,8 @@ Skills work in the Codex app, CLI, and IDE extension.
 - **2026-07 frontier (Sol / GPT-5.6):** High reasoning effort frequently derails task-bound
   coding (nit-chasing, scope freelancing, multi-day non-completion). Default **≤ medium** for
   implementer work; hard-cap medium for unattended. OpenAI lean-prompt guidance: strip
-  5.5-era persistence scaffolds — they can worsen overstep. See @workflow
-  @workflow (`references/model-runtime-policy.md`). Do not put model leaderboards in process skills.
+  5.5-era persistence scaffolds — they can worsen overstep. See @work
+  @work (`references/model-runtime-policy.md`). Do not put model leaderboards in process skills.
 
 ---
 

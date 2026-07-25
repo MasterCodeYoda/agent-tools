@@ -144,13 +144,13 @@ Use `<REPO_ROOT>/.codex/worktrees/<name>` as the path.
 
 <!-- /agent:include codex -->
 
-This is the same pattern used by @workflow (execution) for entering existing worktrees. It switches the Bash working directory for subsequent commands without disrupting other sessions.
+This is the same pattern used by @work (execution) for entering existing worktrees. It switches the Bash working directory for subsequent commands without disrupting other sessions.
 
 **Do not use any agent-specific "enter worktree" tool** that auto-creates from HEAD — always use explicit `git worktree` commands so you can control the base ref and target directory (see the agent blocks above for the correct path pattern).
 
 ## Phase 3 — Establish Dependencies
 
-Restore project dependencies so the worktree is ready to work immediately. Follow the procedure in @workflow (dependency establishment):
+Restore project dependencies so the worktree is ready to work immediately. Follow the procedure in @work (dependency establishment):
 
 1. **Detect tooling** from lock files in the worktree root (Node.js and Python ecosystems)
 2. **Copy dependency caches** from `$REPO_ROOT` (Node.js only, non-pnpm — uses COW clones where available)

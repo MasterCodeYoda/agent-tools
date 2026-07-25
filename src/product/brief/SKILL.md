@@ -83,6 +83,6 @@ Brief consumes the positioning document. Position decides what to say; brief dec
 
 After generating content and applying it to the project, run audit to verify the new content is consistent across all surfaces.
 
-### With /workflow:execute
+### With /work:execute
 
 README and comparison page content can be applied to the project as implementation tasks via execute.

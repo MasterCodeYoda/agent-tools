@@ -123,13 +123,13 @@ Initialize Sentinel in a project. Creates directory structure, config file, Play
 ### `/qa:discover`
 Author NL specs by scanning the app, importing existing docs, or guided interactive conversation. Outputs structured markdown NL specs ready for Playwright's Planner.
 
-**Drift detection** (specs vs. generated tests vs. app behavior) is performed by `/workflow:audit` (qa domain). A dedicated `/qa:audit` command is referenced in some docs but is not yet implemented as a standalone leaf skill.
+**Drift detection** (specs vs. generated tests vs. app behavior) is performed by `/work:audit` (qa domain). A dedicated `/qa:audit` command is referenced in some docs but is not yet implemented as a standalone leaf skill.
 
 ## Related Skills
 
 - **test-strategy**: Testing methodology and strategy selection. **E2E boundary**: qa owns NL spec authoring and Playwright pipeline for E2E tests; test-strategy owns testing philosophy, strategy selection, and unit/integration test design. When deciding *what* E2E scenarios to write, consult qa. When deciding *how* to design test assertions and structure, consult test-strategy.
 - **use-browser**: Browser automation tools used by qa:discover for app scanning
-- **audit**: QA coverage domain (@workflow `audit/domains/qa.md`) audits spec completeness and drift
+- **audit**: QA coverage domain (@work `audit/domains/qa.md`) audits spec completeness and drift
 
 ## References
 

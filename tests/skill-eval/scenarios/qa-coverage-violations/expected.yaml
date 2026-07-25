@@ -1,4 +1,4 @@
-# Expected findings when running /workflow:audit --focus qa against this scenario.
+# Expected findings when running /work:audit --focus qa against this scenario.
 
 findings:
   - id: QCV-01

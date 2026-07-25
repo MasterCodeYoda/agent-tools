@@ -65,5 +65,5 @@ Write `./planning/positioning.md` using **`templates/positioning-doc.md`** (load
 
 - **`/product:audit`** — assess gaps then re-audit after positioning  
 - **`/product:brief`** — content generation from positioning doc  
-- **`/workflow:plan`** — feature gaps from claims vs codebase  
-- **`/workflow:compound`** — capture competitive research findings  
+- **`/work:plan`** — feature gaps from claims vs codebase  
+- **`/work:compound`** — capture competitive research findings  

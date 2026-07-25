@@ -1,4 +1,4 @@
-# Expected findings when running /workflow:review against this diff scenario.
+# Expected findings when running /work:review against this diff scenario.
 # The scenario simulates a changeset (new file additions) that a standard
 # depth review should flag.
 
@@ -11,7 +11,7 @@ findings:
       User input interpolated directly into SQL query string.
       Classic SQL injection vulnerability — attacker can exfiltrate
       or modify database contents.
-    skill_pattern: "workflow:review — security-sentinel: Injection vulnerabilities"
+    skill_pattern: "work:review — security-sentinel: Injection vulnerabilities"
     agent: security-sentinel
 
   - id: RMI-02
@@ -21,7 +21,7 @@ findings:
     description: >
       API key hardcoded as a string literal in source code. Will be
       committed to version control and visible in git history.
-    skill_pattern: "workflow:review — security-sentinel: Sensitive data handling"
+    skill_pattern: "work:review — security-sentinel: Sensitive data handling"
     agent: security-sentinel
 
   - id: RMI-03
@@ -32,7 +32,7 @@ findings:
       Loop issues one database query per user to fetch orders.
       With 1000 users this produces 1001 queries instead of 2.
       Classic N+1 query pattern.
-    skill_pattern: "workflow:review — performance-oracle: N+1 queries"
+    skill_pattern: "work:review — performance-oracle: N+1 queries"
     agent: performance-oracle
 
   - id: RMI-04
@@ -43,7 +43,7 @@ findings:
       File opened without context manager (with statement). If an
       exception occurs between open() and close(), the file handle
       leaks.
-    skill_pattern: "workflow:review — performance-oracle: Resource leaks"
+    skill_pattern: "work:review — performance-oracle: Resource leaks"
     agent: performance-oracle
 
   - id: RMI-05
@@ -54,7 +54,7 @@ findings:
       Database query executed directly in the route handler
       (framework layer). Queries belong in infrastructure layer
       via repository pattern.
-    skill_pattern: "workflow:review — architecture-strategist: Layer violations"
+    skill_pattern: "work:review — architecture-strategist: Layer violations"
     agent: architecture-strategist
 
   - id: RMI-06
@@ -64,7 +64,7 @@ findings:
     description: >
       New report generation logic added with no corresponding test
       file. Changed logic should have test coverage.
-    skill_pattern: "workflow:review — test-reviewer: Test coverage for changed code"
+    skill_pattern: "work:review — test-reviewer: Test coverage for changed code"
     agent: test-reviewer
 
   - id: RMI-07
@@ -85,5 +85,5 @@ findings:
     description: >
       print() debug statements left in production code. Should use
       structured logging or be removed before merge.
-    skill_pattern: "workflow:review — code-quality-reviewer: Obvious bugs or issues"
+    skill_pattern: "work:review — code-quality-reviewer: Obvious bugs or issues"
     agent: code-quality-reviewer

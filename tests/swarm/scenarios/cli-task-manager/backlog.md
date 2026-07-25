@@ -68,7 +68,7 @@ Build the foundation the commands depend on.
 
 We want users to be able to find tasks. Make search work.
 
-_(Deliberately vague — the orchestrator should run host-side `/workflow:refine` to turn this
+_(Deliberately vague — the orchestrator should run host-side `/work:refine` to turn this
 into concrete acceptance criteria before planning it.)_
 
 **Dependencies:**

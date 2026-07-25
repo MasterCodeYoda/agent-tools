@@ -137,8 +137,8 @@ get_declared_name() {
 }
 
 # After a grouped package has been published (e.g. dist/.../skills/git/),
-# look for any leaf sub-skills whose name contains a colon (git:commit, workflow:refine, etc.)
-# and also publish them as top-level skills using hyphen as separator (git-commit, workflow-refine).
+# look for any leaf sub-skills whose name contains a colon (git:commit, work:refine, etc.)
+# and also publish them as top-level skills using hyphen as separator (git-commit, work-refine).
 # This allows both the group overview (/git) and direct sub-commands (/git-commit) to appear.
 #
 # IMPORTANT: only used for agents whose discovery walks *only* direct children of skills/
@@ -147,7 +147,7 @@ get_declared_name() {
 # (it uses the separate commands/ mechanism instead).
 emit_flattened_leaves() {
     local agent="$1"
-    local package="$2"          # e.g. "git", "workflow"
+    local package="$2"          # e.g. "git", "work"
     local group_dir="$3"        # e.g. dist/claude/skills/git
 
     for leaf_dir in "$group_dir"/*/; do
@@ -216,9 +216,9 @@ write_opencode_command() {
 # Emit native command definitions for OpenCode.
 # OpenCode keeps "skills" (on-demand via the skill tool) and "commands" (explicit /slash
 # triggers) as separate things. We emit:
-#   1. Colon sub-skills (workflow:continue → workflow-continue)
-#   2. Bare family roots that have colon-named children (workflow, git, …) so
-#      /workflow and /git are real slash commands — not fuzzy-matched onto *-continue
+#   1. Colon sub-skills (work:continue → work-continue)
+#   2. Bare family roots that have colon-named children (work, git, …) so
+#      /work and /git are real slash commands — not fuzzy-matched onto *-continue
 #   3. Special leaf invocables (personify, use-browser)
 # Family roots stay in skills/ (nested refs + skill-tool load). Leaves and
 # colon-named top-level dirs are removed from skills/ after emission (see publish loop).
@@ -259,7 +259,7 @@ emit_commands_for_opencode() {
                 fi
             done
 
-            # Bare family root (e.g. /workflow, /git) when it has colon-named children
+            # Bare family root (e.g. /work, /git) when it has colon-named children
             local top_md="${top}/SKILL.md"
             if [ -f "$top_md" ] && $has_colon_sub; then
                 local top_declared
@@ -295,7 +295,7 @@ emit_commands_for_opencode() {
         local top_md="${top_dir}/SKILL.md"
         local has_colon_sub=false
 
-        # Direct children with colon names (e.g. workflow/continue → workflow-continue)
+        # Direct children with colon names (e.g. work/continue → work-continue)
         for sub_dir in "$top_dir"/*/; do
             [ -d "$sub_dir" ] || continue
             local sub_md="${sub_dir}/SKILL.md"
@@ -311,7 +311,7 @@ emit_commands_for_opencode() {
 
         # Top-level dir itself:
         # - colon-named standalone (swarm-test) → command only (removed from skills later)
-        # - bare family root with colon children (workflow) → command + keep in skills/
+        # - bare family root with colon children (work) → command + keep in skills/
         if [ -f "$top_md" ]; then
             local declared
             declared=$(get_declared_name "$top_md")
@@ -576,7 +576,7 @@ publish_for_agent() {
 
         # After emitting commands, remove any top-level dirs in skills/ that we want
         # only as commands for opencode (prevents duplication):
-        # - Colon-named sub-skills (e.g. swarm-test, workflow-continue)
+        # - Colon-named sub-skills (e.g. swarm-test, work-continue)
         # - Special leaf commands without sub-skills (personify, use-browser)
         for d in "$dest_dir"/*/; do
             [ -d "$d" ] || continue

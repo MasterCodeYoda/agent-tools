@@ -313,8 +313,8 @@ class DocLintCase(unittest.TestCase):
 
     def test_emphasis_important_in_workflow_reported(self):
         self.write(
-            "src/workflow/SKILL.md",
-            "---\nname: workflow\n---\n**IMPORTANT**: never do x\n",
+            "src/work/SKILL.md",
+            "---\nname: work\n---\n**IMPORTANT**: never do x\n",
         )
         code, out = self.run_lint()
         self.assertEqual(code, 1)
@@ -338,16 +338,16 @@ class DocLintCase(unittest.TestCase):
 
     def test_emphasis_allowlist_suppresses(self):
         self.write(
-            "src/workflow/SKILL.md",
-            "---\nname: workflow\n---\n**IMPORTANT**: never do x\n",
+            "src/work/SKILL.md",
+            "---\nname: work\n---\n**IMPORTANT**: never do x\n",
         )
-        self.write("allow.txt", "shape src/workflow/**\n")
+        self.write("allow.txt", "shape src/work/**\n")
         self.assert_clean(*self.run_lint())
 
     def test_emphasis_inside_fence_skipped(self):
         self.write(
-            "src/workflow/SKILL.md",
-            "---\nname: workflow\n---\n```\n**IMPORTANT**: example\n```\n",
+            "src/work/SKILL.md",
+            "---\nname: work\n---\n```\n**IMPORTANT**: example\n```\n",
         )
         self.assert_clean(*self.run_lint())
 

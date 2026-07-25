@@ -30,14 +30,14 @@ Historical, append-only run log from the legacy `/evolve` command era (predates 
 - **Key changes**:
   - `workflow:audit` domain paths: `domains/*.md` (was `audit-*.md` / `skills/audit/` / `@audit/`)
   - Stale related skill `workflow-guide` → `workflow`; Rust advertised on code-patterns + CA frontmatter
-  - Setup template paths; handoff `@workflow parallel` worker-contract qualification; research-loop path disambiguation
+  - Setup template paths; handoff `@work parallel` worker-contract qualification; research-loop path disambiguation
   - Personify two-layer model + limits synced into `memory-primitives.md`
   - Parallel worktree cleanup → `/git:worktree-delete`
   - Logging required fields `service` + `environment`; QA frontmatter schema audit; mock/complexity/frontend/docs heuristics
   - Discoverability: `swarm-test` harness (project-only) and `qa:tools` family indexes
 - **Recommendations (multi-file / judgment — not applied)**:
   - Planning-root SoT: refine/plan/product still hard-code `./planning/` vs preferred `.agent-tools/planning/` (`planning-root.md`)
-  - Dual residence: parent workflow skill session-state schema vs execute skill session-state template
+  - Dual residence: parent work skill session-state schema vs execute skill session-state template
   - Product competitive-research protocol dual residence (parent vs `product:audit`)
   - Dual “Testing by Layer” ownership (code-patterns vs clean-architecture) — pick one authority + deference
   - Thin-routing extractions for fat write-time bodies in setup/brainstorm/roadmap (allowlisted setup remains)

@@ -80,7 +80,7 @@ NL specs generated in specs/. Next steps:
 2. Run Playwright Planner — the Planner reads your NL specs and creates a test plan
 3. Run Playwright Generator — converts the plan into .spec.ts files in tests/
 4. Run tests — `npx playwright test` to execute
-5. Audit drift — `/workflow:audit` (qa domain) to keep specs and tests aligned (planned dedicated `/qa:audit`)
+5. Audit drift — `/work:audit` (qa domain) to keep specs and tests aligned (planned dedicated `/qa:audit`)
 ```
 
 ---
