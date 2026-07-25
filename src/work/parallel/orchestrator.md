@@ -8,7 +8,7 @@
 **Parallel mode** is multi-role, multi-item orchestration of backlog-scale work inside
 `/work:continue`. When continue enters parallel mode with a **goal**, the host agent
 becomes an **orchestrator**: it drives backlog items through the `/work`
-lifecycle (refine → plan → implement → review → local-merge) by dispatching role-specialized
+lifecycle (refine → plan → implement → review → local-merge) by dispatching function-scoped
 sub-agents in parallel waves, each item isolated in its own git worktree.
 
 The orchestrator runs in your active session — no tmux, no daemon. Parallelism comes from (a)
@@ -45,14 +45,14 @@ Bare `/work` **status** may summarize an active run; it never enters the orchest
 
 ## Reference material
 
-Detailed algorithms live in `references/` and the role prompts in `roles/`:
+Detailed algorithms live in `references/` and the function packets in `functions/`:
 
 - `references/classification-rules.md` — stages, classification sources, status→stage, reconciliation
 - `references/dispatch-mechanics.md` — wave scheduling, dispatch assembly, worktree deferral, **merge orchestration**, session logs
 - `references/structured-return-schema.md` — the worker return schema + parse rules
 - `references/state-yml-schema.md` — per-run `state.yml` + atomic writes
 - `references/config-yml-schema.md` — `config.yml` + test-command discovery
-- `roles/worker-contract.md` + `roles/<role>.md` — prompts the orchestrator assembles per dispatch
+- `functions/worker-contract.md` + `functions/<function>.md` — prompts the orchestrator assembles per dispatch
 
 ## Behavior
 
@@ -62,7 +62,7 @@ active run lives in bare `/work` (`references/status.md`) — not here.
 ### Goal → Orchestrator
 
 **Precondition:** if `.agent-tools/charter/charter.md` is absent, stop: "No charter found.
-Run `/work:setup` first." Also confirm `.agent-tools/parallel/roles/` (and config) exist
+Run `/work:setup` first." Also confirm `.agent-tools/parallel/functions/` (and config) exist
 (from `/work:setup`); if missing, direct the user to re-run `/work:setup`.
 
 **Explicit charter load (this session is parallel-mode):** Read the charter files now:
@@ -117,15 +117,15 @@ Classify each item's stage per `references/classification-rules.md` (read only
 
 Each wave is **one message** with up to `concurrency_cap` (default 5) parallel native
 `Agent`-tool dispatches. Assemble each prompt per `references/dispatch-mechanics.md`
-(worker-contract + role file + charter reference + item context + any resume `fix_list`), and
-pass the per-role model from `config.models`. Workers enter their worktree via `cd`. Capture
+(worker-contract + function packet + charter reference + item context + any resume `fix_list`), and
+pass the per-function model from `config.models`. Workers enter their worktree via `cd`. Capture
 the dispatch prompt and the returned YAML into the per-dispatch session log.
 
 #### Merge orchestration
 
 Between waves, sequentially for each approved item: `git checkout main` → `git merge --no-ff`.
-On conflict → one-shot **conflict-resolver** dispatch (workspace = main); on test failure
-after merge → one-shot **integration-fixer** dispatch. A second failure of either →
+On conflict → one-shot **resolve-conflict** dispatch (workspace = main); on test failure
+after merge → one-shot **fix-integration** dispatch. A second failure of either →
 TERMINAL_PAUSE. On success → `/git:worktree-delete` the item's worktree and mark `merged`.
 Full detail in `references/dispatch-mechanics.md`.
 
@@ -136,7 +136,7 @@ Full detail in `references/dispatch-mechanics.md`.
 | All items merged | `GOAL_COMPLETE` | Final report; clear `active-run`; user pushes when ready |
 | Worker `BLOCKED` (off-band need) or fix-it `FAILED` second time | `TERMINAL_PAUSE` | Write `state.yml` + `last_handoff`; leave `active-run`; continue **parallel_resume** |
 | `NEEDS_CONTEXT` answerable in chat | `IN_FLIGHT_DECISION` | Ask (AskUserQuestion), stay loaded, apply answer, resume loop |
-| `DONE_WITH_CONCERNS` worth user input | `IN_FLIGHT_DECISION` or log + continue | Decision rule: would the user want to weigh in before downstream roles act? |
+| `DONE_WITH_CONCERNS` worth user input | `IN_FLIGHT_DECISION` or log + continue | Decision rule: would the user want to weigh in before downstream functions act? |
 | No items advanced, none in flight, candidates empty | `TERMINAL_PAUSE` (defensive) | Deadlock/classification bug; bail with diagnostic |
 
 **IN_FLIGHT vs TERMINAL rule:** *"Can I act on the user's answer within this loaded session,
@@ -150,13 +150,13 @@ Created when the run starts; **cleared on GOAL_COMPLETE**; **preserved on TERMIN
 ## Attribution
 
 Orchestration concept adapted from **swarm-forge** by Robert C. "Uncle Bob" Martin —
-<https://github.com/unclebob/swarm-forge> (charter primitive, role-specialized agents,
-per-item worktrees). Re-shaped: host native sub-agent dispatch (no tmux), roles aligned to
+<https://github.com/unclebob/swarm-forge> (charter primitive, function-scoped agents,
+per-item worktrees). Re-shaped: host native sub-agent dispatch (no tmux), functions aligned to
 `/work` phases, host-mediated structured returns, entry only via `/work:continue`.
 
 ## Related paths
 
 - `resume.md` — parallel_resume reconciliation
 - `references/` — classification, dispatch, state/config schemas, return schema
-- `roles/` — worker contract + role prompts (canonical; copied into project by setup)
+- `functions/` — worker contract + function packets (canonical; copied into project by setup)
 - Decision: `docs/decisions/001-swarm-collapse-into-workflow.md`

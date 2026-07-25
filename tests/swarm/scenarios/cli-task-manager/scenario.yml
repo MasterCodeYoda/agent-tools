@@ -1,8 +1,8 @@
 name: cli-task-manager
 purpose: >
   Exercise the full parallel-mode lifecycle on a small real Python CLI: dependency-aware parallel
-  waves, host-side refinement of an unrefined item, a merge conflict (conflict-resolver), a
-  post-merge integration-test failure (integration-fixer), and at least one review fix loop.
+  waves, host-side refinement of an unrefined item, a merge conflict (resolve-conflict), a
+  post-merge integration-test failure (fix-integration), and at least one review fix loop.
 stack: python                   # generate seeds a pytest project; test_command: pytest -q
 
 expected_exit: GOAL_COMPLETE     # INTENDED terminal exit — checked softly (a run may
@@ -19,13 +19,13 @@ observation_checklist:          # soft intent — seeds analyze's automated asse
     expect: CTM-1 (core model + store) planned/implemented/reviewed/merged before its dependents dispatch
   - id: parallel-wave
     expect: CTM-2 and CTM-3 dispatched in the same wave (both unblocked after CTM-1)
-  - id: conflict-resolver-fires
-    expect: CTM-2 and CTM-3 both edit taskcli/cli.py COMMANDS; the second merge conflicts and a conflict-resolver is dispatched
+  - id: resolve-conflict-fires
+    expect: CTM-2 and CTM-3 both edit taskcli/cli.py COMMANDS; the second merge conflicts and a resolve-conflict is dispatched
   - id: host-refinement
     expect: CTM-4 (search) enters unrefined; orchestrator runs /work:refine host-side before planning it
-  - id: integration-fixer-fires
-    expect: CTM-5 (stats) passes its own unit tests but breaks tests/test_integration.py (empty-store divide-by-zero) post-merge; an integration-fixer is dispatched
+  - id: fix-integration-fires
+    expect: CTM-5 (stats) passes its own unit tests but breaks tests/test_integration.py (empty-store divide-by-zero) post-merge; an fix-integration is dispatched
   - id: review-fix-loop
-    expect: at least one reviewer returns FIX_REQUESTED, triggering an implementer re-dispatch
+    expect: at least one review returns FIX_REQUESTED, triggering an implement re-dispatch
   - id: clean-exit
     expect: all items reach stage=merged; run ends GOAL_COMPLETE; active-run cleared

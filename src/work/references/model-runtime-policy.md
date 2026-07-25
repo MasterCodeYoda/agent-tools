@@ -2,7 +2,7 @@
 
 **Load when:** packaging a host adapter (Hermes, automation, multi-model router), pre-wake
 automation, swarm worker dispatch, or when the user/host is choosing reasoning effort for
-implementer models.
+implement models.
 
 **Process SoT stays model-agnostic.** This file states **runtime-owned** defaults. Do **not**
 embed lab leaderboards or “always use model X” tables in process skills.
@@ -28,7 +28,7 @@ These are **operational defaults**, not benchmarks. Hosts measure and adjust.
 |---------|----------------|--------------|
 | **Unattended** (cron, pre-wake, Hermes factory automation, headless continue) | **medium** hard cap | **Forbidden** unless explicit ops override on the run |
 | **Interactive** human-watched session | **medium** soft default | Allowed with user opt-in; warn if host can detect high on Sol-class |
-| **Swarm implementer workers** | **medium** hard default | Only if orchestrator config explicitly raises and scope is frozen |
+| **Swarm implement workers** | **medium** hard default | Only if orchestrator config explicitly raises and scope is frozen |
 | **Research / ticket-hidden research window** | host default or medium | Higher OK when window is disposable and isolated |
 
 ## Scope freeze (all models, mandatory for high effort)

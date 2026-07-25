@@ -75,7 +75,7 @@ One object per line; justified by phase-return evidence only — never invent ti
 ### Escalate / veto receipts (required when they happen)
 
 Judgment stops must leave a **disk receipt**, not only a chat line. When continue (or an
-automation entry) hits escalate-tier stop, human/reviewer veto, or draft-first hold:
+automation entry) hits escalate-tier stop, human/review veto, or draft-first hold:
 
 1. Set phase_return `status: await_user` (or `blocked`) with event `ESCALATE`, `HUMAN_VETO`,
    and/or `DRAFT_PENDING` (@work `continue/references/unit-state-machine.md`).  

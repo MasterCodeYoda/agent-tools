@@ -57,5 +57,5 @@ If scope grows mid-flight:
 ## Relationship
 
 - Continue classifies micro before feature SM — named-without-shell can be micro when eligible
-- Swarm implementer roles may still use full plan; micro is the sequential personal path
+- Swarm implement roles may still use full plan; micro is the sequential personal path
 - Process IP changes from repeated micro mis-routes → `/skills:evolve`, not ad-hoc skill edits

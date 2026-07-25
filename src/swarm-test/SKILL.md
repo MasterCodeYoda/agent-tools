@@ -109,7 +109,7 @@ Run the deterministic log summarizer:
 python -m tests.swarm.harness ingest <run-dir>
 ```
 
-This writes `<run-dir>/observations.json` (per-role dispatch counts, status tallies,
+This writes `<run-dir>/observations.json` (per-function dispatch counts, status tallies,
 malformed returns, return sizes, missing decision logs, and safety signals). Read it. Also
 read the run's `state.yml` (`.agent-tools/parallel/sessions/<run-id>/state.yml`) and
 `orchestrator.md` for stage/exit-state ground truth.
@@ -135,11 +135,11 @@ For each `observation_checklist` item, judge **satisfied / not-satisfied / incon
 the evidence, and cite it (file paths, dispatch log names, `state.yml` fields,
 `observations.json` keys). Examples of how to ground each:
 
-- "conflict-resolver fired" → a `conflict-resolver-*.md` dispatch log exists; corroborated by
+- "resolve-conflict fired" → a `resolve-conflict-*.md` dispatch log exists; corroborated by
   `observations.by_role`.
 - "host-side refinement happened" → `orchestrator.md` records a `/work:refine` step for
   the unrefined item; the item's stage advanced past `unrefined`.
-- "review fix loop" → an `implementer-2.md` exists after a `reviewer-1.md` returning
+- "review fix loop" → an `implementer-2.md` exists after a `review-1.md` returning
   `FIX_REQUESTED`.
 - "init authored the charter" (init-first scenarios) → `.agent-tools/charter/*.md` exist in
   the run after the pass.

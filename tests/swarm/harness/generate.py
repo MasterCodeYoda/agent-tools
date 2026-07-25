@@ -1,7 +1,7 @@
 """Build a throwaway git repo from a scenario definition (deterministic).
 
 This is the first bookend of the harness. It lays down the scenario's seed
-sources, charter, swarm config, the *current* canonical role templates, and the
+sources, charter, swarm config, the *current* canonical function packets, and the
 backlog, then initialises a real git repo with a `main` branch and an initial
 commit — leaving a project that is ready for an agent to run `/work:continue` (parallel multi-item goal)
 against.
@@ -20,22 +20,22 @@ from pathlib import Path
 DEFAULT_CONFIG_YML = """\
 schema_version: 1
 concurrency_cap: 5
-role_chain:
-  - planner
-  - implementer
-  - reviewer
+function_chain:
+  - plan
+  - implement
+  - review
 models:
-  planner: most_capable
-  implementer: mid_tier
-  reviewer: most_capable
-  conflict_resolver: most_capable
-  integration_fixer: most_capable
+  plan: most_capable
+  implement: mid_tier
+  review: most_capable
+  resolve-conflict: most_capable
+  fix-integration: most_capable
 clis:
-  planner: claude
-  implementer: claude
-  reviewer: claude
-  conflict_resolver: claude
-  integration_fixer: claude
+  plan: claude
+  implement: claude
+  review: claude
+  resolve-conflict: claude
+  fix-integration: claude
 test_command: pytest -q
 backlog:
   default_source: file
@@ -95,13 +95,13 @@ def generate(
     # Bootstrap mode is keyed on whether the scenario ships a charter:
     #   charter/ present  → SEEDED: generate writes the full .agent-tools/ umbrella.
     #   charter/ absent   → INIT-FIRST: bare repo; the run begins with /work:setup, which
-    #                       authors the charter + umbrella + roles itself.
+    #                       authors the charter + umbrella + functions itself.
     charter_src = scenario_dir / "charter"
     seeded = charter_src.is_dir()
 
-    roles_src = root / "src" / "workflow" / "parallel" / "roles"
-    if seeded and not roles_src.is_dir():
-        raise GenerateError(f"Canonical roles not found: {roles_src}")
+    functions_src = root / "src" / "work" / "parallel" / "functions"
+    if seeded and not functions_src.is_dir():
+        raise GenerateError(f"Canonical functions not found: {functions_src}")
 
     stamp = now.strftime("%Y%m%d-%H%M%S")
     run_dir = runs_root / f"{scenario}-{stamp}"
@@ -138,7 +138,7 @@ def generate(
             shutil.copy2(config_src, parallel_dir / "config.yml")
         else:
             (parallel_dir / "config.yml").write_text(DEFAULT_CONFIG_YML)
-        shutil.copytree(roles_src, parallel_dir / "roles")
+        shutil.copytree(functions_src, parallel_dir / "functions")
         (agent_tools / ".gitignore").write_text(UMBRELLA_GITIGNORE)
 
     # 4. Real git repo with a `main` branch + initial commit.

@@ -1,11 +1,11 @@
 """Summarize a /swarm run's session logs into structured observations (deterministic).
 
 Second bookend of the harness. Walks the generated repo's
-`.agent-tools/parallel/sessions/<run-id>/<item>/<role>-<n>.md` logs and emits an
+`.agent-tools/parallel/sessions/<run-id>/<item>/<function>-<n>.md` logs and emits an
 `observations.json` the `swarm:test` skill reasons over.
 
 Dependency-free: PyYAML is intentionally NOT required. The authoritative
-`status`/`role`/`item` live in each log's flat frontmatter; for the worker's
+`status`/`function`/`item` live in each log's flat frontmatter; for the worker's
 returned YAML block we only need presence/parseability, size, and the
 `files_changed` list — all extracted with targeted stdlib parsing.
 """
@@ -113,16 +113,16 @@ def _sessions_root(run_dir: Path) -> Path | None:
     return runs[0] if runs else None
 
 
-_KNOWN_ROLES = {"planner", "implementer", "reviewer", "conflict-resolver", "integration-fixer"}
+_KNOWN_FUNCTIONS = {"plan", "implement", "review", "resolve-conflict", "fix-integration"}
 _KNOWN_STATUSES = {
     "DONE", "DONE_WITH_CONCERNS", "NEEDS_CONTEXT", "BLOCKED",
     "APPROVED", "FIX_REQUESTED", "FAILED",
 }
-# description verb -> role, for transcripts where the dispatch is a generic agent
-_DESC_ROLE = [
-    ("plan", "planner"), ("implement", "implementer"), ("review", "reviewer"),
-    ("resolve", "conflict-resolver"), ("conflict", "conflict-resolver"),
-    ("integration", "integration-fixer"),
+# description needle -> function id (for transcripts without a clear function: field)
+_DESC_FUNCTION = [
+    ("plan", "plan"), ("implement", "implement"), ("review", "review"),
+    ("resolve", "resolve-conflict"), ("conflict", "resolve-conflict"),
+    ("integration", "fix-integration"),
 ]
 
 
@@ -160,19 +160,19 @@ def _find_transcript(run_dir: Path) -> Path | None:
 
 
 def _parse_swarm_return(text: str) -> dict | None:
-    """If ``text`` contains a swarm structured return, extract {role, status, item}."""
+    """If ``text`` contains a swarm structured return, extract {function, status, item}."""
     if not text:
         return None
-    role = re.search(r"^\s*role:\s*([\w-]+)", text, re.MULTILINE)
+    function = re.search(r"^\s*function:\s*([\w-]+)", text, re.MULTILINE)
     status = re.search(r"^\s*status:\s*([\w]+)", text, re.MULTILINE)
     item = re.search(r"^\s*item:\s*([^\s#]+)", text, re.MULTILINE)
-    if not (role and status):
+    if not (function and status):
         return None
-    r = role.group(1)
+    r = function.group(1)
     s = status.group(1)
-    if r not in _KNOWN_ROLES or s not in _KNOWN_STATUSES:
+    if r not in _KNOWN_FUNCTIONS or s not in _KNOWN_STATUSES:
         return None
-    return {"role": r, "status": s, "item": item.group(1).strip("'\"") if item else "unknown"}
+    return {"function": r, "status": s, "item": item.group(1).strip("'\"") if item else "unknown"}
 
 
 def _result_text(block: dict) -> str:
@@ -185,7 +185,7 @@ def _result_text(block: dict) -> str:
 
 
 def transcript_dispatches(transcript: Path) -> list[dict]:
-    """Recover {role, status, item} per dispatch from an orchestrator transcript.
+    """Recover {function, status, item} per dispatch from an orchestrator transcript.
 
     Workers return their structured YAML to the orchestrator via the Task tool; that return
     lands in a ``tool_result`` block in the transcript. We pair each result to its dispatch by
@@ -216,11 +216,11 @@ def transcript_dispatches(transcript: Path) -> list[dict]:
                 ret = _parse_swarm_return(_result_text(block))
                 if ret is None:
                     continue
-                if ret["role"] == "unknown" or ret["role"] not in _KNOWN_ROLES:
+                if ret["function"] == "unknown" or ret["function"] not in _KNOWN_FUNCTIONS:
                     desc = desc_by_id.get(block.get("tool_use_id", ""), "").lower()
-                    for needle, role in _DESC_ROLE:
+                    for needle, fn in _DESC_FUNCTION:
                         if needle in desc:
-                            ret["role"] = role
+                            ret["function"] = fn
                             break
                 out.append(ret)
     return out
@@ -233,7 +233,7 @@ def ingest(run_dir: Path) -> dict:
         "run_dir": str(run_dir),
         "run_id": None,
         "dispatch_count": 0,
-        "by_role": {},
+        "by_function": {},
         "status_tally": defaultdict(int),
         "malformed_returns": [],
         "return_sizes": [],
@@ -251,8 +251,8 @@ def ingest(run_dir: Path) -> dict:
         return obs
     obs["run_id"] = sess_root.name
 
-    by_role: dict[str, dict] = defaultdict(lambda: {"dispatches": 0, "statuses": defaultdict(int)})
-    items: dict[str, dict] = defaultdict(lambda: {"roles_seen": [], "last_status": None})
+    by_function: dict[str, dict] = defaultdict(lambda: {"dispatches": 0, "statuses": defaultdict(int)})
+    items: dict[str, dict] = defaultdict(lambda: {"functions_seen": [], "last_status": None})
 
     log_files = sorted(p for p in sess_root.rglob("*.md") if p.is_file())
     for path in log_files:
@@ -264,20 +264,20 @@ def ingest(run_dir: Path) -> dict:
             continue
 
         fm = parse_frontmatter(text)
-        if not fm or "role" not in fm:
+        if not fm or "function" not in fm:
             obs["malformed_returns"].append({"file": rel, "reason": "missing/!malformed frontmatter"})
             continue
 
-        role = fm.get("role", "unknown")
+        fn = fm.get("function", "unknown")
         status = fm.get("status", "UNKNOWN")
         item = fm.get("item", "unknown")
 
         obs["dispatch_count"] += 1
-        by_role[role]["dispatches"] += 1
-        by_role[role]["statuses"][status] += 1
+        by_function[fn]["dispatches"] += 1
+        by_function[fn]["statuses"][status] += 1
         obs["status_tally"][status] += 1
-        if role not in items[item]["roles_seen"]:
-            items[item]["roles_seen"].append(role)
+        if fn not in items[item]["functions_seen"]:
+            items[item]["functions_seen"].append(fn)
         items[item]["last_status"] = status
 
         ret = extract_return_block(text)
@@ -285,7 +285,7 @@ def ingest(run_dir: Path) -> dict:
             obs["malformed_returns"].append({"file": rel, "reason": "no parseable return block"})
         else:
             obs["return_sizes"].append(
-                {"file": rel, "role": role, "chars": len(ret), "lines": ret.count("\n") + 1}
+                {"file": rel, "function": fn, "chars": len(ret), "lines": ret.count("\n") + 1}
             )
             for fc in extract_files_changed(ret):
                 if _is_out_of_scope(fc):
@@ -312,19 +312,19 @@ def ingest(run_dir: Path) -> dict:
                     f"recovered {len(dispatches)} dispatch(es) from transcript {transcript.name}"
                 )
                 for d in dispatches:
-                    role, status, item = d["role"], d["status"], d["item"]
+                    fn, status, item = d["function"], d["status"], d["item"]
                     obs["dispatch_count"] += 1
-                    by_role[role]["dispatches"] += 1
-                    by_role[role]["statuses"][status] += 1
+                    by_function[fn]["dispatches"] += 1
+                    by_function[fn]["statuses"][status] += 1
                     obs["status_tally"][status] += 1
-                    if role not in items[item]["roles_seen"]:
-                        items[item]["roles_seen"].append(role)
+                    if fn not in items[item]["functions_seen"]:
+                        items[item]["functions_seen"].append(fn)
                     items[item]["last_status"] = status
 
     # finalize (convert defaultdicts to plain dicts for JSON)
-    obs["by_role"] = {
+    obs["by_function"] = {
         r: {"dispatches": d["dispatches"], "statuses": dict(d["statuses"])}
-        for r, d in by_role.items()
+        for r, d in by_function.items()
     }
     obs["items"] = {k: v for k, v in items.items()}
     obs["status_tally"] = dict(obs["status_tally"])

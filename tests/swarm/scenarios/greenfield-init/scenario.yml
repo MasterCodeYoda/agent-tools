@@ -19,7 +19,7 @@ observation_checklist:
   - id: init-authored-charter
     expect: after the run, .agent-tools/charter/{charter,project,engineering,workflow}.md exist (authored by /work:setup)
   - id: init-bootstrapped-umbrella
-    expect: .agent-tools/parallel/config.yml and .agent-tools/parallel/roles/ exist after init
+    expect: .agent-tools/parallel/config.yml and .agent-tools/parallel/functions/ exist after init
   - id: parallel-wave
     expect: GI-1 and GI-2 dispatched in the same wave (both independent, parallelizable)
   - id: clean-exit

@@ -96,7 +96,7 @@ decision is.
 | `USER_GATE` | any HITL stop |
 | `THRASH_BOUND` | too many refine re-entries this unit (see bound) |
 | `ESCALATE` | stopped at escalate tier (unsafe, invent-NEXT blocked, red isolation, judgment call staged) |
-| `HUMAN_VETO` | human or reviewer gate rejected a proposed ship/integrate/action |
+| `HUMAN_VETO` | human or review gate rejected a proposed ship/integrate/action |
 | `DRAFT_PENDING` | draft-first artifact prepared; waiting approval before ship |
 
 ## Transitions (guards required)

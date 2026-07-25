@@ -13,7 +13,7 @@ from tests.swarm.harness.ingest import (
 )
 
 
-def _log(item, role, status, *, decision=True, files=None, push=False, return_block=True):
+def _log(item, function, status, *, decision=True, files=None, push=False, return_block=True):
     fc = ""
     if files is not None:
         fc = "  files_changed: [" + ", ".join(files) + "]\n"
@@ -23,18 +23,18 @@ def _log(item, role, status, *, decision=True, files=None, push=False, return_bl
     if return_block:
         ret = (
             "## Return\n```yaml\n"
-            f"status: {status}\nitem: {item}\nrole: {role}\nartifacts:\n{fc}```\n"
+            f"status: {status}\nitem: {item}\nfunction: {function}\nartifacts:\n{fc}```\n"
         )
     return (
-        f"---\nrun_id: r1\nitem: {item}\nrole: {role}\nstatus: {status}\n---\n"
+        f"---\nrun_id: r1\nitem: {item}\nfunction: {function}\nstatus: {status}\n---\n"
         f"## Dispatch context\n{push_line}prompt\n{dec}{ret}"
     )
 
 
 class FrontmatterTests(unittest.TestCase):
     def test_parses_flat_pairs(self):
-        fm = parse_frontmatter("---\nrole: planner\nstatus: DONE\nitem: 'x'\n---\nbody")
-        self.assertEqual(fm, {"role": "planner", "status": "DONE", "item": "x"})
+        fm = parse_frontmatter("---\nfunction: plan\nstatus: DONE\nitem: 'x'\n---\nbody")
+        self.assertEqual(fm, {"function": "plan", "status": "DONE", "item": "x"})
 
     def test_no_frontmatter(self):
         self.assertEqual(parse_frontmatter("no fm here"), {})
@@ -64,20 +64,20 @@ class IngestTests(unittest.TestCase):
         (d / name).write_text(content)
 
     def test_counts_and_tallies(self):
-        self._write("item-1", "implementer-1.md", _log("item-1", "implementer", "DONE", files=["src/app.py"]))
-        self._write("item-1", "reviewer-1.md", _log("item-1", "reviewer", "APPROVED"))
-        self._write("item-2", "planner-1.md", _log("item-2", "planner", "DONE"))
+        self._write("item-1", "implement-1.md", _log("item-1", "implement", "DONE", files=["src/app.py"]))
+        self._write("item-1", "review-1.md", _log("item-1", "review", "APPROVED"))
+        self._write("item-2", "plan-1.md", _log("item-2", "plan", "DONE"))
         obs = ingest(self.tmp)
         self.assertEqual(obs["run_id"], "r1")
         self.assertEqual(obs["dispatch_count"], 3)
         self.assertEqual(obs["status_tally"], {"DONE": 2, "APPROVED": 1})
-        self.assertEqual(obs["by_role"]["implementer"]["dispatches"], 1)
-        self.assertEqual(obs["items"]["item-1"]["roles_seen"], ["implementer", "reviewer"])
+        self.assertEqual(obs["by_function"]["implement"]["dispatches"], 1)
+        self.assertEqual(obs["items"]["item-1"]["functions_seen"], ["implement", "review"])
         self.assertEqual(obs["items"]["item-1"]["last_status"], "APPROVED")
 
     def test_malformed_and_missing_frontmatter(self):
-        self._write("item-1", "planner-1.md", "garbage, no frontmatter\n")
-        self._write("item-1", "implementer-1.md", _log("item-1", "implementer", "DONE", return_block=False))
+        self._write("item-1", "plan-1.md", "garbage, no frontmatter\n")
+        self._write("item-1", "implement-1.md", _log("item-1", "implement", "DONE", return_block=False))
         obs = ingest(self.tmp)
         reasons = {m["reason"] for m in obs["malformed_returns"]}
         self.assertIn("missing/!malformed frontmatter", reasons)
@@ -86,13 +86,13 @@ class IngestTests(unittest.TestCase):
         self.assertEqual(obs["dispatch_count"], 1)
 
     def test_missing_decision_log_flagged(self):
-        self._write("item-1", "reviewer-1.md", _log("item-1", "reviewer", "APPROVED", decision=False))
+        self._write("item-1", "review-1.md", _log("item-1", "review", "APPROVED", decision=False))
         obs = ingest(self.tmp)
         self.assertEqual(len(obs["missing_decision_logs"]), 1)
 
     def test_safety_signals(self):
-        self._write("item-1", "reviewer-1.md",
-                    _log("item-1", "reviewer", "FIX_REQUESTED", push=True,
+        self._write("item-1", "review-1.md",
+                    _log("item-1", "review", "FIX_REQUESTED", push=True,
                          files=["../other/secret.py", "/etc/passwd", "src/ok.py"]))
         obs = ingest(self.tmp)
         self.assertEqual(len(obs["safety"]["push_mentions"]), 1)
@@ -105,7 +105,7 @@ class IngestTests(unittest.TestCase):
         self.assertTrue(any("no sessions" in w for w in obs["warnings"]))
 
     def test_write_observations(self):
-        self._write("item-1", "planner-1.md", _log("item-1", "planner", "DONE"))
+        self._write("item-1", "plan-1.md", _log("item-1", "plan", "DONE"))
         obs = ingest(self.tmp)
         out = write_observations(self.tmp, obs)
         self.assertTrue(out.is_file())

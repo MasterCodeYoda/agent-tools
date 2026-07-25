@@ -22,7 +22,7 @@ history/<run-id>/
   orchestrator.md    the run narrative — otherwise transient (gitignored in the run repo)
 ```
 
-`analysis.md` cites its evidence (dispatch logs, reviewer returns, `state.yml` fields), so the
+`analysis.md` cites its evidence (dispatch logs, review returns, `state.yml` fields), so the
 summary stays traceable without the multi-megabyte run dir or the `~/.claude` transcript.
 
 ## Convention

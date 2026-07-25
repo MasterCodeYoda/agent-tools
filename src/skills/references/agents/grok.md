@@ -90,7 +90,7 @@ Grok Build (xAI) uses a flexible **skills** system where skills are folders cont
 - Use `grok inspect` liberally when developing skills — it is the best way to understand what the agent currently sees.
 - Because of Claude compatibility, many existing skills “just work,” but test important ones.
 - Skills + plugins + hooks form a powerful combined extension system — don’t treat skills in isolation.
-- **2026-07 frontier:** Grok 4.5 is often used as a cost/speed implementer in multi-model rosters.
+- **2026-07 frontier:** Grok 4.5 is often used as a cost/speed implement in multi-model rosters.
   Keep skills process-thin; do not encode model ranking tables. Mid-item reclaim default is
   `/new` (alias `/clear`) then continue — see context-compact protocol.
 

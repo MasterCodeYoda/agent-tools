@@ -90,14 +90,13 @@ Skills are context-aware reference material that Claude loads on demand via `@sk
 
 | Skill | Purpose |
 |-------|---------|
-| **workflow** | Parent for the work family — bare `/work` is portfolio status (read-only); `/work:continue` drives work; decomposition modes, session continuity, knowledge compounding; phase commands (`:setup`, `:prune`, `:roadmap`, `:brainstorm`, `:refine`, `:plan`, `:execute`, `:review`, `:audit`, `:compound`) |
-| **swarm** | Parallel multi-item orchestration on top of `/work` — usually entered via continue when roadmap has explicit `∥` waves; bare `/swarm` is status; `/swarm <goal>` override; `/swarm:setup` charter + umbrella; `/swarm:continue` resumes a paused run |
+| **work** | Control plane — bare `/work` is portfolio status; `/work:continue` drives unit or parallel mode; phases (`:setup`, `:roadmap`, `:brainstorm`, `:refine`, `:plan`, `:execute`, `:review`, `:audit`, `:compound`, `:maintain`) |
 | **git** | Family of safe, conventional git skills — commits, push/PR flows, and worktree-based parallel development (includes `/git` overview + sub-commands reachable via the parent or exact name) |
 | **product** | Parent for the product family — positioning frameworks, competitive research, messaging, go-to-market patterns, briefs, and audits |
 | **qa** | Parent for the QA family — NL spec authoring for Playwright Test Agents, visual inspection tools, discovery; drift detection via `/work:audit` |
 | **skills** | Meta-skill (project-scoped only) for importing skills from other agents and iteratively evolving the canonical corpus |
 | **personify** | Project-specific agent personality, voice guidance, and communication facts stored in bounded `.agent-tools/personify.md` (token limits + proactive maintenance). Invocable as `/personify` for interactive management |
-| **swarm-test** | (project-scoped) Drives and analyzes `/swarm` test-harness runs (repo-development tool) |
+| **swarm-test** | (project-scoped) Drives and analyzes parallel-mode test-harness runs under `tests/swarm/` |
 | **clean-architecture** | Language-agnostic Clean Architecture with the Dependency Rule, layer patterns, and per-language guides (Python, TypeScript, C#, Rust) |
 | **code-patterns** | Language-specific best practices — type safety, error handling, testing idioms, and framework conventions |
 | **test-strategy** | Strategy selection (TDD, spec-first, property-based, contract, characterization), Red-Green-Refactor, SCRAP quality scoring, and AI-specific anti-patterns |
@@ -113,8 +112,8 @@ Commands are invoked with `/command-name` (or the hyphenated equivalents for sub
 | Command | Purpose |
 |---------|---------|
 | `/work` | **Status** — read-only portfolio glance (planning root, in-progress/NEXT, soft signals, continue-mode preview); focused status with a unit arg |
-| `/work:continue` | **Drive** — orient from `planning/`, portfolio mode (swarm resume/handoff on explicit `∥` waves, or unit phase state machine); never invents NEXT |
-| `/work:setup` | Initialize/maintain `planning/` docs and define project-local conventions (tracks, gates, policy) |
+| `/work:continue` | **Drive** — orient from `planning/`, portfolio mode (parallel resume/handoff on explicit `∥` waves, or unit phase state machine); never invents NEXT |
+| `/work:setup` | Planning, conventions, memory, runs, charter, parallel config/functions |
 | `/work:maintain` | **Steward** — always prune-check `planning/`; schedule-aware yield + memory (force with flags / `--all`) |
 | `/work:brainstorm` | Explore a fuzzy idea into a framed concept ready for refinement |
 | `/work:refine` | Discover and refine requirements through guided conversation |
@@ -128,10 +127,6 @@ Commands are invoked with `/command-name` (or the hyphenated equivalents for sub
 
 | Command | Purpose |
 |---------|---------|
-| `/swarm` | Summarize a project's swarm state (active run, item stages, or whether it's initialized) |
-| `/swarm <goal>` | Override entry for parallel orchestration on a goal (also auto-entered from `/work:continue` when roadmap has an explicit `∥` / `{wave}` at the head). Classifies items, drives refine (host) → plan → implement → review → local-merge via role-specialized sub-agents in parallel waves |
-| `/swarm:setup` | Author the project charter and set up the `.agent-tools/` umbrella (idempotent, evidence-grounded) |
-| `/swarm:continue` | Resume the most recent paused run, reconciling saved state against disk + PM ground truth |
 
 > The orchestrator runs in your session (no tmux/daemon), **never pushes to remote**, and
 > merges to `main` locally with the full test suite between merges. Per-item work is isolated
@@ -204,7 +199,7 @@ All development happens under `src/`. `setup.sh` runs the publisher to produce c
 
 ### The `.agent-tools/` Umbrella (in target projects)
 
-The structure above is the **agent-tools repo itself**. Separately, when you run `/swarm:setup`
+The structure above is the **agent-tools repo itself**. Separately, when you run `/work:setup`
 in one of *your* projects, it creates a small `.agent-tools/` umbrella there to hold
 agent-tools meta-artifacts:
 
@@ -217,9 +212,9 @@ agent-tools meta-artifacts:
 │   │   ├── engineering.md      # how we build
 │   │   └── workflow.md         # how we move
 │   ├── personify.md            # agent personality, voice guidance, interpersonal facts (single bounded file with token limits)
-│   ├── swarm/
+│   ├── parallel/
 │   │   ├── config.yml          # orchestrator preferences (committed)
-│   │   ├── roles/              # role templates, editable per project (committed)
+│   │   ├── functions/          # function packets, editable per project (committed)
 │   │   ├── active-run          # pointer to the current run (gitignored)
 │   │   └── sessions/<run-id>/  # per-run state.yml + logs (gitignored)
 │   └── .gitignore              # umbrella gitignore (add-don't-remove)
@@ -227,7 +222,7 @@ agent-tools meta-artifacts:
 └── planning/                   # stays at the project root (intentional carve-out)
 ```
 
-The umbrella primarily covers **charter + swarm + other durable agent configuration** (e.g. personify). `./planning/` is an explicit carve-out for transient work artifacts — it stays at the project root for high-traffic daily use. It uses directory-local `.gitkeep` and `.gitignore` rules (top-level and per-item: ignore everything except `.gitkeep` and `conventions.md` at top level). `/work:setup` enforces this structure idempotently. Workflow may reference `.agent-tools/` for durable items.
+The umbrella primarily covers **charter + parallel + other durable agent configuration** (e.g. personify). `./planning/` is an explicit carve-out for transient work artifacts — it stays at the project root for high-traffic daily use. It uses directory-local `.gitkeep` and `.gitignore` rules (top-level and per-item: ignore everything except `.gitkeep` and `conventions.md` at top level). `/work:setup` enforces this structure idempotently. The work family may reference `.agent-tools/` for durable items.
 
 ## Design Principles
 

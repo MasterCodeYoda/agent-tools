@@ -1,7 +1,7 @@
 # Handoff package (unit ↔ swarm)
 
 **Load when:** continue may pause between phases for a later session/agent, swarm assembles a
-worker dispatch, or two coding agents split operator vs implementer work.
+worker dispatch, or two coding agents split operator vs implement work.
 
 **Default (personal / same-session):** after plan approve, continue **stays in-session** and runs
 execute. Handoff package is **optional** — use when crossing sessions, CLIs, or swarm workers.
@@ -9,7 +9,7 @@ Do not invent emit-and-stop as the default path.
 
 ## One dialect
 
-Swarm `@work parallel` `roles/worker-contract.md` structured return and this package share the **same
+Swarm `@work parallel` `functions/worker-contract.md` structured return and this package share the **same
 field names** for artifacts and status. Unit continue does not invent a second schema.
 
 | Producer | Consumer | Shape |
@@ -19,7 +19,7 @@ field names** for artifacts and status. Unit continue does not invent a second s
 | Worker / phase host | Orchestrator or continue | Structured return YAML (worker-contract) |
 
 Canonical return schema authority for swarm: `@work parallel` `references/structured-return-schema.md`
-(and `@work parallel` `roles/worker-contract.md`). Unit mode **maps** phase-return events into the same
+(and `@work parallel` `functions/worker-contract.md`). Unit mode **maps** phase-return events into the same
 status vocabulary when emitting a package.
 
 ## `handoff_package` (outbound — work to resume)
@@ -32,7 +32,7 @@ handoff_package:
   unit: SPEC-851
   run_id: r-20260718-1
   track: feature | micro | research
-  role_hint: operator | implementer | reviewer
+  role_hint: operator | implement | reviewer
   phase_next: execute | review | integrate | compound | refine | plan
   from_state: ready_execute
   planning_root: .agent-tools/planning   # or legacy ./planning
@@ -61,7 +61,7 @@ Same fields as swarm worker-contract (subset always required):
 ```yaml
 status: DONE | DONE_WITH_CONCERNS | NEEDS_CONTEXT | BLOCKED | APPROVED | FIX_REQUESTED | FAILED
 item: <issue-key>
-role: planner | implementer | reviewer | operator | conflict-resolver | integration-fixer
+function: plan | implement | review | operator | resolve-conflict | fix-integration
 summary: |
   2-4 sentences
 
@@ -110,7 +110,7 @@ Same agent may play both in one session (default). Split only when useful.
 
 ## Swarm alignment
 
-- Orchestrator continues to prepend full `@work parallel` `roles/worker-contract.md` on dispatch (boundaries + brevity).
+- Orchestrator continues to prepend full `@work parallel` `functions/worker-contract.md` on dispatch (boundaries + brevity).
 - Do **not** dual-maintain a forked return schema in workflow — change `@work parallel` structured-return-schema
   + worker-contract together; this file only maps unit continue ↔ that schema.
 - Unit continue **never** writes swarm `state.yml`; swarm never owns unit phase-return.

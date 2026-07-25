@@ -46,7 +46,7 @@ evidence). Soft doc polish does not bump.
 | Concern | Notes |
 |---------|--------|
 | Multi-channel gateway | Maps channel events → `work:claim` only |
-| Model routing | Operator vs implementer models |
+| Model routing | Operator vs implement models |
 | **Thinking / effort ceiling** | Cap high effort for unattended + Sol-class implementers — see `model-runtime-policy.md` |
 | Cron / schedule | Emit claim or continue invocation |
 | Sandbox / cloud workers | Still return structured YAML + disk artifacts |
@@ -106,4 +106,4 @@ silent process-IP skill edits.
 ## Related
 
 - Wave 1–2 notes in consumer projects (e.g. software-factory `docs/process-ip-wave*.md`)
-- Swarm worker contract: `src/work/parallel/roles/worker-contract.md`
+- Swarm worker contract: `src/work/parallel/functions/worker-contract.md`

@@ -6,7 +6,7 @@ Multi-item parallel orchestration (formerly the **`/swarm` skill family**) is **
 into** the `/work` control plane as a **drive mode** of `/work:continue`. There is
 **no** top-level `/swarm`, `/swarm:continue`, or `/swarm:setup` surface.
 
-Charter authoring and parallel-mode project scaffolding (config, role templates, umbrella
+Charter authoring and parallel-mode project scaffolding (config, function packets, umbrella
 gitignore, AGENTS charter-link) are owned by **`/work:setup` only**. No second setup
 command is invented or retained.
 

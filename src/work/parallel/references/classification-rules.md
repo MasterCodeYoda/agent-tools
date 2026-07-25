@@ -13,7 +13,7 @@ unrefined | refined | planning | planned | implementing | implemented
 ```
 
 Stage names are lowercase. They are a separate namespace from worker **status codes**
-(`DONE`, `APPROVED`, etc.). A reviewer's `APPROVED` status advances the item's stage to
+(`DONE`, `APPROVED`, etc.). A review function's `APPROVED` status advances the item's stage to
 `approved`.
 
 ## Classification sources
@@ -34,10 +34,10 @@ as concurrency scales.
 
 | Returned status | Stage transition |
 |-----------------|------------------|
-| planner `DONE` | planning → planned |
-| implementer `DONE` / `DONE_WITH_CONCERNS` | implementing → implemented |
-| reviewer `APPROVED` | reviewing → approved (enters `merge_queue`) |
-| reviewer `FIX_REQUESTED` | reviewing → fix-requested (store `fix_list`) |
+| plan `DONE` | planning → planned |
+| implement `DONE` / `DONE_WITH_CONCERNS` | implementing → implemented |
+| review `APPROVED` | reviewing → approved (enters `merge_queue`) |
+| review `FIX_REQUESTED` | reviewing → fix-requested (store `fix_list`) |
 | (merge sweep success) | approved → merged |
 | `NEEDS_CONTEXT` | stage unchanged; raise IN_FLIGHT_DECISION |
 | `BLOCKED` | stage unchanged; TERMINAL_PAUSE |

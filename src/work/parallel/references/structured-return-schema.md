@@ -1,16 +1,14 @@
-# Reference: Structured Return Schema
+# Structured return schema (orchestrator parse)
 
-Every worker returns a single YAML document in one fenced ```yaml block — nothing outside it.
-The orchestrator parses it with a YAML library. This file is the **orchestrator-side**
-authority for the schema and parse rules; the same schema is embedded in
-`roles/worker-contract.md` for the worker side.
+Authority for the YAML block workers must return. Keep in lockstep with
+`functions/worker-contract.md`.
 
-## Schema
+## Required shape
 
 ```yaml
 status: DONE | DONE_WITH_CONCERNS | NEEDS_CONTEXT | BLOCKED | APPROVED | FIX_REQUESTED | FAILED
 item: <issue-key>
-role: planner | implementer | reviewer | conflict-resolver | integration-fixer
+function: plan | implement | review | resolve-conflict | fix-integration
 summary: |
   <2-4 sentences>
 
@@ -23,36 +21,21 @@ artifacts:
   test_status: pass | fail | not-run | not-applicable
   test_command: <command or null>
 
-concerns: []          # DONE_WITH_CONCERNS: bullets tagged [info|warn|important]
-needs: []             # NEEDS_CONTEXT: questions for the user
-blocker:              # BLOCKED: { what, why_offband_needed, suggested_action }
-fix_list: []          # FIX_REQUESTED: items for the next implementer dispatch
-next_action_recommended: <one phrase>
-run_id: <r-YYYYMMDD-N or null>   # optional; shared with /work runs ledger
+concerns: []
+needs: []
+blocker: null
+fix_list: []          # FIX_REQUESTED: items for the next implement dispatch
+next_action_recommended: <phrase>
+run_id: <optional>
 track: feature | micro | research | null
 ```
 
-Unit continue maps these statuses to phase-return events via @work `references/handoff-package.md`.
-Schema changes here and in `roles/worker-contract.md` stay in lockstep — do not fork a second
-return dialect for sequential workflow.
-
 ## Parse rules
 
-1. Extract the first fenced ```yaml block from the worker's output. Ignore any prose outside
-   it (workers are instructed not to emit any, but be tolerant on extraction).
-2. Parse with a YAML parser.
-3. **If extraction or parse fails, or `status` is missing/invalid → treat as `BLOCKED`** with
-   a synthetic `blocker` describing the parse error. Never guess the worker's intent.
-4. Validate `status` is in the role's allowed set (see role files). An out-of-set status is a
-   parse failure → `BLOCKED`.
+- Entire assistant return must be one ```yaml fence (or the first yaml fence is taken).
+- Unknown `function` or `status` → treat as `BLOCKED` with parse note.
+- Missing required keys for the status → `BLOCKED`.
+- No legacy `role:` field — clean cut; reject or ignore only if you must recover a mid-flight
+  pre-migration log (prefer re-dispatch).
 
-## Why YAML-in-a-fenced-block (not a tool call)
-
-Portable across CLIs — a Phase 3 shell-out worker on a non-host CLI produces the identical
-format. Parsing a fenced block with a YAML library is robust against models embellishing
-around tool calls.
-
-## Status → orchestrator action
-
-See `classification-rules.md` for how each status advances the item's stage, and
-`dispatch-mechanics.md` for merge-time handling of `APPROVED`.
+Schema changes here and in `functions/worker-contract.md` stay in lockstep.

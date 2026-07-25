@@ -105,7 +105,7 @@ Skills work in the Codex app, CLI, and IDE extension.
 - The standard is intentionally portable — skills authored here with judicious markup should transfer cleanly to Codex (and vice-versa via `skills:import`).
 - **2026-07 frontier (Sol / GPT-5.6):** High reasoning effort frequently derails task-bound
   coding (nit-chasing, scope freelancing, multi-day non-completion). Default **≤ medium** for
-  implementer work; hard-cap medium for unattended. OpenAI lean-prompt guidance: strip
+  implement work; hard-cap medium for unattended. OpenAI lean-prompt guidance: strip
   5.5-era persistence scaffolds — they can worsen overstep. See @work
   @work (`references/model-runtime-policy.md`). Do not put model leaderboards in process skills.
 

@@ -1,6 +1,6 @@
 ---
 name: work:setup
-description: Initialize and maintain planning root, conventions, runs ledger, shared memory, project charter, and parallel-mode config/roles for the work family.
+description: Initialize and maintain planning root, conventions, runs ledger, shared memory, project charter, and parallel-mode config/functions for the work family.
 argument-hint: "[optional: 'maintain' to refresh existing conventions, or blank to initialize]"
 user-invocable: true
 ---
@@ -18,7 +18,7 @@ scaffolding. Run it once to bootstrap, and any time afterward to refresh. It own
 4. **Project charter** (`.agent-tools/charter/`) + AGENTS charter-link + optional agent
    memory symlinks — required for parallel mode; useful ground truth for any session that
    loads it.
-5. **Parallel-mode readiness** under `.agent-tools/parallel/` (config.yml + role templates +
+5. **Parallel-mode readiness** under `.agent-tools/parallel/` (config.yml + function packets +
    umbrella gitignore). On-disk path retained; operator entry is continue’s parallel mode
    only — @work `parallel/MODE.md`. Decision:
    `docs/decisions/001-swarm-collapse-into-workflow.md`.
@@ -58,7 +58,7 @@ Survey what already exists; **read before writing** (@work `references/planning-
 - `.agent-tools/memory/` — maintain or plan create + AGENTS memory-link.
 - `.agent-tools/runs/` — maintain or plan create (README, events, ledger).
 - `.agent-tools/charter/` — present → charter re-setup path in §5.3; absent → offer charter.
-- `.agent-tools/parallel/config.yml` + `roles/` — parallel-mode readiness.
+- `.agent-tools/parallel/config.yml` + `functions/` — parallel-mode readiness.
 - Legacy `docs/solutions/` — note migrate via `/work:maintain --migrate-solutions`.
 
 Report what you found and what's missing before changing anything.
@@ -348,11 +348,11 @@ Touch empty `events.ndjson` if absent. Full schema: @work `references/runs-ledge
 ### 5.3 Charter + parallel-mode readiness
 
 Owns project charter and parallel orchestrator scaffolding. Templates live under
-@work `parallel/templates/`; canonical roles under @work `parallel/roles/`. Detailed
+@work `parallel/templates/`; canonical functions under @work `parallel/functions/`. Detailed
 orchestrator behavior: @work `parallel/MODE.md`.
 
-**Hard refuses:** never `git -C`; never overwrite charter/role content without consent; never
-move `./planning/` or QA artifacts under `.agent-tools/`.
+**Hard refuses:** never `git -C`; never overwrite charter/function-packet content without
+consent; never move `./planning/` or QA artifacts under `.agent-tools/`.
 
 #### Detection (evidence before questions)
 
@@ -374,19 +374,25 @@ Each file: frontmatter `last_updated: <YYYY-MM-DD>`; stable headers; sparse bodi
 Fresh: author from evidence + dialogue (< ~8 questions). Re-setup when charter exists: per
 section keep / replace / edit (default **keep**); refresh AGENTS charter-link every re-setup.
 
-#### Parallel config + roles (`.agent-tools/parallel/`)
+#### Parallel config + functions (`.agent-tools/parallel/`)
 
-**Legacy path migrate (mandatory when present):** if `.agent-tools/swarm/` exists and
-`.agent-tools/parallel/` does not, rename `swarm` → `parallel` (`git mv` when tracked;
-plain `mv` otherwise). If **both** exist, stop and ask (do not merge silently). If only
-`parallel/` exists, continue. Do not invent dual trees.
+**Path migrate (mandatory when present):**
+
+1. If `.agent-tools/swarm/` exists and `.agent-tools/parallel/` does not → rename
+   `swarm` → `parallel` (`git mv` when tracked; plain `mv` otherwise).
+2. If `.agent-tools/parallel/roles/` exists and `functions/` does not → rename
+   `roles` → `functions`. **Do not** keep dual trees or alias maps; rewrite `config.yml`
+   keys to `function_chain` / verb function ids (plan, implement, review, …) when present
+   as old planner/implementer keys — prefer full rewrite from template if ambiguous.
+3. If both old and new names exist at either step → stop and ask.
 
 - Write `config.yml` from `parallel/templates/config.yml.md`; set `backlog.default_source`
-  from detected PM (else `file`). On re-setup: add missing keys only; never overwrite values.
-- Copy six role templates into `.agent-tools/parallel/roles/` from skill `parallel/roles/`
-  (`worker-contract`, `planner`, `implementer`, `reviewer`, `conflict-resolver`,
-  `integration-fixer`). On re-setup: for locally edited files offer keep-local /
-  replace-with-canonical / merge / show-diff.
+  from detected PM (else `file`). On re-setup: add missing keys only; never overwrite values
+  once the new schema is in place.
+- Copy function packets into `.agent-tools/parallel/functions/` from skill
+  `parallel/functions/` (`worker-contract`, `plan`, `implement`, `review`,
+  `resolve-conflict`, `fix-integration`). On re-setup: for locally edited files offer
+  keep-local / replace-with-canonical / merge / show-diff.
 - Do **not** create `sessions/` or `active-run` (runtime, gitignored).
 
 #### Umbrella gitignore
@@ -414,9 +420,10 @@ Files (load in order when needed; earlier take precedence on conflict):
 3. [`.agent-tools/charter/engineering.md`](.agent-tools/charter/engineering.md) — standards, DoD
 4. [`.agent-tools/charter/workflow.md`](.agent-tools/charter/workflow.md) — PM, branch, merge, review
 
-**Loading policy:** Parallel mode and roles **explicitly read** needed charter files during
-orientation. Pure unit-mode `/work:*` sessions (including continue in unit mode) do **not**
-auto-load the full charter set. Use textual references only — no `@` auto-import of charter.
+**Loading policy:** Parallel mode and function dispatches **explicitly read** needed charter
+files during orientation. Pure unit-mode `/work:*` sessions (including continue in unit mode)
+do **not** auto-load the full charter set. Use textual references only — no `@` auto-import
+of charter.
 ```
 
 #### Conditional agent-memory symlinks
@@ -449,7 +456,7 @@ Also evaluate shared memory + runs + charter + parallel readiness:
 - `.agent-tools/memory/` tree + AGENTS memory-link
 - `.agent-tools/runs/` README + events + ledger
 - Charter re-setup drift (§5.3) when charter exists
-- `parallel/config.yml` + roles integrity
+- `parallel/config.yml` + `functions/` integrity
 - Legacy `docs/solutions/` migrate note as before
 
 ## What `/work:setup` does not do

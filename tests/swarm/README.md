@@ -29,7 +29,7 @@ generate  →  [agent runs /swarm]  →  analyze
 
    It runs `tests/swarm/new-run.sh <scenario>` under the hood to build
    `tests/swarm/runs/<name>-<timestamp>/` — a real git repo seeded with the scenario's
-   sources, a charter, swarm `config.yml`, the **current** `src/parallel/roles/*` (so you always
+   sources, a charter, swarm `config.yml`, the **current** `src/parallel/functions/*` (so you always
    test live role content), and the backlog. It then hands you a copy-paste block for a new
    terminal and waits.
 
@@ -49,7 +49,7 @@ generate  →  [agent runs /swarm]  →  analyze
    from the analysis session, and it must run in the generated repo's working directory.
    Init-first scenarios begin with `/work:setup` before `/swarm backlog.md`. This produces
    per-dispatch session logs under
-   `.agent-tools/parallel/sessions/<run-id>/<item>/<role>-<n>.md`.
+   `.agent-tools/parallel/sessions/<run-id>/<item>/<function>-<n>.md`.
 
 3. **Analyze** — tell the conversation the run is done (or, in a fresh session, run
    `/swarm:test <run-dir>`). Either way `/swarm:test` confirms the run finished, then runs the

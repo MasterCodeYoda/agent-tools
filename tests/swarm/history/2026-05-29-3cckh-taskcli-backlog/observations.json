@@ -21,7 +21,7 @@
         "APPROVED": 5
       }
     },
-    "conflict-resolver": {
+    "resolve-conflict": {
       "dispatches": 2,
       "statuses": {
         "DONE": 2
@@ -34,35 +34,35 @@
   },
   "malformed_returns": [
     {
-      "file": ".agent-tools/parallel/sessions/2026-05-29-3cckh-taskcli-backlog/CTM-1/implementer-1.md",
+      "file": ".agent-tools/parallel/sessions/2026-05-29-3cckh-taskcli-backlog/CTM-1/implement-1.md",
       "reason": "missing/!malformed frontmatter"
     },
     {
-      "file": ".agent-tools/parallel/sessions/2026-05-29-3cckh-taskcli-backlog/CTM-1/planner-1.md",
+      "file": ".agent-tools/parallel/sessions/2026-05-29-3cckh-taskcli-backlog/CTM-1/plan-1.md",
       "reason": "missing/!malformed frontmatter"
     },
     {
-      "file": ".agent-tools/parallel/sessions/2026-05-29-3cckh-taskcli-backlog/CTM-2/implementer-1.md",
+      "file": ".agent-tools/parallel/sessions/2026-05-29-3cckh-taskcli-backlog/CTM-2/implement-1.md",
       "reason": "missing/!malformed frontmatter"
     },
     {
-      "file": ".agent-tools/parallel/sessions/2026-05-29-3cckh-taskcli-backlog/CTM-2/planner-1.md",
+      "file": ".agent-tools/parallel/sessions/2026-05-29-3cckh-taskcli-backlog/CTM-2/plan-1.md",
       "reason": "missing/!malformed frontmatter"
     },
     {
-      "file": ".agent-tools/parallel/sessions/2026-05-29-3cckh-taskcli-backlog/CTM-3/implementer-1.md",
+      "file": ".agent-tools/parallel/sessions/2026-05-29-3cckh-taskcli-backlog/CTM-3/implement-1.md",
       "reason": "missing/!malformed frontmatter"
     },
     {
-      "file": ".agent-tools/parallel/sessions/2026-05-29-3cckh-taskcli-backlog/CTM-4/implementer-1.md",
+      "file": ".agent-tools/parallel/sessions/2026-05-29-3cckh-taskcli-backlog/CTM-4/implement-1.md",
       "reason": "missing/!malformed frontmatter"
     },
     {
-      "file": ".agent-tools/parallel/sessions/2026-05-29-3cckh-taskcli-backlog/CTM-4/planner-1.md",
+      "file": ".agent-tools/parallel/sessions/2026-05-29-3cckh-taskcli-backlog/CTM-4/plan-1.md",
       "reason": "missing/!malformed frontmatter"
     },
     {
-      "file": ".agent-tools/parallel/sessions/2026-05-29-3cckh-taskcli-backlog/CTM-5/implementer-1.md",
+      "file": ".agent-tools/parallel/sessions/2026-05-29-3cckh-taskcli-backlog/CTM-5/implement-1.md",
       "reason": "missing/!malformed frontmatter"
     },
     {
@@ -100,7 +100,7 @@
         "planner",
         "implementer",
         "reviewer",
-        "conflict-resolver"
+        "resolve-conflict"
       ],
       "last_status": "DONE"
     },
@@ -109,7 +109,7 @@
         "planner",
         "implementer",
         "reviewer",
-        "conflict-resolver"
+        "resolve-conflict"
       ],
       "last_status": "DONE"
     },

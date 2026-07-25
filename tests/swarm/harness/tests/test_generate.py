@@ -18,7 +18,7 @@ FIXED = datetime(2026, 5, 28, 12, 0, 0)
 
 def _make_fake_repo(tmp: Path, *, with_seed=True, with_charter=True,
                     with_backlog=True, scenario_config=None) -> None:
-    """Lay down a minimal fake repo root with one scenario + canonical roles."""
+    """Lay down a minimal fake repo root with one scenario + canonical functions."""
     scn = tmp / "tests" / "swarm" / "scenarios" / "demo"
     scn.mkdir(parents=True)
     if with_backlog:
@@ -31,10 +31,10 @@ def _make_fake_repo(tmp: Path, *, with_seed=True, with_charter=True,
         (scn / "seed" / "app.py").write_text("print('hi')\n")
     if scenario_config is not None:
         (scn / "config.yml").write_text(scenario_config)
-    roles = tmp / "src" / "workflow" / "parallel" / "roles"
-    roles.mkdir(parents=True)
-    (roles / "worker-contract.md").write_text("# canonical contract v1\n")
-    (roles / "planner.md").write_text("# canonical planner v1\n")
+    functions = tmp / "src" / "work" / "parallel" / "functions"
+    functions.mkdir(parents=True)
+    (functions / "worker-contract.md").write_text("# canonical contract v1\n")
+    (functions / "plan.md").write_text("# canonical plan v1\n")
 
 
 class GenerateTests(unittest.TestCase):
@@ -52,12 +52,12 @@ class GenerateTests(unittest.TestCase):
         self.assertIn("schema_version: 1", (run / ".agent-tools/parallel/config.yml").read_text())
         self.assertIn("parallel/sessions/", (run / ".agent-tools/.gitignore").read_text())
 
-    def test_copies_live_roles_verbatim(self):
+    def test_copies_live_functions_verbatim(self):
         _make_fake_repo(self.tmp)
         run = generate("demo", root=self.tmp, now=FIXED)
-        dest = run / ".agent-tools/parallel/roles"
+        dest = run / ".agent-tools/parallel/functions"
         self.assertEqual((dest / "worker-contract.md").read_text(), "# canonical contract v1\n")
-        self.assertEqual((dest / "planner.md").read_text(), "# canonical planner v1\n")
+        self.assertEqual((dest / "plan.md").read_text(), "# canonical plan v1\n")
 
     def test_creates_main_branch_and_initial_commit(self):
         _make_fake_repo(self.tmp)

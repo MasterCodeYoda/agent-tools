@@ -1,7 +1,7 @@
-# Reference: `config.yml` Schema
+# Reference: `config.yml` schema
 
 Project-stable orchestrator preferences at `.agent-tools/parallel/config.yml`. **Committed** —
-preferences are part of the project. Written with defaults by `/swarm:setup`; user-editable.
+preferences are part of the project. Written with defaults by `/work:setup`; user-editable.
 
 ## Schema
 
@@ -10,27 +10,27 @@ schema_version: 1
 
 concurrency_cap: 5
 
-role_chain:
-  - planner
-  - implementer
-  - reviewer
+function_chain:
+  - plan
+  - implement
+  - review
 
 # Tier labels (most_capable | mid_tier | fast) map to actual model IDs per host CLI
 # (e.g. Claude: opus | sonnet | haiku). Or pin an exact model ID.
 models:
-  planner: most_capable
-  implementer: mid_tier
-  reviewer: most_capable
-  conflict_resolver: most_capable
-  integration_fixer: most_capable
+  plan: most_capable
+  implement: mid_tier
+  review: most_capable
+  resolve-conflict: most_capable
+  fix-integration: most_capable
 
-# CLI per role (Phase 3; host CLI for all in Phase 2). Orchestrator is always the host.
+# CLI per function (Phase 3; host CLI for all in Phase 2). Orchestrator is always the host.
 clis:
-  planner: claude
-  implementer: claude
-  reviewer: claude
-  conflict_resolver: claude
-  integration_fixer: claude
+  plan: claude
+  implement: claude
+  review: claude
+  resolve-conflict: claude
+  fix-integration: claude
 
 test_command: null            # null = auto-detect (see cascade below)
 
@@ -48,11 +48,13 @@ output:
   per_wave_summary: brief     # brief | verbose | quiet
 ```
 
+**Clean cut:** no `role_chain`, no `roles/` path, no `planner`/`implementer` model keys.
+Use `function_chain` and function ids matching `functions/*.md` stems.
+
 ## Model-tier mapping
 
-The orchestrator maps tier labels to concrete model IDs for the host CLI. Defaults:
-planner/reviewer/conflict_resolver/integration_fixer → most_capable; implementer → mid_tier
-(highest volume; work is bounded by plan + tests).
+Defaults: plan / review / resolve-conflict / fix-integration → `most_capable`;
+implement → `mid_tier` (highest volume; work is bounded by plan + tests).
 
 ## Test-command discovery cascade
 

@@ -34,14 +34,14 @@ items:
     blocked_by: []
     priority: null            # null = use PM-derived; int = explicit override
     in_flight:                # set when a worker dispatch is active
-      role: implementer
+      function: implement
       dispatched_at: 2026-05-28T11:00:00Z
-      log_file: .agent-tools/parallel/sessions/<run-id>/AER-101/implementer-1.md
+      log_file: .agent-tools/parallel/sessions/<run-id>/AER-101/implement-1.md
     last_completed:           # set when most recent dispatch returned
-      role: planner
+      function: plan
       completed_at: 2026-05-28T10:58:33Z
       status: DONE
-      log_file: .agent-tools/parallel/sessions/<run-id>/AER-101/planner-1.md
+      log_file: .agent-tools/parallel/sessions/<run-id>/AER-101/plan-1.md
     fix_list: []              # populated when stage=fix-requested
 
 merge_queue: []  # item keys in stage=approved, awaiting merge sweep
@@ -55,7 +55,7 @@ last_handoff: null
 #     - "Inspect failed tests in worktree X"
 #     - "Decide: revert AER-115 or fix forward"
 #   diagnostic_files:
-#     - .agent-tools/parallel/sessions/<run-id>/AER-115/integration-fixer-1.md
+#     - .agent-tools/parallel/sessions/<run-id>/AER-115/fix-integration-1.md
 ```
 
 ## Notes
@@ -63,7 +63,7 @@ last_handoff: null
 - `in_flight` and `last_completed` are mutually informative; contents move from `in_flight`
   to `last_completed` on return.
 - `blocks` / `blocked_by` are sourced from refinement/planning dependency metadata.
-- `fix_list` persists across waves until consumed by the next implementer dispatch.
+- `fix_list` persists across waves until consumed by the next implement dispatch.
 - **Wave history is NOT in state.yml** — it lives in `orchestrator.md`.
 
 ## Atomic writes

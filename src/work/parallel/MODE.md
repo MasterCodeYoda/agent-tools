@@ -1,17 +1,27 @@
 # Parallel mode (under `/work:continue`)
 
-Multi-item, role-specialized, worktree-isolated orchestration. **Not** a top-level slash
-family. Decision: `docs/decisions/001-swarm-collapse-into-workflow.md`.
+Multi-item, **function-scoped**, worktree-isolated orchestration. **Not** a top-level slash
+family. Decisions: `docs/decisions/001-swarm-collapse-into-workflow.md`,
+`docs/decisions/003-parallel-functions-not-roles.md`.
+
+## Doctrine
+
+- **One agent kind.** Dispatches use the same substrate (harness + model + effort/thinking).
+- **Scoped functions, not personas.** Packets are procedures with contracts — not character sheets.
+- **One charter.** Shared values/standards/process under `.agent-tools/charter/`.
+- **Phase packets** map to `/work:*` (plan, implement, review).
+- **Ad-hoc functions** (resolve-conflict, fix-integration) prove value beyond “run a work step
+  in a fresh context.”
 
 ## Load map
 
 | When | Load |
 |------|------|
-| Entering parallel with a goal | `orchestrator.md` then `references/*` / `roles/*` as needed |
+| Entering parallel with a goal | `orchestrator.md` then `references/*` / `functions/*` as needed |
 | Active run / pause recovery | `resume.md` then re-enter `orchestrator.md` at merge sweep |
-| Setup / re-setup | `/work:setup` (charter + `.agent-tools/parallel/` config & roles) |
+| Setup / re-setup | `/work:setup` (charter + `.agent-tools/parallel/` config & functions) |
 | Classification / dispatch / schemas | `references/` |
-| Worker prompts | `roles/` (canonical); project copies under `.agent-tools/parallel/roles/` |
+| Worker prompts | `functions/` (canonical); project copies under `.agent-tools/parallel/functions/` |
 
 ## Entry (portfolio router)
 
@@ -29,7 +39,7 @@ Single-item args always stay **unit** mode (never force parallel for one id).
 ## Ready
 
 - `.agent-tools/charter/charter.md` exists, and
-- `.agent-tools/parallel/` has `config.yml` and/or `roles/` from `/work:setup`
+- `.agent-tools/parallel/` has `config.yml` and/or `functions/` from `/work:setup`
 
 If not ready but a wave is eligible → one ask: run `/work:setup` then handoff, **or**
 proceed sequential on the first claimable peer.
@@ -38,14 +48,23 @@ proceed sequential on the first claimable peer.
 
 ```text
 .agent-tools/parallel/
-  config.yml          # committed preferences
-  roles/              # project role templates (editable)
-  active-run          # runtime pointer (gitignored)
-  sessions/<run-id>/  # state.yml + dispatch logs (gitignored)
+  config.yml              # committed preferences (function_chain, models, …)
+  functions/              # project function packets (editable)
+    worker-contract.md
+    plan.md
+    implement.md
+    review.md
+    resolve-conflict.md
+    fix-integration.md
+  active-run              # runtime pointer (gitignored)
+  sessions/<run-id>/      # state.yml + dispatch logs (gitignored)
 ```
 
-Former path `.agent-tools/swarm/` is obsolete. `/work:setup` renames it to `parallel/` when
-found (no in-flight run assumed).
+**Migrate:** if `.agent-tools/parallel/functions/` exists and `functions/` does not, rename
+`roles` → `functions` (`git mv` when tracked). If both exist, stop and ask. No dual trees;
+no alias forever.
+
+Former top-level path `.agent-tools/swarm/` → rename to `parallel/` first (see setup).
 
 ## Safety (non-negotiable)
 

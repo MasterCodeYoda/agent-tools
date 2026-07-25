@@ -141,7 +141,7 @@ Spawn 3 parallel agents:
 **factory-readiness-reviewer** — Code Factory 10-point alignment:
 1. CI runs all tests on every PR
 2. Coverage tool enforces minimum threshold
-3. AI reviewer bot on every PR
+3. AI review bot on every PR
 4. One author can merge without extra approval (with CI gates)
 5. Failed CI → agent gets feedback and retries ("one loop")
 6. Mutation testing or equivalent quality gate
@@ -259,7 +259,7 @@ Calculate from findings:
 |---|-------|--------|-------|
 | 1 | CI runs all tests on every PR | [Met/Partial/Not Met] | |
 | 2 | Coverage tool enforces minimum | [Met/Partial/Not Met] | |
-| 3 | AI reviewer on every PR | [Met/Partial/Not Met] | |
+| 3 | AI review on every PR | [Met/Partial/Not Met] | |
 | 4 | Single author can merge (with gates) | [Met/Partial/Not Met] | |
 | 5 | Failed CI → agent retries | [Met/Partial/Not Met] | |
 | 6 | Mutation testing or equivalent | [Met/Partial/Not Met] | |
