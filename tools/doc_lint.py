@@ -20,7 +20,7 @@ tests/**/*.md, and README.md against the actual repo tree:
                fenced-code line ratio ≥ SHAPE_FENCE_RATIO
            (see src/skills/references/thin-routing.md)
   emphasis process-skill re-growth guard: IMPORTANT/CRITICAL shouting theater
-           in src/{workflow,git,swarm,skills}/**/*.md (allowlist: shape-style)
+           in src/{work,git,swarm,skills}/**/*.md (allowlist: shape-style)
 
 Findings print as `path:line: [class] message`. Exit codes: 0 clean,
 1 findings (0 with --report-only), 2 usage/config error.
@@ -49,7 +49,7 @@ SHAPE_MIN_LINES_FENCE = 200
 SHAPE_FENCE_RATIO = 0.35
 
 # Process families subject to Type A emphasis re-growth guard (thin-routing).
-EMPHASIS_FAMILIES = frozenset({"workflow", "git", "swarm", "skills"})
+EMPHASIS_FAMILIES = frozenset({"work", "git", "swarm", "skills"})
 # Match shouting theater, not ordinary words like "critical path" or severity tables.
 EMPHASIS_RE = re.compile(
     r"(?:\*\*IMPORTANT\*\*|##\s+CRITICAL\b|\*\*CRITICAL\*\*:)"
