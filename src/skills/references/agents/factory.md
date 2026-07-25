@@ -1,6 +1,6 @@
 # Factory (Droid) – Skill Authoring Quick Reference
 
-**Last Updated**: 2026-05-17  
+**Last Updated**: 2026-07-25  
 **Sources**:
 - Primary: https://docs.factory.ai/cli/configuration/skills
 - Related guides: https://docs.factory.ai/guides/skills/*
@@ -93,6 +93,9 @@ Custom commands have been largely merged into the skills system.
 - Include explicit verification steps and required artifacts.
 - Supporting files (scripts, templates) are a first-class part of the system — don’t treat a skill as only the `SKILL.md`.
 - Restart Droid after adding or modifying skills in most environments.
+- **2026-07:** Same frontier lean-skill guidance as other hosts — thin always-on process, thick
+  modular refs, no Type A shouting. Effort ceilings are runtime-owned
+  (`model-runtime-policy.md`), not Droid-specific process forks.
 
 ---
 

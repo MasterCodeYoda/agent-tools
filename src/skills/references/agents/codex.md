@@ -1,6 +1,6 @@
 # Codex – Skill Authoring Quick Reference
 
-**Last Updated**: 2026-06-01  
+**Last Updated**: 2026-07-25  
 **Sources**:
 - Primary: https://developers.openai.com/codex/skills
 - Related: https://developers.openai.com/codex/guides/agents-md
@@ -103,6 +103,11 @@ Skills work in the Codex app, CLI, and IDE extension.
 - AGENTS.md is your primary lever for project conventions; load it early and keep it sparse + high-signal.
 - Use the optional `agents/openai.yaml` only when you need UI polish or declared MCP deps in the Codex app.
 - The standard is intentionally portable — skills authored here with judicious markup should transfer cleanly to Codex (and vice-versa via `skills:import`).
+- **2026-07 frontier (Sol / GPT-5.6):** High reasoning effort frequently derails task-bound
+  coding (nit-chasing, scope freelancing, multi-day non-completion). Default **≤ medium** for
+  implementer work; hard-cap medium for unattended. OpenAI lean-prompt guidance: strip
+  5.5-era persistence scaffolds — they can worsen overstep. See @workflow
+  `references/model-runtime-policy.md`. Do not put model leaderboards in process skills.
 
 ---
 

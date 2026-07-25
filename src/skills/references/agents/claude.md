@@ -1,6 +1,6 @@
 # Claude – Skill Authoring Quick Reference
 
-**Last Updated**: 2026-05-17  
+**Last Updated**: 2026-07-25  
 **Sources**:
 - Primary: https://docs.anthropic.com/en/docs/claude-code/skills
 - Related: https://docs.anthropic.com/en/docs/claude-code/overview
@@ -99,6 +99,10 @@ Skills replace repeatedly pasting the same instructions and help keep long proce
 - Use `description` thoughtfully; it is the main signal for automatic loading.
 - Prefer skills over `CLAUDE.md` for anything long or conditionally useful.
 - Skills can (and often should) include supporting files referenced from `SKILL.md`.
+- **2026-07 frontier:** Opus 5 / Fable 5 era — lean always-on text; avoid persistence cheerleading
+  and emphasis theater. Prefer medium effort for long drive; high only with scope freeze.
+  Process skills should stay Type B (gates, artifacts), not model-personality steering.
+  Effort policy: @workflow `references/model-runtime-policy.md` (runtime-owned).
 
 ---
 
