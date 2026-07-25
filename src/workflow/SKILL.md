@@ -7,9 +7,9 @@ argument-hint: "[no args for portfolio status | unit id/path/slug for focused st
 
 # Workflow
 
-Parent skill for the `workflow` family: high-level philosophy, shared contracts (session-state,
-branch naming, conventions), and navigation. **Procedures live in the sub-skills** — load those
-for full detail.
+Parent skill for the `workflow` family: high-level philosophy, shared contracts, and navigation.
+**Procedures live in the sub-skills** — load those for full detail. Bare `/workflow` is
+**status only** — load `references/status.md`, not the family-contract encyclopedia.
 
 ## Invocation (like `/swarm`)
 
@@ -72,218 +72,65 @@ Direct phase commands (`:refine`, `:plan`, …) remain valid when the user alrea
 
 ## Philosophy
 
-### Core Tenets
-
 1. Do what works — simple processes over complex frameworks  
 2. Work spans sessions — structure for continuity  
 3. Speed + quality + detail  
 4. Knowledge compounds — capture insight after non-trivial work  
 5. User approves before durable commits (plans, roadmaps, brainstorm converge); continue never invents a queue (named NEXT without a planning shell is still claimable)  
-6. Artifacts state the **current** target — re-derive when decisions change; git holds history. See `references/decision-records.md`  
+6. Artifacts state the **current** target — re-derive when decisions change; git holds history (`references/decision-records.md`)  
 7. Durable path decisions (`Chosen Direction`, stream lists, NEXT) are user-gated  
+8. Requirements / design / plan are **working hypotheses** — mid-code learning reclassifies (`references/context-engineering.md`)
 
-### Decomposition Modes
+**Decomposition:** vertical slice (default feature) vs deliverable-partition — full doctrine
+`references/decomposition-modes.md`.
 
-**Vertical slice** — end-to-end story, ship before next. Default for post-release feature work.  
-**Deliverable-partition** — partition parent ACs across artifact sub-issues (foundation, cross-cutting).
+## Requirements source · planning root · tracks
 
-Full selection doctrine, AC inheritance, anti-patterns: `references/decomposition-modes.md`.
+| Topic | Detail |
+|-------|--------|
+| **File vs PM** | Binary per unit; detection `planning/pm-integration.md` |
+| **Planning root** | Prefer `.agent-tools/planning/`; legacy `./planning/` — `references/planning-root.md` |
+| **Runs ledger** | `.agent-tools/runs/` — `references/runs-ledger.md`; yield via `:maintain` |
+| **Tracks** | feature · micro · research — `references/tracks.md` |
+| **Context craft** | On-demand codebase research ≠ research track — `references/context-engineering.md` |
+| **Compact** | Mid-item reclaim — `references/context-compact.md` |
 
-## Requirements Source Mode
+## Project-local conventions
 
-Binary per workflow: **file** (`requirements.md`) vs **PM** (issue is SoT). Detection and field
-mappings: `planning/pm-integration.md`. Agent states mode and allows course-correct.
+Optional `planning/conventions.md` is a **sparse overlay** (tracks, gates, merge policy, PM
+queue, visual plan). Absent sections keep built-in defaults. Automation overlays (always-PR,
+etc.) stay one process dialect — `references/approval-boundaries.md`.
 
-## Planning root
+## Family contracts (load on demand)
 
-**Preferred home:** `.agent-tools/planning/`. **Legacy fallback:** `./planning/` if that directory
-exists and the preferred root does not. Bare `planning/` in this family means *relative to the
-resolved planning root*. Full rules: `references/planning-root.md`.
+Session-state schema, branch naming, planning-dir layout, task-planning norms:
+**`references/family-contracts.md`**. Write-time shells: `execution/templates/session-state.md`,
+@workflow (`planning/templates.md`). **Not** required for bare status.
 
-**Runs ledger** (line instrumentation, not planning work product): `.agent-tools/runs/` —
-`references/runs-ledger.md`. Regenerate yield via **`/workflow:maintain`** (not continue).
+## Parallel worktrees
 
-## Built-in tracks
+2+ independent slices: `references/parallel-worktrees.md` + @git worktree-create /
+worktree-delete.
 
-| Track | Dose |
-|-------|------|
-| **feature** | Full line: refine → plan → execute → review → integrate → compound |
-| **micro** | Issue-as-plan → execute → review (`quick`) → integrate → compound disposition |
-| **research** | Frame → evidence → conclusion → compound; done is judgment once not-done signals clear |
+## High-leverage refs (load when needed)
 
-Classification, micro/research process, review depth: `references/tracks.md`. Project
-`conventions.md` may add tracks or adopt the **personal factory** pack (setup template).
-
-**On-demand codebase research** (compress live-code truth for the unit) is **not** the same
-as the research track — it is default context craft for almost all work. Questions-first /
-ticket-hidden research, refine-primary technical design, plan structure→tactical segmentation,
-dumb-zone norms, mid-phase intentional compaction: `references/context-engineering.md`.
-Mid-item reclaim (clean session default) + continue: `references/context-compact.md`.
-
-## Project-Local Conventions
-
-Optional `planning/conventions.md` (via `/workflow:setup`) is a **sparse overlay** of project-local
-overrides — not a full replacement of built-in defaults. It may define: extra work tracks, horizon
-layout, additive gates, integration/merge policy (including autonomous local merge), orientation/
-PM queue, and optional **visual plan approval** policy (`never` | `on-substantial` | `always`).
-Continue and execute honor recorded sections; **any section left out keeps the skill’s built-in
-default** (e.g. visual plan stays `on-substantial` when the file never mentions it). File entirely
-absent → all built-in defaults. Visual presentation is first-party static HTML
-(`visual-plan.html`) and is non-blocking when skipped.
-
-**Automation overlays:** a host or agent profile may require always-PR (or stricter escalate)
-while project conventions keep human local-merge defaults. That is still **one process dialect**
-— see `references/approval-boundaries.md`. Do not invent a second phase table for bots.
-
-## Task Planning
-
-All planned tasks are required (no priority tiers). Acceptance criteria are binary. Future ideas go
-in **Out of Scope**, not deferred tasks.
-
-Generic workflow labels such as “DTO” are placeholders, not naming requirements. Plans and
-checklists use the target project's established terminology; for C#, defer to @code-patterns
-**Model Terminology (NOT DTOs)**.
-
-## Session Continuity
-
-### Planning Directory Structure
-
-```
-<planning-root>/          # .agent-tools/planning/ preferred; else ./planning/
-├── roadmap.md            # optional (roadmap skill)
-├── conventions.md        # optional (setup)
-├── <project-name>/
-│   ├── brainstorm.md           # optional (concept seed — not technical design)
-│   ├── requirements.md         # file mode only
-│   ├── codebase-research.md    # on-demand code snapshot (almost all work)
-│   ├── design-discussion.md    # technical design (refine-primary; feature/hard)
-│   ├── implementation-plan.md  # structure + tactical segments (executable SoT)
-│   ├── session-state.md
-│   ├── visual-plan.html        # optional; approval presentation only
-│   └── technical-decisions.md  # optional
-└── archive/
-```
-
-```
-.agent-tools/runs/        # line instrumentation (not under planning-root)
-├── events.ndjson
-├── ledger.yml
-└── yield.md              # optional regenerated glance
-```
-
-Initiative/workstream dialects are honored when conventions say so.
-
-### Session State Schema
-
-```yaml
----
-project: [name]
-requirements_source: [file|pm]
-work_item: [ISSUE-ID]
-pm_tool: [linear|jira|manual]
-session_count: [N]
-status: [planned|in_progress|complete]
-track: [feature|micro|research]   # optional; classify may set
-run_id: r-YYYYMMDD-N              # optional until first continue claim
-source_channel: [cli|linear|github|chat|other]
-progress:
-  total_tasks: [X]
-  completed: [Y]
-  percent: [Z%]
-current_layer: [domain|infrastructure|application|framework]
-branch: <type>/<issue-key or description>
-worktree: <path>  # only with --worktree
-visual_plan: <path-to-visual-plan.html | skipped — reason>  # optional; approval presentation only
-reentry_counts:   # optional; thrash bound is per run_id
-  refine_from_execute_or_review: 0
-  plan_from_execute_or_review: 0
-thrash_bound_hits: 0
----
-## Current Focus
-[What's being worked on]
-
-## Last Session Summary
-[Handoff context]
-
-## Intentional Compaction
-[Latest mid-phase snapshot when used — content fields: context-engineering.md;
- reclaim/resume: context-compact.md (compact_focus, resume_loads, latest-IC-wins)]
-
-## Session History
-[Append-only log]
-```
-
-> **Scope:** this template — including the append-only `Session History` log — is for **per-item**
-> `planning/<item>/session-state.md`. The **top-level handoff** (`planning/session-state.md`) is a
-> *light pointer*, not a log: it never carries an append-only history or completed/released-work
-> records. See `@workflow:setup` §4.
-
-### Branch Naming Convention
-
-**Rule:** `<type>/<identifier>` exactly.
-
-| Type | With issue key | Without |
-|------|----------------|---------|
-| Bug | `fix/INK-123` | `fix/login-validation` |
-| Feature | `feat/INK-124` | `feat/user-dashboard` |
-
-With an issue key, use the key as the **entire** identifier — no username prefixes, no appended
-descriptions. Without: short lowercase-hyphenated (2–4 words).
-
-**Anti-patterns:** `matt/ink-123-desc`, `feature/INK-123-long-name`, bare `INK-123`.
-
-### Handoff Protocol
-
-At session boundaries: update session state → commit → offer compound → handoff summary.
-
-## Parallel Execution with Worktrees
-
-Use for 2+ independent slices; not for sequential/shared-file work. Full rules:
-`references/parallel-worktrees.md`. @git worktree-create / worktree-delete for agent mechanics.
-
-Decomposition pitfalls and mode selection: `references/decomposition-modes.md`.
-
-## Extended Guidance (load on demand)
-
-| Area | Path |
+| When | Path |
 |------|------|
-| Portfolio status (bare `/workflow`) | `references/status.md` |
-| Planning root | `references/planning-root.md` |
-| Built-in tracks | `references/tracks.md` |
-| Context engineering (dumb zone, ticket-hidden research, design, plan segmentation, IC content) | `references/context-engineering.md` |
-| Context compact protocol (mid-item clean-session reclaim + continue) | `references/context-compact.md` |
-| Optional reclaim Stop/SessionStart hooks | `references/hooks/reclaim-hooks.md` |
-| Design discussion template | `refine/templates/design-discussion.md` |
-| Runs ledger | `references/runs-ledger.md` |
-| Stewardship (prune + yield + memory) | `@workflow:maintain` |
-| Handoff package (unit ↔ swarm) | `references/handoff-package.md` |
-| Process payload (runtime adapters) | `references/process-payload.md` |
-| Decomposition | `references/decomposition-modes.md` |
-| Worktrees | `references/parallel-worktrees.md` |
-| Plan templates | `planning/templates.md` |
-| Visual plan approval (static HTML) | `planning/references/visual-approval.md` |
-| Visual plan HTML template | `planning/templates/visual-plan.html` |
-| Task breakdown | `planning/task-breakdown.md` |
-| Quality gates | `execution/quality-checkpoints.md` |
-| Deps in worktree | `execution/dependency-establishment.md` |
-| Logging | `execution/logging.md` |
-| PM + claim dialect | `planning/pm-integration.md` |
-| Altitude | `references/horizon-altitudes.md` |
-| Memory | `references/memory-primitives.md` |
-| Decisions | `references/decision-records.md` |
-| Critic pass | `references/critic-pass.md` |
-| Approval boundaries (autonomous / draft-first / escalate) | `references/approval-boundaries.md` |
-| Pre-wake checklist (automation entry) | `references/pre-wake-checklist.md` |
-| Planning example | `references/planning-example.md` |
-| Conversation analysis | `references/conversation-analysis.md` |
+| Bare status | `references/status.md` |
+| Drive / SM | `@workflow:continue` + its refs |
+| Context craft / research / compact | `references/context-engineering.md`, `context-compact.md` |
+| Family contracts | `references/family-contracts.md` |
+| Tracks / root / ledger | `references/tracks.md`, `planning-root.md`, `runs-ledger.md` |
+| Steward | `@workflow:maintain` |
+| Runtime adapters | `references/process-payload.md` |
+| Plan templates / visual | `planning/templates.md`, `planning/references/visual-approval.md` |
+| Approval / pre-wake | `references/approval-boundaries.md`, `pre-wake-checklist.md` |
+
+Secondary refs (memory, critic, examples, conversation analysis, hooks, …) live under
+`references/` and phase trees — open by topic.
 
 ## Related Skills
 
-- **clean-architecture** — layers and dependency direction  
-- **code-patterns** — language implementation  
-- **test-strategy** — testing methodology  
-- **qa** — E2E / NL specs  
-- **skills:evolve** — skill-source only (`publish-target: project`); only path that *edits*
-  process IP skills. Consumer projects capture process evidence and escalate upstream.
-  Never rewrite process IP ad-hoc mid-loop — evolve the skill source, else capture evidence
-  and take the gap upstream.
+- **clean-architecture** · **code-patterns** · **test-strategy** · **qa**
+- **skills:evolve** — only path that *edits* process IP (`publish-target: project`); consumers
+  capture evidence and escalate upstream.

@@ -40,13 +40,14 @@ is the default context practice for **almost all work**; dose scales, skip is ra
 
 ## Dumb-zone norms
 
-Rough band (Claude-class ~168k usable windows; adjust per model):
+Bands are **relative utilization of the usable window for this model/harness**, not a fixed
+token count. Adjust cutoffs when the host exposes a meter; otherwise use trajectory triggers.
 
 | Band | Guidance |
 |------|----------|
-| **Smart zone** (~0–40% utilization) | Prefer to do planning, hard reasoning, and delicate edits here |
-| **Work band** (~40–60%) | Acceptable for well-scoped implement steps with a strong plan; watch for drift |
-| **Dumb zone** (≳60%, or any heavy MCP/tool-noise session) | **Stop and compact** — do not “push through” with more search/edits |
+| **Smart zone** (~0–40% of usable window) | Prefer planning, hard reasoning, delicate edits |
+| **Work band** (~40–60%) | Well-scoped implement steps with a strong plan; watch for drift |
+| **Dumb zone** (≳60%, or any heavy MCP/tool-noise session) | **Stop and compact** — do not “push through” |
 
 Hard norms:
 
@@ -61,10 +62,10 @@ Hard norms:
    on exploration.
 5. **Audit / one-shot discovery is an exception** when the skill explicitly grants a large
    dedicated window for exhaustive search — still return compact findings to the host.
-6. **Instruction budget.** Frontier models only follow on the order of ~150–200 instructions
-   with good consistency (number moves with models). Mega-prompts and stuffed skill loads
-   **silently skip** high-leverage steps. Prefer **control flow outside the prompt** (phase
-   skills, hard gates, thin load points) over one blob that “mentions” every step.
+6. **Instruction budget (heuristic, dated 2026-07).** Always-on instruction load degrades
+   fidelity; exact capacity moves with models. Prefer **control flow outside the prompt**
+   (phase skills, hard gates, thin load points) over mega-prompts. If high-leverage steps are
+   skipped, thin the always-on surface — do not shout louder.
 
 Agents cannot always read a live token meter. Approximate triggers to compact **now**:
 

@@ -100,7 +100,8 @@ Surface the ERROR strings defined there (including planning-docs-missing-in-work
 
 - Worktree just entered: branch already set — record and skip create
 - Else: honor `branch:` in session-state; never start implementation on `main`/`master`
-- Create/switch using Branch Naming Convention from @workflow (`<type>/<ISSUE-KEY>` or short description)
+- Create/switch using Branch Naming Convention from @workflow
+  (`references/family-contracts.md`)
 
 **Hard refuse:** never begin implementation work on `main`/`master` — create or switch to a
 working branch first.
@@ -288,42 +289,18 @@ log, implementation-plan, and `codebase-research.md`; ask user if needed. Prefer
 **context-compact protocol** (write if stale, then reclaim + resume) over replaying a failed
 thread.
 
-## Key Principles
+## Definition of Done
 
-- **Ship complete work** — no 80% features  
-- **Maintain continuity** — session state is SoT  
-- **Stay in the smart zone** — run context-compact mid-phase; load research + plan + latest IC,
-  not noise  
-- **Build knowledge** — compound at boundaries  
-- **Quality built in** — patterns, tests, continuous checks  
+**Per task:** implemented + tests green + plan checkbox + session-state progress + focused
+changes + mutation survivors checked (domain, if tool) + commit on story/slice close +
+decision-reconciliation (`quality-checkpoints.md`) + PM update when applicable.
 
-## Definition of Done (Per Task)
+**Per session:** completion verification · targeted tasks done or documented · ACs checked ·
+session-state updated · work committed · compound offered · handoff summary.
 
-- [ ] Implementation complete  
-- [ ] Tests written and passing  
-- [ ] Plan checkbox updated  
-- [ ] Session state reflects progress  
-- [ ] No introduced regressions  
-- [ ] Mutation survivors analyzed (domain logic only, if tool available)  
-- [ ] Committed (if completing a story/slice)  
-- [ ] Decision-reconciliation at close — governing decision + touched docs/ACs vs built code
-      (see `quality-checkpoints.md` › Decision-Reconciliation at Close)  
-- [ ] PM tool updated (story marked Done)  
+## Integration
 
-## Definition of Done (Per Session)
+`/workflow:plan` · `/workflow:compound` · @test-strategy · PM via session-state ·
+`quality-checkpoints.md` · `dependency-establishment.md` · `logging.md` ·
+@workflow `references/family-contracts.md`
 
-- [ ] Completion Verification checklist passed  
-- [ ] All targeted tasks complete or documented  
-- [ ] All acceptance criteria verified against the plan before closing  
-- [ ] Session state updated  
-- [ ] Work committed  
-- [ ] Compound prompt offered  
-- [ ] Handoff summary provided  
-
-## Integration Points
-
-- **/workflow:plan** — loads plan + session-state; worktree coordinate (plan creates, execute enters)  
-- **/workflow:compound** — offered at session boundaries  
-- **@test-strategy** — per-task testing approach  
-- **PM tools** — status updates from session-state issue keys  
-- **Sibling docs** — `quality-checkpoints.md`, `dependency-establishment.md`, `logging.md`  

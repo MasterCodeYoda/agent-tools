@@ -309,6 +309,48 @@ class DocLintCase(unittest.TestCase):
         self.write("allow.txt", "shape src/solo/**\n")
         self.assert_clean(*self.run_lint())
 
+    # ── emphasis ceremony (Type A re-growth) ───────────────────────────
+
+    def test_emphasis_important_in_workflow_reported(self):
+        self.write(
+            "src/workflow/SKILL.md",
+            "---\nname: workflow\n---\n**IMPORTANT**: never do x\n",
+        )
+        code, out = self.run_lint()
+        self.assertEqual(code, 1)
+        self.assert_finding(out, "[emphasis] shouting theater")
+
+    def test_emphasis_critical_header_in_git_reported(self):
+        self.write(
+            "src/git/SKILL.md",
+            "---\nname: git\n---\n## CRITICAL: Git rules\n",
+        )
+        code, out = self.run_lint()
+        self.assertEqual(code, 1)
+        self.assert_finding(out, "[emphasis] shouting theater")
+
+    def test_emphasis_outside_process_families_ok(self):
+        self.write(
+            "src/product/SKILL.md",
+            "---\nname: product\n---\n**IMPORTANT**: product note\n",
+        )
+        self.assert_clean(*self.run_lint())
+
+    def test_emphasis_allowlist_suppresses(self):
+        self.write(
+            "src/workflow/SKILL.md",
+            "---\nname: workflow\n---\n**IMPORTANT**: never do x\n",
+        )
+        self.write("allow.txt", "shape src/workflow/**\n")
+        self.assert_clean(*self.run_lint())
+
+    def test_emphasis_inside_fence_skipped(self):
+        self.write(
+            "src/workflow/SKILL.md",
+            "---\nname: workflow\n---\n```\n**IMPORTANT**: example\n```\n",
+        )
+        self.assert_clean(*self.run_lint())
+
 
 if __name__ == "__main__":
     unittest.main()

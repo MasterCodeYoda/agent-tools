@@ -9,9 +9,10 @@ horizon extractions that move content between `SKILL.md`, `templates/`, and `ref
 > procedurally complete enough to force the right loads and checks — not empty routers.**
 
 **Shouting is not a gate.** Prefer plain **Hard refuse** / **Guard** one-liners over
-`IMPORTANT` / `CRITICAL` / all-caps MUST theater. If agents miss a rule, fix load point or
-structure — do not bold harder. Process skills define **repeatable process** (when, order,
-evidence, stop conditions), not model personality or persistence cheerleading.
+emphasis theater (bold IMPORTANT-style headers, CRITICAL-style section titles, all-caps MUST).
+If agents miss a rule, fix load point or structure — do not bold harder. Process skills define
+**repeatable process** (when, order, evidence, stop conditions), not model personality or
+persistence cheerleading.
 
 | Layer | Role | Shape |
 |-------|------|--------|
@@ -69,6 +70,7 @@ Empty routers that only say “be careful and check the docs” produce variance
 |------|-------------------|
 | `skill-bloat-no-siblings` | `SKILL.md` ≥ **300** lines and **zero** other `.md` files under that skill directory tree |
 | `skill-high-fence-ratio` | `SKILL.md` ≥ **200** lines and fenced-code line ratio ≥ **0.35** |
+| `emphasis` (process families) | Bold-IMPORTANT / CRITICAL-header shouting patterns in `workflow` / `git` / `swarm` / `skills` — re-growth guard after Type A decontaminate |
 
 Suppressions for known pre-extraction fat skills use allowlist form:
 

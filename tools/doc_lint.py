@@ -19,6 +19,8 @@ tests/**/*.md, and README.md against the actual repo tree:
              skill-high-fence-ratio — ≥ SHAPE_MIN_LINES_FENCE lines and
                fenced-code line ratio ≥ SHAPE_FENCE_RATIO
            (see src/skills/references/thin-routing.md)
+  emphasis process-skill re-growth guard: IMPORTANT/CRITICAL shouting theater
+           in src/{workflow,git,swarm,skills}/**/*.md (allowlist: shape-style)
 
 Findings print as `path:line: [class] message`. Exit codes: 0 clean,
 1 findings (0 with --report-only), 2 usage/config error.
@@ -45,6 +47,13 @@ SKIP_DIRS = {"pdf-build"}
 SHAPE_MIN_LINES_NO_SIBLINGS = 300
 SHAPE_MIN_LINES_FENCE = 200
 SHAPE_FENCE_RATIO = 0.35
+
+# Process families subject to Type A emphasis re-growth guard (thin-routing).
+EMPHASIS_FAMILIES = frozenset({"workflow", "git", "swarm", "skills"})
+# Match shouting theater, not ordinary words like "critical path" or severity tables.
+EMPHASIS_RE = re.compile(
+    r"(?:\*\*IMPORTANT\*\*|##\s+CRITICAL\b|\*\*CRITICAL\*\*:)"
+)
 
 # Fixture and captured-run data: content is test *data* by design (including
 # intentional violations), not authored documentation. Never linted.
@@ -362,6 +371,37 @@ def check_skill_shapes(src_root, findings, allow):
             )
 
 
+def check_emphasis_ceremony(src_root, findings, allow):
+    """Flag IMPORTANT/CRITICAL shouting theater in process skill families.
+
+    Prefer plain Hard refuse / Guard one-liners (thin-routing.md). Suppress with
+    `shape <glob>` allowlist lines (same as skill-shape suppressions).
+    """
+    for path in sorted(src_root.rglob("*.md")):
+        if any(part in SKIP_DIRS for part in path.parts):
+            continue
+        rel_parts = path.relative_to(src_root).parts
+        if not rel_parts or rel_parts[0] not in EMPHASIS_FAMILIES:
+            continue
+        rel_file = path.relative_to(REPO_ROOT).as_posix()
+        if allow.permits_shape(rel_file):
+            continue
+        text = path.read_text(encoding="utf-8")
+        in_fence = False
+        for lineno, line in enumerate(text.splitlines(), 1):
+            if FENCE_RE.match(line):
+                in_fence = not in_fence
+                continue
+            if in_fence:
+                continue
+            if EMPHASIS_RE.search(line):
+                findings.append(
+                    (rel_file, lineno, "emphasis",
+                     "shouting theater (IMPORTANT/CRITICAL); use Hard refuse / "
+                     "Guard one-liners — see thin-routing.md")
+                )
+
+
 def gather_files(repo_root):
     files = []
     for base in ("src", "tests"):
@@ -410,6 +450,7 @@ def main(argv=None):
     for path in files:
         lint_file(path, src_root, declared, findings, allow)
     check_skill_shapes(src_root, findings, allow)
+    check_emphasis_ceremony(src_root, findings, allow)
 
     for rel_file, lineno, kind, message in findings:
         print(f"{rel_file}:{lineno}: [{kind}] {message}")

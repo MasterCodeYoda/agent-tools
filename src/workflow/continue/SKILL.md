@@ -44,7 +44,9 @@ $ARGUMENTS
 
 | When | Load |
 |------|------|
-| Always (this skill) | Soft orientation rules below; refuse list |
+| Always (this skill) | Soft orientation rules below; refuse summary |
+| Full refuse catalog | `references/refuse.md` (with gates; or when orientation is ambiguous) |
+| Family contracts (session-state / branch) | @workflow `references/family-contracts.md` (when writing state or branching) |
 | Path roots | @workflow `references/planning-root.md` |
 | Before mode select | `references/portfolio-router.md` |
 | Unit mode | `references/unit-state-machine.md`, `references/phase-return.md`, @workflow `references/tracks.md` |
@@ -58,7 +60,7 @@ $ARGUMENTS
 | Approval tiers / claim-class / automation overlay | @workflow `references/approval-boundaries.md` (orientation; mandatory before integrate, draft-first ship, or automation entry) |
 | Scheduled / unattended entry | @workflow `references/pre-wake-checklist.md` (before claim when automation-shaped) |
 | Conventions present | `planning/conventions.md` (tracks, gates, merge policy, orientation entrypoint) |
-| Schema / family contracts | `@workflow` (session-state, branch naming, PM mode, claim dialect) |
+| PM / claim dialect | @workflow `planning/pm-integration.md` when claiming from PM |
 
 **Hard gates are not optional.** `gates.md` is a mandatory load, not a nice-to-read essay.
 
@@ -210,25 +212,12 @@ same-session drive — do not emit-and-stop after plan by default.
 
 ## What `/continue` does not do
 
-- Does **not** invent a next unit or NEXT pointer (unlisted / fatigue / residual-only).
-- Does **not** hard-stop solely because a named unit lacks a planning directory.
-- Does **not** auto-author roadmaps or brainstorm seeds (stop + offer unless unit SM routes there).
-- Does **not** author plan/requirements content — phase skills do.
-- Does **not** treat `visual-plan.html` (or any visual surface) as executable SoT or plan-approval proof.
-- Does **not** skip review or invent review evidence; gates green ≠ reviewed.
-- Does **not** skip compound after integrate without explicit `compound: none`.
-- Does **not** push/PR unless project push policy allows — never production promotion.
-- Does **not** implement multi-item parallelism itself — **routes** to `/swarm` when eligible;
-  does not grab items an active swarm worker owns when in unit mode.
-- Does **not** invent a swarm wave without explicit `∥` / `{wave}` grouping.
-- Does **not** free-form thrash phases without artifact/decision evidence (thrash bound).
-- Does **not** emit end-of-loop recap on user-approval stops.
-- Does **not** edit the skill corpus mid-loop — process gaps → process memory + skill-source
-  `/skills:evolve` when available (else upstream escalate; see `references/soft-checks.md`).
-- Does **not** invent NEXT from open PM backlog scrape (PM queue only with conventions filter).
-- Does **not** ship draft-first / escalate-tier actions as if autonomous
-  (`references/approval-boundaries.md`).
-- Does **not** re-drive the same await_user / escalate gate on a tight automation loop.
+**Hard refuses (summary):** invent NEXT; skip/theater review; skip compound without reason;
+push/PR without policy; thrash without evidence; ship draft-first/escalate as autonomous;
+edit skill corpus mid-loop; push through plan when reclassify events fire.
+
+Full catalog: **`references/refuse.md`** (mandatory load with gates when reviewing/integrating;
+load anytime orientation is ambiguous).
 
 ## Related
 
