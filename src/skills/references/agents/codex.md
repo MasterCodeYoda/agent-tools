@@ -107,7 +107,7 @@ Skills work in the Codex app, CLI, and IDE extension.
   coding (nit-chasing, scope freelancing, multi-day non-completion). Default **≤ medium** for
   implementer work; hard-cap medium for unattended. OpenAI lean-prompt guidance: strip
   5.5-era persistence scaffolds — they can worsen overstep. See @workflow
-  `references/model-runtime-policy.md`. Do not put model leaderboards in process skills.
+  @workflow (`references/model-runtime-policy.md`). Do not put model leaderboards in process skills.
 
 ---
 
