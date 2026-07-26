@@ -2,28 +2,26 @@
 
 Primary Kevin instance: image **`kevin-hermes`**, process skills from **`dist/hermes`** (baked at build).
 
-## Quick start (local build)
+## Quick start (preferred)
+
+From the **agent-tools** repo (or any product repo with `--project`):
 
 ```bash
-cd /path/to/agent-tools
-docker build -f hermes/docker/Dockerfile -t kevin-hermes:local .
+# Build local image and start, mounting a product repo
+./hermes/kevin.sh --build -p /path/to/product-repo
 
-export KEVIN_PROJECT_ROOT=/path/to/your/product-repo
-export KEVIN_HERMES_DATA=$HOME/.kevin/hermes-data
-export KEVIN_HERMES_IMAGE=kevin-hermes:local
-mkdir -p "$KEVIN_HERMES_DATA"
+# Or from inside a product git checkout (mounts cwd)
+./hermes/kevin.sh --build
 
-docker compose -f hermes/docker/compose.yaml up -d
-docker logs -f kevin-hermes
+# Pull GHCR :main and start
+./hermes/kevin.sh pull -p /path/to/product-repo
+
+./hermes/kevin.sh logs
+./hermes/kevin.sh status
+./hermes/kevin.sh down
 ```
 
-## GHCR (after main CI)
-
-```bash
-export KEVIN_HERMES_IMAGE=ghcr.io/mastercodeyoda/kevin-hermes:main
-docker compose -f hermes/docker/compose.yaml pull
-docker compose -f hermes/docker/compose.yaml up -d
-```
+Script path: [`../kevin.sh`](../kevin.sh)
 
 ## Volumes
 

@@ -10,44 +10,41 @@
 
 Kevin’s **primary instance** is this container. Laptop Hermes + `setup.sh` remains for Claude/Grok/etc. and optional host dogfood — **not** the long-lived factory host path of record.
 
-## Ordered bring-up
+## Ordered bring-up (script)
+
+Prefer **`hermes/kevin.sh`** (Docker Desktop, Linux, WSL, Git Bash):
 
 | Step | Action | Pass |
 |------|--------|------|
-| 1 | Docker Desktop (or Linux engine) running | `docker info` |
-| 2 | Clone **agent-tools** (optional if only pulling image) | repo present for local build |
-| 3 | Set `KEVIN_PROJECT_ROOT` to product repo absolute path | path exists, is git |
-| 4 | Set `KEVIN_HERMES_DATA` (default `~/.kevin/hermes-data`) | dir creatable |
-| 5 | `docker compose -f hermes/docker/compose.yaml pull` **or** local `docker build` | image present |
-| 6 | `docker compose -f hermes/docker/compose.yaml up -d` | container running |
-| 7 | `docker logs kevin-hermes` shows profile/skills OK | no crash loop |
-| 8 | Secrets in data volume (API keys / Slack as needed) | model or gateway ready |
-| 9 | Smoke: write under `/workspace` → host `git status` dirty | project bind works |
-
-```bash
-cd /path/to/agent-tools   # if using compose from repo
-
-export KEVIN_PROJECT_ROOT=/path/to/product-repo
-export KEVIN_HERMES_DATA=$HOME/.kevin/hermes-data
-# export KEVIN_HERMES_IMAGE=kevin-hermes:local   # after local build
-
-mkdir -p "$KEVIN_HERMES_DATA"
-docker compose -f hermes/docker/compose.yaml up -d
-```
-
-### Local image build
+| 1 | Docker engine running | `docker info` |
+| 2 | Clone **agent-tools** | `./hermes/kevin.sh` works |
+| 3 | Start with product repo | container `kevin-hermes` up |
+| 4 | Logs show gateway | `./hermes/kevin.sh logs` |
+| 5 | Secrets in data volume as needed | model / Slack when required |
+| 6 | Smoke: write under mount → host `git status` | bind works |
 
 ```bash
 cd /path/to/agent-tools
-docker build -f hermes/docker/Dockerfile -t kevin-hermes:local .
-export KEVIN_HERMES_IMAGE=kevin-hermes:local
+
+# Local build + start (mount product repo)
+./hermes/kevin.sh --build -p /path/to/product-repo
+
+# Or pull GHCR :main + start
+./hermes/kevin.sh pull -p /path/to/product-repo
+
+./hermes/kevin.sh logs
+./hermes/kevin.sh status
+./hermes/kevin.sh down
 ```
+
+If cwd is already a product git repo, omit `-p` and the script mounts the current directory.
 
 ## Update
 
 ```bash
-docker compose -f hermes/docker/compose.yaml pull
-docker compose -f hermes/docker/compose.yaml up -d
+./hermes/kevin.sh pull -p /path/to/product-repo
+# or rebuild local:
+./hermes/kevin.sh --build -p /path/to/product-repo
 ```
 
 New process skills = **new image** (green `main` rebuild). No silent git pull of agent-tools inside the running gateway.

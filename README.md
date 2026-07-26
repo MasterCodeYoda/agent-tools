@@ -16,6 +16,7 @@ Long-lived Kevin runs as Docker image **`kevin-hermes`** (GHCR), with process sk
 
 | Doc | Path |
 |-----|------|
+| **Run Kevin** | [`./hermes/kevin.sh --build -p /path/to/product-repo`](hermes/kevin.sh) |
 | Docker path of record | [docs/kevin/runbooks/kevin-hermes-docker.md](docs/kevin/runbooks/kevin-hermes-docker.md) |
 | Profile + docker pack | [hermes/](hermes/) |
 | Image versioning | [docs/kevin/decisions/002-kevin-hermes-image-versioning.md](docs/kevin/decisions/002-kevin-hermes-image-versioning.md) |

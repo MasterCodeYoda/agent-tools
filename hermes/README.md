@@ -2,11 +2,16 @@
 
 | Path | Role |
 |------|------|
+| [`kevin.sh`](kevin.sh) | **Operator CLI** — build / pull / up / logs / down |
 | [`profile/`](profile/) | Hermes profile distribution **`kevin`** |
-| [`docker/`](docker/) | **Primary** instance: `kevin-hermes` image + compose |
+| [`docker/`](docker/) | Image + compose used by `kevin.sh` |
 | [`scripts/`](scripts/) | Host helpers (secondary to Docker) |
 
-**Path of record for the long-lived Kevin instance:** [docs/kevin/runbooks/kevin-hermes-docker.md](../docs/kevin/runbooks/kevin-hermes-docker.md)
+```bash
+./hermes/kevin.sh --build -p /path/to/product-repo
+```
+
+**Path of record:** [docs/kevin/runbooks/kevin-hermes-docker.md](../docs/kevin/runbooks/kevin-hermes-docker.md)
 
 **Process skills:** published as agent id **`hermes`** (`./setup.sh` on laptop; **`dist/hermes` baked into the image** for Docker). Never hand-edit installed skill bodies.
 
