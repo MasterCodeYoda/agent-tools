@@ -1,4 +1,4 @@
-> **SECONDARY:** Path of record for the long-lived Kevin instance is [kevin-hermes-docker.md](./kevin-hermes-docker.md) (`./hermes/kevin.sh`). This document is host-PATH dogfood only.
+> **SECONDARY:** Path of record for Docker packaging is [kevin-hermes-docker.md](./kevin-hermes-docker.md) (`./hermes/dev.sh` builds from source). This document is host-PATH dogfood only.
 
 # Runbook: Hermes profile **kevin** (Kevin v1)
 

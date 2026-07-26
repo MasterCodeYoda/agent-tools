@@ -7,7 +7,7 @@
 | software-factory | agent-tools |
 |------------------|---------------|
 | `hermes/profile/` | `hermes/profile/` |
-| Docker primary | `hermes/docker/` + `hermes/kevin.sh` |
+| Docker pack + source-tree dev runner | `hermes/docker/` + `hermes/dev.sh` (build-from-checkout; not client install) |
 | Kevin scripts | `hermes/scripts/` (+ `factory-wake/`) |
 | ADRs 001–002 | `docs/kevin/decisions/` |
 | Runbooks | `docs/kevin/runbooks/` |

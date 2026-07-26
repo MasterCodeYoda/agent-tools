@@ -6,7 +6,7 @@
 
 | What | Where |
 |------|--------|
-| **Run Kevin** | [`../../hermes/kevin.sh`](../../hermes/kevin.sh) — `./hermes/kevin.sh --build -p /path/to/product-repo` |
+| **Dev build + run** (this repo) | [`../../hermes/dev.sh`](../../hermes/dev.sh) — `./hermes/dev.sh -p /path/to/product-repo` |
 | **Docker path of record** | [runbooks/kevin-hermes-docker.md](./runbooks/kevin-hermes-docker.md) |
 | **Profile + image pack** | [`../../hermes/`](../../hermes/) |
 | **Image versioning** | [decisions/002-kevin-hermes-image-versioning.md](./decisions/002-kevin-hermes-image-versioning.md) |
@@ -30,7 +30,7 @@ docs/kevin/
   product-surface.md
   kevin-v1.md
 hermes/
-  kevin.sh
+  dev.sh
   profile/
   docker/
   scripts/

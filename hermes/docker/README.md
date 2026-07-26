@@ -1,27 +1,30 @@
 # kevin-hermes Docker pack
 
-Primary Kevin instance: image **`kevin-hermes`**, process skills from **`dist/hermes`** (baked at build).
+Image **`kevin-hermes`**, process skills from **`dist/hermes`** (baked at build).
 
-## Quick start (preferred)
+## Dev (this monorepo)
 
-From the **agent-tools** repo (or any product repo with `--project`):
+Always build from the agent-tools checkout:
 
 ```bash
-# Build local image and start, mounting a product repo
-./hermes/kevin.sh --build -p /path/to/product-repo
-
-# Or from inside a product git checkout (mounts cwd)
-./hermes/kevin.sh --build
-
-# Pull GHCR :main and start
-./hermes/kevin.sh pull -p /path/to/product-repo
-
-./hermes/kevin.sh logs
-./hermes/kevin.sh status
-./hermes/kevin.sh down
+cd /path/to/agent-tools
+./hermes/dev.sh -p /path/to/product-repo   # build + up
+./hermes/dev.sh up --no-build              # reuse last local image
+./hermes/dev.sh logs
+./hermes/dev.sh status
+./hermes/dev.sh down
 ```
 
-Script path: [`../kevin.sh`](../kevin.sh)
+Script: [`../dev.sh`](../dev.sh)
+
+## CI / distribution
+
+On green `main`, GitHub Actions builds multi-arch images and pushes:
+
+- `ghcr.io/mastercodeyoda/kevin-hermes:main`
+- `ghcr.io/mastercodeyoda/kevin-hermes:sha-<short>`
+
+Client install (PATH `kevin`, pull + run without a full agent-tools checkout) is **not** implemented yet.
 
 ## Volumes
 
@@ -30,11 +33,11 @@ Script path: [`../kevin.sh`](../kevin.sh)
 | `KEVIN_HERMES_DATA` | `/opt/data` | Secrets, sessions, installed profile |
 | `KEVIN_PROJECT_ROOT` | `/workspace` | Product git tree (operator reviews here) |
 
-Skills are **in the image** at `/opt/kevin/skills` (not a host bind). Update skills by pulling a new image and recreating the container.
+Skills are **in the image** at `/opt/kevin/skills` (not a host bind).
 
 ## Secrets
 
-Fill live values under the data volume after first start (e.g. profile `.env` for API keys / Slack). Names only in `hermes/profile/.env.template`. Never commit tokens.
+Fill live values under the data volume after first start (e.g. profile `.env`). Names only in `hermes/profile/.env.template`. Never commit tokens.
 
 ## Related
 

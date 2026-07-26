@@ -2,14 +2,19 @@
 
 | Path | Role |
 |------|------|
-| [`kevin.sh`](kevin.sh) | **Operator CLI** — build / pull / up / logs / down |
+| [`dev.sh`](dev.sh) | **Source-tree dev runner** — always builds `kevin-hermes:local` from this checkout, then compose up |
 | [`profile/`](profile/) | Hermes profile distribution **`kevin`** |
-| [`docker/`](docker/) | Image + compose used by `kevin.sh` |
+| [`docker/`](docker/) | Dockerfile + compose used by `dev.sh` and CI |
 | [`scripts/`](scripts/) | Host helpers (secondary to Docker) |
 
 ```bash
-./hermes/kevin.sh --build -p /path/to/product-repo
+# From agent-tools checkout — build image from this tree and run it
+./hermes/dev.sh -p /path/to/product-repo
+./hermes/dev.sh logs
+./hermes/dev.sh down
 ```
+
+`dev.sh` is **not** a distributable client CLI and does **not** pull GHCR. Client install / on-PATH `kevin` is a separate design (not shipped yet).
 
 **Path of record:** [docs/kevin/runbooks/kevin-hermes-docker.md](../docs/kevin/runbooks/kevin-hermes-docker.md)
 
