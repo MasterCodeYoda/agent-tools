@@ -15,20 +15,22 @@ Notation: `→` sequential · `∥` (or `||`) parallelizable · `{A ∥ B}` wave
 |---|------|--------|---------|
 | — | **AGNT-11** packaging capital | Done | Monorepo + image + SF retire |
 | 1 | **AGNT-13** Skills dist artifact | Done (local) | CI pack of `dist/hermes` + revision/manifest; stable fetch URL for CLI — live after push to main |
-| 2 | **AGNT-12** Workstation CLI + host bootstrap | In progress | PATH `kevin`: setup/update/doctor/start; Hermes + profile; skills from artifact; project root |
+| 2 | **AGNT-12** Workstation CLI + host bootstrap | Done (local) | PATH `kevin`: setup/update/doctor/start; Hermes + profile; skills from artifact; project root |
 | 3 | **AGNT-14** Isolated clean-room / remote DX | Backlog | Provision & sandbox DX for image mode — not dogfood path |
 
 **Order line:**
 
 ```text
-AGNT-11 (done) → AGNT-13 → AGNT-12 → AGNT-14
+AGNT-11 (done) → AGNT-13 (done) → AGNT-12 (done) → AGNT-14
 ```
 
 **⚠ collision watch (not a launch package):** AGNT-12 ∥ AGNT-13 share skills-root path, revision shape, and profile `external_dirs` — sequential reduces thrash.
 
 ## NEXT
 
-**AGNT-12** — Workstation Kevin: foundational CLI + host bootstrap
+**AGNT-14** — Isolated Kevin: clean-room provision and remote DX (backlog; not dogfood gate)
+
+Workstation dogfood path is live locally (`kevin setup` / `kevin doctor` / `kevin start`).
 
 ## Out of scope
 
@@ -44,4 +46,4 @@ AGNT-11 (done) → AGNT-13 → AGNT-12 → AGNT-14
 - PM: Linear team **Agent Tools** (`AGNT`); project *Kevin v1 — Hermes factory foundation*
 - Decisions: [ADR-003](../docs/kevin/decisions/003-workstation-vs-isolated-kevin.md), [ADR-004](../docs/kevin/decisions/004-workstation-cli-and-skills-distribution.md)
 - AGNT-14 after workstation dogfood is underway — not blocking CLI/artifact
-- Continue: claim **AGNT-12** via `/work:continue`
+- Continue: claim **AGNT-14** only when isolated provision is intentional; otherwise dogfood workstation
