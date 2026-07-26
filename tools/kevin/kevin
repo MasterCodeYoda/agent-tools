@@ -113,11 +113,7 @@ find_skills_installer() {
 }
 
 find_profile_source() {
-  # Prefer already-staged profile when complete
-  if [[ -f "${PROFILE_SRC}/distribution.yaml" ]]; then
-    echo "$PROFILE_SRC"
-    return
-  fi
+  # Prefer packaging sources (monorepo / CLI share) so re-setup refreshes staged copy.
   if [[ -n "$REPO_ROOT" && -f "${REPO_ROOT}/hermes/profile/distribution.yaml" ]]; then
     echo "${REPO_ROOT}/hermes/profile"
     return
@@ -128,6 +124,11 @@ find_profile_source() {
   fi
   if [[ -f "${KEVIN_HOME}/share/profile/distribution.yaml" ]]; then
     echo "${KEVIN_HOME}/share/profile"
+    return
+  fi
+  # Last resort: already-staged profile (offline consumer without share dir)
+  if [[ -f "${PROFILE_SRC}/distribution.yaml" ]]; then
+    echo "$PROFILE_SRC"
     return
   fi
   echo ""
