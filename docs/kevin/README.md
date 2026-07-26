@@ -16,7 +16,7 @@ These modes are **permanent options**, not a migration ladder. See [ADR-003](./d
 | What | Where |
 |------|--------|
 | **Modes + decisions** | [decisions/](./decisions/) — especially 003, 004 |
-| **Workstation distribution** | [ADR-004](./decisions/004-workstation-cli-and-skills-distribution.md) · [skills dist runbook](./runbooks/kevin-skills-dist.md) · CLI (AGNT-12) |
+| **Workstation CLI (path of record)** | [runbooks/kevin-workstation-cli.md](./runbooks/kevin-workstation-cli.md) · [skills dist](./runbooks/kevin-skills-dist.md) · [ADR-004](./decisions/004-workstation-cli-and-skills-distribution.md) |
 | **Isolated / packaging** | [runbooks/kevin-hermes-docker.md](./runbooks/kevin-hermes-docker.md) · [`hermes/dev.sh`](../../hermes/dev.sh) |
 | **Linear** | Team **Agent Tools** (`AGNT`) — [LINEAR.md](./LINEAR.md) |
 | **software-factory repo** | Retired — [MIGRATION.md](./MIGRATION.md) |

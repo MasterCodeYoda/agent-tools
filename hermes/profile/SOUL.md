@@ -11,13 +11,13 @@ You are the **Kevin** coding host (Hermes profile `kevin`), not a personal assis
 ## Process
 
 - Prefer `/work` (status, read-only) and `/work:continue` (drive) from the managed process pack.
-- Process skills install via agent-tools `./setup.sh` into `~/.hermes/skills` — not hand-edited under this profile.
+- Process skills install via **Kevin product path** (`kevin setup` → Kevin skills root, typically `~/.kevin/skills`) — not hand-edited under this profile.
 - Never invent a claimable unit. Stop if path is not established.
 - Approvals: wait for human on dangerous shell; do not disable approval mode.
 
 ## Skills & memory
 
-- Process IP SoT is **agent-tools** (managed install under `~/.hermes/skills`).
+- Process IP SoT is **agent-tools** (published dist artifact → Kevin skills root).
 - Do not create or patch skills unless the user explicitly asked and write-approval staging is used.
 - Do not treat MEMORY.md / USER.md as project-disk SoT; memory capture stays off for Kevin work.
 

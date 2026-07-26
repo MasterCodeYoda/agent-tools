@@ -15,7 +15,7 @@ Notation: `→` sequential · `∥` (or `||`) parallelizable · `{A ∥ B}` wave
 |---|------|--------|---------|
 | — | **AGNT-11** packaging capital | Done | Monorepo + image + SF retire |
 | 1 | **AGNT-13** Skills dist artifact | Done (local) | CI pack of `dist/hermes` + revision/manifest; stable fetch URL for CLI — live after push to main |
-| 2 | **AGNT-12** Workstation CLI + host bootstrap | Todo | PATH `kevin`: setup/update/doctor/start; Hermes + profile; skills from artifact; project root |
+| 2 | **AGNT-12** Workstation CLI + host bootstrap | In progress | PATH `kevin`: setup/update/doctor/start; Hermes + profile; skills from artifact; project root |
 | 3 | **AGNT-14** Isolated clean-room / remote DX | Backlog | Provision & sandbox DX for image mode — not dogfood path |
 
 **Order line:**
@@ -44,4 +44,4 @@ AGNT-11 (done) → AGNT-13 → AGNT-12 → AGNT-14
 - PM: Linear team **Agent Tools** (`AGNT`); project *Kevin v1 — Hermes factory foundation*
 - Decisions: [ADR-003](../docs/kevin/decisions/003-workstation-vs-isolated-kevin.md), [ADR-004](../docs/kevin/decisions/004-workstation-cli-and-skills-distribution.md)
 - AGNT-14 after workstation dogfood is underway — not blocking CLI/artifact
-- Continue: claim **AGNT-13** via `/work:continue`
+- Continue: claim **AGNT-12** via `/work:continue`

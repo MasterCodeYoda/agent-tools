@@ -1,4 +1,4 @@
-> **SECONDARY:** Path of record for Docker packaging is [kevin-hermes-docker.md](./kevin-hermes-docker.md) (`./hermes/dev.sh` builds from source). This document is host-PATH dogfood only.
+> **SECONDARY for workstation consumers:** Product path of record is [kevin-workstation-cli.md](./kevin-workstation-cli.md) (`kevin setup` / `kevin doctor` / `kevin start`). This document retains historical host-PATH dogfood (monorepo + setup.sh era). Docker packaging: [kevin-hermes-docker.md](./kevin-hermes-docker.md).
 
 # Runbook: Hermes profile **kevin** (Kevin v1)
 

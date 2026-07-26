@@ -14,7 +14,7 @@ Clone once, run `./setup.sh`, and get a consistent set of high-quality skills ac
 
 | Mode | Path |
 |------|------|
-| **Workstation** (coding agent on your machine) | [docs/kevin/](docs/kevin/) · ADRs [003](docs/kevin/decisions/003-workstation-vs-isolated-kevin.md), [004](docs/kevin/decisions/004-workstation-cli-and-skills-distribution.md) — foundational `kevin` CLI + skills dist artifact (in progress) |
+| **Workstation** (coding agent on your machine) | [kevin CLI runbook](docs/kevin/runbooks/kevin-workstation-cli.md) · skills dist · ADRs [003](docs/kevin/decisions/003-workstation-vs-isolated-kevin.md), [004](docs/kevin/decisions/004-workstation-cli-and-skills-distribution.md) |
 | **Isolated** (container) | Image `kevin-hermes` · packaging [`./hermes/dev.sh`](hermes/dev.sh) · [runbook](docs/kevin/runbooks/kevin-hermes-docker.md) |
 
 Process skills SoT: `src/` → `dist/hermes`. Workstation consumers install via CLI artifact (not multi-agent `./setup.sh` into `~/.hermes/skills`). `./setup.sh` remains for Claude/Grok/Factory/etc.

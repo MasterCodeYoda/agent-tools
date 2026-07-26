@@ -16,8 +16,9 @@ memory:
 skills:
   write_approval: true
   creation_nudge_interval: 0
-  # Laptop: agent-tools ./setup.sh → ~/.hermes/skills
+  # Workstation: Kevin skills root (~/.kevin/skills via kevin setup / install-kevin-skills)
   # Image: /opt/kevin/skills (copy of dist/hermes/skills at build)
+  # Placeholder substituted at apply/setup to an absolute path.
   external_dirs:
     - __HERMES_SKILLS_DIR__
 

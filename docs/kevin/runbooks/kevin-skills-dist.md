@@ -45,24 +45,28 @@ kevin-skills/
 
 `--no-publish` reuses an existing `dist/hermes/skills` tree.
 
-## Install into Kevin skills root (interim — until `kevin` CLI)
+## Install into Kevin skills root
 
 Default root: **`~/.kevin/skills`** (override with `KEVIN_SKILLS_ROOT`).
 
+**Preferred (product CLI):**
+
 ```bash
-# From published release
+kevin setup
+# or: kevin setup --from-file dist/kevin-skills/kevin-skills.tar.gz
+```
+
+**Direct installer (maintainer / library used by CLI):**
+
+```bash
 ./tools/install-kevin-skills.sh --from-url
-
-# From a local pack
 ./tools/install-kevin-skills.sh --from-file dist/kevin-skills/kevin-skills.tar.gz
-
-# Custom root
 KEVIN_SKILLS_ROOT=/tmp/kevin-skills-test ./tools/install-kevin-skills.sh --from-file dist/kevin-skills/kevin-skills.tar.gz
 ```
 
 Install is a **copy**, not a symlink into a clone. Verify: `cat $KEVIN_SKILLS_ROOT/.agent-tools-revision`.
 
-Profile `kevin` must set `external_dirs` to this root (AGNT-12 CLI; until then operators may point profile at `~/.kevin/skills` manually after install).
+Profile `kevin` must set `external_dirs` to this root (`kevin setup` does this).
 
 ## CI
 

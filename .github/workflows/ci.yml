@@ -18,7 +18,7 @@ jobs:
       - uses: actions/checkout@v5
 
       - name: shellcheck
-        run: shellcheck setup.sh tools/publish-skills.sh tools/pack-kevin-skills.sh tools/install-kevin-skills.sh
+        run: shellcheck setup.sh tools/publish-skills.sh tools/pack-kevin-skills.sh tools/install-kevin-skills.sh tools/install-kevin-cli.sh tools/kevin/kevin hermes/scripts/apply-kevin-profile.sh
 
       - name: Publisher dry-run
         run: tools/publish-skills.sh --dry-run --quiet

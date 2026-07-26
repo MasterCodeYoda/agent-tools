@@ -55,13 +55,13 @@ Install lands at `~/.hermes/profiles/kevin/`. User-owned paths (`.env`, `auth.js
 `sessions/`, `memories/`, `state.db*`, …) are **never** overwritten by
 `hermes profile update`.
 
-## Process skills
+## Process skills (product path)
 
-1. In agent-tools: `./setup.sh` (installs managed skills under `~/.hermes/skills`).
-2. Profile `external_dirs` points at that path (wrapper substitutes absolute path).
-3. Missing skills → fail loud: re-run agent-tools setup. Do not silent-pull on start.
+1. **Workstation:** `kevin setup` (or `tools/install-kevin-skills.sh`) installs into **`~/.kevin/skills`**.
+2. Profile `external_dirs` points at that path (apply/setup substitutes absolute path).
+3. Missing skills → fail loud: re-run `kevin setup` / `kevin update`. Do not silent-pull on start.
 
-Kevin `export-process-pack.sh` remains a **secondary** offline artifact only.
+Multi-agent `./setup.sh` → `~/.hermes/skills` is **not** the Kevin consumer product path (ADR-004).
 
 ## Posture (locked)
 

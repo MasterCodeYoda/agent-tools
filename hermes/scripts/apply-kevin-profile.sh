@@ -16,17 +16,21 @@ config.yaml with the absolute managed skills path.
 Options:
   --force           Overwrite an existing kevin profile (Hermes --force; user data preserved)
   --force-config    Also re-apply distribution config (hermes profile update --force-config)
+  --no-alias        Do not create Hermes thin kevin alias (prefer product kevin CLI on PATH)
   --skip-skills-check
-                    Install even if ~/.hermes/skills is missing (not recommended)
+                    Install even if Kevin skills root is missing (not recommended)
   -y, --yes         Non-interactive install confirmation
   -h, --help        Show this help
 
 Environment:
-  HERMES_SKILLS_DIR   Override managed skills path (default: $HOME/.hermes/skills)
+  KEVIN_SKILLS_ROOT   Kevin skills root (preferred; default: $HOME/.kevin/skills)
+  HERMES_SKILLS_DIR   Override skills path (legacy alias for the same value)
+
+Product path (ADR-004): ~/.kevin/skills — prefer: kevin setup
 
 Examples:
   ./scripts/apply-kevin-profile.sh
-  ./scripts/apply-kevin-profile.sh --force
+  ./scripts/apply-kevin-profile.sh --force --no-alias -y
   ./scripts/apply-kevin-profile.sh --force --force-config -y
 EOF
 }
@@ -35,11 +39,13 @@ FORCE=0
 FORCE_CONFIG=0
 SKIP_SKILLS=0
 YES=0
+NO_ALIAS=0
 
 while [[ $# -gt 0 ]]; do
   case "$1" in
     --force) FORCE=1; shift ;;
     --force-config) FORCE_CONFIG=1; shift ;;
+    --no-alias) NO_ALIAS=1; shift ;;
     --skip-skills-check) SKIP_SKILLS=1; shift ;;
     -y|--yes) YES=1; shift ;;
     -h|--help) usage; exit 0 ;;
@@ -54,9 +60,9 @@ done
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 # This file lives at hermes/scripts/; profile is hermes/profile/; repo root is ../..
 HERMES_DIR="$(cd "${SCRIPT_DIR}/.." && pwd)"
-REPO_ROOT="$(cd "${HERMES_DIR}/.." && pwd)"
 SRC="${HERMES_DIR}/profile"
-SKILLS_DIR="${HERMES_SKILLS_DIR:-${HOME}/.hermes/skills}"
+# Product default: Kevin skills root (ADR-004). HERMES_SKILLS_DIR remains an override.
+SKILLS_DIR="${HERMES_SKILLS_DIR:-${KEVIN_SKILLS_ROOT:-${HOME}/.kevin/skills}}"
 PLACEHOLDER="__HERMES_SKILLS_DIR__"
 PROFILE_HOME="${HOME}/.hermes/profiles/kevin"
 INSTALLED_CONFIG="${PROFILE_HOME}/config.yaml"
@@ -72,10 +78,10 @@ if ! command -v hermes >/dev/null 2>&1; then
 fi
 
 if [[ ! -d "${SKILLS_DIR}" ]]; then
-  msg="error: managed skills path missing: ${SKILLS_DIR}
-  Run agent-tools ./setup.sh so process skills install under ~/.hermes/skills.
-  (E2 / agent-tools owns the install target; this script only binds the profile.)
-  Override with HERMES_SKILLS_DIR=... or pass --skip-skills-check (not recommended)."
+  msg="error: Kevin skills root missing: ${SKILLS_DIR}
+  Product path: kevin setup   (or tools/install-kevin-skills.sh --from-url)
+  Maintainer:   tools/install-kevin-skills.sh --from-file dist/kevin-skills/kevin-skills.tar.gz
+  Override with KEVIN_SKILLS_ROOT=... / HERMES_SKILLS_DIR=... or pass --skip-skills-check."
   if [[ "${SKIP_SKILLS}" -eq 1 ]]; then
     echo "warning: ${msg}" >&2
   else
@@ -130,7 +136,10 @@ if profile_exists && [[ "${FORCE_CONFIG}" -eq 1 && "${FORCE}" -eq 0 ]]; then
   substitute_skills_path
 else
   # Install from stable repo path so distribution source is this tree (not a temp dir).
-  INSTALL_ARGS=(profile install "${SRC}" --name kevin --alias)
+  INSTALL_ARGS=(profile install "${SRC}" --name kevin)
+  if [[ "${NO_ALIAS}" -eq 0 ]]; then
+    INSTALL_ARGS+=(--alias)
+  fi
   if [[ "${FORCE}" -eq 1 ]] || profile_exists; then
     INSTALL_ARGS+=(--force)
   fi
@@ -149,9 +158,9 @@ fi
 
 echo
 echo "Kevin profile apply complete."
-echo "  Launch: hermes -p kevin   (or alias 'kevin' if created)"
+echo "  Launch: kevin   (product CLI) or hermes -p kevin"
 echo "  Profile: ${PROFILE_HOME}"
 echo "  Source:  ${SRC}"
 echo "  Secrets: fill ${PROFILE_HOME}/.env (from .env.template / .env.EXAMPLE) or use auth.json"
-echo "  Process skills: agent-tools ./setup.sh → ${SKILLS_DIR}"
+echo "  Process skills (product): ${SKILLS_DIR}  (kevin setup / install-kevin-skills.sh)"
 echo "  Legacy dogfood used hermes -p factory — prefer kevin; do not auto-delete factory."

@@ -1,0 +1,482 @@
+#!/usr/bin/env bash
+#
+# Product CLI for Workstation Kevin (ADR-004).
+# Commands: setup | update | doctor | start (default) | help
+#
+# Env:
+#   KEVIN_HOME          default $HOME/.kevin
+#   KEVIN_SKILLS_ROOT   default $KEVIN_HOME/skills
+#   KEVIN_PROFILE_SRC   staged profile dist (default $KEVIN_HOME/profile-src)
+#   KEVIN_SHARE_DIR     install share (profile + install-kevin-skills); auto-detected
+#   KEVIN_SKILLS_URL    override skills download URL
+#
+set -euo pipefail
+
+CMD_NAME="kevin"
+KEVIN_HOME="${KEVIN_HOME:-${HOME}/.kevin}"
+SKILLS_ROOT="${KEVIN_SKILLS_ROOT:-${KEVIN_HOME}/skills}"
+PROFILE_SRC="${KEVIN_PROFILE_SRC:-${KEVIN_HOME}/profile-src}"
+PLACEHOLDER="__HERMES_SKILLS_DIR__"
+PROFILE_HOME="${HOME}/.hermes/profiles/kevin"
+INSTALLED_CONFIG="${PROFILE_HOME}/config.yaml"
+
+die() { echo "${CMD_NAME}: error: $*" >&2; exit 1; }
+info() { echo "${CMD_NAME}: $*" >&2; }
+ok() { echo "OK  $*"; }
+warn() { echo "WARN $*" >&2; }
+fail_hard() { echo "FAIL $*"; HARD_FAILS=$((HARD_FAILS + 1)); }
+
+usage() {
+  cat <<'EOF'
+kevin — Workstation Kevin CLI (Hermes host + process skills)
+
+Usage:
+  kevin setup   [--from-file TAR] [--force-profile]
+  kevin update  [--from-file TAR] [--force-profile]
+  kevin doctor  [--project PATH]
+  kevin start   [--project PATH] [-- HERMES_ARGS...]
+  kevin         # same as start
+  kevin help
+
+Environment:
+  KEVIN_HOME          default ~/.kevin
+  KEVIN_SKILLS_ROOT   default $KEVIN_HOME/skills
+  KEVIN_PROFILE_SRC   staged profile distribution
+  KEVIN_SKILLS_URL    skills tarball URL override
+
+Product path: skills from published artifact → Kevin skills root (not setup.sh → ~/.hermes/skills).
+EOF
+}
+
+# Resolve this script (follow one level of symlink for install wrappers).
+resolve_self() {
+  local src="${BASH_SOURCE[0]}"
+  while [[ -L "$src" ]]; do
+    local dir
+    dir="$(cd -P "$(dirname "$src")" && pwd)"
+    src="$(readlink "$src")"
+    [[ "$src" != /* ]] && src="${dir}/${src}"
+  done
+  cd -P "$(dirname "$src")" && pwd
+}
+
+SELF_DIR="$(resolve_self)"
+
+# Share dir: installed share next to bin, or KEVIN_HOME/share (monorepo uses REPO_ROOT instead).
+detect_share_dir() {
+  if [[ -n "${KEVIN_SHARE_DIR:-}" ]]; then
+    echo "$KEVIN_SHARE_DIR"
+    return
+  fi
+  # Installed: PREFIX/bin/kevin → PREFIX/share/kevin
+  local prefix
+  prefix="$(cd "${SELF_DIR}/.." && pwd)"
+  if [[ -d "${prefix}/share/kevin" ]]; then
+    echo "${prefix}/share/kevin"
+    return
+  fi
+  if [[ -d "${KEVIN_HOME}/share" ]]; then
+    echo "${KEVIN_HOME}/share"
+    return
+  fi
+  echo ""
+}
+
+detect_repo_root() {
+  local candidate
+  candidate="$(cd "${SELF_DIR}/../.." && pwd)"
+  if [[ -f "${candidate}/hermes/profile/distribution.yaml" ]] \
+    && [[ -f "${candidate}/tools/install-kevin-skills.sh" ]]; then
+    echo "$candidate"
+    return
+  fi
+  echo ""
+}
+
+REPO_ROOT="$(detect_repo_root)"
+SHARE_DIR="$(detect_share_dir)"
+
+find_skills_installer() {
+  if [[ -n "$REPO_ROOT" && -x "${REPO_ROOT}/tools/install-kevin-skills.sh" ]]; then
+    echo "${REPO_ROOT}/tools/install-kevin-skills.sh"
+    return
+  fi
+  if [[ -n "$SHARE_DIR" && -x "${SHARE_DIR}/install-kevin-skills.sh" ]]; then
+    echo "${SHARE_DIR}/install-kevin-skills.sh"
+    return
+  fi
+  if [[ -x "${KEVIN_HOME}/share/install-kevin-skills.sh" ]]; then
+    echo "${KEVIN_HOME}/share/install-kevin-skills.sh"
+    return
+  fi
+  echo ""
+}
+
+find_profile_source() {
+  # Prefer already-staged profile when complete
+  if [[ -f "${PROFILE_SRC}/distribution.yaml" ]]; then
+    echo "$PROFILE_SRC"
+    return
+  fi
+  if [[ -n "$REPO_ROOT" && -f "${REPO_ROOT}/hermes/profile/distribution.yaml" ]]; then
+    echo "${REPO_ROOT}/hermes/profile"
+    return
+  fi
+  if [[ -n "$SHARE_DIR" && -f "${SHARE_DIR}/profile/distribution.yaml" ]]; then
+    echo "${SHARE_DIR}/profile"
+    return
+  fi
+  if [[ -f "${KEVIN_HOME}/share/profile/distribution.yaml" ]]; then
+    echo "${KEVIN_HOME}/share/profile"
+    return
+  fi
+  echo ""
+}
+
+require_hermes() {
+  if command -v hermes >/dev/null 2>&1; then
+    return 0
+  fi
+  cat >&2 <<'EOF'
+kevin: error: hermes not found on PATH
+
+Install Hermes (upstream), then re-open your shell:
+
+  curl -fsSL https://hermes-agent.nousresearch.com/install.sh | bash
+
+See https://hermes-agent.nousresearch.com/
+EOF
+  exit 1
+}
+
+stage_profile() {
+  local src
+  src="$(find_profile_source)"
+  [[ -n "$src" ]] || die "no profile distribution found (run tools/install-kevin-cli.sh or use monorepo)"
+  if [[ "$src" == "$PROFILE_SRC" ]]; then
+    info "profile already staged at ${PROFILE_SRC}"
+    return
+  fi
+  mkdir -p "$PROFILE_SRC"
+  if command -v rsync >/dev/null 2>&1; then
+    rsync -a --delete "${src}/" "${PROFILE_SRC}/"
+  else
+    find "$PROFILE_SRC" -mindepth 1 -maxdepth 1 -exec rm -rf {} + 2>/dev/null || true
+    cp -a "${src}/." "${PROFILE_SRC}/"
+  fi
+  [[ -f "${PROFILE_SRC}/distribution.yaml" ]] || die "staged profile missing distribution.yaml"
+  info "staged profile → ${PROFILE_SRC}"
+}
+
+substitute_skills_path() {
+  [[ -f "$INSTALLED_CONFIG" ]] || die "expected installed config at ${INSTALLED_CONFIG}"
+  if grep -q "$PLACEHOLDER" "$INSTALLED_CONFIG"; then
+    # portable in-place substitute
+    local tmp
+    tmp="$(mktemp)"
+    sed "s|${PLACEHOLDER}|${SKILLS_ROOT}|g" "$INSTALLED_CONFIG" >"$tmp"
+    mv "$tmp" "$INSTALLED_CONFIG"
+    info "substituted skills path → ${SKILLS_ROOT}"
+  elif grep -qF "$SKILLS_ROOT" "$INSTALLED_CONFIG"; then
+    info "skills path already set → ${SKILLS_ROOT}"
+  else
+    # Force external_dirs to Kevin skills root if config was bound elsewhere
+    if grep -q 'external_dirs:' "$INSTALLED_CONFIG"; then
+      local tmp
+      tmp="$(mktemp)"
+      # Replace first list item under external_dirs (simple YAML list of one path)
+      awk -v root="$SKILLS_ROOT" '
+        BEGIN { done=0 }
+        /^[[:space:]]*external_dirs:[[:space:]]*$/ { print; getline; if ($0 ~ /^[[:space:]]*-/) { print "    - " root; done=1; next } }
+        { print }
+        END { if (!done) exit 0 }
+      ' "$INSTALLED_CONFIG" >"$tmp"
+      mv "$tmp" "$INSTALLED_CONFIG"
+      info "rewrote external_dirs → ${SKILLS_ROOT}"
+    else
+      warn "could not find external_dirs in ${INSTALLED_CONFIG}; set manually to ${SKILLS_ROOT}"
+    fi
+  fi
+}
+
+apply_profile() {
+  local force="${1:-0}"
+  require_hermes
+  stage_profile
+  [[ -d "$SKILLS_ROOT" ]] || die "skills root missing: ${SKILLS_ROOT} (install skills first)"
+
+  export HERMES_SKILLS_DIR="$SKILLS_ROOT"
+  export KEVIN_SKILLS_ROOT="$SKILLS_ROOT"
+
+  local exists=0
+  if hermes profile show kevin >/dev/null 2>&1; then
+    exists=1
+  fi
+
+  # Do not pass --alias: product kevin owns PATH (Hermes thin alias would clobber it).
+  if [[ "$exists" -eq 1 && "$force" -eq 0 ]]; then
+    info "profile kevin exists — updating from staged source"
+    if ! hermes profile update kevin -y 2>/dev/null; then
+      info "update failed or no-op; reinstalling with --force"
+      hermes profile install "$PROFILE_SRC" --name kevin --force -y
+    fi
+  else
+    local args=(profile install "$PROFILE_SRC" --name kevin -y)
+    if [[ "$exists" -eq 1 || "$force" -eq 1 ]]; then
+      args+=(--force)
+    fi
+    info "hermes ${args[*]}"
+    hermes "${args[@]}"
+  fi
+
+  substitute_skills_path
+
+  if [[ -f "${PROFILE_SRC}/.no-bundled-skills" ]]; then
+    mkdir -p "$PROFILE_HOME"
+    cp "${PROFILE_SRC}/.no-bundled-skills" "${PROFILE_HOME}/.no-bundled-skills"
+  fi
+  info "profile ready at ${PROFILE_HOME}"
+}
+
+install_skills() {
+  local from_file="${1:-}"
+  local installer
+  installer="$(find_skills_installer)"
+  [[ -n "$installer" ]] || die "install-kevin-skills.sh not found (install CLI via tools/install-kevin-cli.sh)"
+
+  local args=(--root "$SKILLS_ROOT")
+  if [[ -n "$from_file" ]]; then
+    args+=(--from-file "$from_file")
+  else
+    args+=(--from-url)
+  fi
+  info "installing skills via ${installer}"
+  KEVIN_SKILLS_ROOT="$SKILLS_ROOT" "$installer" "${args[@]}"
+}
+
+cmd_setup() {
+  local from_file="" force=0
+  while [[ $# -gt 0 ]]; do
+    case "$1" in
+      --from-file)
+        [[ $# -ge 2 ]] || die "--from-file needs a path"
+        from_file="$2"
+        shift 2
+        ;;
+      --force-profile) force=1; shift ;;
+      -h|--help) usage; exit 0 ;;
+      *) die "setup: unknown argument: $1" ;;
+    esac
+  done
+
+  require_hermes
+  install_skills "$from_file"
+  apply_profile "$force"
+  info "setup complete"
+  info "  skills:  ${SKILLS_ROOT}"
+  info "  profile: ${PROFILE_HOME}"
+  info "  doctor:  kevin doctor"
+  info "  start:   cd <project-repo> && kevin"
+}
+
+cmd_update() {
+  local from_file="" force=0
+  while [[ $# -gt 0 ]]; do
+    case "$1" in
+      --from-file)
+        [[ $# -ge 2 ]] || die "--from-file needs a path"
+        from_file="$2"
+        shift 2
+        ;;
+      --force-profile) force=1; shift ;;
+      -h|--help) usage; exit 0 ;;
+      *) die "update: unknown argument: $1" ;;
+    esac
+  done
+
+  require_hermes
+  install_skills "$from_file"
+  if [[ "$force" -eq 1 ]] || ! hermes profile show kevin >/dev/null 2>&1; then
+    apply_profile 1
+  else
+    # Re-bind skills path in case operator changed roots
+    if [[ -f "$INSTALLED_CONFIG" ]]; then
+      substitute_skills_path
+    fi
+  fi
+  info "update complete → ${SKILLS_ROOT}"
+}
+
+is_git_worktree() {
+  local dir="$1"
+  git -C "$dir" rev-parse --is-inside-work-tree >/dev/null 2>&1
+}
+
+cmd_doctor() {
+  local project
+  project="$(pwd)"
+  while [[ $# -gt 0 ]]; do
+    case "$1" in
+      --project)
+        [[ $# -ge 2 ]] || die "--project needs a path"
+        project="$2"
+        shift 2
+        ;;
+      -h|--help) usage; exit 0 ;;
+      *) die "doctor: unknown argument: $1" ;;
+    esac
+  done
+
+  HARD_FAILS=0
+  echo "Kevin doctor"
+  echo "------------"
+
+  if command -v hermes >/dev/null 2>&1; then
+    local ver
+    ver="$(hermes version 2>/dev/null | head -1 || true)"
+    ok "hermes on PATH${ver:+ — ${ver}}"
+  else
+    fail_hard "hermes not on PATH"
+  fi
+
+  if command -v hermes >/dev/null 2>&1 && hermes profile show kevin >/dev/null 2>&1; then
+    ok "profile kevin present"
+  else
+    fail_hard "profile kevin missing — run: kevin setup"
+  fi
+
+  if [[ -d "$SKILLS_ROOT" ]]; then
+    ok "skills root: ${SKILLS_ROOT}"
+    if [[ -f "${SKILLS_ROOT}/.agent-tools-revision" ]]; then
+      ok "skills revision marker present"
+      if grep -q 'publish-agent=hermes' "${SKILLS_ROOT}/.agent-tools-revision" 2>/dev/null; then
+        ok "publish-agent=hermes"
+      else
+        warn "revision lacks publish-agent=hermes"
+      fi
+    else
+      fail_hard "missing ${SKILLS_ROOT}/.agent-tools-revision — run: kevin setup / kevin update"
+    fi
+  else
+    fail_hard "skills root missing: ${SKILLS_ROOT}"
+  fi
+
+  if [[ -f "$INSTALLED_CONFIG" ]]; then
+    if grep -q "$PLACEHOLDER" "$INSTALLED_CONFIG"; then
+      fail_hard "unexpanded ${PLACEHOLDER} in profile config — re-run: kevin setup --force-profile"
+    else
+      ok "no unexpanded skills placeholder"
+    fi
+    if grep -qF "$SKILLS_ROOT" "$INSTALLED_CONFIG"; then
+      ok "external_dirs includes Kevin skills root"
+    else
+      fail_hard "profile config does not reference ${SKILLS_ROOT}"
+    fi
+  elif command -v hermes >/dev/null 2>&1 && hermes profile show kevin >/dev/null 2>&1; then
+    fail_hard "profile config missing at ${INSTALLED_CONFIG}"
+  fi
+
+  if [[ -d "$project" ]] && is_git_worktree "$project"; then
+    ok "project git work tree: ${project}"
+  else
+    fail_hard "project is not a git work tree: ${project}"
+  fi
+
+  # Soft: auth
+  if [[ -f "${PROFILE_HOME}/.env" ]]; then
+    ok "profile .env present (soft)"
+  else
+    warn "profile .env missing — fill secrets before interactive chat (soft)"
+  fi
+
+  if command -v hermes >/dev/null 2>&1 && hermes profile show kevin >/dev/null 2>&1; then
+    local doctor_out
+    doctor_out="$(mktemp)"
+    set +e
+    hermes -p kevin doctor >"$doctor_out" 2>&1
+    local doctor_ec=$?
+    set -e
+    if grep -Eiq 'Hermes Doctor|Configuration Files|Python Environment' "$doctor_out"; then
+      ok "hermes -p kevin doctor ran (exit ${doctor_ec}; advisories may remain)"
+    else
+      warn "hermes doctor output unexpected (exit ${doctor_ec}) — soft"
+    fi
+    rm -f "$doctor_out"
+  fi
+
+  echo "------------"
+  if [[ "$HARD_FAILS" -gt 0 ]]; then
+    echo "RESULT: FAIL (${HARD_FAILS} hard)"
+    return 1
+  fi
+  echo "RESULT: PASS (hard checks)"
+  return 0
+}
+
+cmd_start() {
+  local project
+  project="$(pwd)"
+  local passthrough=()
+  while [[ $# -gt 0 ]]; do
+    case "$1" in
+      --project)
+        [[ $# -ge 2 ]] || die "--project needs a path"
+        project="$2"
+        shift 2
+        ;;
+      --)
+        shift
+        passthrough+=("$@")
+        break
+        ;;
+      -h|--help) usage; exit 0 ;;
+      *)
+        passthrough+=("$1")
+        shift
+        ;;
+    esac
+  done
+
+  require_hermes
+  [[ -d "$project" ]] || die "project path not found: ${project}"
+  is_git_worktree "$project" || die "project is not a git work tree: ${project}"
+
+  if ! hermes profile show kevin >/dev/null 2>&1; then
+    die "profile kevin missing — run: kevin setup"
+  fi
+
+  cd "$project" || die "cannot cd to ${project}"
+  info "starting hermes -p kevin in ${project}"
+  exec hermes -p kevin "${passthrough[@]}"
+}
+
+main() {
+  local cmd="${1:-start}"
+  if [[ $# -gt 0 ]]; then
+    shift
+  fi
+  case "$cmd" in
+    setup) cmd_setup "$@" ;;
+    update) cmd_update "$@" ;;
+    doctor) cmd_doctor "$@" ;;
+    start) cmd_start "$@" ;;
+    help|-h|--help) usage ;;
+    version|--version)
+      echo "kevin (workstation CLI)"
+      if [[ -f "${SKILLS_ROOT}/.agent-tools-revision" ]]; then
+        echo "skills:"
+        sed 's/^/  /' "${SKILLS_ROOT}/.agent-tools-revision"
+      fi
+      ;;
+    *)
+      # Unknown: treat as start with args (harness-like) only if it looks like a flag
+      if [[ "$cmd" == -* ]]; then
+        cmd_start "$cmd" "$@"
+      else
+        die "unknown command: ${cmd} (try: kevin help)"
+      fi
+      ;;
+  esac
+}
+
+main "$@"
