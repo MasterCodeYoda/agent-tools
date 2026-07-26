@@ -10,8 +10,9 @@
 
 | Issue | Focus |
 |-------|--------|
-| **AGNT-11** | Packaging capital (monorepo + image) — close or mark packaging-complete |
-| **Workstation CLI + skills artifact** | NEXT for capability dogfood |
-| **Isolated provision/DX** | Later (clean-room / remote) |
+| **AGNT-11** | Packaging capital — Done |
+| **AGNT-13** | Skills dist artifact (rolling release + install script) — active |
+| **AGNT-12** | Workstation `kevin` CLI + host bootstrap |
+| **AGNT-14** | Isolated provision/DX — later |
 
 See ADRs 003–004.

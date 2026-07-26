@@ -14,7 +14,10 @@ for arg in "$@"; do
             echo "  detected agents (Claude, Grok, Factory, Hermes, Codex, OpenCode)."
             echo "  For OpenCode, sub-skills are also emitted as native commands."
             echo ""
-            echo "  Hermes (Kevin): managed skills under ~/.hermes/skills/ when ~/.hermes exists."
+            echo "  Hermes host skills: ~/.hermes/skills/ when ~/.hermes exists"
+            echo "    (multi-agent / maintainer dogfood — NOT the Kevin product path)."
+            echo "  Kevin product skills: published dist artifact → ~/.kevin/skills"
+            echo "    (see docs/kevin/runbooks/kevin-skills-dist.md · tools/install-kevin-skills.sh)."
             echo "  factory remains the Factory coding agent (~/.factory) — not Kevin."
             echo ""
             echo "Options:"
@@ -42,7 +45,8 @@ GROK_DIR="${HOME}/.grok"
 # Grok also supports ~/.grok/skills directly in some installations
 GROK_SKILLS_DIR="${HOME}/.grok/skills"
 FACTORY_DIR="${HOME}/.factory"
-# Hermes host (Kevin profile binds external_dirs here). Not the Factory coding agent.
+# Hermes host multi-agent skills dir (maintainer / non-product for Kevin consumers).
+# Kevin product path: ADR-004 / docs/kevin/runbooks/kevin-skills-dist.md → ~/.kevin/skills
 HERMES_DIR="${HOME}/.hermes"
 HERMES_SKILLS_DIR="${HOME}/.hermes/skills"
 CODEX_DIR="${HOME}/.codex"
@@ -639,12 +643,16 @@ if [ -d "$FACTORY_DIR" ]; then
     echo "    - This project : ./.factory/skills/  (project-scoped skills only)"
 fi
 if [ -d "$HERMES_DIR" ] || [ -d "$HERMES_SKILLS_DIR" ]; then
-    echo "  Hermes (Kevin host bind):"
+    echo "  Hermes (multi-agent / maintainer — not Kevin product path):"
     echo "    - User profile : ~/.hermes/skills/   (managed + optional hub trees)"
     echo "    - This project : ./.hermes/skills/   (project-scoped skills only)"
     echo "    - Revision     : ~/.hermes/skills/.agent-tools-revision"
     echo "    - Update ritual: pull agent-tools if needed, then ./setup.sh"
     echo "    - Missing skills: re-run setup (no silent pull on Hermes start/cron)"
+    echo "  Kevin product skills (workstation):"
+    echo "    - Target       : ~/.kevin/skills (copy from published artifact)"
+    echo "    - Pack/install : tools/pack-kevin-skills.sh · tools/install-kevin-skills.sh"
+    echo "    - Runbook      : docs/kevin/runbooks/kevin-skills-dist.md"
 fi
 if [ -d "$CODEX_DIR" ]; then
     echo "  Codex:"

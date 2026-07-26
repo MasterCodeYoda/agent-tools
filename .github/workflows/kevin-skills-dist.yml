@@ -1,0 +1,82 @@
+# Pack and publish Kevin skills dist on main (rolling GitHub Release).
+# Stable URL:
+#   https://github.com/MasterCodeYoda/agent-tools/releases/download/kevin-skills/kevin-skills.tar.gz
+# Not semver theater — mutable tag kevin-skills updated each green main pack.
+# ADR-004 · AGNT-13
+
+name: kevin-skills dist
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: kevin-skills-dist-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  pack-release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Pack kevin-skills artifact
+        run: |
+          chmod +x tools/publish-skills.sh tools/pack-kevin-skills.sh
+          tools/pack-kevin-skills.sh
+          ls -la dist/kevin-skills/
+          cat dist/kevin-skills/manifest.json
+
+      - name: Publish rolling release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          TAG=kevin-skills
+          NOTES="Kevin skills dist (dist/hermes) — AGNT-13 / ADR-004
+
+          Rolling package updated on each publish from \`main\`.
+
+          **Download (stable):**
+          https://github.com/${{ github.repository }}/releases/download/${TAG}/kevin-skills.tar.gz
+
+          **Install (interim):**
+          \`\`\`bash
+          tools/install-kevin-skills.sh --from-url
+          # or: KEVIN_SKILLS_ROOT=~/.kevin/skills tools/install-kevin-skills.sh --from-file dist/kevin-skills/kevin-skills.tar.gz
+          \`\`\`
+
+          Manifest: see \`manifest.json\` asset (git SHA, created_at, skill_count).
+          "
+          if gh release view "$TAG" >/dev/null 2>&1; then
+            gh release upload "$TAG" \
+              dist/kevin-skills/kevin-skills.tar.gz \
+              dist/kevin-skills/kevin-skills.sha256 \
+              dist/kevin-skills/manifest.json \
+              --clobber
+            gh release edit "$TAG" --notes "$NOTES" --title "Kevin skills dist"
+          else
+            gh release create "$TAG" \
+              dist/kevin-skills/kevin-skills.tar.gz \
+              dist/kevin-skills/kevin-skills.sha256 \
+              dist/kevin-skills/manifest.json \
+              --title "Kevin skills dist" \
+              --notes "$NOTES"
+          fi
+
+      - name: Summary
+        run: |
+          {
+            echo "### Kevin skills dist"
+            echo ""
+            echo "Stable URL:"
+            echo "https://github.com/${{ github.repository }}/releases/download/kevin-skills/kevin-skills.tar.gz"
+            echo ""
+            echo '```json'
+            cat dist/kevin-skills/manifest.json
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
