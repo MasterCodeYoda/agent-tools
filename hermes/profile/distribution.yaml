@@ -3,7 +3,7 @@
 # Or:      ./scripts/apply-kevin-profile.sh
 name: kevin
 version: 0.1.0
-description: "Kevin Hermes software-factory host profile (config-as-code)"
+description: "Kevin Hermes host profile (config-as-code; agent-tools monorepo)"
 author: "Overlund Media"
 license: "UNLICENSED"
 # hermes_requires: optional; pin when a hard floor is known

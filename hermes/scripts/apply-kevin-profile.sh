@@ -52,8 +52,10 @@ while [[ $# -gt 0 ]]; do
 done
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-REPO_ROOT="$(cd "${SCRIPT_DIR}/.." && pwd)"
-SRC="${REPO_ROOT}/hermes/profile"
+# This file lives at hermes/scripts/; profile is hermes/profile/; repo root is ../..
+HERMES_DIR="$(cd "${SCRIPT_DIR}/.." && pwd)"
+REPO_ROOT="$(cd "${HERMES_DIR}/.." && pwd)"
+SRC="${HERMES_DIR}/profile"
 SKILLS_DIR="${HERMES_SKILLS_DIR:-${HOME}/.hermes/skills}"
 PLACEHOLDER="__HERMES_SKILLS_DIR__"
 PROFILE_HOME="${HOME}/.hermes/profiles/kevin"

@@ -34,7 +34,7 @@ Versioned **Kevin** host profile for Hermes. This directory is a Hermes
 Native Hermes:
 
 ```bash
-# From software-factory repo root (or pass absolute path to this directory)
+# From agent-tools repo root (or pass absolute path to this directory)
 hermes profile install ./hermes/profile --name kevin --alias
 
 # Re-apply distribution-owned files later (preserves .env / auth / sessions):
@@ -46,9 +46,9 @@ hermes profile update kevin --force-config
 Recommended wrapper (skills path check + placeholder substitution):
 
 ```bash
-./scripts/apply-kevin-profile.sh
+./hermes/scripts/apply-kevin-profile.sh
 # Existing profile:
-./scripts/apply-kevin-profile.sh --force
+./hermes/scripts/apply-kevin-profile.sh --force
 ```
 
 Install lands at `~/.hermes/profiles/kevin/`. User-owned paths (`.env`, `auth.json`,
@@ -76,7 +76,7 @@ Kevin `export-process-pack.sh` remains a **secondary** offline artifact only.
 Historical dogfood used `hermes -p factory`. Prefer:
 
 ```bash
-./scripts/apply-kevin-profile.sh
+./hermes/scripts/apply-kevin-profile.sh
 hermes -p kevin
 ```
 
