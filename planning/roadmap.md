@@ -14,7 +14,7 @@ Notation: `→` sequential · `∥` (or `||`) parallelizable · `{A ∥ B}` wave
 | # | Unit | Status | Purpose |
 |---|------|--------|---------|
 | — | **AGNT-11** packaging capital | Done | Monorepo + image + SF retire |
-| 1 | **AGNT-13** Skills dist artifact | Todo | CI pack of `dist/hermes` + revision/manifest; stable fetch URL for CLI |
+| 1 | **AGNT-13** Skills dist artifact | Done (local) | CI pack of `dist/hermes` + revision/manifest; stable fetch URL for CLI — live after push to main |
 | 2 | **AGNT-12** Workstation CLI + host bootstrap | Todo | PATH `kevin`: setup/update/doctor/start; Hermes + profile; skills from artifact; project root |
 | 3 | **AGNT-14** Isolated clean-room / remote DX | Backlog | Provision & sandbox DX for image mode — not dogfood path |
 
@@ -28,7 +28,7 @@ AGNT-11 (done) → AGNT-13 → AGNT-12 → AGNT-14
 
 ## NEXT
 
-**AGNT-13** — Skills dist artifact for Kevin (CI pack of `dist/hermes`)
+**AGNT-12** — Workstation Kevin: foundational CLI + host bootstrap
 
 ## Out of scope
 

@@ -18,4 +18,21 @@ runs:
       review: ok
       compound: ok
 
+  - run_id: r-20260726-2
+    unit: AGNT-13
+    track: feature
+    opened: 2026-07-26
+    closed: 2026-07-26
+    channel: cli
+    outcome: shipped
+    sessions: 1
+    ttm_hours: null
+    refine_reentries: 0
+    plan_reentries: 0
+    review_cycles: 1
+    thrash_bound_hits: 0
+    rework: false
+    fidelity:
+      review: ok
+      compound: ok
 

@@ -15,6 +15,7 @@ Maintained by `/work:compound`. Not a substitute for ADRs, CONTRIBUTING, or Code
 - [Frontier process: Type B keep, Type A prune](entries/frontier-process-type-b-not-type-a.md) — process harness vs behavior mega-prompts; thin/decontaminate not wipe; Sol effort caps
 - [Phase skill control-plane budget](entries/phase-skill-control-plane-budget.md) — execute/plan ≤~150 lines; recovery/gathering in references/
 - [Profile skill bindings track published names](entries/profile-skill-bindings-track-published-names.md) — after renames, grep profile/channel bindings against `dist/*/skills` ids
+- [Kevin skills rolling release channel](entries/kevin-skills-rolling-release-channel.md) — tag `kevin-skills` + pack/install scripts; not setup.sh→~/.hermes for product
 
 ## Solutions
 
