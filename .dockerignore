@@ -1,0 +1,18 @@
+# Speed up kevin-hermes image builds (context = repo root)
+dist/claude
+dist/codex
+dist/factory
+dist/grok
+dist/opencode
+tests
+planning
+.git/hooks
+**/__pycache__
+**/*.pyc
+**/.DS_Store
+spikes
+*.md
+!hermes/**/*.md
+!src/**/*.md
+docs
+!docs/kevin/**

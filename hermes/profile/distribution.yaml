@@ -1,0 +1,28 @@
+# Hermes profile distribution — Kevin
+# Install: hermes profile install <repo>/hermes/profile --name kevin --alias
+# Or:      ./scripts/apply-kevin-profile.sh
+name: kevin
+version: 0.1.0
+description: "Kevin Hermes software-factory host profile (config-as-code)"
+author: "Overlund Media"
+license: "UNLICENSED"
+# hermes_requires: optional; pin when a hard floor is known
+env_requires:
+  # Names only; all optional — one working path (API key or hermes auth / auth.json) is enough.
+  # Portable fill steps: docs/runbooks/kevin-auth-packaging.md
+  # Slack env is owned by KEVN-8 — omit from env_requires; cross-ref packs/factory-slack.env.example
+  - name: ANTHROPIC_API_KEY
+    description: "Anthropic API key (Path A) when not using OAuth / profile auth.json (Path B: hermes -p kevin auth)"
+    required: false
+  - name: OPENAI_API_KEY
+    description: "OpenAI API key if using OpenAI-compatible providers; optional if OAuth/other path covers default model"
+    required: false
+  - name: OPENROUTER_API_KEY
+    description: "OpenRouter API key if using OpenRouter; optional if not on OpenRouter"
+    required: false
+distribution_owned:
+  - SOUL.md
+  - config.yaml
+  - .env.template
+  - skills
+  - distribution.yaml

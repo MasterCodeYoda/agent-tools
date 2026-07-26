@@ -1,6 +1,6 @@
 # Agent Tools
 
-A canonical, portable skill corpus for modern coding agents (Claude Code, Codex, Grok, Factory Droid, OpenCode).
+A canonical, portable skill corpus for modern coding agents (Claude Code, Codex, Grok, Factory Droid, OpenCode, **Hermes / Kevin**).
 
 **The problem this solves:** every coding agent wants its own skills directory, its own
 discovery quirks, and its own dialect — so the knowledge you invest in one agent doesn't
@@ -9,6 +9,18 @@ lightweight per-agent markup, mechanically publishes clean per-agent trees, and 
 them where each agent looks. Write a skill once; every agent gets its best version.
 
 Clone once, run `./setup.sh`, and get a consistent set of high-quality skills across all your projects and agents. The system automatically publishes the canonical source (`src/`) into agent-specific trees (`dist/<agent>/skills/`) and installs them in the right places (global profile vs local project).
+
+### Kevin (Hermes) primary instance
+
+Long-lived Kevin runs as Docker image **`kevin-hermes`** (GHCR), with process skills baked from **`dist/hermes`** at build time — not raw `src/`.
+
+| Doc | Path |
+|-----|------|
+| Docker path of record | [docs/kevin/runbooks/kevin-hermes-docker.md](docs/kevin/runbooks/kevin-hermes-docker.md) |
+| Profile + docker pack | [hermes/](hermes/) |
+| Image versioning | [docs/kevin/decisions/002-kevin-hermes-image-versioning.md](docs/kevin/decisions/002-kevin-hermes-image-versioning.md) |
+
+Laptop `./setup.sh` still installs managed skills under `~/.hermes/skills` for interactive Hermes; the **primary** factory host is the container.
 
 New here? Start with the worked walkthrough in [docs/getting-started.md](docs/getting-started.md).
 

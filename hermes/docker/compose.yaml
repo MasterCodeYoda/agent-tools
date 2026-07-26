@@ -1,0 +1,33 @@
+# Kevin primary instance — Docker Desktop or headless host
+#
+# From agent-tools repo (or any dir with this file):
+#   export KEVIN_PROJECT_ROOT=/path/to/product-repo
+#   export KEVIN_HERMES_DATA=$HOME/.kevin/hermes-data
+#   docker compose -f hermes/docker/compose.yaml pull   # when using GHCR
+#   docker compose -f hermes/docker/compose.yaml up -d
+#
+# Local image build:
+#   docker build -f hermes/docker/Dockerfile -t kevin-hermes:local .
+#   export KEVIN_HERMES_IMAGE=kevin-hermes:local
+
+name: kevin-hermes
+
+services:
+  kevin:
+    image: ${KEVIN_HERMES_IMAGE:-ghcr.io/mastercodeyoda/kevin-hermes:main}
+    container_name: kevin-hermes
+    restart: unless-stopped
+    working_dir: /workspace
+    environment:
+      HERMES_UID: ${HERMES_UID:-1000}
+      HERMES_GID: ${HERMES_GID:-1000}
+      # Optional: KEVIN_FORCE_PROFILE_UPDATE=1
+    volumes:
+      # Hermes state: secrets, sessions, installed profile (user-owned)
+      - ${KEVIN_HERMES_DATA:-${HOME}/.kevin/hermes-data}:/opt/data
+      # Product repo the operator reviews in git (software-factory, Spectral, …)
+      - ${KEVIN_PROJECT_ROOT:?set KEVIN_PROJECT_ROOT to the product repo absolute path}:/workspace
+    # Socket Mode Slack needs no published ports. Optional API/dashboard later.
+    # ports:
+    #   - "8642:8642"
+    #   - "9119:9119"

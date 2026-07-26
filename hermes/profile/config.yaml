@@ -1,0 +1,61 @@
+# Kevin Hermes profile policy (versioned in agent-tools).
+# Secrets do NOT belong here — use profile .env / auth.json after install.
+# Apply substitutes __HERMES_SKILLS_DIR__ with the absolute managed skills path.
+# Docker image: placeholder becomes /opt/kevin/skills (baked dist/hermes).
+
+model:
+  # Operator may change; pin intentionally for teammate predictability.
+  default: claude-sonnet-4-5
+  provider: anthropic
+
+memory:
+  memory_enabled: false
+  user_profile_enabled: false
+  write_approval: true
+
+skills:
+  write_approval: true
+  creation_nudge_interval: 0
+  # Laptop: agent-tools ./setup.sh → ~/.hermes/skills
+  # Image: /opt/kevin/skills (copy of dist/hermes/skills at build)
+  external_dirs:
+    - __HERMES_SKILLS_DIR__
+
+approvals:
+  mode: manual
+  deny:
+    - "rm -rf /*"
+    - "git push --force*"
+    - "*curl*|*bash*"
+    - "*curl*|*sh*"
+
+terminal:
+  backend: local
+  # No fixed cwd — launch / compose working_dir is the product repo mount.
+
+platform_toolsets:
+  cli:
+    - file
+    - terminal
+    - skills
+  slack:
+    - file
+    - terminal
+    - skills
+
+# Ops: replace placeholder with real C… before live smoke (never commit real channel IDs).
+slack:
+  channel_skill_bindings:
+    - id: "REPLACE_WITH_KEVIN_OPS_CHANNEL_ID"
+      skills:
+        - workflow
+        - workflow-continue
+
+auxiliary:
+  compression:
+    provider: anthropic
+    model: claude-haiku-4-5
+    reasoning_effort: low
+  title_generation:
+    provider: anthropic
+    model: claude-haiku-4-5
