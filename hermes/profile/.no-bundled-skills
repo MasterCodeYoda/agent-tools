@@ -1,0 +1,2 @@
+# Opt out of Hermes bundled skill seeding for this profile.
+# Process skills come from managed ~/.hermes/skills (agent-tools setup).
