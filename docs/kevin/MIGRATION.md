@@ -1,6 +1,6 @@
 # Migration: software-factory → agent-tools
 
-**Status:** SoT is **agent-tools**. software-factory may be **deleted**.
+**Status:** SoT is **agent-tools**. GitHub remote `overlund-media/software-factory` is **gone** (2026-07-26). Local clone gone; optional residual worktree `software-factory-kevin-e5` is operator cleanup only.
 
 ## Disposition checklist (delete readiness)
 

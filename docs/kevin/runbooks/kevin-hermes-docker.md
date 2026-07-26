@@ -1,21 +1,24 @@
-# Runbook: kevin-hermes Docker primary (path of record)
+# Runbook: kevin-hermes Docker (Isolated Kevin)
 
-**Status:** Active — AGNT-11  
+**Status:** Active — AGNT-11 packaging capital  
+**Mode:** **Isolated Kevin** ([ADR-003](../decisions/003-workstation-vs-isolated-kevin.md)) — sandbox / remote-capable host  
 **Image:** `ghcr.io/mastercodeyoda/kevin-hermes` (CI) · `kevin-hermes:local` (dev)  
 **Profile:** `kevin` only  
 **Process skills:** baked **`dist/hermes`** at image build (never raw `src/`)  
 **Versioning:** [ADR-002](../decisions/002-kevin-hermes-image-versioning.md) — `:main` + `:sha-…`; no GH Releases for now  
 
+> **Capability dogfood path of record** is **Workstation Kevin** (host Hermes + CLI), not this image — see ADR-003/004. This runbook covers packaging and isolated-mode bring-up.
+
 ## Intent
 
-Kevin’s **primary instance** is a Docker container. Two different workflows:
+Two packaging workflows for the **Isolated Kevin** image:
 
 | Workflow | Tool | Image source |
 |----------|------|----------------|
 | **Develop packaging** (this repo) | [`hermes/dev.sh`](../../../hermes/dev.sh) | Always build from local agent-tools checkout |
-| **Run published Kevin** (any machine) | Client install / PATH CLI | GHCR `:main` — **not shipped yet** |
+| **Run published isolated Kevin** | Compose / GHCR pull | GHCR `:main` — client PATH install deferred |
 
-Laptop Hermes + `setup.sh` remains for Claude/Grok/etc. and optional host dogfood.
+Laptop Hermes + `setup.sh` remains for multi-agent install and **Workstation Kevin** dogfood.
 
 ## Dev bring-up (`dev.sh`)
 

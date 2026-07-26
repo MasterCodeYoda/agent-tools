@@ -164,11 +164,11 @@ Parent ACs (plan-final):
 
 ## Definition of done
 
-- [ ] All AC1–10 checked  
-- [ ] Local or CI image build succeeds with non-empty `/opt/kevin/skills` and revision marker  
-- [ ] `docker compose` against `:main` (or local build tag) dogfood notes recorded  
-- [ ] software-factory deleted or explicit residual with owner  
-- [ ] Linear AGNT-11 updated; no dual path of record  
+- [x] All AC1–10 checked (AC9 partial accepted under ADR-003 — full desktop dogfood → workstation follow-on)  
+- [x] Local or CI image build succeeds with non-empty `/opt/kevin/skills` and revision marker  
+- [x] Packaging verify notes recorded (image skills+revision; compose config; GHCR green)  
+- [x] software-factory remote deleted; local residual worktree operator-owned only  
+- [x] Linear AGNT-11 Done; Isolated vs Workstation path of record in ADR-003  
 
 ## Risks
 

@@ -48,8 +48,8 @@ slack:
   channel_skill_bindings:
     - id: "REPLACE_WITH_KEVIN_OPS_CHANNEL_ID"
       skills:
-        - workflow
-        - workflow-continue
+        - work
+        - work-continue
 
 auxiliary:
   compression:

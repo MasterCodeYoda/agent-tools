@@ -84,6 +84,13 @@ ensure_profile() {
 
 ensure_profile
 
+# Fail closed: install paths may use soft fallbacks for hermes CLI flag variance,
+# but we must not start gateway without a resolvable kevin profile.
+if ! "${HERMES_BIN}" profile show kevin >/dev/null 2>&1; then
+  log "error: profile kevin not available after install/update — refusing to start"
+  exit 1
+fi
+
 # Default: gateway under kevin. Allow override via args (e.g. doctor, version).
 if [[ $# -eq 0 ]]; then
   set -- gateway run
