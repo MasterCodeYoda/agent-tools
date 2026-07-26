@@ -10,18 +10,14 @@ them where each agent looks. Write a skill once; every agent gets its best versi
 
 Clone once, run `./setup.sh`, and get a consistent set of high-quality skills across all your projects and agents. The system automatically publishes the canonical source (`src/`) into agent-specific trees (`dist/<agent>/skills/`) and installs them in the right places (global profile vs local project).
 
-### Kevin (Hermes) primary instance
+### Kevin (Hermes)
 
-Long-lived Kevin is the Docker image **`kevin-hermes`** (GHCR for distribution; local build for packaging work). Process skills are baked from **`dist/hermes`** at image build — not raw `src/`.
+| Mode | Path |
+|------|------|
+| **Workstation** (coding agent on your machine) | [docs/kevin/](docs/kevin/) · ADRs [003](docs/kevin/decisions/003-workstation-vs-isolated-kevin.md), [004](docs/kevin/decisions/004-workstation-cli-and-skills-distribution.md) — foundational `kevin` CLI + skills dist artifact (in progress) |
+| **Isolated** (container) | Image `kevin-hermes` · packaging [`./hermes/dev.sh`](hermes/dev.sh) · [runbook](docs/kevin/runbooks/kevin-hermes-docker.md) |
 
-| Doc | Path |
-|-----|------|
-| **Dev: build + run from this checkout** | [`./hermes/dev.sh -p /path/to/product-repo`](hermes/dev.sh) |
-| Docker path of record | [docs/kevin/runbooks/kevin-hermes-docker.md](docs/kevin/runbooks/kevin-hermes-docker.md) |
-| Profile + docker pack | [hermes/](hermes/) |
-| Image versioning | [docs/kevin/decisions/002-kevin-hermes-image-versioning.md](docs/kevin/decisions/002-kevin-hermes-image-versioning.md) |
-
-Laptop `./setup.sh` still installs managed skills under `~/.hermes/skills` for interactive Hermes. A client install CLI (PATH `kevin`, GHCR pull) is **not** this script — deferred.
+Process skills SoT: `src/` → `dist/hermes`. Workstation consumers install via CLI artifact (not multi-agent `./setup.sh` into `~/.hermes/skills`). `./setup.sh` remains for Claude/Grok/Factory/etc.
 
 New here? Start with the worked walkthrough in [docs/getting-started.md](docs/getting-started.md).
 

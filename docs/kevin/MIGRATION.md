@@ -1,43 +1,34 @@
-# Migration: software-factory → agent-tools (complete for SoT)
+# Migration: software-factory → agent-tools
 
-**Status:** Content SoT is **agent-tools**. software-factory is a **tombstone** (see that repo’s README) pending remote delete.
+**Status:** SoT is **agent-tools**. software-factory may be **deleted**.
 
-## Map (executed)
+## Disposition checklist (delete readiness)
+
+| Content | In agent-tools? | Action before delete |
+|---------|-----------------|----------------------|
+| Profile, Docker pack, `dev.sh`, scripts | Yes (`hermes/`) | None |
+| ADRs 001–002, runbooks, evidence, kevin packs | Yes (`docs/kevin/`) | None |
+| Kevin/Hermes memory entries + gumclaw import | Yes (`docs/kevin/memory/`) | None |
+| AGNT-11 planning snapshot | Yes (`docs/kevin/planning/agnt-11/`) | None |
+| ADRs 003–004 (workstation / CLI dist) | Yes | None |
+| Full `docs/research/*` archive | **No** (only research README) | **Optional:** tag SF before delete if you want recovery: `git tag archive/pre-delete-YYYYMMDD && git push --tags`. Not required for product. |
+| Legacy `factory-*` packs, spikes | No | Drop (historical / superseded) |
+| Uncommitted plant-rename dirt on SF | N/A | **Ignore** — do not invest; delete |
+| Unpushed SF tombstone commits | Local only | Optional push; irrelevant if remote is deleted |
+
+## Delete procedure (operator)
+
+1. Confirm agent-tools `main` has Kevin docs + hermes pack (already true).  
+2. Optional safety tag on SF (research recovery).  
+3. GitHub → `overlund-media/software-factory` → **Delete repository** (or Archive).  
+4. Remove local clone: `rm -rf ~/Source/OMG/software-factory`.  
+5. Update any personal bookmarks to `agent-tools/docs/kevin/`.
+
+## Map (historical)
 
 | software-factory | agent-tools |
 |------------------|---------------|
 | `hermes/profile/` | `hermes/profile/` |
-| Docker pack + source-tree dev runner | `hermes/docker/` + `hermes/dev.sh` (build-from-checkout; not client install) |
-| Kevin scripts | `hermes/scripts/` (+ `factory-wake/`) |
-| ADRs 001–002 | `docs/kevin/decisions/` |
-| Runbooks | `docs/kevin/runbooks/` |
-| product-surface, kevin-v1 | `docs/kevin/` |
-| kevin packs | `docs/kevin/packs/` |
-| evidence | `docs/kevin/evidence/` |
-| compound memory (Kevin/Hermes entries) | `docs/kevin/memory/` |
-| AGNT-11 planning | `docs/kevin/planning/kevn-11/` |
-| Research archive | **not** fully copied — remains only in old git history / SF until remote delete |
-| Planning history (all kevn-*) | snapshot AGNT-11 only; rest in SF git history |
-
-## Delete software-factory when
-
-1. agent-tools branch with migration is on **main** (or you accept working from the feature branch).  
-2. No open clones depend on SF paths for day-to-day work.  
-3. Operator deletes the GitHub repo `overlund-media/software-factory` (or archives it).
-
-Local cleanup after remote delete:
-
-```bash
-# optional
-rm -rf ~/Source/OMG/software-factory
-```
-
-## Research archive
-
-Full `docs/research/` from SF is large and closed-archive. If needed later, recover from git history of the deleted repo or a one-off tag before delete:
-
-```bash
-# before delete, optional safety tag on SF:
-# git -C software-factory tag archive/pre-delete-$(date +%Y%m%d)
-# git -C software-factory push origin --tags
-```
+| Docker / packaging | `hermes/docker/` + `hermes/dev.sh` |
+| Scripts | `hermes/scripts/` |
+| Docs / ADRs / runbooks | `docs/kevin/` |
