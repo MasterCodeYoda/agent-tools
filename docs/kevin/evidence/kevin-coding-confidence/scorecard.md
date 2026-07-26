@@ -1,11 +1,11 @@
 # Kevin coding-loop confidence — scorecard
 
-**Gate:** [KEVN-6](https://linear.app/overlund-media/issue/KEVN-6)  
+**Gate:** [AGNT-6](https://linear.app/overlund-media/issue/AGNT-6)  
 **Protocol:** [../../runbooks/kevin-coding-confidence.md](../../runbooks/kevin-coding-confidence.md)  
 **Date:** 2026-07-24  
 **Host:** Hermes profile `kevin` · model `claude-sonnet-4-5` / anthropic  
 **Worktree:** `/Users/matthew.overlund/Source/OMG/software-factory-kevin-e5`  
-**Branch:** `feat/KEVN-6-coding-loop-confidence-wt`
+**Branch:** `feat/AGNT-6-coding-loop-confidence-wt`
 
 ## Baseline (daily harness)
 
@@ -18,7 +18,7 @@
 | Band (wall time) | **4** |
 | Band (rework) | **4** |
 | Band (thrash) | **4** |
-| Notes | KEVN-2..5 sessions: process-fidelity strong on project docs/scripts |
+| Notes | AGNT-2..5 sessions: process-fidelity strong on project docs/scripts |
 
 ## Tracers
 
@@ -54,7 +54,7 @@
 | **Result** | **PASS** |
 | **Completed tracers** | 3 / 3 |
 | **Fail path (if FAIL)** | — |
-| **KEVN-7 implement trust** | **Unblocked for implement-class work on project/docs/scripts** — still require pre-wake isolation for unattended wake epic itself |
+| **AGNT-7 implement trust** | **Unblocked for implement-class work on project/docs/scripts** — still require pre-wake isolation for unattended wake epic itself |
 | **Caveat** | Tracers were **software-factory system** (scripts/docs), not Spectral/Wildwood app code. Equitable band proven for this class; large multi-layer product-app loops remain a residual risk if ops demand that bar later. |
 | **Signed** | 2026-07-24 operator session via hermes -p kevin + Grok Build continue |
 

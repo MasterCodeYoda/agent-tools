@@ -1,6 +1,6 @@
 # Runbook: Hermes factory profile dogfood (H1–H5)
 
-> **Migration (KEVN-2):** Kevin production profile is **`kevin`**, not `factory`.  
+> **Migration (AGNT-2):** Kevin production profile is **`kevin`**, not `factory`.  
 > Use [hermes-kevin.md](./hermes-kevin.md) and `./scripts/apply-kevin-profile.sh`.  
 > This document is the **historical H1–H5 dogfood** record (`hermes -p factory`).  
 > Apply-kevin never auto-deletes `~/.hermes/profiles/factory` — retire that profile yourself when ready.

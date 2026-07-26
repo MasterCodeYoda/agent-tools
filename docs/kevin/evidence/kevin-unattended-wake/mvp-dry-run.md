@@ -1,4 +1,4 @@
-# KEVN-7 MVP dry-run evidence
+# AGNT-7 MVP dry-run evidence
 
 **Date:** 2026-07-24  
 **Host:** macOS · Hermes profile `kevin`  

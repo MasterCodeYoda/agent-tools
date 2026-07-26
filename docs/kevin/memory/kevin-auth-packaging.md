@@ -6,7 +6,7 @@ applicability: project
 related:
   - docs/runbooks/kevin-auth-packaging.md
   - hermes/profile/.env.template
-  - KEVN-9
+  - AGNT-9
   - run_id:2026-07-24-mxn3k-kevn-8-9
 incident_date: null
 job_phases: [continue, execute]
@@ -28,5 +28,5 @@ Bring-up failed as a snowflake when secrets lived only in one operator's head. T
 - Live: `~/.hermes/profiles/kevin/.env` and/or `auth.json` — never commit values
 - Path A: API keys in `.env`; Path B: `hermes -p kevin auth …` OAuth / subscription-style
 - Guardrails: never copy secrets into the repo; never blind-script-overwrite live `.env` (apply preserves user-owned paths)
-- Slack secret **names** cross-ref KEVN-8 / `packs/kevin-slack.env.example` — do not duplicate Slack packaging here
+- Slack secret **names** cross-ref AGNT-8 / `packs/kevin-slack.env.example` — do not duplicate Slack packaging here
 - Link from `hermes-kevin.md` and `kevin-control-plane.md`; do not maintain a second drifting secret matrix

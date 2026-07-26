@@ -15,9 +15,9 @@
 | kevin packs | `docs/kevin/packs/` |
 | evidence | `docs/kevin/evidence/` |
 | compound memory (Kevin/Hermes entries) | `docs/kevin/memory/` |
-| KEVN-11 planning | `docs/kevin/planning/kevn-11/` |
+| AGNT-11 planning | `docs/kevin/planning/kevn-11/` |
 | Research archive | **not** fully copied — remains only in old git history / SF until remote delete |
-| Planning history (all kevn-*) | snapshot KEVN-11 only; rest in SF git history |
+| Planning history (all kevn-*) | snapshot AGNT-11 only; rest in SF git history |
 
 ## Delete software-factory when
 

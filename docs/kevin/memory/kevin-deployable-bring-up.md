@@ -28,7 +28,7 @@ bar — missing `.env`/keys is expected until the operator fills secrets.
    doctor readiness bar → secrets → isolated SF worktree smoke (status/orientation, not coding-loop PASS).
 3. Hard check assist: `./scripts/kevin-bring-up-check.sh` (exit 0 = hard bar; WARN = soft auth).
 4. Never reintroduce `factory` as Kevin path of record; control plane is optional after base smoke.
-5. Defer unattended wake (KEVN-7) and coding confidence (KEVN-6).
+5. Defer unattended wake (AGNT-7) and coding confidence (AGNT-6).
 
 ## Gotchas
 

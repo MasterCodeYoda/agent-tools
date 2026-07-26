@@ -1,8 +1,8 @@
 # Runbook: Kevin Slack live (Socket Mode)
 
-**Status:** Path of record for KEVN-8 / E7 Slack transport  
+**Status:** Path of record for AGNT-8 / E7 Slack transport  
 **Profile name:** `kevin` only — never personal default; never brand Kevin as `factory`  
-**Unit:** [KEVN-8](https://linear.app/overlund-media/issue/KEVN-8)  
+**Unit:** [AGNT-8](https://linear.app/overlund-media/issue/AGNT-8)  
 **Packaging:** [`packs/kevin-slack-setup.md`](../../packs/kevin-slack-setup.md) · [`packs/kevin-slack.env.example`](../../packs/kevin-slack.env.example) · [`packs/kevin-slack-manifest.json`](../../packs/kevin-slack-manifest.json)  
 **Related:** bring-up [hermes-kevin.md](./hermes-kevin.md) · wake [kevin-unattended-wake.md](./kevin-unattended-wake.md) · legacy H3 dogfood [hermes-factory.md](./hermes-factory.md) § H3 · historical packs `packs/factory-slack-*`
 
@@ -26,7 +26,7 @@ Slack is **transport only** for the Kevin software-factory agent:
 | Hermes on PATH | `hermes version` (dogfood validated on 0.19.x) |
 | Kevin profile applied | `./scripts/apply-kevin-profile.sh` ([hermes-kevin.md](./hermes-kevin.md)) |
 | Process skills installed | agent-tools `./setup.sh` → `~/.hermes/skills` (publish agent **hermes**) |
-| Provider auth | Model keys in `~/.hermes/profiles/kevin/.env` or `auth.json` — **KEVN-9** owns portable secrets packaging SoT; names in `hermes/profile/.env.template` |
+| Provider auth | Model keys in `~/.hermes/profiles/kevin/.env` or `auth.json` — **AGNT-9** owns portable secrets packaging SoT; names in `hermes/profile/.env.template` |
 | Slack tokens | Names only in repo (`packs/kevin-slack.env.example`); values only in user-owned kevin `.env` |
 | Project root | software-factory git tree the operator reviews |
 
@@ -210,7 +210,7 @@ Map 1:1 to Linear ACs. Tick **Pass** only with real evidence. If tokens unavaila
 | Field | Value |
 |-------|--------|
 | **Date** | 2026-07-24 |
-| **Session / run** | `2026-07-24-mxn3k-kevn-8-9` (KEVN-8 implementer) |
+| **Session / run** | `2026-07-24-mxn3k-kevn-8-9` (AGNT-8 implementer) |
 | **AC7 disposition** | **Residual** — packaging + path-of-record shipped; live gateway smoke deferred |
 | **Why** | No `~/.hermes/profiles/kevin/.env` with Slack tokens on implementer host; operator has not provisioned workspace app tokens this session |
 | **Remaining operator steps** | (1) Create/update Slack app from `packs/kevin-slack-manifest.json`; (2) fill kevin `.env` from `packs/kevin-slack.env.example` with real `xoxb`/`xapp` + non-empty allowlists; (3) set real `C…` in `channel_skill_bindings` and re-apply profile; (4) `cd` software-factory → `hermes -p kevin gateway run`; (5) tick L1–L9 and ACs 4–7 Pass rows above |
@@ -238,21 +238,21 @@ Map 1:1 to Linear ACs. Tick **Pass** only with real evidence. If tokens unavaila
 - Telegram or multi-channel productization  
 - Full unattended Slack autonomy without approvals  
 - New process dialect / dual continue language for Slack  
-- KEVN-9 portable secrets packaging SoT (`hermes/profile/.env.template` wholesale)  
-- KEVN-10 controller chrome  
+- AGNT-9 portable secrets packaging SoT (`hermes/profile/.env.template` wholesale)  
+- AGNT-10 controller chrome  
 - Deleting historical factory Slack packs  
 
 ---
 
-## 13. KEVN-9 boundary
+## 13. AGNT-9 boundary
 
 | Surface | Owner |
 |---------|--------|
 | Slack token **names** + Socket Mode ops | **This runbook** + `packs/kevin-slack.env.example` |
-| Provider keys / portable auth packaging | **KEVN-9** + [hermes-kevin.md](./hermes-kevin.md) secrets / `hermes/profile/.env.template` |
+| Provider keys / portable auth packaging | **AGNT-9** + [hermes-kevin.md](./hermes-kevin.md) secrets / `hermes/profile/.env.template` |
 | User-owned secrets file | `~/.hermes/profiles/kevin/.env` (both may land keys there; different name sets) |
 
-Do **not** rewrite `hermes/profile/.env.template` wholesale for Slack in KEVN-8.
+Do **not** rewrite `hermes/profile/.env.template` wholesale for Slack in AGNT-8.
 
 ---
 

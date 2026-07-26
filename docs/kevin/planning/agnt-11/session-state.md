@@ -1,7 +1,7 @@
 ---
 project: kevn-docker-primary-deploy
 requirements_source: pm
-work_item: KEVN-11
+work_item: AGNT-11
 pm_tool: linear
 session_count: 1
 status: execute_in_progress
@@ -11,7 +11,7 @@ execution_home: agent-tools
 branch: feat/kevn-11-kevin-hermes-image
 pending_gate: none
 last_transition: "approve&execute — monorepo pack + local image build OK"
-linear: https://linear.app/overlund-media/issue/KEVN-11
+linear: https://linear.app/overlund-media/issue/AGNT-11
 ---
 
 ## Progress

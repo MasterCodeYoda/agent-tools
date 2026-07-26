@@ -1,4 +1,4 @@
-# Runbook: Kevin controller & project chrome (E9 / KEVN-10)
+# Runbook: Kevin controller & project chrome (E9 / AGNT-10)
 
 **Status:** Active MVP  
 **Profile:** `kevin` only  
@@ -15,7 +15,7 @@ Thin **product judgment loop** over the project disk plus **standing chrome** (p
 |-------|--------|
 | Process dialect | agent-tools (unchanged) |
 | Project continuity | disk (planning, runs, memory) |
-| Model / provider / usage UI | Hermes dashboard (KEVN-4) |
+| Model / provider / usage UI | Hermes dashboard (AGNT-4) |
 | Disk-gated continue \| escalate \| idle + project chrome | **this runbook / CLI** |
 
 Read-only. Does **not** invent NEXT, claim units, write session-state, or fork phase tables.
@@ -91,7 +91,7 @@ cd /path/to/software-factory   # or product project root
 
 ---
 
-## Relation to pre-wake (KEVN-7)
+## Relation to pre-wake (AGNT-7)
 
 | Gate | Script |
 |------|--------|
@@ -110,7 +110,7 @@ Pre-wake does **not** replace decide; decide does **not** replace pre-wake.
 
 ---
 
-## Relation to control plane (KEVN-4)
+## Relation to control plane (AGNT-4)
 
 - Dashboard: models, keys, usage windows.  
 - Controller: project phase / yield / claimable decision.  
@@ -140,7 +140,7 @@ With empty NEXT and no in_progress: expect `idle` exit **10**.
 
 ---
 
-## Acceptance (KEVN-10)
+## Acceptance (AGNT-10)
 
 1. This path of record exists  
 2. Controller prints continue \| escalate \| idle with codes  

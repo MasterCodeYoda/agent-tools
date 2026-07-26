@@ -26,7 +26,7 @@ Versioned **Kevin** host profile for Hermes. This directory is a Hermes
 | Path of record | [docs/runbooks/kevin-auth-packaging.md](../../docs/runbooks/kevin-auth-packaging.md) |
 
 - One working path is enough: API key **or** OAuth pool for the default provider.
-- Slack secret **names** only: cross-ref [packs/factory-slack.env.example](../../packs/factory-slack.env.example) / KEVN-8 — this profile does not own Slack packaging.
+- Slack secret **names** only: cross-ref [packs/factory-slack.env.example](../../packs/factory-slack.env.example) / AGNT-8 — this profile does not own Slack packaging.
 - **Never** commit tokens, real `.env`, or `auth.json`.
 
 ## Apply (primary)

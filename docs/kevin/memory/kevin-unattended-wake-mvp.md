@@ -1,6 +1,6 @@
 ---
 name: kevin-unattended-wake-mvp
-description: KEVN-7 MVP — kevin-pre-wake requires worktree; cron template; live gateway residual
+description: AGNT-7 MVP — kevin-pre-wake requires worktree; cron template; live gateway residual
 type: pattern
 applicability: project
 related:

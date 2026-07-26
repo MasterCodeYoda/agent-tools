@@ -1,4 +1,4 @@
-# Design discussion: KEVN-11 Docker primary deploy surface
+# Design discussion: AGNT-11 Docker primary deploy surface
 
 Status: **Locked monorepo** (user 2026-07-26)  
 Grounded in research: `codebase-research.md`  
@@ -83,7 +83,7 @@ operator: compose image kevin-hermes:main
 
 ## Requirements impact (replaces prior SF-local pack ACs)
 
-Must reframe KEVN-11 (or successor) around:
+Must reframe AGNT-11 (or successor) around:
 
 1. Migrate Kevin packaging/docs/scripts into agent-tools `hermes/` (+ docs home).  
 2. Dockerfile/compose for **kevin-hermes**; build uses **dist/hermes** post-setup.  

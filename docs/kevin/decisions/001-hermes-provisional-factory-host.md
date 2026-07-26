@@ -26,10 +26,10 @@ We already have the software factory **process** in **agent-tools** (prescriptiv
 | J1 judgment vertical | PASS — isolation, always-PR overlay, review evidence, E-MERGE, disk resume (operator-as-controller) |
 | J1-bis automated wake | Substrate researched; live wake not yet executed |
 | Process IP Wave 5 | Landed in agent-tools (approval boundaries, pre-wake, dated rules, escalate receipts) |
-| Coding-loop parity | **PASS (2026-07-24)** — KEVN-6: 3/3 hermes -p kevin tracers (bug/multi-file/recovery) on SF project worktree within ±1 band of Grok Build baseline (Sonnet-class). Evidence: `docs/evidence/kevin-coding-confidence/scorecard.md`. Caveat: project docs/scripts class, not large Spectral-app residual. |
+| Coding-loop parity | **PASS (2026-07-24)** — AGNT-6: 3/3 hermes -p kevin tracers (bug/multi-file/recovery) on SF project worktree within ±1 band of Grok Build baseline (Sonnet-class). Evidence: `docs/evidence/kevin-coding-confidence/scorecard.md`. Caveat: project docs/scripts class, not large Spectral-app residual. |
 | Stack re-research | **Closed** — pursue Hermes for Kevin v1 without further host bake-offs as blockers |
 
-**Product name / tracking:** Linear team **Kevin** (key **KEVN**); project holds full v1 epic set. Repo directory may remain `software-factory` until rename.
+**Product name / tracking:** Linear team **Agent Tools** (key **AGNT**); project holds full v1 epic set. Repo directory may remain `software-factory` until rename.
 
 ---
 
@@ -50,7 +50,7 @@ We are **not** building “a Hermes multi-instance product that happens to load 
 
 - Default runtime for Kevin v1: Hermes profile **`kevin`** (not named “factory”), managed process skills under `~/.hermes/`, approvals floor, memory off / write_approval, project bind.  
 - **Naming:** Do **not** use **factory** for Kevin’s Hermes profile, publish agent, or skill install path. agent-tools already uses **`factory`** for the separate **Factory coding agent** (`~/.factory`). Kevin installs into **hermes** paths only.  
-- Historical dogfood used `hermes -p factory`; migrate to **`kevin`** under config-as-code (KEVN-2).  
+- Historical dogfood used `hermes -p factory`; migrate to **`kevin`** under config-as-code (AGNT-2).  
 - **Not** eternal product OS — host remains replaceable if judgment, isolation, coding-parity, or control-plane tax becomes unacceptable (pi/Eve/OpenCode remain documented fallbacks).  
 - No further host **research** as a gate; pivots only via written failure notes + epic outcome (e.g. coding-parity fail paths).
 
@@ -149,9 +149,9 @@ Same class of pipe as other coding agents that consume agent-tools — **not** a
 | H4 model hierarchy | PASS | Policy + knobs; control plane elevates this |
 | Pre-H5 collab | Converged | Lean A |
 | J1 judgment vertical | PASS | Operator controller on Spectral worktree |
-| J1-bis automated wake | **MVP path (2026-07-24)** | KEVN-7 runbook + kevin-pre-wake; live gateway tick residual |
+| J1-bis automated wake | **MVP path (2026-07-24)** | AGNT-7 runbook + kevin-pre-wake; live gateway tick residual |
 | Wave 5 process IP | Landed | agent-tools + factory re-export |
-| Coding-loop parity | **PASS (repo class)** | KEVN-6 scorecard; large-app residual optional |
+| Coding-loop parity | **PASS (repo class)** | AGNT-6 scorecard; large-app residual optional |
 
 ---
 
@@ -174,9 +174,9 @@ Same class of pipe as other coding agents that consume agent-tools — **not** a
 ### Actions (build sequence)
 
 1. Foundation cleanup (product repo + docs) — done.  
-2. Linear team **Kevin (KEVN)** + v1 project + epics — done.  
-3. Roadmap active; drive **KEVN-2** onward.  
-4. agent-tools: add **hermes** publish/install target in `setup.sh` (KEVN-3).  
+2. Linear team **Kevin (AGNT)** + v1 project + epics — done.  
+3. Roadmap active; drive **AGNT-2** onward.  
+4. agent-tools: add **hermes** publish/install target in `setup.sh` (AGNT-3).  
 5. Default dogfood: `hermes -p kevin` + managed `~/.hermes/skills` (migrate off legacy `factory` profile).
 
 ---

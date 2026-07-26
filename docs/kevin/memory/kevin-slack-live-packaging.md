@@ -6,7 +6,7 @@ applicability: project
 related:
   - docs/runbooks/kevin-slack-live.md
   - packs/kevin-slack-setup.md
-  - KEVN-8
+  - AGNT-8
   - run_id:2026-07-24-mxn3k-kevn-8-9
 incident_date: null
 job_phases: [continue, execute]

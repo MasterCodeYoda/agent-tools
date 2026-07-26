@@ -3,7 +3,7 @@
 Status: Explored  
 converged_by: user  
 updated: 2026-07-25  
-linear: KEVN-11
+linear: AGNT-11
 
 ## Seed Concept
 
@@ -37,4 +37,4 @@ v1 shipped host-PATH bring-up and Slack packaging against laptop Hermes. The rea
 - [ ] How process pack lands (host setup → bind, bake, or init ritual)
 - [ ] Profile `kevin` create/apply from dist without clobbering secrets
 - [ ] Desktop dogfood DoD vs headless parity checklist split
-- [ ] Update KEVN-5/8 runbooks as “secondary” vs new runbook only
+- [ ] Update AGNT-5/8 runbooks as “secondary” vs new runbook only

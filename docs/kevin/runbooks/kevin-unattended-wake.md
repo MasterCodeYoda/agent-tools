@@ -1,4 +1,4 @@
-# Runbook: Kevin unattended wake (E6 / KEVN-7)
+# Runbook: Kevin unattended wake (E6 / AGNT-7)
 
 **Status:** Active MVP — path of record (live gateway tick optional residual)  
 **Profile:** `kevin` only — **not** personal Hermes default, **not** legacy `factory`  
@@ -18,7 +18,7 @@ Automated outer loop: Hermes **gateway + cron** under profile **`kevin`**, alway
 ## Preconditions
 
 1. Bring-up hard bar: `./scripts/kevin-bring-up-check.sh`  
-2. Coding-loop repo-class PASS recorded (KEVN-6) — do not treat wake as coding-parity substitute  
+2. Coding-loop repo-class PASS recorded (AGNT-6) — do not treat wake as coding-parity substitute  
 3. Disposable **git worktree** of the product repo (never dirty primary as cron `workdir`)  
 4. Approvals remain fail-closed for unattended (see below)  
 5. No silent `git pull` / setup on wake  
@@ -219,8 +219,8 @@ Record results under [../evidence/kevin-unattended-wake/](../evidence/kevin-unat
 
 ## Out of scope
 
-- Live Slack transport ([KEVN-8](https://linear.app/overlund-media/issue/KEVN-8))  
-- Coding-loop re-gate ([KEVN-6](https://linear.app/overlund-media/issue/KEVN-6) already repo-class PASS)  
+- Live Slack transport ([AGNT-8](https://linear.app/overlund-media/issue/AGNT-8))  
+- Coding-loop re-gate ([AGNT-6](https://linear.app/overlund-media/issue/AGNT-6) already repo-class PASS)  
 - Silent pull/setup on wake  
 - Shell-out architecture  
 - Personal default Hermes profile for Kevin  

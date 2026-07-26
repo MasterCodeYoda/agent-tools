@@ -1,4 +1,4 @@
-# Kevin Slack bot setup (KEVN-8)
+# Kevin Slack bot setup (AGNT-8)
 
 **Profile:** always `hermes -p kevin` — never personal default, never legacy `factory` for Kevin work.  
 **Process pack:** agent-tools `./setup.sh` → `~/.hermes/skills` (publish agent **`hermes`**).  
@@ -79,4 +79,4 @@ Quick smoke rows (when tokens available):
 - `approvals.mode: manual` + deny globs (force-push, curl\|sh, root rm)
 - Slack toolsets: `file`, `terminal`, `skills` only
 - Channel binding skills: `workflow`, `workflow-continue` (not full pack auto-load)
-- Provider auth / portable secrets packaging: [KEVN-9](https://linear.app/overlund-media/issue/KEVN-9) / [hermes-kevin.md](../docs/runbooks/hermes-kevin.md) secrets section
+- Provider auth / portable secrets packaging: [AGNT-9](https://linear.app/overlund-media/issue/AGNT-9) / [hermes-kevin.md](../docs/runbooks/hermes-kevin.md) secrets section

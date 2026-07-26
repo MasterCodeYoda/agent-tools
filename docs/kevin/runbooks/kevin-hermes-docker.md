@@ -1,6 +1,6 @@
 # Runbook: kevin-hermes Docker primary (path of record)
 
-**Status:** Active — KEVN-11  
+**Status:** Active — AGNT-11  
 **Image:** `ghcr.io/mastercodeyoda/kevin-hermes` (or local build)  
 **Profile:** `kevin` only  
 **Process skills:** baked **`dist/hermes`** at image build (never raw `src/`)  

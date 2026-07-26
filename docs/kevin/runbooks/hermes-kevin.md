@@ -2,7 +2,7 @@
 
 # Runbook: Hermes profile **kevin** (Kevin v1)
 
-**Status:** Active — E1 config-as-code + **E4 deployable bring-up** / [KEVN-5](https://linear.app/overlund-media/issue/KEVN-5)  
+**Status:** Active — E1 config-as-code + **E4 deployable bring-up** / [AGNT-5](https://linear.app/overlund-media/issue/AGNT-5)  
 **Profile name:** `kevin`  
 **Distribution root:** [`hermes/profile/`](../../hermes/profile/)  
 **Process SoT:** agent-tools → managed `~/.hermes/skills` (publish agent **`hermes`**)  
@@ -98,7 +98,7 @@ Summary only — do not maintain a second full secret-name matrix here:
 
 #### 7 — Smoke (isolated worktree)
 
-Goal: prove project + process skills resolve on a disposable worktree — **not** coding-loop PASS (that is [KEVN-6](https://linear.app/overlund-media/issue/KEVN-6)).
+Goal: prove project + process skills resolve on a disposable worktree — **not** coding-loop PASS (that is [AGNT-6](https://linear.app/overlund-media/issue/AGNT-6)).
 
 ```bash
 cd "$SF"
@@ -274,9 +274,9 @@ Historical H1–H4 dogfood used `hermes -p factory` and pack-relative `external_
 
 - Replacing Hermes install channel
 - Auto-provisioning API keys
-- Coding-loop confidence tracer bullets ([KEVN-6](https://linear.app/overlund-media/issue/KEVN-6))
-- Unattended wake / gateway cron ([KEVN-7](https://linear.app/overlund-media/issue/KEVN-7))
-- Live Slack transport details — path of record [kevin-slack-live.md](./kevin-slack-live.md) ([KEVN-8](https://linear.app/overlund-media/issue/KEVN-8))
-- Auth packaging detail — path of record [kevin-auth-packaging.md](./kevin-auth-packaging.md) ([KEVN-9](https://linear.app/overlund-media/issue/KEVN-9))
-- Custom controller / project chrome ([KEVN-10](https://linear.app/overlund-media/issue/KEVN-10))
-- agent-tools hermes install implementation internals (landed under E2 / KEVN-3)
+- Coding-loop confidence tracer bullets ([AGNT-6](https://linear.app/overlund-media/issue/AGNT-6))
+- Unattended wake / gateway cron ([AGNT-7](https://linear.app/overlund-media/issue/AGNT-7))
+- Live Slack transport details — path of record [kevin-slack-live.md](./kevin-slack-live.md) ([AGNT-8](https://linear.app/overlund-media/issue/AGNT-8))
+- Auth packaging detail — path of record [kevin-auth-packaging.md](./kevin-auth-packaging.md) ([AGNT-9](https://linear.app/overlund-media/issue/AGNT-9))
+- Custom controller / project chrome ([AGNT-10](https://linear.app/overlund-media/issue/AGNT-10))
+- agent-tools hermes install implementation internals (landed under E2 / AGNT-3)

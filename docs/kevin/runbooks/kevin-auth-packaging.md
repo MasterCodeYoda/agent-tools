@@ -1,8 +1,8 @@
-# Runbook: Kevin auth packaging (E8 / KEVN-9)
+# Runbook: Kevin auth packaging (E8 / AGNT-9)
 
 **Status:** Active — path of record for portable secrets  
 **Profile name:** `kevin` only  
-**Related:** [hermes-kevin.md](./hermes-kevin.md) (bring-up) · [kevin-control-plane.md](./kevin-control-plane.md) · [hermes/profile](../../hermes/profile/) · Slack packaging [KEVN-8](https://linear.app/overlund-media/issue/KEVN-8) / [packs/factory-slack.env.example](../../packs/factory-slack.env.example) (cross-ref only)
+**Related:** [hermes-kevin.md](./hermes-kevin.md) (bring-up) · [kevin-control-plane.md](./kevin-control-plane.md) · [hermes/profile](../../hermes/profile/) · Slack packaging [AGNT-8](https://linear.app/overlund-media/issue/AGNT-8) / [packs/factory-slack.env.example](../../packs/factory-slack.env.example) (cross-ref only)
 
 ---
 
@@ -24,11 +24,11 @@ At least **one** working inference path is enough (API key **or** OAuth pool for
 | `OPENAI_API_KEY` | OpenAI-compatible providers | Profile `.env` | false | Optional if not using OpenAI |
 | `OPENROUTER_API_KEY` | OpenRouter | Profile `.env` | false | Optional if not using OpenRouter |
 | OAuth / pool credentials | Provider login (e.g. Anthropic Claude Code pool) | `auth.json` via `hermes -p kevin auth …` | false | Path B; **never** commit `auth.json` |
-| `SLACK_BOT_TOKEN` | Slack bot token (Socket Mode) | Profile `.env` when Slack is used | false for core auth | **KEVN-8 owns packaging** — see [Slack cross-ref](#slack-secrets-cross-ref) |
-| `SLACK_APP_TOKEN` | Slack app-level token | Profile `.env` when Slack is used | false for core auth | Same — KEVN-8 |
-| `SLACK_ALLOWED_USERS` | Hard allowlist (member IDs) | Profile `.env` when Slack is used | false for core auth | Same — KEVN-8 |
-| `SLACK_ALLOWED_CHANNELS` | Hard allowlist (channel IDs) | Profile `.env` when Slack is used | false for core auth | Same — KEVN-8 |
-| `SLACK_HOME_CHANNEL` | Optional home channel | Profile `.env` when Slack is used | false | Same — KEVN-8 |
+| `SLACK_BOT_TOKEN` | Slack bot token (Socket Mode) | Profile `.env` when Slack is used | false for core auth | **AGNT-8 owns packaging** — see [Slack cross-ref](#slack-secrets-cross-ref) |
+| `SLACK_APP_TOKEN` | Slack app-level token | Profile `.env` when Slack is used | false for core auth | Same — AGNT-8 |
+| `SLACK_ALLOWED_USERS` | Hard allowlist (member IDs) | Profile `.env` when Slack is used | false for core auth | Same — AGNT-8 |
+| `SLACK_ALLOWED_CHANNELS` | Hard allowlist (channel IDs) | Profile `.env` when Slack is used | false for core auth | Same — AGNT-8 |
+| `SLACK_HOME_CHANNEL` | Optional home channel | Profile `.env` when Slack is used | false | Same — AGNT-8 |
 | `TERMINAL_ENV` | Optional terminal env export name | Profile `.env` | false | Sandboxed shells; name only |
 
 Repo seed for core API key names: [`hermes/profile/.env.template`](../../hermes/profile/.env.template) and `env_requires` in [`hermes/profile/distribution.yaml`](../../hermes/profile/distribution.yaml).
@@ -135,16 +135,16 @@ Apply behavior to cite: [`scripts/apply-kevin-profile.sh`](../../scripts/apply-k
 
 ## Slack secrets (cross-ref)
 
-Slack Socket Mode packaging is **[KEVN-8](https://linear.app/overlund-media/issue/KEVN-8)** — not this runbook.
+Slack Socket Mode packaging is **[AGNT-8](https://linear.app/overlund-media/issue/AGNT-8)** — not this runbook.
 
-| Until KEVN-8 lands kevin-scoped docs | Use |
+| Until AGNT-8 lands kevin-scoped docs | Use |
 |--------------------------------------|-----|
 | Name list / example shape | [`packs/factory-slack.env.example`](../../packs/factory-slack.env.example) |
 | Setup narrative (legacy `factory` profile paths) | [`packs/factory-slack-setup.md`](../../packs/factory-slack-setup.md) |
 
 **Names (for inventory completeness only):** `SLACK_BOT_TOKEN`, `SLACK_APP_TOKEN`, `SLACK_ALLOWED_USERS`, `SLACK_ALLOWED_CHANNELS`, optional `SLACK_HOME_CHANNEL`.
 
-When filling Slack for Kevin dogfood, put values in **`~/.hermes/profiles/kevin/.env`** (not into git). Prefer future kevin-scoped Slack env docs from KEVN-8 when they land; shared guardrails above still apply.
+When filling Slack for Kevin dogfood, put values in **`~/.hermes/profiles/kevin/.env`** (not into git). Prefer future kevin-scoped Slack env docs from AGNT-8 when they land; shared guardrails above still apply.
 
 ---
 
@@ -153,7 +153,7 @@ When filling Slack for Kevin dogfood, put values in **`~/.hermes/profiles/kevin/
 - Secrets manager product packaging (Bitwarden / 1Password first-class Kevin product) — Hermes may expose `hermes secrets`; Kevin E8 does not require it
 - Sharing personal OAuth pools across operators
 - Public multi-tenant SaaS auth
-- Owning or rewriting `packs/*slack*` / a kevin-slack runbook (KEVN-8)
+- Owning or rewriting `packs/*slack*` / a kevin-slack runbook (AGNT-8)
 - Changing bring-up hard/soft readiness semantics (secrets stay soft)
 
 ---

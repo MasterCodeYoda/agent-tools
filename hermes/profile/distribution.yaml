@@ -10,7 +10,7 @@ license: "UNLICENSED"
 env_requires:
   # Names only; all optional — one working path (API key or hermes auth / auth.json) is enough.
   # Portable fill steps: docs/runbooks/kevin-auth-packaging.md
-  # Slack env is owned by KEVN-8 — omit from env_requires; cross-ref packs/factory-slack.env.example
+  # Slack env is owned by AGNT-8 — omit from env_requires; cross-ref packs/factory-slack.env.example
   - name: ANTHROPIC_API_KEY
     description: "Anthropic API key (Path A) when not using OAuth / profile auth.json (Path B: hermes -p kevin auth)"
     required: false

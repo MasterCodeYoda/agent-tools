@@ -1,6 +1,6 @@
 ---
 name: kevin-foundation-cleanup
-description: Foundation cleanup done 2026-07-24 — docs taxonomy, hermes scaffold, kevin-v1 register; next Linear KEVN
+description: Foundation cleanup done 2026-07-24 — docs taxonomy, hermes scaffold, kevin-v1 register; next Linear AGNT
 type: process
 applicability: project
 related:
@@ -23,5 +23,5 @@ Dogfood research lived flat under `docs/` with stale README/handoff; residual Do
 1. Start at `docs/handoff.md` → ADR-001 → `docs/kevin-v1.md`.  
 2. Research is **archive** under `docs/research/`.  
 3. Config-as-code home is `hermes/` (scaffold).  
-4. Do **not** invent NEXT until Linear KEVN + roadmap rechart.  
+4. Do **not** invent NEXT until Linear AGNT + roadmap rechart.  
 5. Process pack: re-export only; packs/hermes-process-pack* gitignored.  

@@ -3,7 +3,7 @@
 **Status:** Accepted  
 **Date:** 2026-07-26  
 **Deciders:** Matt Overlund  
-**Related:** [001-hermes-provisional-factory-host.md](./001-hermes-provisional-factory-host.md) · KEVN-11 (Docker primary / agent-tools monorepo) · Spectral/Wildwood git-cliff practice (pattern reference only)
+**Related:** [001-hermes-provisional-factory-host.md](./001-hermes-provisional-factory-host.md) · AGNT-11 (Docker primary / agent-tools monorepo) · Spectral/Wildwood git-cliff practice (pattern reference only)
 
 **Migration note:** When software-factory content moves into agent-tools, this ADR moves with Kevin packaging docs (same decision text).
 
@@ -92,7 +92,7 @@ Until a trigger fires, **do not** implement cliff/semver/GitHub Releases as part
 
 ### Actions
 
-1. KEVN-11 / monorepo image CI implements **§1 only**.  
+1. AGNT-11 / monorepo image CI implements **§1 only**.  
 2. When a §2 trigger is met, open a small unit: cliff + tag workflow + optional GH Release; amend this ADR status notes if practice diverges.
 
 ---
@@ -110,5 +110,5 @@ Until a trigger fires, **do not** implement cliff/semver/GitHub Releases as part
 
 ## References
 
-- KEVN-11 design lock: monorepo agent-tools, image `kevin-hermes`, primary track `main`.  
+- AGNT-11 design lock: monorepo agent-tools, image `kevin-hermes`, primary track `main`.  
 - Sibling practice: Spectral ADR-012 (git-cliff for CHANGELOG) — **pattern for future §2**, not current obligation.

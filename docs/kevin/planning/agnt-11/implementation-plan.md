@@ -1,6 +1,6 @@
 ---
 project: kevn-docker-primary-deploy
-work_item: KEVN-11
+work_item: AGNT-11
 requirements_source: pm
 decomposition: deliverable-partition
 status: approved
@@ -12,7 +12,7 @@ execution_home: agent-tools
 donor_repo: software-factory
 ---
 
-# Implementation Plan: KEVN-11 — agent-tools monorepo + kevin-hermes image
+# Implementation Plan: AGNT-11 — agent-tools monorepo + kevin-hermes image
 
 ## Approach
 
@@ -168,7 +168,7 @@ Parent ACs (plan-final):
 - [ ] Local or CI image build succeeds with non-empty `/opt/kevin/skills` and revision marker  
 - [ ] `docker compose` against `:main` (or local build tag) dogfood notes recorded  
 - [ ] software-factory deleted or explicit residual with owner  
-- [ ] Linear KEVN-11 updated; no dual path of record  
+- [ ] Linear AGNT-11 updated; no dual path of record  
 
 ## Risks
 

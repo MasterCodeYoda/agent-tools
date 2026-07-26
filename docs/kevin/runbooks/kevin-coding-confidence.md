@@ -1,4 +1,4 @@
-# Runbook: Kevin coding-loop confidence (E5 / KEVN-6)
+# Runbook: Kevin coding-loop confidence (E5 / AGNT-6)
 
 **Status:** Active gate  
 **Profile:** `hermes -p kevin` only (direct tool loop)  
@@ -11,7 +11,7 @@
 
 Prove that the Kevin Hermes host sits in an **equitable band** with the operator’s daily coding harness for real implement loops — not packaging theater, not shell-out architecture.
 
-**This gate blocks declaring unattended *implement* trusted** ([KEVN-7](https://linear.app/overlund-media/issue/KEVN-7)). Packaging (E1–E4) may proceed without it.
+**This gate blocks declaring unattended *implement* trusted** ([AGNT-7](https://linear.app/overlund-media/issue/AGNT-7)). Packaging (E1–E4) may proceed without it.
 
 ---
 
@@ -116,7 +116,7 @@ git worktree remove ../product-kevin-e5
 
 ## Out of scope
 
-- Unattended wake / cron implement (KEVN-7)  
+- Unattended wake / cron implement (AGNT-7)  
 - Declaring PASS from doctor/skills alone  
 - Synthetic fixture-only “success”  
 - Dual process dialect  

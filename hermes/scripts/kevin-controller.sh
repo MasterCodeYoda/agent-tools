@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# kevin-controller.sh — project chrome + disk-gated judgment (KEVN-10)
+# kevin-controller.sh — project chrome + disk-gated judgment (AGNT-10)
 #
 # Read-only lens on the project. Does not claim work, invent NEXT, or write session-state.
 # Profile reminder: hermes -p kevin. Process SoT remains agent-tools.
@@ -148,16 +148,16 @@ if [[ -f "$PLANNING/session-state.md" ]]; then
   TOP_STATUS="$(fm_get status "$TOP_FM")"
 fi
 
-# Fallback: grep NEXT markdown for KEVN-#### if frontmatter empty
+# Fallback: grep NEXT markdown for AGNT-#### (legacy KEVN-####) if frontmatter empty
 if [[ -z "$NEXT_UNIT" && -f "$PLANNING/session-state.md" ]]; then
   NEXT_UNIT="$(
     awk '
-      /^\*\*KEVN-[0-9]+/ {
-        if (match($0, /KEVN-[0-9]+/)) { print substr($0, RSTART, RLENGTH); exit }
+      /^\*\*(AGNT|KEVN)-[0-9]+/ {
+        if (match($0, /(AGNT|KEVN)-[0-9]+/)) { print substr($0, RSTART, RLENGTH); exit }
       }
       /^## NEXT/ { next_sec=1; next }
-      next_sec && /KEVN-[0-9]+/ {
-        if (match($0, /KEVN-[0-9]+/)) { print substr($0, RSTART, RLENGTH); exit }
+      next_sec && /(AGNT|KEVN)-[0-9]+/ {
+        if (match($0, /(AGNT|KEVN)-[0-9]+/)) { print substr($0, RSTART, RLENGTH); exit }
       }
     ' "$PLANNING/session-state.md" || true
   )"
@@ -273,7 +273,7 @@ Swarm active:   ${SWARM_RUN:-"(none)"}
 Profile default: ${MODEL_DEFAULT:-"(missing hermes/profile/config.yaml)"}
 Provider:        ${MODEL_PROVIDER:-"(unknown)"}
 Hierarchy:       packs/kevin-model-hierarchy.md
-Turn override:   hermes -p kevin -m … / dashboard (KEVN-4)
+Turn override:   hermes -p kevin -m … / dashboard (AGNT-4)
 
 --- Capacity / windows ---
 Best-available via operator control plane (Hermes dashboard):

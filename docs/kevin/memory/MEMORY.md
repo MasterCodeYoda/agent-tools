@@ -17,13 +17,13 @@ CONTRIBUTING, or Codex/domain docs.
 - [hermes-j1-bis-research-residual](entries/hermes-j1-bis-research-residual.md) — J1-bis: automated wake residual; not H5 blocker; unsafe primary cwd
 - [hermes-h5-provisional-host](entries/hermes-h5-provisional-host.md) — H5 ADR-001: Hermes host under lean A (amended Kevin adopt 2026-07-24)
 - [gumclaw-ops-import-split-ip](entries/gumclaw-ops-import-split-ip.md) — GumClaw patterns → split IP (agent-tools process vs factory host/wake)
-- [kevin-foundation-cleanup](entries/kevin-foundation-cleanup.md) — 2026-07-24 docs project cleanup; next Linear KEVN
-- [kevin-profile-config-as-code](entries/kevin-profile-config-as-code.md) — KEVN-2: hermes/profile distribution + apply script; install from stable path; skills placeholder post-sub
-- [kevin-hermes-process-pack-setup](entries/kevin-hermes-process-pack-setup.md) — KEVN-3: agent-tools hermes → ~/.hermes/skills; factory remains coding agent
-- [kevin-control-plane-mvp](entries/kevin-control-plane-mvp.md) — KEVN-4: Hermes dashboard isolated + hierarchy pack + sync story
-- [kevin-deployable-bring-up](entries/kevin-deployable-bring-up.md) — KEVN-5: bring-up path of record + hard readiness check; soft doctor ≠ fail
-- [kevin-coding-loop-confidence-pass](entries/kevin-coding-loop-confidence-pass.md) — KEVN-6 PASS repo-class; hermes kevin tracers + scorecard
-- [kevin-unattended-wake-mvp](entries/kevin-unattended-wake-mvp.md) — KEVN-7 MVP: kevin-pre-wake worktree gate + cron template; live tick residual
+- [kevin-foundation-cleanup](entries/kevin-foundation-cleanup.md) — 2026-07-24 docs project cleanup; next Linear AGNT
+- [kevin-profile-config-as-code](entries/kevin-profile-config-as-code.md) — AGNT-2: hermes/profile distribution + apply script; install from stable path; skills placeholder post-sub
+- [kevin-hermes-process-pack-setup](entries/kevin-hermes-process-pack-setup.md) — AGNT-3: agent-tools hermes → ~/.hermes/skills; factory remains coding agent
+- [kevin-control-plane-mvp](entries/kevin-control-plane-mvp.md) — AGNT-4: Hermes dashboard isolated + hierarchy pack + sync story
+- [kevin-deployable-bring-up](entries/kevin-deployable-bring-up.md) — AGNT-5: bring-up path of record + hard readiness check; soft doctor ≠ fail
+- [kevin-coding-loop-confidence-pass](entries/kevin-coding-loop-confidence-pass.md) — AGNT-6 PASS repo-class; hermes kevin tracers + scorecard
+- [kevin-unattended-wake-mvp](entries/kevin-unattended-wake-mvp.md) — AGNT-7 MVP: kevin-pre-wake worktree gate + cron template; live tick residual
 
 ## Solutions
 

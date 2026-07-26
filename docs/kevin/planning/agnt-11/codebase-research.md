@@ -1,4 +1,4 @@
-# Codebase research — KEVN-11 Docker primary deploy
+# Codebase research — AGNT-11 Docker primary deploy
 
 Status: Complete  
 Date: 2026-07-25  
@@ -10,7 +10,7 @@ Mode: ticket-hidden facts (explore subagent + project read)
 2. What is hermes/profile layout and terminal project binding?
 3. How do process skills install today?
 4. What does bring-up check verify?
-5. What do KEVN-5/7/8/9 runbooks say about project, docker, gateway, secrets?
+5. What do AGNT-5/7/8/9 runbooks say about project, docker, gateway, secrets?
 6. Any existing Docker deploy surface in-repo?
 7. How is project bound today (cwd vs config)?
 8. Which scripts hardcode host Hermes paths?
@@ -44,10 +44,10 @@ Mode: ticket-hidden facts (explore subagent + project read)
 
 ### Runbooks (docker mentions)
 
-- KEVN-5 host PATH path of record; secrets soft for bring-up.
-- KEVN-8: project modes local | docker (terminal backend) | ssh; gateway from project cwd; secrets `~/.hermes/profiles/kevin/.env`.
-- KEVN-7: worktree isolation; gateway under kevin; no container deploy.
-- KEVN-9: secrets landing zone host profile home.
+- AGNT-5 host PATH path of record; secrets soft for bring-up.
+- AGNT-8: project modes local | docker (terminal backend) | ssh; gateway from project cwd; secrets `~/.hermes/profiles/kevin/.env`.
+- AGNT-7: worktree isolation; gateway under kevin; no container deploy.
+- AGNT-9: secrets landing zone host profile home.
 
 ### Docker in-repo
 
@@ -73,7 +73,7 @@ Mode: ticket-hidden facts (explore subagent + project read)
 | Apply works against container volume with env only | **Overturned** | Profile path hardcodes `$HOME/.hermes/profiles/kevin` |
 | Deploy pack already exists | **Overturned** | No compose/Dockerfile |
 | Project via terminal.cwd | **Overturned** | Intentionally unset; cwd launch convention |
-| Docker in KEVN-8 docs = deploy surface | **Overturned** | Means terminal.backend docker, not instance-in-container |
+| Docker in AGNT-8 docs = deploy surface | **Overturned** | Means terminal.backend docker, not instance-in-container |
 
 ## Unknowns (outside project)
 

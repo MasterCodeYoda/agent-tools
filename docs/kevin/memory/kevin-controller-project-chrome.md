@@ -1,12 +1,12 @@
 ---
 name: kevin-controller-project-chrome
-description: Project chrome + judgment is kevin-controller.sh (status|decide); exit 0/10/20; never invent NEXT; dashboard stays KEVN-4 substrate
+description: Project chrome + judgment is kevin-controller.sh (status|decide); exit 0/10/20; never invent NEXT; dashboard stays AGNT-4 substrate
 type: lesson
 applicability: project
 related:
   - docs/runbooks/kevin-controller.md
   - scripts/kevin-controller.sh
-  - KEVN-10
+  - AGNT-10
   - run_id:r-20260724-10
 incident_date: null
 job_phases: [continue, pre-wake]
@@ -19,7 +19,7 @@ source_harness: grok
 
 ## Why
 
-KEVN-4 dashboard covers models/usage. Operators and unattended wake still need a **disk lens** for phase/yield and a **claimable-only** continue|escalate|idle decision without inventing NEXT.
+AGNT-4 dashboard covers models/usage. Operators and unattended wake still need a **disk lens** for phase/yield and a **claimable-only** continue|escalate|idle decision without inventing NEXT.
 
 ## How to apply
 

@@ -12,7 +12,7 @@
 | **Image versioning** | [decisions/002-kevin-hermes-image-versioning.md](./decisions/002-kevin-hermes-image-versioning.md) |
 | **Host decision (Hermes)** | [decisions/001-hermes-provisional-factory-host.md](./decisions/001-hermes-provisional-factory-host.md) |
 | **Migration from software-factory** | [MIGRATION.md](./MIGRATION.md) |
-| **Linear** | Team **Kevin** (`KEVN`) for now — see [LINEAR.md](./LINEAR.md) |
+| **Linear** | Team **Agent Tools** (`AGNT`) — see [LINEAR.md](./LINEAR.md) |
 
 ## Layout
 
@@ -26,7 +26,7 @@ docs/kevin/
   packs/             # Slack / model hierarchy packaging
   evidence/          # scorecards, dry-runs
   memory/            # compound entries snapshot
-  planning/          # KEVN-11 planning snapshot
+  planning/          # AGNT-11 planning snapshot
   product-surface.md
   kevin-v1.md
 hermes/

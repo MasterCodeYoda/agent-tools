@@ -17,7 +17,7 @@ source_harness: factory
 
 ## Why
 
-ADR prefers Hermes dashboard as substrate. Custom chrome is KEVN-10. MVP is launch path + hierarchy policy + honest gaps.
+ADR prefers Hermes dashboard as substrate. Custom chrome is AGNT-10. MVP is launch path + hierarchy policy + honest gaps.
 
 ## How to apply
 

@@ -1,4 +1,4 @@
-# Runbook: Kevin operator control plane (E3 / KEVN-4)
+# Runbook: Kevin operator control plane (E3 / AGNT-4)
 
 **Status:** Active MVP  
 **Substrate:** Hermes web dashboard (`hermes dashboard`)  
@@ -134,7 +134,7 @@ local edits (not auto-exported to git)
 
 ---
 
-## Acceptance checklist (KEVN-4)
+## Acceptance checklist (AGNT-4)
 
 - [ ] Kevin-scoped launch documented + wrapper works  
 - [ ] Hierarchy pack is kevin-named and matches profile defaults  
@@ -147,7 +147,7 @@ local edits (not auto-exported to git)
 
 ## Out of scope here
 
-- Custom React control console (KEVN-10)  
-- Unattended wake (KEVN-7)  
+- Custom React control console (AGNT-10)  
+- Unattended wake (AGNT-7)  
 - Scraping provider quotas into a product database  
 - Dual process dialect in the dashboard  
