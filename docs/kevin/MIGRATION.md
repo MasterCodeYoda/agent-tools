@@ -11,7 +11,8 @@
 | Kevin/Hermes memory entries + gumclaw import | Yes (`docs/kevin/memory/`) | None |
 | AGNT-11 planning snapshot | Yes (`docs/kevin/planning/agnt-11/`) | None |
 | ADRs 003–004 (workstation / CLI dist) | Yes | None |
-| Full `docs/research/*` archive | **No** (only research README) | **Optional:** tag SF before delete if you want recovery: `git tag archive/pre-delete-YYYYMMDD && git push --tags`. Not required for product. |
+| Selected research (doctrine + host + gumclaw + talks) | **Yes** — `docs/kevin/research/` (2026-07-26) | Stack trio, process-ip waves, spikes **dropped** with SF |
+| Rest of research archive | **No** | Safe to hard-delete with SF |
 | Legacy `factory-*` packs, spikes | No | Drop (historical / superseded) |
 | Uncommitted plant-rename dirt on SF | N/A | **Ignore** — do not invest; delete |
 | Unpushed SF tombstone commits | Local only | Optional push; irrelevant if remote is deleted |
