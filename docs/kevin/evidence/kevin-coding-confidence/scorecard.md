@@ -22,11 +22,13 @@
 
 ## Tracers
 
-| ID | Shape | Task | Status | Turns | Time | Rework | Thrash | Within ±1? | Notes |
-|----|-------|------|--------|-------|------|--------|--------|------------|-------|
-| T1 | Bug fix | Detect unexpanded `__HERMES_SKILLS_DIR__` in installed kevin config | **done** | 5 | 4 | 5 | 4 | **yes** | ~83s; commit `92ab157`; hermes tried /tmp verify write (refused) — minor thrash, DoD met |
-| T2 | Multi-file | Wire gate into handoff + hermes README + kevin runbook | **done** | 5 | 5 | 5 | 5 | **yes** | ~49s; commit `67227e8`; 3 files exact |
-| T3 | Recovery | Remove intentional bogus hard-fail; keep T1 check | **done** | 5 | 4 | 5 | 4 | **yes** | ~83s; commit `a94da68`; fault injection `e42ab40` then recovery |
+| ID | Shape | Task | Status | run_id | Turns | Time | Rework | Thrash | Within ±1? | Notes |
+|----|-------|------|--------|--------|-------|------|--------|--------|------------|-------|
+| T1 | Bug fix | Detect unexpanded `__HERMES_SKILLS_DIR__` in installed kevin config | **done** | none — freeform (pre-envelope) | 5 | 4 | 5 | 4 | **yes** | ~83s; commit `92ab157`; hermes tried /tmp verify write (refused) — minor thrash, DoD met |
+| T2 | Multi-file | Wire gate into handoff + hermes README + kevin runbook | **done** | none — freeform (pre-envelope) | 5 | 5 | 5 | 5 | **yes** | ~49s; commit `67227e8`; 3 files exact |
+| T3 | Recovery | Remove intentional bogus hard-fail; keep T1 check | **done** | none — freeform (pre-envelope) | 5 | 4 | 5 | 4 | **yes** | ~83s; commit `a94da68`; fault injection `e42ab40` then recovery |
+
+**Template for new tracers:** fill `run_id` from product-repo `.agent-tools/runs/` when `/work:continue` drives the work; else `none — freeform` + note.
 
 ### T1 detail
 

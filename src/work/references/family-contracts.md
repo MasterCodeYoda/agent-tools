@@ -43,7 +43,8 @@ Write-time shell: **load** `execution/templates/session-state.md` (or plan-time 
 |-------|--------|
 | `project`, `requirements_source`, `work_item`, `pm_tool` | Identity |
 | `session_count`, `status`, `progress` | Continuity |
-| `track`, `run_id`, `source_channel` | Continue / ledger |
+| `track`, `run_id`, `source_channel` | Continue / ledger (ingress channel ≠ harness) |
+| `harness`, `agent_surface`, `model`, `skills_rev`, `profile`, `workspace_kind`, `task_shape` | Runs identity envelope — claim-time; see `runs-ledger.md` |
 | `branch`, `worktree` | Workspace |
 | `visual_plan` | Approval presentation only |
 | `reentry_counts`, `thrash_bound_hits` | Thrash bound per `run_id` |

@@ -126,6 +126,14 @@ reentry_counts:
   plan_from_execute_or_review: 0
 thrash_bound_hits: 0
 source_channel: cli | linear | github | chat | other
+# Identity envelope — mint on claim; see runs-ledger.md (capture early)
+harness: grok-build | claude-code | kevin-hermes | codex | cursor | other | unknown
+agent_surface: work-continue | work-phase | kevin-start | swarm-worker | unattended | other
+model: unknown
+skills_rev: unknown
+profile: null
+workspace_kind: skill_source | product_repo | sandbox | unknown
+task_shape: packaging | bug | multi_file | recovery | research | docs | other | unknown
 ```
 
 Do not create a second per-unit orchestrator-state file. Prefer re-derive; write only what
@@ -134,9 +142,14 @@ classify cannot reconstruct.
 ## Runs ledger append (host)
 
 After forming `phase_return`, the continue host **also** appends one event line under
-`.agent-tools/runs/events.ndjson` per @work `references/runs-ledger.md`. Soft-fail on FS
-errors — never block the loop for telemetry. On unit `done`, run the **close-run recipe**
-(ledger.yml row). Yield glance only on demand / soft weekly offer — not every phase.
+`.agent-tools/runs/events.ndjson` per @work `references/runs-ledger.md` (identity envelope +
+honest wall-clock `ts` + optional `dose` from this block). Soft-fail on FS errors — never
+block the loop for telemetry. On unit `done`, run the **close-run recipe** (ledger.yml row:
+strict `rework`, `review_fix_cycles`, deferred P counts, `ttm_hours` when known).
+
+Product workspaces: ensure `.agent-tools/runs/` exists locally before append.
+
+Yield glance only on demand / soft weekly offer — not every phase.
 
 This is line instrumentation, not a parallel state machine.
 

@@ -17,6 +17,7 @@ Maintained by `/work:compound`. Not a substitute for ADRs, CONTRIBUTING, or Code
 - [Profile skill bindings track published names](entries/profile-skill-bindings-track-published-names.md) — after renames, grep profile/channel bindings against `dist/*/skills` ids
 - [Kevin skills rolling release channel](entries/kevin-skills-rolling-release-channel.md) — tag `kevin-skills` + pack/install scripts; not setup.sh→~/.hermes for product
 - [Kevin workstation CLI composes capital](entries/kevin-workstation-cli-composes-capital.md) — product `kevin` owns PATH; compose skills install + profile; thin Hermes alias is not setup
+- [Runs ledger capture early](entries/runs-ledger-capture-early.md) — identity envelope on claim; rework ≠ review_fix; process_payload v2
 
 ## Solutions
 

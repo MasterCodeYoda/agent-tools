@@ -22,6 +22,11 @@ corpus (evidence that the skill text is wrong/missing) before a proposal is writ
 seed_id: seed-001
 run_ids: [r-20260718-1]
 unit: SPEC-851
+# Optional identity (from ledger when present — capture early enables clustering)
+harness: grok-build | kevin-hermes | … | unknown
+workspace_kind: skill_source | product_repo | sandbox | unknown
+skills_rev: "<sha or unknown>"
+task_shape: packaging | bug | multi_file | recovery | … | unknown
 symptoms:
   - thrash_bound after micro-eligible issue forced needs_refine
 evidence:
@@ -34,6 +39,9 @@ candidate_skills:
   - src/work/references/tracks.md
 severity_guess: P1 | P2 | P3
 ```
+
+When clustering seeds, prefer grouping by `harness` + `workspace_kind` + symptoms so Kevin
+product-repo dogfood is not mixed with monorepo packaging process gaps.
 
 ## Detection rules for seeds
 

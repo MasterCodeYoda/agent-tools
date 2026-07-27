@@ -9,11 +9,16 @@ rewriting phases.
 ## Payload version
 
 ```text
-process_payload_version: 1
+process_payload_version: 2
 ```
 
 Bump when hard contracts change (tracks, claim dialect, runs events, handoff schema, gate
 evidence). Soft doc polish does not bump.
+
+**v2 (runs identity):** adapters must stamp claim-time identity envelope on session-state and
+events (`harness`, `agent_surface`, `model`, `skills_rev`, `profile`, `workspace_kind`,
+`task_shape`); use strict `rework` vs `review_fix_cycles` on close; wall-clock `ts` at append.
+See `runs-ledger.md`.
 
 ## Must implement (adapter surface)
 
@@ -25,7 +30,7 @@ evidence). Soft doc polish does not bump.
 | Tracks | `references/tracks.md` | feature \| micro \| research (+ conventions overrides) |
 | Phase skills | refine, plan, execute, review, compound, … | Same gates; same artifacts |
 | Claim dialect | `planning/pm-integration.md` | Parse/emit `work:claim` / egress lines |
-| Runs ledger | `references/runs-ledger.md` | Append events; close-run; yield via maintain |
+| Runs ledger | `references/runs-ledger.md` | Append events with identity envelope + honest ts; close-run (strict rework); local `.agent-tools/runs/` in product repos; yield via maintain |
 | Handoff / return | `references/handoff-package.md` + swarm structured return | Same field names |
 | Review evidence | continue `gates.md` | method, date, verdict, P1–P3, disposition |
 | Merge policy | conventions | Honor autonomous local merge ratchet; no silent push |

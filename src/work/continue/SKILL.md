@@ -52,7 +52,7 @@ $ARGUMENTS
 | Before mode select | `references/portfolio-router.md` |
 | Parallel modes | @work `parallel/MODE.md` + `orchestrator.md` / `resume.md` as selected |
 | Unit mode | `references/unit-state-machine.md`, `references/phase-return.md`, @work `references/tracks.md` |
-| After phase-return | @work `references/runs-ledger.md` (append event; close-run on done) |
+| After phase-return | @work `references/runs-ledger.md` (identity envelope + honest ts append; close-run on done) |
 | Yield-only args (compat) | `@work:maintain` (yield job only) — not drive |
 | Before review / integrate / recap / merge | `references/gates.md` |
 | Context craft (research artifact, dumb zone, IC content) | @work `references/context-engineering.md` |
@@ -181,7 +181,9 @@ governing decision**. Stale artifact vs moved decision → re-enter refine (resi
 `await_user`. Corpus fixes → skill-source `/skills:evolve` (or upstream escalate), not in-loop
 skill edits.
 
-Append phase-return events to `.agent-tools/runs/` per `runs-ledger.md`.
+On claim: mint `run_id` + stamp identity envelope (harness/model/skills_rev/workspace_kind/…).
+Append phase-return events to `.agent-tools/runs/` per `runs-ledger.md` (wall-clock `ts`;
+strict rework on close). Product repos: local runs scaffold required.
 
 ### Review / merge / recap (always-on refuse)
 
@@ -205,9 +207,10 @@ or enter via `@git` worktree-create; **continue never removes** a worktree.
 
 Update `planning/<project>/session-state.md` lightly: status/progress/branch; Current Focus +
 next state; compress history (archive verbose detail). Optional light fields only when needed:
-`pending_gate`, `last_transition`, `run_id` (see phase-return). After merge: valid review
-evidence + compound disposition before advancing top-level NEXT pointer; **close-run** ledger
-row per `runs-ledger.md`.
+`pending_gate`, `last_transition`, `run_id`, identity envelope (see phase-return / runs-ledger).
+After merge: valid review evidence + compound disposition before advancing top-level NEXT
+pointer; **close-run** ledger row per `runs-ledger.md` (strict rework, review_fix_cycles,
+deferred P counts).
 
 **Cross-session / multi-agent pause (optional):** if stopping mid-unit for another agent or
 CLI, emit `handoff_package` per @work `references/handoff-package.md`. Default remains

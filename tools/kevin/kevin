@@ -698,6 +698,17 @@ cmd_start() {
   fi
 
   cd "$project" || die "cannot cd to ${project}"
+  # Hint identity envelope for work-family hosts (runs-ledger capture)
+  export KEVIN_RUN_HARNESS="${KEVIN_RUN_HARNESS:-kevin-hermes}"
+  export KEVIN_RUN_PROFILE="${KEVIN_RUN_PROFILE:-kevin}"
+  if [[ -f "${SKILLS_ROOT}/.agent-tools-revision" ]]; then
+    local _skills_rev
+    _skills_rev="$(
+      grep -E '^agent-tools-rev=' "${SKILLS_ROOT}/.agent-tools-revision" 2>/dev/null \
+        | head -1 | cut -d= -f2-
+    )" || true
+    export KEVIN_RUN_SKILLS_REV="${_skills_rev:-}"
+  fi
   info "starting Kevin in ${project}"
   exec hermes -p kevin "${passthrough[@]}"
 }

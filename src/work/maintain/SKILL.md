@@ -155,6 +155,8 @@ prune only / cancel.
 3. Else regenerate `.agent-tools/runs/yield.md` from `ledger.yml` (+ cheap open-run peek from
    `events.ndjson` if useful) per **Yield document shape** in `runs-ledger.md`.
 4. Summarize KPIs to the user. Flag structural notes (thrash/rework clusters, fidelity dips).
+   **Rework rate** uses ledger `rework` only (execute/review→refine/plan or thrash) — not
+   `review_fix_cycles`. When identity fields exist, include a short by-harness glance.
 5. **Never** hand-edit vanity numbers — only regenerate from ledger.
 
 ## Job 3 — Memory

@@ -110,6 +110,20 @@ kevin
 
 Session home is the **project git repo**. Runtime is Hermes under profile kevin; entry is always `kevin`.
 
+## Runs ledger identity (process dogfood)
+
+When `/work:continue` (or any work-family drive) runs under Kevin, the **continue host** must stamp the runs identity envelope on session-state and `.agent-tools/runs/` in **this workspace** (product repo or skill-source). Defaults:
+
+| Field | Kevin default |
+|-------|----------------|
+| `harness` | `kevin-hermes` |
+| `profile` | `kevin` |
+| `agent_surface` | `work-continue` (or `kevin-start` if freeform start only) |
+| `skills_rev` | from `~/.kevin/skills/.agent-tools-revision` (or `KEVIN_SKILLS_ROOT`) |
+| `workspace_kind` | `product_repo` when cwd is not agent-tools skill-source; else `skill_source` |
+
+`kevin start` exports `KEVIN_RUN_HARNESS=kevin-hermes` and `KEVIN_RUN_PROFILE=kevin` for child agents. See process `runs-ledger.md` (payload v2). Coding-confidence tracers record `run_id` in the scorecard.
+
 ## Environment
 
 | Variable | Default | Role |

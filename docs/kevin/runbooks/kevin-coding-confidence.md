@@ -47,10 +47,11 @@ Fill the baseline row in the [scorecard](../evidence/kevin-coding-confidence/sco
 
 Each tracer:
 
-1. Runs on **`hermes -p kevin`** from the product worktree cwd.  
-2. May use process skills from managed `~/.hermes/skills`.  
+1. Runs on **Workstation Kevin** from the product worktree cwd (`kevin` / profile kevin — prefer product CLI).  
+2. May use process skills from Kevin skills root (`~/.kevin/skills` after `kevin setup`).  
 3. Leaves git evidence (commits/branch) on the worktree branch.  
-4. Records notes in the scorecard (task, model, turns/time estimate, rework, thrash, band).
+4. Records notes in the scorecard (task, model, turns/time estimate, rework, thrash, band).  
+5. **Records `run_id`** when the tracer uses `/work:continue` (or any work-family drive that mints a run). Freeform chat-only tracers may set `run_id: none — freeform` with a one-line note. Join path: product repo `.agent-tools/runs/` + this scorecard.
 
 ---
 
