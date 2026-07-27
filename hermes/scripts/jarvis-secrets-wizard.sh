@@ -68,10 +68,28 @@ fi
 has() { [[ -n "${CUR[$1]:-}" ]]; }
 mark() { if has "$1"; then echo "set"; else echo "missing"; fi; }
 
+xai_oauth_status() {
+  # auth.json lives next to .env under the profile; never print tokens
+  if command -v hermes >/dev/null 2>&1; then
+    if hermes -p jarvis auth status xai-oauth 2>/dev/null | grep -qiE 'logged in|active|credential|token|ok|yes'; then
+      echo "present"
+      return 0
+    fi
+  fi
+  local auth_json
+  auth_json="$(dirname "$ENV_FILE")/auth.json"
+  if [[ -f "$auth_json" ]] && grep -q 'xai-oauth' "$auth_json" 2>/dev/null; then
+    echo "present"
+    return 0
+  fi
+  echo "missing"
+  return 1
+}
+
 check_report() {
   echo "Live env: $ENV_FILE"
   echo "  (values never printed)"
-  echo "Model:    ANTHROPIC=$(mark ANTHROPIC_API_KEY) OPENAI=$(mark OPENAI_API_KEY) OPENROUTER=$(mark OPENROUTER_API_KEY)"
+  echo "Model:    Grok-OAuth=$(xai_oauth_status 2>/dev/null || echo missing) XAI_KEY=$(mark XAI_API_KEY) ANTHROPIC=$(mark ANTHROPIC_API_KEY) OPENAI=$(mark OPENAI_API_KEY) OPENROUTER=$(mark OPENROUTER_API_KEY)"
   echo "Backup:   REPO=$(mark JARVIS_BACKUP_REPO) TOKEN=$(mark JARVIS_BACKUP_GITHUB_TOKEN)  # write one repo only"
   echo "GH read:  TOKEN=$(mark JARVIS_GITHUB_READ_TOKEN)  # OMG repos; NOT backup token"
   echo "Linear:   KEY=$(mark JARVIS_LINEAR_API_KEY)"
@@ -118,7 +136,8 @@ write_env() {
     echo "# Volume path $ENV_FILE — never commit"
     echo "# Token split: BACKUP write ≠ GITHUB_READ ≠ Linear ≠ Jira"
     echo ""
-    echo "# --- Model ---"
+    echo "# --- Model (prefer Grok OAuth via: hermes -p jarvis auth add xai-oauth --type oauth) ---"
+    [[ -n "${CUR[XAI_API_KEY]:-}" ]] && echo "XAI_API_KEY=${CUR[XAI_API_KEY]}"
     [[ -n "${CUR[ANTHROPIC_API_KEY]:-}" ]] && echo "ANTHROPIC_API_KEY=${CUR[ANTHROPIC_API_KEY]}"
     [[ -n "${CUR[OPENAI_API_KEY]:-}" ]] && echo "OPENAI_API_KEY=${CUR[OPENAI_API_KEY]}"
     [[ -n "${CUR[OPENROUTER_API_KEY]:-}" ]] && echo "OPENROUTER_API_KEY=${CUR[OPENROUTER_API_KEY]}"
@@ -167,15 +186,43 @@ info "Tokens are split by job — never reuse the backup write PAT for org read.
 check_report
 
 # ── Model ──────────────────────────────────────────────────────────
-section "1) Model API key"
+section "1) Model — xAI Grok OAuth (recommended; Spectral/Wildwood style)"
 howto <<'EOF'
-Mint (pick one path that matches your default model):
-  • Anthropic: https://console.anthropic.com/ → API keys → Create key
-  • OpenAI:    https://platform.openai.com/api-keys
-  • OpenRouter: https://openrouter.ai/keys
-Paste the key below (hidden). You only need one working provider.
+Jarvis defaults to provider xai-oauth + model grok-4 (see hermes/jarvis-profile/config.yaml).
+
+Preferred path = SuperGrok / Premium+ OAuth (device + browser PKCE). Tokens go to
+profile auth.json — NOT .env (same idea as Spectral tools/dev/xai_login.py).
+
+Mint / login (run in your terminal — needs interactive TTY + browser):
+
+  docker exec -it jarvis-hermes hermes -p jarvis auth add xai-oauth --type oauth
+
+  • Hermes prints a URL + code (or opens a browser).
+  • Complete login on auth.x.ai with the SuperGrok / Premium+ account.
+  • Tokens refresh automatically (short-lived access; refresh kept in auth.json).
+  • Docs for remote/SSH-style flows:
+    https://hermes-agent.nousresearch.com/docs/guides/oauth-over-ssh
+
+Optional: pick/confirm default model after login:
+  docker exec -it jarvis-hermes hermes -p jarvis model
+
+Fallback if you use BYOK API key instead of subscription OAuth:
+  set XAI_API_KEY below and change profile model provider to "xai" (not xai-oauth).
+Other providers (Anthropic/OpenAI/OpenRouter) are optional fall-through only.
 EOF
-if ask_yn "Configure model API key(s) now?" "y"; then
+if ask_yn "Have you completed (or will you complete next) Grok OAuth login for jarvis?" "y"; then
+  info "If not already done, run in another terminal NOW:"
+  info "  docker exec -it jarvis-hermes hermes -p jarvis auth add xai-oauth --type oauth"
+  if ask_yn "Press y after OAuth succeeds so we can verify auth.json" "y"; then
+    if xai_oauth_status >/dev/null 2>&1; then
+      info "Grok OAuth: present (auth.json / hermes status)"
+    else
+      info "Grok OAuth not detected yet — complete the docker exec auth add command, then re-run wizard or continue and fix later"
+    fi
+  fi
+fi
+if ask_yn "Also set API-key fallbacks (XAI_API_KEY / Anthropic / OpenAI / OpenRouter)?" "n"; then
+  ask_val XAI_API_KEY "XAI_API_KEY (BYOK; not needed if OAuth works)" 1
   ask_val ANTHROPIC_API_KEY "ANTHROPIC_API_KEY" 1
   ask_val OPENAI_API_KEY "OPENAI_API_KEY" 1
   ask_val OPENROUTER_API_KEY "OPENROUTER_API_KEY" 1

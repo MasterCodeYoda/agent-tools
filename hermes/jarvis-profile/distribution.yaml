@@ -9,6 +9,9 @@ author: "Overlund Media"
 license: "UNLICENSED"
 env_requires:
   # Names only; values live in profile .env / auth.json — never commit.
+  - name: XAI_API_KEY
+    description: "xAI API key fallback when not using SuperGrok OAuth (auth add xai-oauth)"
+    required: false
   - name: ANTHROPIC_API_KEY
     description: "Anthropic API key when not using OAuth / profile auth.json"
     required: false

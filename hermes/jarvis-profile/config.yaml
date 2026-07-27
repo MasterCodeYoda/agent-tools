@@ -5,8 +5,11 @@
 # Docker image: placeholder becomes /opt/jarvis/skills (baked jarvis product pack).
 
 model:
-  default: claude-sonnet-4-5
-  provider: anthropic
+  # Default: xAI Grok via SuperGrok OAuth (same class as Spectral/Wildwood).
+  # Login: hermes -p jarvis auth add xai-oauth --type oauth  (device/browser PKCE flow)
+  # Tokens live in profile auth.json — not .env. API-key fallback: XAI_API_KEY + provider xai.
+  default: grok-4
+  provider: xai-oauth
 
 memory:
   # CoS may enable later; v1 project lens uses explicit state/ files (adaptive lane).

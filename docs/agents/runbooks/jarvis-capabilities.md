@@ -12,7 +12,7 @@
 
 | Capability | Lane | Secret / config names (git = names only) | Required for | Fail loud when |
 |------------|------|------------------------------------------|--------------|----------------|
-| **Model auth** | Secrets | `ANTHROPIC_API_KEY` / `OPENAI_*` / `OPENROUTER_*` or `auth.json` | Chat + research | No working model path |
+| **Model auth (Grok OAuth preferred)** | Secrets (`auth.json`) | `hermes -p jarvis auth add xai-oauth --type oauth` (SuperGrok/Premium+ device+browser PKCE). Optional env: `XAI_API_KEY`, Anthropic/OpenAI/OpenRouter | Chat + research | No OAuth session and no API key |
 | **Research (web/X)** | Policy toolsets + host tools | Model keys above | Digest ritual | Tools unavailable |
 | **Email digest** | Secrets | `JARVIS_SMTP_*`, `JARVIS_DIGEST_TO` / `FROM` | Morning send | Missing env and not dry-run |
 | **Slack CoS chat** | Secrets + bindings | `SLACK_BOT_TOKEN`, `SLACK_APP_TOKEN`, `SLACK_ALLOWED_USERS`, optional home channel | Interactive UX | Gateway cannot connect |
