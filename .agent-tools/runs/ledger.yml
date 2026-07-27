@@ -54,3 +54,33 @@ runs:
       review: ok
       compound: ok
 
+  - run_id: r-20260727-1
+    unit: runs-ledger-capture-envelope
+    track: feature
+    opened: 2026-07-27
+    closed: 2026-07-27
+    channel: cli
+    harness: grok-build
+    agent_surface: work-continue
+    model: unknown
+    skills_rev: unknown
+    profile: null
+    workspace_kind: skill_source
+    task_shape: packaging
+    outcome: shipped
+    sessions: 1
+    ttm_hours: null
+    refine_reentries: 0
+    plan_reentries: 0
+    review_cycles: 1
+    review_fix_cycles: 0
+    thrash_bound_hits: 0
+    rework: false
+    deferred_p1: 0
+    deferred_p2: 0
+    deferred_p3: 0
+    effectiveness_ref: null
+    fidelity:
+      review: ok
+      compound: ok
+
