@@ -10,11 +10,13 @@
 #
 # Usage:
 #   ./hermes/scripts/jarvis-setup.sh                 # full setup (interactive secrets)
+#   ./hermes/scripts/jarvis-setup.sh --from-env-file PATH  # non-interactive (promote path)
 #   ./hermes/scripts/jarvis-setup.sh --no-build
-#   ./hermes/scripts/jarvis-setup.sh --skip-cron     # emergency only; prints residual
-#   ./hermes/scripts/jarvis-setup.sh --check         # validate install without prompts
+#   ./hermes/scripts/jarvis-setup.sh --skip-cron     # emergency only
+#   ./hermes/scripts/jarvis-setup.sh --check
 #
-# Local packaging smoke (no backup): use jarvis-local-smoke.sh instead.
+# Prefer lab→durable promote: ./hermes/scripts/jarvis-promote.sh --ssh … --image …
+# Local packaging smoke: jarvis-local-smoke.sh
 #
 set -euo pipefail
 
@@ -24,6 +26,7 @@ SMOKE="${SCRIPT_DIR}/jarvis-local-smoke.sh"
 WIZARD="${SCRIPT_DIR}/jarvis-secrets-wizard.sh"
 BACKUP="${SCRIPT_DIR}/jarvis-backup-state.sh"
 CRON_INSTALL="${SCRIPT_DIR}/jarvis-install-backup-cron.sh"
+PROMOTE="${SCRIPT_DIR}/jarvis-promote.sh"
 
 export JARVIS_HERMES_IMAGE="${JARVIS_HERMES_IMAGE:-jarvis-hermes:local}"
 export JARVIS_VOLUME_SPEC="${JARVIS_VOLUME_SPEC:-jarvis-hermes-data}"
@@ -31,6 +34,7 @@ export JARVIS_VOLUME_SPEC="${JARVIS_VOLUME_SPEC:-jarvis-hermes-data}"
 NO_BUILD=()
 SKIP_CRON=0
 CHECK_ONLY=0
+FROM_ENV=""
 
 die() { echo "jarvis-setup: error: $*" >&2; exit 1; }
 info() { echo "jarvis-setup: $*" >&2; }
@@ -40,7 +44,8 @@ while [[ $# -gt 0 ]]; do
     --no-build) NO_BUILD=(--no-build); shift ;;
     --skip-cron) SKIP_CRON=1; shift ;;
     --check) CHECK_ONLY=1; shift ;;
-    -h|--help) sed -n '2,18p' "$0" | sed 's/^# \?//'; exit 0 ;;
+    --from-env-file) FROM_ENV="${2:-}"; shift 2 ;;
+    -h|--help) sed -n '2,16p' "$0" | sed 's/^# \?//'; exit 0 ;;
     *) die "unknown option: $1" ;;
   esac
 done
@@ -60,11 +65,29 @@ if [[ "$CHECK_ONLY" -eq 1 ]]; then
   exit 0
 fi
 
+# Non-interactive promote path (blind .env inject)
+if [[ -n "$FROM_ENV" ]]; then
+  [[ -f "$FROM_ENV" ]] || die "missing --from-env-file $FROM_ENV"
+  [[ -x "$PROMOTE" ]] || die "missing $PROMOTE"
+  export JARVIS_HERMES_IMAGE
+  args=(finish-remote --env-file "$FROM_ENV" --image "$JARVIS_HERMES_IMAGE")
+  [[ "$SKIP_CRON" -eq 1 ]] && args=(finish-remote --env-file "$FROM_ENV" --image "$JARVIS_HERMES_IMAGE")
+  # reuse promote finish; skip backup if skip-cron only still runs backup once — map skip-cron to skip-backup false
+  if [[ "$SKIP_CRON" -eq 1 ]]; then
+    info "WARNING: --skip-cron: still injects env; run jarvis-install-backup-cron.sh later"
+  fi
+  "$PROMOTE" finish-remote --env-file "$FROM_ENV" --image "$JARVIS_HERMES_IMAGE" \
+    $([[ "$SKIP_CRON" -eq 1 ]] && echo --skip-backup || true)
+  if [[ "$SKIP_CRON" -eq 1 ]]; then
+    info "env injected; backup/cron skipped — residual: $CRON_INSTALL && $BACKUP --init"
+  fi
+  exit 0
+fi
+
 info "=== 1/4 bring-up ==="
 "$BRING_UP" "${NO_BUILD[@]}"
 
 info "=== 2/4 secrets (backup write PAT + OMG GitHub read + Linear + Jira) ==="
-# Prefer in-container wizard (baked in image); always refresh script from repo for latest prompts
 docker cp "$WIZARD" jarvis-hermes:/opt/jarvis/bin/jarvis-secrets-wizard.sh
 docker exec jarvis-hermes chmod 755 /opt/jarvis/bin/jarvis-secrets-wizard.sh
 docker exec -it jarvis-hermes /opt/jarvis/bin/jarvis-secrets-wizard.sh \
@@ -91,3 +114,4 @@ info "  container: jarvis-hermes"
 info "  volume: ${JARVIS_VOLUME_SPEC}"
 info "  backup: nightly via host cron → private git (adaptive state only)"
 info "  agent-tools: backup text is evolution signal (digests/state), not skill SoT"
+info "  promote lab→server: hermes/scripts/jarvis-promote.sh --ssh user@host --remote-repo … --image …"

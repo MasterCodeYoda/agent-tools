@@ -25,15 +25,43 @@ One always-on Jarvis for:
 
 ## Production / durable setup (path of record)
 
-**Full fidelity** — includes adaptive-state git backup + nightly host cron (not optional):
+### Preferred: lab → promote (no second secrets wizard)
+
+Mint secrets once on Docker Desktop, validate, then **blind-copy `.env`** and finish remote non-interactively:
 
 ```bash
-cd /path/to/agent-tools
+# Lab
+./hermes/scripts/jarvis-local-smoke.sh
+./hermes/scripts/jarvis-local-smoke.sh --secrets   # mint (wizard prints how-to)
+
+# Publish validated image to GHCR (CI on merge, or docker tag/push)
+# IMAGE=ghcr.io/OWNER/jarvis-hermes:sha-…
+
+# Promote (agent-executable when SSH works)
+./hermes/scripts/jarvis-promote.sh promote \
+  --ssh user@durable-host \
+  --remote-repo /path/to/agent-tools \
+  --image "$IMAGE"
+```
+
+Promote: export `.env` (never logged) → scp → remote inject into volume → restart → backup init/push → host cron → local purge.
+
+Manual halves:
+
+```bash
+./hermes/scripts/jarvis-promote.sh export-env --out ~/secure/jarvis.env
+# private transfer, then on host:
+./hermes/scripts/jarvis-promote.sh finish-remote --env-file /secure/jarvis.env --image "$IMAGE"
+# or: ./hermes/scripts/jarvis-setup.sh --from-env-file /secure/jarvis.env
+```
+
+### Interactive full setup on the durable host only
+
+```bash
 ./hermes/scripts/jarvis-setup.sh
 ```
 
-Collects model keys **and** `JARVIS_BACKUP_REPO` + fine-grained `JARVIS_BACKUP_GITHUB_TOKEN`, runs first backup, installs cron.  
-Details: [jarvis-state-backup.md](./jarvis-state-backup.md).
+Details: [jarvis-state-backup.md](./jarvis-state-backup.md) · capabilities matrix for tokens.
 
 Jarvis is **container-native**. Data: Docker volume `jarvis-hermes-data` → `/opt/data`. No Kevin-style product-repo mount.
 
