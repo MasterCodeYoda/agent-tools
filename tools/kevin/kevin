@@ -1,7 +1,11 @@
 #!/usr/bin/env bash
 #
 # Product CLI for Workstation Kevin (ADR-004).
-# Commands: setup | update | doctor | start (default) | help
+#
+# Operator surface is kevin only — Hermes is the runtime under profile kevin.
+#
+# Commands:
+#   setup | update | doctor | auth | model | configure | start | help | version
 #
 # Env:
 #   KEVIN_HOME          default $HOME/.kevin
@@ -19,36 +23,55 @@ PROFILE_SRC="${KEVIN_PROFILE_SRC:-${KEVIN_HOME}/profile-src}"
 PLACEHOLDER="__HERMES_SKILLS_DIR__"
 PROFILE_HOME="${HOME}/.hermes/profiles/kevin"
 INSTALLED_CONFIG="${PROFILE_HOME}/config.yaml"
+PROFILE_ENV="${PROFILE_HOME}/.env"
+PROFILE_AUTH="${PROFILE_HOME}/auth.json"
 
 die() { echo "${CMD_NAME}: error: $*" >&2; exit 1; }
 info() { echo "${CMD_NAME}: $*" >&2; }
-ok() { echo "OK  $*"; }
-warn() { echo "WARN $*" >&2; }
-fail_hard() { echo "FAIL $*"; HARD_FAILS=$((HARD_FAILS + 1)); }
+ok() { echo "  OK   $*"; }
+warn() { echo "  WARN $*"; }
+fail_hard() { echo "  FAIL $*"; HARD_FAILS=$((HARD_FAILS + 1)); }
+soft_note() { echo "  note $*"; }
 
 usage() {
   cat <<'EOF'
-kevin — Workstation Kevin CLI (Hermes host + process skills)
+kevin — Workstation Kevin (coding agent on your machine)
 
-Usage:
+Bootstrap & stack
   kevin setup   [--from-file TAR] [--force-profile]
   kevin update  [--from-file TAR] [--force-profile]
-  kevin doctor  [--project PATH]
-  kevin start   [--project PATH] [-- HERMES_ARGS...]
-  kevin         # same as start
-  kevin help
+  kevin doctor  [--project PATH] [--verbose]
 
-Environment:
+Credentials & model (via Hermes profile kevin — use these, not hermes -p)
+  kevin auth    …          # list / add / status / remove / …
+  kevin model   …          # pick default model & provider
+  kevin configure […]     # interactive host configure wizard
+
+Session
+  kevin start   [--project PATH] [-- ARGS…]
+  kevin                  # same as start
+  kevin help
+  kevin version
+
+Typical path
+  ./tools/install-kevin-cli.sh   # once from agent-tools (or your install channel)
+  kevin setup
+  kevin auth add anthropic --type oauth   # or another provider you use
+  kevin doctor
+  cd <product-repo> && kevin
+
+Environment
   KEVIN_HOME          default ~/.kevin
   KEVIN_SKILLS_ROOT   default $KEVIN_HOME/skills
   KEVIN_PROFILE_SRC   staged profile distribution
   KEVIN_SKILLS_URL    skills tarball URL override
 
-Product path: skills from published artifact → Kevin skills root (not setup.sh → ~/.hermes/skills).
+Skills install into the Kevin skills root (not multi-agent setup.sh → ~/.hermes/skills).
 EOF
 }
 
-# Resolve this script (follow one level of symlink for install wrappers).
+# --- path detection ----------------------------------------------------------
+
 resolve_self() {
   local src="${BASH_SOURCE[0]}"
   while [[ -L "$src" ]]; do
@@ -62,13 +85,11 @@ resolve_self() {
 
 SELF_DIR="$(resolve_self)"
 
-# Share dir: installed share next to bin, or KEVIN_HOME/share (monorepo uses REPO_ROOT instead).
 detect_share_dir() {
   if [[ -n "${KEVIN_SHARE_DIR:-}" ]]; then
     echo "$KEVIN_SHARE_DIR"
     return
   fi
-  # Installed: PREFIX/bin/kevin → PREFIX/share/kevin
   local prefix
   prefix="$(cd "${SELF_DIR}/.." && pwd)"
   if [[ -d "${prefix}/share/kevin" ]]; then
@@ -113,7 +134,6 @@ find_skills_installer() {
 }
 
 find_profile_source() {
-  # Prefer packaging sources (monorepo / CLI share) so re-setup refreshes staged copy.
   if [[ -n "$REPO_ROOT" && -f "${REPO_ROOT}/hermes/profile/distribution.yaml" ]]; then
     echo "${REPO_ROOT}/hermes/profile"
     return
@@ -126,7 +146,6 @@ find_profile_source() {
     echo "${KEVIN_HOME}/share/profile"
     return
   fi
-  # Last resort: already-staged profile (offline consumer without share dir)
   if [[ -f "${PROFILE_SRC}/distribution.yaml" ]]; then
     echo "$PROFILE_SRC"
     return
@@ -134,14 +153,16 @@ find_profile_source() {
   echo ""
 }
 
+# --- Hermes runtime (internal only) ------------------------------------------
+
 require_hermes() {
   if command -v hermes >/dev/null 2>&1; then
     return 0
   fi
   cat >&2 <<'EOF'
-kevin: error: hermes not found on PATH
+kevin: error: Hermes runtime not found on PATH
 
-Install Hermes (upstream), then re-open your shell:
+Kevin uses Hermes under profile "kevin". Install Hermes, then re-open your shell:
 
   curl -fsSL https://hermes-agent.nousresearch.com/install.sh | bash
 
@@ -150,10 +171,136 @@ EOF
   exit 1
 }
 
+# Run Hermes under profile kevin. Operator-facing commands should go through
+# kevin wrappers so users never need hermes -p kevin.
+run_profile() {
+  require_hermes
+  hermes -p kevin "$@"
+}
+
+profile_exists() {
+  command -v hermes >/dev/null 2>&1 && hermes profile show kevin >/dev/null 2>&1
+}
+
+is_git_worktree() {
+  local dir="$1"
+  git -C "$dir" rev-parse --is-inside-work-tree >/dev/null 2>&1
+}
+
+default_provider() {
+  # From installed profile config when present
+  if [[ -f "$INSTALLED_CONFIG" ]]; then
+    local p
+    p="$(awk '
+      /^model:[[:space:]]*$/ { in_model=1; next }
+      in_model && /^[^[:space:]#]/ { in_model=0 }
+      in_model && /^[[:space:]]*provider:[[:space:]]*/ {
+        sub(/^[[:space:]]*provider:[[:space:]]*/, "")
+        gsub(/[[:space:]]*#.*$/, "")
+        gsub(/["'\'']/, "")
+        print
+        exit
+      }
+    ' "$INSTALLED_CONFIG" 2>/dev/null || true)"
+    if [[ -n "${p:-}" ]]; then
+      echo "$p"
+      return
+    fi
+  fi
+  echo "anthropic"
+}
+
+default_model() {
+  if [[ -f "$INSTALLED_CONFIG" ]]; then
+    local m
+    m="$(awk '
+      /^model:[[:space:]]*$/ { in_model=1; next }
+      in_model && /^[^[:space:]#]/ { in_model=0 }
+      in_model && /^[[:space:]]*default:[[:space:]]*/ {
+        sub(/^[[:space:]]*default:[[:space:]]*/, "")
+        gsub(/[[:space:]]*#.*$/, "")
+        gsub(/["'\'']/, "")
+        print
+        exit
+      }
+    ' "$INSTALLED_CONFIG" 2>/dev/null || true)"
+    if [[ -n "${m:-}" ]]; then
+      echo "$m"
+      return
+    fi
+  fi
+  echo ""
+}
+
+# Returns 0 if operator has a usable inference credential path.
+# Path A: non-empty KEY=value lines in profile .env
+# Path B: hermes auth list shows at least one credential block
+auth_has_any() {
+  if [[ -f "$PROFILE_ENV" ]] && grep -qE '^[A-Za-z_][A-Za-z0-9_]*[[:space:]]*=[[:space:]]*[^[:space:]#]+' "$PROFILE_ENV" 2>/dev/null; then
+    return 0
+  fi
+  if [[ -f "$PROFILE_AUTH" && -s "$PROFILE_AUTH" ]]; then
+    # non-empty auth store is a strong signal; still prefer list parse when hermes works
+    if command -v hermes >/dev/null 2>&1; then
+      local listing
+      listing="$(hermes -p kevin auth list 2>/dev/null || true)"
+      if echo "$listing" | grep -qiE 'credential|oauth|api_key|api-key'; then
+        return 0
+      fi
+      # auth.json present and non-trivial size even if list parse shape changes
+      if [[ "$(wc -c <"$PROFILE_AUTH" | tr -d ' ')" -gt 20 ]]; then
+        return 0
+      fi
+    else
+      return 0
+    fi
+  fi
+  return 1
+}
+
+# True if default provider appears in auth list (best-effort).
+auth_covers_provider() {
+  local provider="$1"
+  local listing
+  listing="$(hermes -p kevin auth list 2>/dev/null || true)"
+  [[ -n "$listing" ]] || return 1
+  # list format: "anthropic (1 credentials):"
+  echo "$listing" | grep -qiE "^${provider}[[:space:]]*\\(" && return 0
+  # .env often uses PROVIDER-shaped keys
+  if [[ -f "$PROFILE_ENV" ]]; then
+    local key
+    key="$(echo "$provider" | tr '[:lower:]-' '[:upper:]_')_API_KEY"
+    if grep -qE "^${key}[[:space:]]*=[[:space:]]*[^[:space:]#]+" "$PROFILE_ENV" 2>/dev/null; then
+      return 0
+    fi
+    # anthropic special-case
+    if [[ "$provider" == "anthropic" ]] && grep -qE '^ANTHROPIC_API_KEY[[:space:]]*=[[:space:]]*[^[:space:]#]+' "$PROFILE_ENV" 2>/dev/null; then
+      return 0
+    fi
+  fi
+  return 1
+}
+
+auth_summary_lines() {
+  # Print non-secret credential summary for doctor
+  if ! command -v hermes >/dev/null 2>&1; then
+    return
+  fi
+  local listing
+  listing="$(hermes -p kevin auth list 2>/dev/null || true)"
+  if [[ -z "$listing" ]]; then
+    return
+  fi
+  # Show provider headers only (e.g. "anthropic (1 credentials):")
+  echo "$listing" | grep -E '^[a-zA-Z0-9_-]+[[:space:]]*\(' | sed 's/^/         /' || true
+}
+
+# --- profile / skills bootstrap ----------------------------------------------
+
 stage_profile() {
   local src
   src="$(find_profile_source)"
-  [[ -n "$src" ]] || die "no profile distribution found (run tools/install-kevin-cli.sh or use monorepo)"
+  [[ -n "$src" ]] || die "no profile distribution found (run tools/install-kevin-cli.sh from agent-tools)"
   if [[ "$src" == "$PROFILE_SRC" ]]; then
     info "profile already staged at ${PROFILE_SRC}"
     return
@@ -172,30 +319,30 @@ stage_profile() {
 substitute_skills_path() {
   [[ -f "$INSTALLED_CONFIG" ]] || die "expected installed config at ${INSTALLED_CONFIG}"
   if grep -q "$PLACEHOLDER" "$INSTALLED_CONFIG"; then
-    # portable in-place substitute
     local tmp
     tmp="$(mktemp)"
     sed "s|${PLACEHOLDER}|${SKILLS_ROOT}|g" "$INSTALLED_CONFIG" >"$tmp"
     mv "$tmp" "$INSTALLED_CONFIG"
-    info "substituted skills path → ${SKILLS_ROOT}"
+    info "bound skills path → ${SKILLS_ROOT}"
   elif grep -qF "$SKILLS_ROOT" "$INSTALLED_CONFIG"; then
     info "skills path already set → ${SKILLS_ROOT}"
   else
-    # Force external_dirs to Kevin skills root if config was bound elsewhere
     if grep -q 'external_dirs:' "$INSTALLED_CONFIG"; then
       local tmp
       tmp="$(mktemp)"
-      # Replace first list item under external_dirs (simple YAML list of one path)
       awk -v root="$SKILLS_ROOT" '
         BEGIN { done=0 }
-        /^[[:space:]]*external_dirs:[[:space:]]*$/ { print; getline; if ($0 ~ /^[[:space:]]*-/) { print "    - " root; done=1; next } }
+        /^[[:space:]]*external_dirs:[[:space:]]*$/ {
+          print
+          getline
+          if ($0 ~ /^[[:space:]]*-/) { print "    - " root; done=1; next }
+        }
         { print }
-        END { if (!done) exit 0 }
       ' "$INSTALLED_CONFIG" >"$tmp"
       mv "$tmp" "$INSTALLED_CONFIG"
       info "rewrote external_dirs → ${SKILLS_ROOT}"
     else
-      warn "could not find external_dirs in ${INSTALLED_CONFIG}; set manually to ${SKILLS_ROOT}"
+      warn "could not find external_dirs in profile config; set to ${SKILLS_ROOT}"
     fi
   fi
 }
@@ -204,21 +351,21 @@ apply_profile() {
   local force="${1:-0}"
   require_hermes
   stage_profile
-  [[ -d "$SKILLS_ROOT" ]] || die "skills root missing: ${SKILLS_ROOT} (install skills first)"
+  [[ -d "$SKILLS_ROOT" ]] || die "skills root missing: ${SKILLS_ROOT} (run kevin setup)"
 
   export HERMES_SKILLS_DIR="$SKILLS_ROOT"
   export KEVIN_SKILLS_ROOT="$SKILLS_ROOT"
 
   local exists=0
-  if hermes profile show kevin >/dev/null 2>&1; then
+  if profile_exists; then
     exists=1
   fi
 
-  # Do not pass --alias: product kevin owns PATH (Hermes thin alias would clobber it).
+  # No --alias: product kevin owns PATH.
   if [[ "$exists" -eq 1 && "$force" -eq 0 ]]; then
     info "profile kevin exists — updating from staged source"
     if ! hermes profile update kevin -y 2>/dev/null; then
-      info "update failed or no-op; reinstalling with --force"
+      info "update failed or no-op; reinstalling"
       hermes profile install "$PROFILE_SRC" --name kevin --force -y
     fi
   else
@@ -226,7 +373,7 @@ apply_profile() {
     if [[ "$exists" -eq 1 || "$force" -eq 1 ]]; then
       args+=(--force)
     fi
-    info "hermes ${args[*]}"
+    info "installing profile kevin"
     hermes "${args[@]}"
   fi
 
@@ -236,14 +383,14 @@ apply_profile() {
     mkdir -p "$PROFILE_HOME"
     cp "${PROFILE_SRC}/.no-bundled-skills" "${PROFILE_HOME}/.no-bundled-skills"
   fi
-  info "profile ready at ${PROFILE_HOME}"
+  info "profile ready"
 }
 
 install_skills() {
   local from_file="${1:-}"
   local installer
   installer="$(find_skills_installer)"
-  [[ -n "$installer" ]] || die "install-kevin-skills.sh not found (install CLI via tools/install-kevin-cli.sh)"
+  [[ -n "$installer" ]] || die "skills installer not found — re-run tools/install-kevin-cli.sh"
 
   local args=(--root "$SKILLS_ROOT")
   if [[ -n "$from_file" ]]; then
@@ -251,9 +398,28 @@ install_skills() {
   else
     args+=(--from-url)
   fi
-  info "installing skills via ${installer}"
-  KEVIN_SKILLS_ROOT="$SKILLS_ROOT" "$installer" "${args[@]}"
+  info "installing skills → ${SKILLS_ROOT}"
+  KEVIN_SKILLS_ROOT="$SKILLS_ROOT" "$installer" "${args[@]}" >/dev/null
+  info "skills installed"
 }
+
+print_next_steps() {
+  local provider
+  provider="$(default_provider)"
+  echo >&2
+  info "next:"
+  info "  kevin doctor"
+  if ! auth_has_any; then
+    info "  kevin auth add ${provider} --type oauth"
+    info "  # or: kevin auth add ${provider} --type api-key"
+    info "  # or: kevin model   # interactive provider/model + login"
+  else
+    info "  kevin auth list    # optional: review credentials"
+  fi
+  info "  cd <product-repo> && kevin"
+}
+
+# --- commands ----------------------------------------------------------------
 
 cmd_setup() {
   local from_file="" force=0
@@ -274,10 +440,8 @@ cmd_setup() {
   install_skills "$from_file"
   apply_profile "$force"
   info "setup complete"
-  info "  skills:  ${SKILLS_ROOT}"
-  info "  profile: ${PROFILE_HOME}"
-  info "  doctor:  kevin doctor"
-  info "  start:   cd <project-repo> && kevin"
+  info "  skills → ${SKILLS_ROOT}"
+  print_next_steps
 }
 
 cmd_update() {
@@ -297,24 +461,16 @@ cmd_update() {
 
   require_hermes
   install_skills "$from_file"
-  if [[ "$force" -eq 1 ]] || ! hermes profile show kevin >/dev/null 2>&1; then
+  if [[ "$force" -eq 1 ]] || ! profile_exists; then
     apply_profile 1
-  else
-    # Re-bind skills path in case operator changed roots
-    if [[ -f "$INSTALLED_CONFIG" ]]; then
-      substitute_skills_path
-    fi
+  elif [[ -f "$INSTALLED_CONFIG" ]]; then
+    substitute_skills_path
   fi
   info "update complete → ${SKILLS_ROOT}"
 }
 
-is_git_worktree() {
-  local dir="$1"
-  git -C "$dir" rev-parse --is-inside-work-tree >/dev/null 2>&1
-}
-
 cmd_doctor() {
-  local project
+  local project verbose=0
   project="$(pwd)"
   while [[ $# -gt 0 ]]; do
     case "$1" in
@@ -323,95 +479,182 @@ cmd_doctor() {
         project="$2"
         shift 2
         ;;
+      --verbose|-v) verbose=1; shift ;;
       -h|--help) usage; exit 0 ;;
       *) die "doctor: unknown argument: $1" ;;
     esac
   done
 
   HARD_FAILS=0
+  local soft_chat_blockers=0
+  local provider model skill_count
+
   echo "Kevin doctor"
-  echo "------------"
+  echo "============"
+  echo "Stack"
+  echo "-----"
 
   if command -v hermes >/dev/null 2>&1; then
     local ver
     ver="$(hermes version 2>/dev/null | head -1 || true)"
-    ok "hermes on PATH${ver:+ — ${ver}}"
+    ok "Hermes runtime${ver:+ — ${ver}}"
   else
-    fail_hard "hermes not on PATH"
+    fail_hard "Hermes runtime not on PATH (install Hermes, then re-open shell)"
   fi
 
-  if command -v hermes >/dev/null 2>&1 && hermes profile show kevin >/dev/null 2>&1; then
-    ok "profile kevin present"
+  if profile_exists; then
+    ok "profile kevin installed"
   else
     fail_hard "profile kevin missing — run: kevin setup"
   fi
 
   if [[ -d "$SKILLS_ROOT" ]]; then
-    ok "skills root: ${SKILLS_ROOT}"
+    skill_count="$(find "$SKILLS_ROOT" -mindepth 1 -maxdepth 1 -type d 2>/dev/null | wc -l | tr -d ' ')"
+    ok "skills root ${SKILLS_ROOT} (${skill_count} skill dirs)"
     if [[ -f "${SKILLS_ROOT}/.agent-tools-revision" ]]; then
-      ok "skills revision marker present"
-      if grep -q 'publish-agent=hermes' "${SKILLS_ROOT}/.agent-tools-revision" 2>/dev/null; then
-        ok "publish-agent=hermes"
-      else
+      ok "skills revision present"
+      if [[ "$verbose" -eq 1 ]]; then
+        soft_note "revision:"
+        sed 's/^/         /' "${SKILLS_ROOT}/.agent-tools-revision"
+      fi
+      if ! grep -q 'publish-agent=hermes' "${SKILLS_ROOT}/.agent-tools-revision" 2>/dev/null; then
         warn "revision lacks publish-agent=hermes"
       fi
     else
-      fail_hard "missing ${SKILLS_ROOT}/.agent-tools-revision — run: kevin setup / kevin update"
+      fail_hard "missing skills revision — run: kevin setup / kevin update"
     fi
   else
-    fail_hard "skills root missing: ${SKILLS_ROOT}"
+    fail_hard "skills root missing: ${SKILLS_ROOT} — run: kevin setup"
   fi
 
   if [[ -f "$INSTALLED_CONFIG" ]]; then
     if grep -q "$PLACEHOLDER" "$INSTALLED_CONFIG"; then
-      fail_hard "unexpanded ${PLACEHOLDER} in profile config — re-run: kevin setup --force-profile"
+      fail_hard "skills path placeholder not expanded — run: kevin setup --force-profile"
     else
-      ok "no unexpanded skills placeholder"
+      ok "skills path bound (no leftover placeholder)"
     fi
     if grep -qF "$SKILLS_ROOT" "$INSTALLED_CONFIG"; then
-      ok "external_dirs includes Kevin skills root"
+      ok "external_dirs → Kevin skills root"
     else
-      fail_hard "profile config does not reference ${SKILLS_ROOT}"
+      fail_hard "profile does not reference ${SKILLS_ROOT} — run: kevin setup --force-profile"
     fi
-  elif command -v hermes >/dev/null 2>&1 && hermes profile show kevin >/dev/null 2>&1; then
+  elif profile_exists; then
     fail_hard "profile config missing at ${INSTALLED_CONFIG}"
   fi
 
   if [[ -d "$project" ]] && is_git_worktree "$project"; then
-    ok "project git work tree: ${project}"
+    ok "project is a git work tree (${project})"
   else
     fail_hard "project is not a git work tree: ${project}"
   fi
 
-  # Soft: auth
-  if [[ -f "${PROFILE_HOME}/.env" ]]; then
-    ok "profile .env present (soft)"
+  echo
+  echo "Credentials (soft — needed for chat, not for stack install)"
+  echo "-----------------------------------------------------------"
+
+  provider="$(default_provider)"
+  model="$(default_model)"
+  if [[ -n "$model" ]]; then
+    soft_note "default model: ${model} (provider: ${provider})"
   else
-    warn "profile .env missing — fill secrets before interactive chat (soft)"
+    soft_note "default provider: ${provider}"
   fi
 
-  if command -v hermes >/dev/null 2>&1 && hermes profile show kevin >/dev/null 2>&1; then
-    local doctor_out
-    doctor_out="$(mktemp)"
-    set +e
-    hermes -p kevin doctor >"$doctor_out" 2>&1
-    local doctor_ec=$?
-    set -e
-    if grep -Eiq 'Hermes Doctor|Configuration Files|Python Environment' "$doctor_out"; then
-      ok "hermes -p kevin doctor ran (exit ${doctor_ec}; advisories may remain)"
+  if auth_has_any; then
+    ok "inference credentials present"
+    auth_summary_lines
+    if command -v hermes >/dev/null 2>&1 && auth_covers_provider "$provider"; then
+      ok "credential covers default provider (${provider})"
     else
-      warn "hermes doctor output unexpected (exit ${doctor_ec}) — soft"
+      warn "no credential clearly matched to provider '${provider}'"
+      soft_note "attach: kevin auth add ${provider} --type oauth"
+      soft_note "   or: kevin auth add ${provider} --type api-key"
+      soft_note "   or: kevin model"
+      soft_chat_blockers=$((soft_chat_blockers + 1))
     fi
-    rm -f "$doctor_out"
+    if [[ -f "$PROFILE_ENV" ]]; then
+      soft_note "profile .env present (API-key / env-style secrets path)"
+    fi
+  else
+    warn "no inference credentials yet — chat will fail until you attach one"
+    soft_note "recommended: kevin auth add ${provider} --type oauth"
+    soft_note "         or: kevin auth add ${provider} --type api-key"
+    soft_note "         or: kevin model"
+    soft_chat_blockers=$((soft_chat_blockers + 1))
   fi
 
-  echo "------------"
+  if [[ "$verbose" -eq 1 ]] && command -v hermes >/dev/null 2>&1 && profile_exists; then
+    echo
+    echo "Runtime doctor (verbose — Hermes internals; ignore .env nags if auth list is green)"
+    echo "--------------------------------------------------------------------------------"
+    set +e
+    hermes -p kevin doctor 2>&1 | sed 's/^/  /'
+    set -e
+  fi
+
+  echo
+  echo "============"
   if [[ "$HARD_FAILS" -gt 0 ]]; then
-    echo "RESULT: FAIL (${HARD_FAILS} hard)"
+    echo "RESULT: FAIL (${HARD_FAILS} hard check(s))"
+    echo "Fix stack issues above, then re-run: kevin doctor"
     return 1
   fi
-  echo "RESULT: PASS (hard checks)"
+  if [[ "$soft_chat_blockers" -gt 0 ]]; then
+    echo "RESULT: PASS (stack) · CHAT NOT READY (${soft_chat_blockers} credential gap(s))"
+    return 0
+  fi
+  echo "RESULT: PASS (stack + credentials look ready for chat)"
   return 0
+}
+
+cmd_auth() {
+  if [[ "${1:-}" == "-h" || "${1:-}" == "--help" ]]; then
+    cat <<'EOF'
+kevin auth — manage inference credentials for profile kevin
+
+Examples:
+  kevin auth list
+  kevin auth add anthropic --type oauth
+  kevin auth add anthropic --type api-key
+  kevin auth status anthropic
+  kevin auth remove …
+
+Credentials may live in the Hermes auth store and/or profile .env.
+You do not need a .env file if OAuth / pooled login already covers your model.
+EOF
+    exit 0
+  fi
+  # Default to list when bare `kevin auth`
+  if [[ $# -eq 0 ]]; then
+    run_profile auth list
+    return
+  fi
+  run_profile auth "$@"
+}
+
+cmd_model() {
+  if [[ "${1:-}" == "-h" || "${1:-}" == "--help" ]]; then
+    cat <<'EOF'
+kevin model — choose default inference provider/model for profile kevin
+
+Runs the interactive model picker under Kevin's profile.
+EOF
+    exit 0
+  fi
+  run_profile model "$@"
+}
+
+cmd_configure() {
+  if [[ "${1:-}" == "-h" || "${1:-}" == "--help" ]]; then
+    cat <<'EOF'
+kevin configure — interactive host configuration for profile kevin
+
+Wraps the Hermes setup wizard under Kevin's profile (model, tools, etc.).
+For credentials only, prefer: kevin auth …  or  kevin model
+EOF
+    exit 0
+  fi
+  run_profile setup "$@"
 }
 
 cmd_start() {
@@ -442,12 +685,20 @@ cmd_start() {
   [[ -d "$project" ]] || die "project path not found: ${project}"
   is_git_worktree "$project" || die "project is not a git work tree: ${project}"
 
-  if ! hermes profile show kevin >/dev/null 2>&1; then
+  if ! profile_exists; then
     die "profile kevin missing — run: kevin setup"
   fi
 
+  if ! auth_has_any; then
+    local provider
+    provider="$(default_provider)"
+    warn "no inference credentials detected — chat will likely fail"
+    info "attach credentials: kevin auth add ${provider} --type oauth"
+    info "                or: kevin model"
+  fi
+
   cd "$project" || die "cannot cd to ${project}"
-  info "starting hermes -p kevin in ${project}"
+  info "starting Kevin in ${project}"
   exec hermes -p kevin "${passthrough[@]}"
 }
 
@@ -460,6 +711,9 @@ main() {
     setup) cmd_setup "$@" ;;
     update) cmd_update "$@" ;;
     doctor) cmd_doctor "$@" ;;
+    auth) cmd_auth "$@" ;;
+    model) cmd_model "$@" ;;
+    configure|config) cmd_configure "$@" ;;
     start) cmd_start "$@" ;;
     help|-h|--help) usage ;;
     version|--version)
@@ -468,9 +722,14 @@ main() {
         echo "skills:"
         sed 's/^/  /' "${SKILLS_ROOT}/.agent-tools-revision"
       fi
+      if profile_exists 2>/dev/null; then
+        local provider model
+        provider="$(default_provider)"
+        model="$(default_model)"
+        [[ -n "$model" ]] && echo "model: ${model} (${provider})"
+      fi
       ;;
     *)
-      # Unknown: treat as start with args (harness-like) only if it looks like a flag
       if [[ "$cmd" == -* ]]; then
         cmd_start "$cmd" "$@"
       else
