@@ -1,0 +1,39 @@
+schema_version: 1
+
+# Project-stable orchestrator preferences. Safe to edit by hand.
+
+concurrency_cap: 5
+
+function_chain:
+  - plan
+  - implement
+  - review
+
+models:
+  plan: most_capable
+  implement: mid_tier
+  review: most_capable
+  resolve-conflict: most_capable
+  fix-integration: most_capable
+
+clis:
+  plan: claude
+  implement: claude
+  review: claude
+  resolve-conflict: claude
+  fix-integration: claude
+
+test_command: python3 -m unittest discover -s tests -q
+
+backlog:
+  default_source: linear
+  default_filter: null
+
+sessions:
+  retention_days: null
+
+pre_launch:
+  always_confirm: true
+
+output:
+  per_wave_summary: brief

@@ -228,10 +228,10 @@ agent-tools meta-artifacts:
 │   │   └── sessions/<run-id>/  # per-run state.yml + logs (gitignored)
 │   └── .gitignore              # umbrella gitignore (add-don't-remove)
 ├── AGENTS.md                   # charter-link block (CLAUDE.md/GEMINI.md may symlink to it)
-└── planning/                   # stays at the project root (intentional carve-out)
+└── planning/                   # preferred: .agent-tools/planning/ (legacy ./planning/ migrated by setup)
 ```
 
-The umbrella primarily covers **charter + parallel + other durable agent configuration** (e.g. personify). `./planning/` is an explicit carve-out for transient work artifacts — it stays at the project root for high-traffic daily use. It uses directory-local `.gitkeep` and `.gitignore` rules (top-level and per-item: ignore everything except `.gitkeep` and `conventions.md` at top level). `/work:setup` enforces this structure idempotently. The work family may reference `.agent-tools/` for durable items.
+The umbrella covers **charter + parallel + planning + memory + runs + other durable agent configuration**. **Preferred planning root** is [`.agent-tools/planning/`](.agent-tools/planning/) (transient work artifacts: roadmap, conventions, per-unit dirs). Directory-local `.gitkeep` / `.gitignore` rules apply (ignore everything except committed exceptions: `.gitkeep`, `conventions.md`, `roadmap.md`, …). Legacy `./planning/` is migrated via `/work:setup` (Case C). Work skills resolve preferred first, then legacy.
 
 ## Design Principles
 
@@ -243,7 +243,7 @@ See `src/work/SKILL.md` for full mode-selection criteria.
 
 **Bottom-Up Implementation (within a vertical slice)** — Domain first, then Application, Infrastructure, and finally Framework. Pure business logic before I/O. In deliverable-partition mode, plan deliverables in their dependency order instead (e.g., contracts before consumers).
 
-**Session Continuity** — State persists in `./planning/<project>/session-state.md` so work resumes across sessions without losing context.
+**Session Continuity** — State persists in `.agent-tools/planning/<project>/session-state.md` (or legacy `./planning/…` until migrated) so work resumes across sessions without losing context.
 
 **Knowledge Compounding** — Solutions are captured and reused. `/work:compound` turns solved problems into team knowledge.
 

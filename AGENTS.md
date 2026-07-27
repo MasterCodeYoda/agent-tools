@@ -1,3 +1,24 @@
+<!-- agent-tools:charter-link begin -->
+## Project Charter
+
+This project uses a structured charter at `.agent-tools/charter/`.
+
+The charter captures durable project identity, engineering standards, and workflow conventions.
+Shared ground truth when parallel mode or any session loads project conventions.
+
+Files (load in order when needed; earlier take precedence on conflict):
+
+1. [`.agent-tools/charter/charter.md`](.agent-tools/charter/charter.md) — entry + precedence + index
+2. [`.agent-tools/charter/project.md`](.agent-tools/charter/project.md) — identity, stack, surfaces
+3. [`.agent-tools/charter/engineering.md`](.agent-tools/charter/engineering.md) — standards, DoD
+4. [`.agent-tools/charter/workflow.md`](.agent-tools/charter/workflow.md) — PM, branch, merge, review
+
+**Loading policy:** Parallel mode and function dispatches **explicitly read** needed charter
+files during orientation. Pure unit-mode `/work:*` sessions (including continue in unit mode)
+do **not** auto-load the full charter set. Use textual references only — no `@` auto-import
+of charter.
+<!-- agent-tools:charter-link end -->
+
 <!-- agent-tools:memory-link begin -->
 ## Project agent memory
 
