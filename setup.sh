@@ -17,7 +17,7 @@ for arg in "$@"; do
             echo "  Hermes host skills: ~/.hermes/skills/ when ~/.hermes exists"
             echo "    (multi-agent / maintainer dogfood — NOT the Kevin product path)."
             echo "  Kevin product skills: published dist artifact → ~/.kevin/skills"
-            echo "    (see docs/kevin/runbooks/kevin-skills-dist.md · tools/install-kevin-skills.sh)."
+            echo "    (see docs/agents/runbooks/kevin-skills-dist.md · tools/install-kevin-skills.sh)."
             echo "  factory remains the Factory coding agent (~/.factory) — not Kevin."
             echo ""
             echo "Options:"
@@ -46,7 +46,7 @@ GROK_DIR="${HOME}/.grok"
 GROK_SKILLS_DIR="${HOME}/.grok/skills"
 FACTORY_DIR="${HOME}/.factory"
 # Hermes host multi-agent skills dir (maintainer / non-product for Kevin consumers).
-# Kevin product path: ADR-004 / docs/kevin/runbooks/kevin-skills-dist.md → ~/.kevin/skills
+# Kevin product path: ADR-004 / docs/agents/runbooks/kevin-skills-dist.md → ~/.kevin/skills
 HERMES_DIR="${HOME}/.hermes"
 HERMES_SKILLS_DIR="${HOME}/.hermes/skills"
 CODEX_DIR="${HOME}/.codex"
@@ -652,7 +652,7 @@ if [ -d "$HERMES_DIR" ] || [ -d "$HERMES_SKILLS_DIR" ]; then
     echo "  Kevin product skills (workstation):"
     echo "    - Target       : ~/.kevin/skills (copy from published artifact)"
     echo "    - Pack/install : tools/pack-kevin-skills.sh · tools/install-kevin-skills.sh"
-    echo "    - Runbook      : docs/kevin/runbooks/kevin-skills-dist.md"
+    echo "    - Runbook      : docs/agents/runbooks/kevin-skills-dist.md"
 fi
 if [ -d "$CODEX_DIR" ]; then
     echo "  Codex:"

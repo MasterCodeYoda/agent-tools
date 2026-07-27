@@ -4,8 +4,8 @@ description: Product kevin CLI composes skills install + Hermes profile install;
 type: pattern
 applicability: project
 related:
-  - docs/kevin/runbooks/kevin-workstation-cli.md
-  - docs/kevin/decisions/004-workstation-cli-and-skills-distribution.md
+  - docs/agents/runbooks/kevin-workstation-cli.md
+  - docs/agents/decisions/004-workstation-cli-and-skills-distribution.md
   - tools/kevin/kevin
   - tools/install-kevin-cli.sh
   - run_id:r-20260726-3

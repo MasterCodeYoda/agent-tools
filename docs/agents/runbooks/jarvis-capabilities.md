@@ -42,12 +42,20 @@ Each new capability adds **names** to `.env.template` / `env_requires`, a row he
 
 ## Operator fill (single remote)
 
-1. Bring up container once (creates profile home on volume).  
-2. Fill live `.env` (or use `docker exec` / volume mount) with model + SMTP + Slack names you need.  
-3. `hermes -p jarvis doctor` (or exec into container).  
-4. Capability checklist: model works; Slack connects; digest dry-run works; then enable send.
+1. **Idempotent install:** `./hermes/scripts/jarvis-bring-up.sh`  
+2. **Secrets (guided, no LLM):** `./hermes/scripts/jarvis-secrets-wizard.sh`  
+   - Interactive prompts; secret fields hidden; values never echoed in summary  
+   - Writes mode-600 live `.env` on the data volume only  
+   - `--check` reports set/missing per key without printing values  
+3. Restart container if it was already up so env reloads.  
+4. `docker exec jarvis-hermes hermes -p jarvis doctor`  
+5. Capability checklist: model works; Slack connects; digest dry-run works; then enable send.
 
-Helper: `hermes/scripts/jarvis-send-digest.sh --file … --dry-run`
+Helpers:
+
+- `hermes/scripts/jarvis-bring-up.sh` — volume + image + compose  
+- `hermes/scripts/jarvis-secrets-wizard.sh` — secrets lane only  
+- `hermes/scripts/jarvis-send-digest.sh --file … --dry-run` — email path
 
 ---
 

@@ -4,7 +4,7 @@ description: Foundation cleanup done 2026-07-24 — docs taxonomy, hermes scaffo
 type: process
 applicability: project
 related:
-  - docs/kevin-v1.md
+  - docs/agents-v1.md
   - docs/handoff.md
   - hermes/README.md
 promoted_at: null
@@ -20,7 +20,7 @@ Dogfood research lived flat under `docs/` with stale README/handoff; residual Do
 
 ## How to apply
 
-1. Start at `docs/handoff.md` → ADR-001 → `docs/kevin-v1.md`.  
+1. Start at `docs/handoff.md` → ADR-001 → `docs/agents-v1.md`.  
 2. Research is **archive** under `docs/research/`.  
 3. Config-as-code home is `hermes/` (scaffold).  
 4. Do **not** invent NEXT until Linear AGNT + roadmap rechart.  

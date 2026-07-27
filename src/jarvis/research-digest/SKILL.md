@@ -120,5 +120,5 @@ Prefer invoking this skill explicitly in the cron prompt. Gateway may already be
 ## Related
 
 - Profile: `hermes/jarvis-profile/`
-- Lanes: `docs/kevin/runbooks/multi-agent-config-lanes.md`
-- Capabilities: `docs/kevin/runbooks/jarvis-capabilities.md`
+- Lanes: `docs/agents/runbooks/multi-agent-config-lanes.md`
+- Capabilities: `docs/agents/runbooks/jarvis-capabilities.md`

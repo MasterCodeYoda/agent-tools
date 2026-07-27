@@ -26,7 +26,7 @@ compound: captured | 2026-07-26 | entries/profile-skill-bindings-track-published
 
 ### Shipped
 
-- Monorepo Kevin packaging under `hermes/` + `docs/kevin/`
+- Monorepo Kevin packaging under `hermes/` + `docs/agents/`
 - Multi-arch GHCR `kevin-hermes` (`:main` + `:sha-…`)
 - SF SoT retired; remote gone
 - Review remediations: entrypoint fail-closed; work/* skill bindings; Isolated runbook language

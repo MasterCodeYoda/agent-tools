@@ -75,7 +75,7 @@ Multi-agent `./setup.sh` → `~/.hermes/skills` is **not** the Kevin consumer pr
 
 Policy vs secrets vs adaptive state, re-apply/`--force-config`, and promotion rules:
 
-**[docs/kevin/runbooks/multi-agent-config-lanes.md](../../docs/kevin/runbooks/multi-agent-config-lanes.md)**
+**[docs/agents/runbooks/multi-agent-config-lanes.md](../../docs/agents/runbooks/multi-agent-config-lanes.md)**
 
 Kevin may use **workstation + isolated** installs. That dual topology is **not** the model for Jarvis (single remote CoS home). See the same runbook § Instance topology.
 

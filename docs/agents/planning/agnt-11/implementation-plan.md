@@ -52,7 +52,7 @@ No git-cliff / semver / GitHub Releases in this unit ([ADR-002](../../../docs/de
 |-------|--------|
 | GHCR image | `ghcr.io/mastercodeyoda/kevin-hermes` (match agent-tools owner; adjust if remote owner differs) |
 | Visibility | **Public** package (public repo) |
-| Docs home in agent-tools | `docs/kevin/` for product/runbooks/ADRs migrated from SF |
+| Docs home in agent-tools | `docs/agents/` for product/runbooks/ADRs migrated from SF |
 | Dashboard in compose | **Off** by default |
 | Terminal | `local` in-container |
 | Project mount | `KEVIN_PROJECT_ROOT` → `/workspace` |
@@ -74,7 +74,7 @@ hermes/
     .env.example
     entrypoint.sh    # or document image CMD + init script
     README.md
-docs/kevin/          # migrated handoff, runbooks, ADRs 001/002, product surface, v1
+docs/agents/          # migrated handoff, runbooks, ADRs 001/002, product surface, v1
 .github/workflows/
   ci.yml             # existing/expanded checks on all pushes
   kevin-hermes-image.yml  # main only: publish → build → push
@@ -120,10 +120,10 @@ services:
 | Move to agent-tools | Disposition |
 |---------------------|-------------|
 | `hermes/profile/**` | → `hermes/profile/` |
-| Kevin runbooks / ADR 001–002 / product-surface / kevin-v1 / handoff | → `docs/kevin/` (paths rewritten) |
+| Kevin runbooks / ADR 001–002 / product-surface / kevin-v1 / handoff | → `docs/agents/` (paths rewritten) |
 | `scripts/apply-kevin-profile.sh`, controller, wake, bring-up | → `hermes/scripts/` or `scripts/kevin/` — adapt for image-first; host path secondary |
-| `packs/kevin-slack-*` | → `hermes/packs/` or `docs/kevin/packs/` |
-| Planning / Linear history | leave git history; optional copy of planning shell under `docs/kevin/planning/` |
+| `packs/kevin-slack-*` | → `hermes/packs/` or `docs/agents/packs/` |
+| Planning / Linear history | leave git history; optional copy of planning shell under `docs/agents/planning/` |
 | spikes, research archive | migrate selectively or drop (research is archive) |
 | Repo | **delete** after verify |
 
@@ -152,12 +152,12 @@ Parent ACs (plan-final):
 
 | ID | Deliverable | ACs | Tasks |
 |----|-------------|-----|-------|
-| **D0** | Migration map + donor prep | (enables all) | Inventory SF paths; write `docs/kevin/MIGRATION.md` checklist in agent-tools PR0 or SF planning |
+| **D0** | Migration map + donor prep | (enables all) | Inventory SF paths; write `docs/agents/MIGRATION.md` checklist in agent-tools PR0 or SF planning |
 | **D1** | hermes/profile + docker skeleton | AC1 | Copy profile; docker README skeleton; empty Dockerfile stub |
 | **D2** | Dockerfile bake dist/hermes | AC2, AC10 | Multi-stage publish; COPY skills; revision file; profile seed |
 | **D3** | Compose + env + init | AC5, AC9 (partial) | compose.yaml; .env.example; entrypoint profile apply |
 | **D4** | GHCR CI | AC3, AC4, AC6 | workflows; packages permission; main+sha tags |
-| **D5** | Runbooks + ADR amend | AC8, AC4 | docs/kevin runbook; ADR-001 §8; ADR-002 present |
+| **D5** | Runbooks + ADR amend | AC8, AC4 | docs/agents runbook; ADR-001 §8; ADR-002 present |
 | **D6** | SF migrate + delete | AC7 | Move remaining; fix links; delete repo after operator OK |
 
 **Gap-prevention:** each AC in exactly one row above; D0 has no AC (enabler).

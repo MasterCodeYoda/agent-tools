@@ -22,11 +22,11 @@
 | `hermes/profile/*` | Kevin distribution | `distribution.yaml`, `config.yaml`, `SOUL.md`, empty `skills/`, `.env.template` |
 | `hermes/scripts/apply-kevin-profile.sh` | Workstation apply | Install from stable repo path; skills path sub; `--force-config` |
 | `hermes/scripts/factory-wake/*` | Unattended pre-wake | Fail-closed worktree/project checks for factory continue |
-| `docs/kevin/runbooks/kevin-control-plane.md` | Config sync story | git SoT → live → UI experiments; manual live→git |
-| `docs/kevin/runbooks/kevin-auth-packaging.md` | Secrets | Live `.env` / `auth.json`; never blind-overwrite |
-| `docs/kevin/runbooks/kevin-unattended-wake.md` | Cron wake shape | Gateway + cron under `kevin`; deliver-once; no silent pull |
-| `docs/kevin/runbooks/kevin-hermes-docker.md` | Isolated packaging | Image tags, dev.sh vs GHCR |
-| `docs/kevin/decisions/001`–`005` | Product constraints | Host, image versioning, workstation vs isolated, skills channel, dialect vs product |
+| `docs/agents/runbooks/kevin-control-plane.md` | Config sync story | git SoT → live → UI experiments; manual live→git |
+| `docs/agents/runbooks/kevin-auth-packaging.md` | Secrets | Live `.env` / `auth.json`; never blind-overwrite |
+| `docs/agents/runbooks/kevin-unattended-wake.md` | Cron wake shape | Gateway + cron under `kevin`; deliver-once; no silent pull |
+| `docs/agents/runbooks/kevin-hermes-docker.md` | Isolated packaging | Image tags, dev.sh vs GHCR |
+| `docs/agents/decisions/001`–`005` | Product constraints | Host, image versioning, workstation vs isolated, skills channel, dialect vs product |
 | `tools/publish-skills.sh` | Dialect render | `src/` → `dist/<dialect>/skills` |
 | `tools/pack-kevin-skills.sh` | Product pack | hermes dialect → `kevin-skills` artifact |
 | `.github/workflows/kevin-hermes-image.yml` | CI image | `:main` + `:sha-…` multi-arch |

@@ -58,7 +58,7 @@ Generate a full manifest with Hermes when available, e.g.:
 hermes -p jarvis slack manifest --agent-view \
   --name Jarvis \
   --description "Personal chief of staff — single remote instance" \
-  --write docs/kevin/packs/jarvis-slack-manifest.json
+  --write docs/agents/packs/jarvis-slack-manifest.json
 ```
 
 (Checked-in generated manifest optional; do not commit tokens.)

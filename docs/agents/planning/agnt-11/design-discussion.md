@@ -95,7 +95,7 @@ Must reframe AGNT-11 (or successor) around:
 
 ## Deliberately undecided (plan/execute)
 
-- Exact agent-tools tree layout for migrated SF docs (e.g. `docs/kevin/` vs top-level).  
+- Exact agent-tools tree layout for migrated SF docs (e.g. `docs/agents/` vs top-level).  
 - Public vs private GHCR package (repo is public → public image is simplest).  
 - Whether release is fully automated on schedule or human-dispatched.  
 - Dashboard default on/off in compose.  

@@ -23,42 +23,55 @@ One always-on Jarvis for:
 
 ---
 
-## Dev build + run
+## Bring-up (path of record — idempotent)
+
+Volume creation and compose up are **install steps**, not chat ceremony:
 
 ```bash
 cd /path/to/agent-tools
 
-docker build -f hermes/docker/Dockerfile.jarvis -t jarvis-hermes:local .
+# Creates $HOME/.jarvis/hermes-data if missing, seeds state/projects.md,
+# builds image only if missing, compose up -d
+./hermes/scripts/jarvis-bring-up.sh
 
-export JARVIS_HERMES_IMAGE=jarvis-hermes:local
-export JARVIS_HERMES_DATA=$HOME/.jarvis/hermes-data
-mkdir -p "$JARVIS_HERMES_DATA"
-
-docker compose -f hermes/docker/compose.jarvis.yaml up -d
-docker compose -f hermes/docker/compose.jarvis.yaml logs -f
+# Status / stop (volume preserved)
+./hermes/scripts/jarvis-bring-up.sh --status
+./hermes/scripts/jarvis-bring-up.sh --down
 ```
+
+Env overrides: `JARVIS_HERMES_DATA`, `JARVIS_HERMES_IMAGE` (default `jarvis-hermes:local`).
 
 Pass checks:
 
 | Step | Pass |
 |------|------|
-| Build | Image `jarvis-hermes:local` exists |
-| Up | Container `jarvis-hermes` running |
-| Profile | Logs show `hermes -p jarvis gateway` / profile jarvis available |
-| State | `$JARVIS_HERMES_DATA` has profile home; `state/projects.md` seeded |
+| Bring-up | Container `jarvis-hermes` running; volume path printed |
+| Profile | `docker exec jarvis-hermes hermes -p jarvis profile show jarvis` |
+| State | `$JARVIS_HERMES_DATA/profiles/jarvis/state/projects.md` present |
 
-```bash
-docker exec jarvis-hermes hermes -p jarvis profile show jarvis
-```
+Manual docker build/compose remains available for packaging debug; prefer the script for daily install.
 
 ---
 
-## Secrets on the volume
+## Secrets on the volume (guided script — no LLM)
 
-After first start, fill live env under the volume’s profile home (layout may be
-`…/profiles/jarvis/.env`). Names: [jarvis-capabilities.md](./jarvis-capabilities.md).
+Do **not** paste tokens into chat history. Use the interactive wizard:
 
-Never commit values. Apply/`profile update` preserves `.env` / `auth.json`.
+```bash
+./hermes/scripts/jarvis-secrets-wizard.sh
+# or after bring-up:
+./hermes/scripts/jarvis-bring-up.sh --secrets
+
+# Non-interactive capability presence report (no values printed):
+./hermes/scripts/jarvis-secrets-wizard.sh --check
+```
+
+Writes mode-600 live `.env` under the data volume (default
+`$JARVIS_HERMES_DATA/profiles/jarvis/.env`). Names: [jarvis-capabilities.md](./jarvis-capabilities.md).
+
+Never commit values. Apply/`profile update` preserves `.env` / `auth.json`.  
+Restart after fill if the container was already running:  
+`docker compose -f hermes/docker/compose.jarvis.yaml restart`
 
 ---
 

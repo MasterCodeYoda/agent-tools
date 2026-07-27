@@ -15,7 +15,7 @@ Hermes data volume. Do **not** run a second daily “local Jarvis” brain.
 | Terminal / `hermes -p jarvis` | Ops only (doctor, secrets, debug) |
 
 Config lanes (policy / secrets / adaptive state):  
-[docs/kevin/runbooks/multi-agent-config-lanes.md](../../docs/kevin/runbooks/multi-agent-config-lanes.md)
+[docs/agents/runbooks/multi-agent-config-lanes.md](../../docs/agents/runbooks/multi-agent-config-lanes.md)
 
 ## Layout
 
@@ -62,8 +62,8 @@ Product path for skills root (host packaging experiments): `JARVIS_SKILLS_ROOT`
 
 ## Related
 
-- [multi-agent-config-lanes.md](../../docs/kevin/runbooks/multi-agent-config-lanes.md)
-- [jarvis-capabilities.md](../../docs/kevin/runbooks/jarvis-capabilities.md)
-- [jarvis-hermes-docker.md](../../docs/kevin/runbooks/jarvis-hermes-docker.md)
-- [jarvis-slack.md](../../docs/kevin/runbooks/jarvis-slack.md)
-- [ADR-005](../../docs/kevin/decisions/005-skills-dialect-vs-product.md)
+- [multi-agent-config-lanes.md](../../docs/agents/runbooks/multi-agent-config-lanes.md)
+- [jarvis-capabilities.md](../../docs/agents/runbooks/jarvis-capabilities.md)
+- [jarvis-hermes-docker.md](../../docs/agents/runbooks/jarvis-hermes-docker.md)
+- [jarvis-slack.md](../../docs/agents/runbooks/jarvis-slack.md)
+- [ADR-005](../../docs/agents/decisions/005-skills-dialect-vs-product.md)

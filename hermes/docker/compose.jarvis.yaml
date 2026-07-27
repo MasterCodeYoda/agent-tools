@@ -6,7 +6,7 @@
 #   docker compose -f hermes/docker/compose.jarvis.yaml up -d
 #
 # No product-repo mount required. Terminal is ops-only; talk via Slack; digest via email.
-# Topology: docs/kevin/runbooks/multi-agent-config-lanes.md
+# Topology: docs/agents/runbooks/multi-agent-config-lanes.md
 
 name: jarvis-hermes
 

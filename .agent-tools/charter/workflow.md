@@ -42,5 +42,5 @@ Prefer fast-forward to `main`; delete feature branch when fully merged.
 
 ## Docs
 
-- Durable decisions: `docs/kevin/decisions/`, other `docs/` as appropriate.
+- Durable decisions: `docs/agents/decisions/`, other `docs/` as appropriate.
 - Transient specs: planning root only; promote to `docs/design/` before committed citation.

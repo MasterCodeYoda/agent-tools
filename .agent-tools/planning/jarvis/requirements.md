@@ -364,7 +364,7 @@ Agent may **propose** policy changes; must not silent-commit them. Unattended Ja
 - Design discussion: `.agent-tools/planning/jarvis/design-discussion.md`
 - Issue: Not created
 - Implementation Plan: (after `/work:plan`)
-- ADR touchpoints: `docs/kevin/decisions/005-skills-dialect-vs-product.md` (jarvis pack now in scope); Kevin control-plane config sync → three-lane rewrite; instance topology (Kevin dual vs Jarvis single)
+- ADR touchpoints: `docs/agents/decisions/005-skills-dialect-vs-product.md` (jarvis pack now in scope); Kevin control-plane config sync → three-lane rewrite; instance topology (Kevin dual vs Jarvis single)
 
 ---
 Created: 2026-07-27

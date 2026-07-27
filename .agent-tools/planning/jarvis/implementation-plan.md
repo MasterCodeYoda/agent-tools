@@ -130,7 +130,7 @@ $HERMES_HOME/profiles/jarvis/state/projects.md
 
 **Tasks:**
 
-- [ ] Author `docs/kevin/runbooks/multi-agent-config-lanes.md` (three lanes, promotion, unattended deny, topology Kevin dual vs Jarvis single)
+- [ ] Author `docs/agents/runbooks/multi-agent-config-lanes.md` (three lanes, promotion, unattended deny, topology Kevin dual vs Jarvis single)
 - [ ] Rewrite Kevin control-plane config-as-code sync section to point at three-lane doctrine (no competing story)
 - [ ] Link doctrine from `hermes/profile/README.md` (Kevin) — Jarvis profile links when D2 lands
 - [ ] Document unattended policy-path mutation deny for both products
@@ -176,7 +176,7 @@ $HERMES_HOME/profiles/jarvis/state/projects.md
 **Tasks:**
 
 - [ ] Expand jarvis `.env.template` + distribution `env_requires`: model, SMTP/email, Slack tokens (names only)
-- [ ] Author capability matrix doc (research, email, slack, future) under docs/kevin or docs/jarvis path
+- [ ] Author capability matrix doc (research, email, slack, future) under docs/agents or docs/jarvis path
 - [ ] Align Kevin auth packaging / control-plane language to three-lane + capability spine vocabulary
 
 **Dependencies:** blocked by D1  

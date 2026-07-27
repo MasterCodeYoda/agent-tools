@@ -4,9 +4,9 @@ description: Publish dist/hermes as rolling GH Release tag kevin-skills for stab
 type: pattern
 applicability: project
 related:
-  - docs/kevin/runbooks/kevin-skills-dist.md
+  - docs/agents/runbooks/kevin-skills-dist.md
   - .github/workflows/kevin-skills-dist.yml
-  - docs/kevin/decisions/004-workstation-cli-and-skills-distribution.md
+  - docs/agents/decisions/004-workstation-cli-and-skills-distribution.md
   - run_id:r-20260726-2
 incident_date: null
 job_phases: [plan, execute]

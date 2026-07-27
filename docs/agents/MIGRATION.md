@@ -7,11 +7,11 @@
 | Content | In agent-tools? | Action before delete |
 |---------|-----------------|----------------------|
 | Profile, Docker pack, `dev.sh`, scripts | Yes (`hermes/`) | None |
-| ADRs 001–002, runbooks, evidence, kevin packs | Yes (`docs/kevin/`) | None |
-| Kevin/Hermes memory entries + gumclaw import | Yes (`docs/kevin/memory/`) | None |
-| AGNT-11 planning snapshot | Yes (`docs/kevin/planning/agnt-11/`) | None |
+| ADRs 001–002, runbooks, evidence, kevin packs | Yes (`docs/agents/`) | None |
+| Kevin/Hermes memory entries + gumclaw import | Yes (`docs/agents/memory/`) | None |
+| AGNT-11 planning snapshot | Yes (`docs/agents/planning/agnt-11/`) | None |
 | ADRs 003–004 (workstation / CLI dist) | Yes | None |
-| Selected research (doctrine + host + gumclaw + talks) | **Yes** — `docs/kevin/research/` (2026-07-26) | Stack trio, process-ip waves, spikes **dropped** with SF |
+| Selected research (doctrine + host + gumclaw + talks) | **Yes** — `docs/agents/research/` (2026-07-26) | Stack trio, process-ip waves, spikes **dropped** with SF |
 | Rest of research archive | **No** | Safe to hard-delete with SF |
 | Legacy `factory-*` packs, spikes | No | Drop (historical / superseded) |
 | Uncommitted plant-rename dirt on SF | N/A | **Ignore** — do not invest; delete |
@@ -23,7 +23,7 @@
 2. Optional safety tag on SF (research recovery).  
 3. GitHub → `overlund-media/software-factory` → **Delete repository** (or Archive).  
 4. Remove local clone: `rm -rf ~/Source/OMG/software-factory`.  
-5. Update any personal bookmarks to `agent-tools/docs/kevin/`.
+5. Update any personal bookmarks to `agent-tools/docs/agents/`.
 
 ## Map (historical)
 
@@ -32,4 +32,4 @@
 | `hermes/profile/` | `hermes/profile/` |
 | Docker / packaging | `hermes/docker/` + `hermes/dev.sh` |
 | Scripts | `hermes/scripts/` |
-| Docs / ADRs / runbooks | `docs/kevin/` |
+| Docs / ADRs / runbooks | `docs/agents/` |

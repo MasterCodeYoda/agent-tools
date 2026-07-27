@@ -41,5 +41,5 @@ Fill live values under the data volume after first start (e.g. profile `.env`). 
 
 ## Related
 
-- Runbook: [docs/kevin/runbooks/kevin-hermes-docker.md](../../docs/kevin/runbooks/kevin-hermes-docker.md)
-- Versioning: [docs/kevin/decisions/002-kevin-hermes-image-versioning.md](../../docs/kevin/decisions/002-kevin-hermes-image-versioning.md)
+- Runbook: [docs/agents/runbooks/kevin-hermes-docker.md](../../docs/agents/runbooks/kevin-hermes-docker.md)
+- Versioning: [docs/agents/decisions/002-kevin-hermes-image-versioning.md](../../docs/agents/decisions/002-kevin-hermes-image-versioning.md)

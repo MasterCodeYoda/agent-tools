@@ -29,7 +29,7 @@ last_updated: 2026-07-27
 | Isolated Kevin | GHCR / local `kevin-hermes` image |
 | Multi-agent skills | `./setup.sh` → agent profile dirs (not Kevin product path) |
 | Process dialect | `/work:*` skills (published to consumers) |
-| Kevin narrative | `docs/kevin/` ADRs + runbooks |
+| Kevin narrative | `docs/agents/` ADRs + runbooks |
 
 ## Vocabulary
 

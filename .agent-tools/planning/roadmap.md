@@ -45,7 +45,7 @@ AGNT-11 (done) → AGNT-13 (done) → AGNT-12 (done) → dogfood workstation →
 ## Notes
 
 - PM: Linear team **Agent Tools** (`AGNT`); project *Kevin v1 — Hermes factory foundation*
-- Decisions: [ADR-003](../docs/kevin/decisions/003-workstation-vs-isolated-kevin.md), [ADR-004](../docs/kevin/decisions/004-workstation-cli-and-skills-distribution.md)
+- Decisions: [ADR-003](../docs/agents/decisions/003-workstation-vs-isolated-kevin.md), [ADR-004](../docs/agents/decisions/004-workstation-cli-and-skills-distribution.md)
 - Live channel verified 2026-07-27: release `git_sha` matches `~/.kevin/skills` after `kevin update` (tip `02d0e57…`)
 - CLI install remains checkout/`install-kevin-cli.sh` (not in skills tarball)
 - Per-unit `planning/*/session-state.md` dirs are done; no open `in_progress` claim

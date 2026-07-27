@@ -114,7 +114,7 @@ Same class of pipe as other coding agents that consume agent-tools — **not** a
 | **Missing skills** | Fail **loudly**. **No** silent `git pull` + setup on Hermes gateway start or unattended wake. |
 | **Process content** | Wave 5 ops discipline remains in force once installed / baked. |
 
-**Monorepo (2026-07-26):** Kevin host packaging lives in this repository (`hermes/`, `docs/kevin/`). The separate software-factory repo is retired after migration.
+**Monorepo (2026-07-26):** Kevin host packaging lives in this repository (`hermes/`, `docs/agents/`). The separate software-factory repo is retired after migration.
 
 ### 9. Personality and conventions
 

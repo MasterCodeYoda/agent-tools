@@ -3,7 +3,7 @@
 **Status:** Historical only — **not** open backlog.  
 Copied from software-factory before that repo’s deletion (2026-07-26).
 
-Process SoT remains **agent-tools** skills (`src/` → publish). Product decisions remain **ADRs** under `docs/kevin/decisions/`.
+Process SoT remains **agent-tools** skills (`src/` → publish). Product decisions remain **ADRs** under `docs/agents/decisions/`.
 
 ## Doctrine
 

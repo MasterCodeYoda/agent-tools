@@ -124,5 +124,5 @@ Render dialect (`hermes`) ≠ product pack (`kevin` | `jarvis`) — [ADR-005](..
 | Jarvis profile dist | `hermes/jarvis-profile/` |
 | Kevin apply | `hermes/scripts/apply-kevin-profile.sh` |
 | Jarvis apply | `hermes/scripts/apply-jarvis-profile.sh` |
-| Kevin image | `docs/kevin/runbooks/kevin-hermes-docker.md` |
-| Jarvis image | `docs/kevin/runbooks/jarvis-hermes-docker.md` |
+| Kevin image | `docs/agents/runbooks/kevin-hermes-docker.md` |
+| Jarvis image | `docs/agents/runbooks/jarvis-hermes-docker.md` |
