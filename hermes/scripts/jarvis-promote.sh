@@ -2,29 +2,23 @@
 # Promote Jarvis lab (Docker Desktop) → durable host (Portainer / remote Docker).
 #
 # Thin path: no interactive wizard on the server.
-#   1) Export .env from local volume (values never printed)
-#   2) scp to remote
-#   3) Remote non-interactive finish: inject .env, restart, backup init+push, cron
+#   1) Export secrets bundle: .env + auth.json (Grok OAuth lives in auth.json)
+#   2) scp bundle to remote
+#   3) Inject both into volume, restart, backup init+push, cron
 #   4) Optional purge of local disposable instance
 #
-# Usage (agent- or human-driven):
-#   # Lab first
-#   ./hermes/scripts/jarvis-local-smoke.sh
-#   ./hermes/scripts/jarvis-local-smoke.sh --secrets   # mint once on Desktop
-#
-#   # Full promote (I run this when SSH + image tag ready)
+# Usage:
+#   ./hermes/scripts/jarvis-promote.sh export-secrets --out ~/secure/jarvis-secrets
 #   ./hermes/scripts/jarvis-promote.sh promote \
-#     --ssh user@portainer-host \
-#     --remote-repo /opt/agent-tools \
-#     --image ghcr.io/OWNER/jarvis-hermes:sha-XXXXXXX
+#     --ssh user@host --remote-repo /opt/agent-tools --image ghcr.io/…/jarvis-hermes:tag
+#   ./hermes/scripts/jarvis-promote.sh finish-remote \
+#     --secrets-dir /secure/jarvis-secrets --image <tag>
 #
-#   # Export only
-#   ./hermes/scripts/jarvis-promote.sh export-env --out ~/secure/jarvis.env
+# Bundle layout (mode 600 files; never log contents):
+#   <dir>/.env
+#   <dir>/auth.json    # required for SuperGrok OAuth; fail if missing unless --allow-missing-auth
 #
-#   # On durable host already (env file placed privately)
-#   ./hermes/scripts/jarvis-promote.sh finish-remote --env-file /secure/jarvis.env --image <tag>
-#
-# Safety: never echoes secret values; temp files mode 600 + shredded; no lab sessions/DBs copied.
+# Safety: never echoes secret values; temp files shredded; no sessions/DBs copied.
 #
 set -euo pipefail
 
@@ -39,80 +33,148 @@ CONTAINER="${JARVIS_CONTAINER_NAME:-jarvis-hermes}"
 IMAGE="${JARVIS_HERMES_IMAGE:-}"
 SSH_TARGET=""
 REMOTE_REPO=""
-ENV_OUT=""
-ENV_FILE=""
+SECRETS_OUT=""
+SECRETS_DIR=""
+ENV_FILE=""   # legacy alias: treat as secrets dir parent or single .env
 DRY_RUN=0
 SKIP_LOCAL_SMOKE=0
 SKIP_PURGE_LOCAL=0
 SKIP_BACKUP=0
+ALLOW_MISSING_AUTH=0
 CMD=""
 
 die() { echo "jarvis-promote: error: $*" >&2; exit 1; }
 info() { echo "jarvis-promote: $*" >&2; }
-usage() { sed -n '2,32p' "$0" | sed 's/^# \?//'; }
+usage() { sed -n '2,28p' "$0" | sed 's/^# \?//'; }
 
 require_cmd() { command -v "$1" >/dev/null 2>&1 || die "need $1 on PATH"; }
 
-export_env_from_local() {
-  local dest="$1"
-  mkdir -p "$(dirname "$dest")"
+# Export .env + auth.json into a directory (never print contents)
+export_secrets_from_local() {
+  local dest_dir="$1"
+  mkdir -p "$dest_dir"
+  chmod 700 "$dest_dir"
   umask 077
+
+  local copy_from_container=0
   if docker ps --format '{{.Names}}' | grep -qx "$CONTAINER"; then
-    info "exporting .env from container $CONTAINER"
-    docker exec "$CONTAINER" cat /opt/data/profiles/jarvis/.env >"$dest" \
-      || die "export failed (run secrets wizard on lab first)"
+    copy_from_container=1
+    info "exporting secrets from container $CONTAINER (/opt/data/profiles/jarvis/)"
   else
-    info "exporting .env from volume $VOLUME_NAME"
-    docker run --rm -v "${VOLUME_NAME}:/data:ro" alpine:3.20 \
-      cat /data/profiles/jarvis/.env >"$dest" \
-      || die "export failed — volume missing .env"
+    info "exporting secrets from volume $VOLUME_NAME"
   fi
-  chmod 600 "$dest"
-  grep -qE '^[A-Za-z_][A-Za-z0-9_]*=' "$dest" || die "exported file does not look like .env"
+
+  if [[ "$copy_from_container" -eq 1 ]]; then
+    docker exec "$CONTAINER" test -f /opt/data/profiles/jarvis/.env \
+      || die "lab .env missing — run secrets wizard first"
+    docker exec "$CONTAINER" cat /opt/data/profiles/jarvis/.env >"${dest_dir}/.env"
+    if docker exec "$CONTAINER" test -f /opt/data/profiles/jarvis/auth.json; then
+      docker exec "$CONTAINER" cat /opt/data/profiles/jarvis/auth.json >"${dest_dir}/auth.json"
+    fi
+  else
+    docker run --rm -v "${VOLUME_NAME}:/data:ro" alpine:3.20 \
+      test -f /data/profiles/jarvis/.env \
+      || die "volume missing .env"
+    docker run --rm -v "${VOLUME_NAME}:/data:ro" alpine:3.20 \
+      cat /data/profiles/jarvis/.env >"${dest_dir}/.env"
+    if docker run --rm -v "${VOLUME_NAME}:/data:ro" alpine:3.20 \
+         test -f /data/profiles/jarvis/auth.json 2>/dev/null; then
+      docker run --rm -v "${VOLUME_NAME}:/data:ro" alpine:3.20 \
+        cat /data/profiles/jarvis/auth.json >"${dest_dir}/auth.json"
+    fi
+  fi
+
+  chmod 600 "${dest_dir}/.env"
+  [[ -f "${dest_dir}/auth.json" ]] && chmod 600 "${dest_dir}/auth.json"
+
+  grep -qE '^[A-Za-z_][A-Za-z0-9_]*=' "${dest_dir}/.env" || die "exported .env does not look like env file"
   local n
-  n="$(grep -cE '^[A-Za-z_][A-Za-z0-9_]*=' "$dest" || true)"
-  info "exported $n key(s) → $dest (mode 600; values not shown)"
+  n="$(grep -cE '^[A-Za-z_][A-Za-z0-9_]*=' "${dest_dir}/.env" || true)"
+  info "exported .env ($n keys) → ${dest_dir}/.env (values not shown)"
+
+  if [[ -f "${dest_dir}/auth.json" ]]; then
+    # structure check only — no token dump
+    grep -q 'xai-oauth\|providers\|access_token\|refresh' "${dest_dir}/auth.json" 2>/dev/null \
+      && info "exported auth.json (OAuth/provider store present; contents not shown)" \
+      || info "exported auth.json (present; shape unknown)"
+  else
+    if [[ "$ALLOW_MISSING_AUTH" -eq 1 ]]; then
+      info "warning: auth.json missing (Grok OAuth will not promote)"
+    else
+      die "auth.json missing — complete Grok OAuth (hermes auth add xai-oauth) or pass --allow-missing-auth"
+    fi
+  fi
+
   for k in JARVIS_BACKUP_REPO JARVIS_BACKUP_GITHUB_TOKEN; do
-    grep -qE "^${k}=.+" "$dest" || die "exported .env missing required $k — re-run lab secrets with backup"
+    grep -qE "^${k}=.+" "${dest_dir}/.env" || die "exported .env missing required $k"
   done
   for k in JARVIS_GITHUB_READ_TOKEN JARVIS_LINEAR_API_KEY JARVIS_JIRA_BASE_URL JARVIS_JIRA_EMAIL JARVIS_JIRA_API_TOKEN; do
-    if ! grep -qE "^${k}=.+" "$dest"; then
-      info "warning: $k not set in lab .env (integrations incomplete)"
+    if ! grep -qE "^${k}=.+" "${dest_dir}/.env"; then
+      info "warning: $k not set in lab .env"
     fi
   done
 }
 
-inject_env_into_volume() {
-  local src="$1"
-  [[ -f "$src" && -r "$src" ]] || die "env file missing/unreadable: $src"
-  info "injecting .env into volume $VOLUME_NAME"
+# Inject .env + auth.json from a secrets directory into the Docker volume
+inject_secrets_into_volume() {
+  local src_dir="$1"
+  [[ -d "$src_dir" ]] || die "secrets dir missing: $src_dir"
+  [[ -f "${src_dir}/.env" ]] || die "secrets dir missing .env: $src_dir"
+  info "injecting secrets into volume $VOLUME_NAME (.env + auth.json if present)"
   if [[ "$DRY_RUN" -eq 1 ]]; then
-    info "dry-run: would inject $(wc -l <"$src" | tr -d ' ') lines"
+    info "dry-run: would inject from $src_dir"
     return 0
   fi
   local abs
-  abs="$(cd "$(dirname "$src")" && pwd)/$(basename "$src")"
+  abs="$(cd "$src_dir" && pwd)"
   docker run --rm \
     -v "${VOLUME_NAME}:/data" \
-    -v "${abs}:/in.env:ro" \
+    -v "${abs}:/in:ro" \
     alpine:3.20 \
-    sh -c 'mkdir -p /data/profiles/jarvis && cp /in.env /data/profiles/jarvis/.env && chmod 600 /data/profiles/jarvis/.env'
-  info "inject complete"
+    sh -c '
+      set -e
+      mkdir -p /data/profiles/jarvis
+      cp /in/.env /data/profiles/jarvis/.env
+      chmod 600 /data/profiles/jarvis/.env
+      if [ -f /in/auth.json ]; then
+        cp /in/auth.json /data/profiles/jarvis/auth.json
+        chmod 600 /data/profiles/jarvis/auth.json
+      fi
+    '
+  info "inject complete (.env$([ -f "${src_dir}/auth.json" ] && echo ' + auth.json' || true))"
 }
 
-shred_file() {
-  local f="$1"
-  [[ -f "$f" ]] || return 0
-  if command -v shred >/dev/null 2>&1; then
-    shred -u "$f" 2>/dev/null || rm -f "$f"
+shred_path() {
+  local p="$1"
+  [[ -e "$p" ]] || return 0
+  if [[ -d "$p" ]]; then
+    find "$p" -type f -exec sh -c 'if command -v shred >/dev/null 2>&1; then shred -u "$1" 2>/dev/null || rm -f "$1"; else rm -f "$1"; fi' _ {} \;
+    rm -rf "$p"
+  elif command -v shred >/dev/null 2>&1; then
+    shred -u "$p" 2>/dev/null || rm -f "$p"
   else
-    rm -f "$f"
+    rm -f "$p"
   fi
-  info "removed temp env file"
+  info "removed temp secrets path"
+}
+
+pack_secrets_tar() {
+  local src_dir="$1" tar_path="$2"
+  tar -C "$src_dir" -czf "$tar_path" .env $( [[ -f "${src_dir}/auth.json" ]] && echo auth.json )
+  chmod 600 "$tar_path"
+}
+
+unpack_secrets_tar() {
+  local tar_path="$1" dest_dir="$2"
+  mkdir -p "$dest_dir"
+  chmod 700 "$dest_dir"
+  tar -C "$dest_dir" -xzf "$tar_path"
+  chmod 600 "${dest_dir}/.env" 2>/dev/null || true
+  [[ -f "${dest_dir}/auth.json" ]] && chmod 600 "${dest_dir}/auth.json"
 }
 
 finish_remote_here() {
-  local envf="$1"
+  local secrets_dir="$1"
   export JARVIS_HERMES_IMAGE="${IMAGE:-${JARVIS_HERMES_IMAGE:-jarvis-hermes:local}}"
   export JARVIS_VOLUME_SPEC="${JARVIS_VOLUME_SPEC:-${VOLUME_NAME}}"
   export JARVIS_VOLUME_NAME="${VOLUME_NAME}"
@@ -128,8 +190,8 @@ finish_remote_here() {
     "$BRING_UP" --no-build 2>/dev/null || "$BRING_UP"
   fi
 
-  info "=== finish-remote: inject .env ==="
-  inject_env_into_volume "$envf"
+  info "=== finish-remote: inject secrets (.env + auth.json) ==="
+  inject_secrets_into_volume "$secrets_dir"
 
   if [[ "$DRY_RUN" -eq 0 ]]; then
     docker restart "$CONTAINER" 2>/dev/null || true
@@ -149,55 +211,105 @@ finish_remote_here() {
 
   info "=== finish-remote: validate ==="
   if [[ "$DRY_RUN" -eq 1 ]]; then
-    info "dry-run: would smoke"
+    info "dry-run: would smoke + oauth presence check"
   else
     "$SMOKE" || die "smoke failed after promote"
     docker exec "$CONTAINER" /opt/jarvis/bin/jarvis-secrets-wizard.sh --in-container --check 2>/dev/null \
       || info "secrets --check skipped or incomplete"
+    if docker exec "$CONTAINER" test -f /opt/data/profiles/jarvis/auth.json; then
+      info "auth.json present on durable volume (OAuth store)"
+    else
+      info "warning: auth.json still missing on durable volume"
+    fi
   fi
   info "finish-remote COMPLETE"
+}
+
+# Resolve --secrets-dir / --env-file / --secrets-bundle into a directory path
+resolve_secrets_dir() {
+  if [[ -n "$SECRETS_DIR" ]]; then
+    [[ -d "$SECRETS_DIR" ]] || die "secrets dir missing: $SECRETS_DIR"
+    echo "$SECRETS_DIR"
+    return
+  fi
+  if [[ -n "$ENV_FILE" ]]; then
+    # legacy: path to .env → use parent if auth.json beside it, else dir of file as bundle
+    if [[ -d "$ENV_FILE" ]]; then
+      echo "$ENV_FILE"
+      return
+    fi
+    if [[ -f "$ENV_FILE" ]]; then
+      local parent
+      parent="$(cd "$(dirname "$ENV_FILE")" && pwd)"
+      # if they passed foo/jarvis.env, prefer parent if it has both; else create temp dir with just .env
+      if [[ -f "${parent}/auth.json" ]] || [[ "$(basename "$ENV_FILE")" == ".env" ]]; then
+        if [[ "$(basename "$ENV_FILE")" != ".env" ]]; then
+          # copy to temp layout
+          local tmp
+          tmp="$(mktemp -d "${TMPDIR:-/tmp}/jarvis-sec.XXXXXX")"
+          cp "$ENV_FILE" "${tmp}/.env"
+          [[ -f "${parent}/auth.json" ]] && cp "${parent}/auth.json" "${tmp}/auth.json"
+          echo "$tmp"
+          return
+        fi
+        echo "$parent"
+        return
+      fi
+      local tmp
+      tmp="$(mktemp -d "${TMPDIR:-/tmp}/jarvis-sec.XXXXXX")"
+      cp "$ENV_FILE" "${tmp}/.env"
+      echo "$tmp"
+      return
+    fi
+  fi
+  die "need --secrets-dir DIR (preferred) or --env-file PATH"
 }
 
 # ── args ───────────────────────────────────────────────────────────
 while [[ $# -gt 0 ]]; do
   case "$1" in
-    export-env|finish-remote|promote) CMD="$1"; shift ;;
+    export-env|export-secrets|finish-remote|promote) CMD="$1"; shift ;;
     --ssh) SSH_TARGET="${2:-}"; shift 2 ;;
     --remote-repo) REMOTE_REPO="${2:-}"; shift 2 ;;
     --image) IMAGE="${2:-}"; shift 2 ;;
-    --out) ENV_OUT="${2:-}"; shift 2 ;;
-    --env-file) ENV_FILE="${2:-}"; shift 2 ;;
+    --out) SECRETS_OUT="${2:-}"; shift 2 ;;
+    --secrets-dir) SECRETS_DIR="${2:-}"; shift 2 ;;
+    --env-file) ENV_FILE="${2:-}"; shift 2 ;;  # legacy
     --volume) VOLUME_NAME="${2:-}"; shift 2 ;;
     --dry-run) DRY_RUN=1; shift ;;
     --skip-local-smoke) SKIP_LOCAL_SMOKE=1; shift ;;
     --skip-purge-local) SKIP_PURGE_LOCAL=1; shift ;;
     --skip-backup) SKIP_BACKUP=1; shift ;;
+    --allow-missing-auth) ALLOW_MISSING_AUTH=1; shift ;;
     -h|--help) usage; exit 0 ;;
     *) die "unknown argument: $1" ;;
   esac
 done
 
-[[ -n "$CMD" ]] || die "command required: export-env | finish-remote | promote"
+# normalize alias
+[[ "$CMD" == "export-env" ]] && CMD=export-secrets
+
+[[ -n "$CMD" ]] || die "command required: export-secrets | finish-remote | promote"
 require_cmd docker
 
 case "$CMD" in
-  export-env)
-    [[ -n "$ENV_OUT" ]] || ENV_OUT="${HOME}/.jarvis/promote/jarvis.env"
-    export_env_from_local "$ENV_OUT"
-    info "Transfer privately (not chat). On remote:"
-    info "  $0 finish-remote --env-file /path/to/jarvis.env --image <tag>"
+  export-secrets)
+    [[ -n "$SECRETS_OUT" ]] || SECRETS_OUT="${HOME}/.jarvis/promote/secrets"
+    export_secrets_from_local "$SECRETS_OUT"
+    info "Transfer directory privately (scp -r). Do not paste into chat."
+    info "On remote: $0 finish-remote --secrets-dir $SECRETS_OUT --image <tag>"
     ;;
 
   finish-remote)
-    [[ -n "$ENV_FILE" ]] || die "finish-remote requires --env-file"
-    [[ -f "$ENV_FILE" ]] || die "missing $ENV_FILE"
     [[ -n "$IMAGE" ]] && export JARVIS_HERMES_IMAGE="$IMAGE"
-    finish_remote_here "$ENV_FILE"
+    sdir="$(resolve_secrets_dir)"
+    finish_remote_here "$sdir"
     ;;
 
   promote)
     require_cmd scp
     require_cmd ssh
+    require_cmd tar
     [[ -n "$SSH_TARGET" ]] || die "promote requires --ssh user@host"
     [[ -n "$REMOTE_REPO" ]] || die "promote requires --remote-repo /path/to/agent-tools on host"
     [[ -n "$IMAGE" ]] || die "promote requires --image ghcr.io/…/jarvis-hermes:tag"
@@ -212,46 +324,53 @@ case "$CMD" in
     fi
 
     if [[ "$DRY_RUN" -eq 1 ]]; then
-      info "dry-run: would export .env (or use --env-file), scp to $SSH_TARGET,"
+      info "dry-run: would export .env+auth.json, scp to $SSH_TARGET,"
       info "  ssh finish-remote on $REMOTE_REPO with image=$IMAGE volume=$VOLUME_NAME,"
       info "  then purge local (unless --skip-purge-local)"
       info "PROMOTE dry-run OK"
       exit 0
     fi
 
-    TMP_ENV="$(mktemp "${TMPDIR:-/tmp}/jarvis-promote.XXXXXX.env")"
-    chmod 600 "$TMP_ENV"
+    TMP_DIR="$(mktemp -d "${TMPDIR:-/tmp}/jarvis-promote.XXXXXX")"
+    TMP_TAR="${TMP_DIR}.tgz"
     # shellcheck disable=SC2064
-    trap "shred_file '$TMP_ENV'" EXIT
+    trap "shred_path '$TMP_DIR'; shred_path '$TMP_TAR'" EXIT
 
-    if [[ -n "$ENV_FILE" ]]; then
-      info "using provided --env-file"
-      cp "$ENV_FILE" "$TMP_ENV"
-      chmod 600 "$TMP_ENV"
-      for k in JARVIS_BACKUP_REPO JARVIS_BACKUP_GITHUB_TOKEN; do
-        grep -qE "^${k}=.+" "$TMP_ENV" || die "env file missing $k"
-      done
+    if [[ -n "$SECRETS_DIR" || -n "$ENV_FILE" ]]; then
+      sdir="$(resolve_secrets_dir)"
+      info "using provided secrets from $sdir"
+      mkdir -p "$TMP_DIR"
+      cp "${sdir}/.env" "${TMP_DIR}/.env"
+      [[ -f "${sdir}/auth.json" ]] && cp "${sdir}/auth.json" "${TMP_DIR}/auth.json"
+      chmod 600 "${TMP_DIR}/.env"
+      [[ -f "${TMP_DIR}/auth.json" ]] || {
+        [[ "$ALLOW_MISSING_AUTH" -eq 1 ]] || die "auth.json missing in provided secrets"
+      }
     else
-      export_env_from_local "$TMP_ENV"
+      export_secrets_from_local "$TMP_DIR"
     fi
 
-    REMOTE_ENV="/tmp/jarvis-promote-$$.env"
-    info "=== scp .env → ${SSH_TARGET} (path only; values not logged) ==="
-    scp -o StrictHostKeyChecking=accept-new "$TMP_ENV" "${SSH_TARGET}:${REMOTE_ENV}"
-    ssh "$SSH_TARGET" "chmod 600 '${REMOTE_ENV}'"
+    pack_secrets_tar "$TMP_DIR" "$TMP_TAR"
+    REMOTE_TAR="/tmp/jarvis-promote-$$.tgz"
+    REMOTE_DIR="/tmp/jarvis-promote-$$-secrets"
+    info "=== scp secrets bundle (.env + auth.json) → ${SSH_TARGET} (values not logged) ==="
+    scp -o StrictHostKeyChecking=accept-new "$TMP_TAR" "${SSH_TARGET}:${REMOTE_TAR}"
+    ssh "$SSH_TARGET" "chmod 600 '${REMOTE_TAR}'"
     info "=== remote finish-remote ==="
     # shellcheck disable=SC2029
     ssh "$SSH_TARGET" \
       "set -euo pipefail; cd '${REMOTE_REPO}'; \
+       mkdir -p '${REMOTE_DIR}' && tar -C '${REMOTE_DIR}' -xzf '${REMOTE_TAR}' && chmod 600 '${REMOTE_DIR}/.env' && \
+       ( [ -f '${REMOTE_DIR}/auth.json' ] && chmod 600 '${REMOTE_DIR}/auth.json' || true ); \
        export JARVIS_HERMES_IMAGE='${IMAGE}'; \
        export JARVIS_VOLUME_NAME='${VOLUME_NAME}'; \
        export JARVIS_VOLUME_SPEC='${VOLUME_NAME}'; \
        ./hermes/scripts/jarvis-promote.sh finish-remote \
-         --env-file '${REMOTE_ENV}' --image '${IMAGE}' --volume '${VOLUME_NAME}'; \
-       if command -v shred >/dev/null 2>&1; then shred -u '${REMOTE_ENV}' 2>/dev/null || rm -f '${REMOTE_ENV}'; \
-       else rm -f '${REMOTE_ENV}'; fi"
+         --secrets-dir '${REMOTE_DIR}' --image '${IMAGE}' --volume '${VOLUME_NAME}'; \
+       rm -rf '${REMOTE_DIR}' '${REMOTE_TAR}'"
 
-    shred_file "$TMP_ENV"
+    shred_path "$TMP_DIR"
+    shred_path "$TMP_TAR"
     trap - EXIT
 
     if [[ "$SKIP_PURGE_LOCAL" -eq 1 ]]; then
@@ -263,6 +382,7 @@ case "$CMD" in
 
     info "PROMOTE COMPLETE → ${SSH_TARGET}"
     info "  image=${IMAGE} volume=${VOLUME_NAME}"
+    info "  secrets: .env + auth.json (OAuth) injected"
     info "  next: durable Slack/email smokes; crontab -l | grep jarvis-backup"
     ;;
 esac

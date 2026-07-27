@@ -44,15 +44,16 @@ Mint secrets once on Docker Desktop, validate, then **blind-copy `.env`** and fi
   --image "$IMAGE"
 ```
 
-Promote: export `.env` (never logged) → scp → remote inject into volume → restart → backup init/push → host cron → local purge.
+Promote secrets bundle is **`.env` + `auth.json`** (Grok SuperGrok OAuth is in `auth.json`, not `.env`).  
+Never logged; scp → inject both → restart → backup init/push → host cron → local purge.
 
 Manual halves:
 
 ```bash
-./hermes/scripts/jarvis-promote.sh export-env --out ~/secure/jarvis.env
-# private transfer, then on host:
-./hermes/scripts/jarvis-promote.sh finish-remote --env-file /secure/jarvis.env --image "$IMAGE"
-# or: ./hermes/scripts/jarvis-setup.sh --from-env-file /secure/jarvis.env
+./hermes/scripts/jarvis-promote.sh export-secrets --out ~/secure/jarvis-secrets
+# private transfer of that directory, then on host:
+./hermes/scripts/jarvis-promote.sh finish-remote --secrets-dir /secure/jarvis-secrets --image "$IMAGE"
+# or: ./hermes/scripts/jarvis-setup.sh --from-secrets-dir /secure/jarvis-secrets
 ```
 
 ### Interactive full setup on the durable host only

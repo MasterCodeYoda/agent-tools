@@ -10,7 +10,8 @@
 #
 # Usage:
 #   ./hermes/scripts/jarvis-setup.sh                 # full setup (interactive secrets)
-#   ./hermes/scripts/jarvis-setup.sh --from-env-file PATH  # non-interactive (promote path)
+#   ./hermes/scripts/jarvis-setup.sh --from-env-file PATH       # legacy .env only
+#   ./hermes/scripts/jarvis-setup.sh --from-secrets-dir DIR     # .env + auth.json (preferred)
 #   ./hermes/scripts/jarvis-setup.sh --no-build
 #   ./hermes/scripts/jarvis-setup.sh --skip-cron     # emergency only
 #   ./hermes/scripts/jarvis-setup.sh --check
@@ -35,6 +36,7 @@ NO_BUILD=()
 SKIP_CRON=0
 CHECK_ONLY=0
 FROM_ENV=""
+FROM_SECRETS=""
 
 die() { echo "jarvis-setup: error: $*" >&2; exit 1; }
 info() { echo "jarvis-setup: $*" >&2; }
@@ -45,7 +47,8 @@ while [[ $# -gt 0 ]]; do
     --skip-cron) SKIP_CRON=1; shift ;;
     --check) CHECK_ONLY=1; shift ;;
     --from-env-file) FROM_ENV="${2:-}"; shift 2 ;;
-    -h|--help) sed -n '2,16p' "$0" | sed 's/^# \?//'; exit 0 ;;
+    --from-secrets-dir) FROM_SECRETS="${2:-}"; shift 2 ;;
+    -h|--help) sed -n '2,18p' "$0" | sed 's/^# \?//'; exit 0 ;;
     *) die "unknown option: $1" ;;
   esac
 done
@@ -65,21 +68,22 @@ if [[ "$CHECK_ONLY" -eq 1 ]]; then
   exit 0
 fi
 
-# Non-interactive promote path (blind .env inject)
-if [[ -n "$FROM_ENV" ]]; then
-  [[ -f "$FROM_ENV" ]] || die "missing --from-env-file $FROM_ENV"
+# Non-interactive promote path (blind secrets inject)
+if [[ -n "$FROM_SECRETS" || -n "$FROM_ENV" ]]; then
   [[ -x "$PROMOTE" ]] || die "missing $PROMOTE"
   export JARVIS_HERMES_IMAGE
-  args=(finish-remote --env-file "$FROM_ENV" --image "$JARVIS_HERMES_IMAGE")
-  [[ "$SKIP_CRON" -eq 1 ]] && args=(finish-remote --env-file "$FROM_ENV" --image "$JARVIS_HERMES_IMAGE")
-  # reuse promote finish; skip backup if skip-cron only still runs backup once — map skip-cron to skip-backup false
   if [[ "$SKIP_CRON" -eq 1 ]]; then
-    info "WARNING: --skip-cron: still injects env; run jarvis-install-backup-cron.sh later"
+    info "WARNING: --skip-cron: still injects secrets; run jarvis-install-backup-cron.sh later"
   fi
-  "$PROMOTE" finish-remote --env-file "$FROM_ENV" --image "$JARVIS_HERMES_IMAGE" \
-    $([[ "$SKIP_CRON" -eq 1 ]] && echo --skip-backup || true)
-  if [[ "$SKIP_CRON" -eq 1 ]]; then
-    info "env injected; backup/cron skipped — residual: $CRON_INSTALL && $BACKUP --init"
+  if [[ -n "$FROM_SECRETS" ]]; then
+    [[ -d "$FROM_SECRETS" ]] || die "missing --from-secrets-dir $FROM_SECRETS"
+    "$PROMOTE" finish-remote --secrets-dir "$FROM_SECRETS" --image "$JARVIS_HERMES_IMAGE" \
+      $([[ "$SKIP_CRON" -eq 1 ]] && echo --skip-backup || true)
+  else
+    [[ -f "$FROM_ENV" ]] || die "missing --from-env-file $FROM_ENV"
+    info "warning: --from-env-file is .env only — Grok OAuth needs auth.json; prefer --from-secrets-dir"
+    "$PROMOTE" finish-remote --env-file "$FROM_ENV" --image "$JARVIS_HERMES_IMAGE" --allow-missing-auth \
+      $([[ "$SKIP_CRON" -eq 1 ]] && echo --skip-backup || true)
   fi
   exit 0
 fi
