@@ -37,20 +37,20 @@ jobs:
         run: |
           set -euo pipefail
           TAG=kevin-skills
-          NOTES="Kevin skills dist (dist/hermes) — AGNT-13 / ADR-004
+          NOTES="Kevin skills dist — product=kevin, render dialect=hermes (ADR-005 / ADR-004)
 
           Rolling package updated on each publish from \`main\`.
 
           **Download (stable):**
           https://github.com/${{ github.repository }}/releases/download/${TAG}/kevin-skills.tar.gz
 
-          **Install (interim):**
+          **Install:**
           \`\`\`bash
-          tools/install-kevin-skills.sh --from-url
-          # or: KEVIN_SKILLS_ROOT=~/.kevin/skills tools/install-kevin-skills.sh --from-file dist/kevin-skills/kevin-skills.tar.gz
+          kevin update
+          # or: tools/install-kevin-skills.sh --from-url
           \`\`\`
 
-          Manifest: see \`manifest.json\` asset (git SHA, created_at, skill_count).
+          Manifest: \`publish_agent=kevin\`, \`render_dialect=hermes\`, git SHA, skill_count.
           "
           if gh release view "$TAG" >/dev/null 2>&1; then
             gh release upload "$TAG" \

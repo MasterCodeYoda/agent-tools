@@ -647,8 +647,12 @@ cmd_doctor() {
         soft_note "revision:"
         sed 's/^/         /' "${SKILLS_ROOT}/.agent-tools-revision"
       fi
-      if ! grep -q 'publish-agent=hermes' "${SKILLS_ROOT}/.agent-tools-revision" 2>/dev/null; then
-        warn "revision lacks publish-agent=hermes"
+      if grep -qE '^publish-agent=kevin$' "${SKILLS_ROOT}/.agent-tools-revision" 2>/dev/null; then
+        ok "publish-agent=kevin (product pack)"
+      elif grep -qE '^publish-agent=hermes$' "${SKILLS_ROOT}/.agent-tools-revision" 2>/dev/null; then
+        soft_note "publish-agent=hermes (legacy stamp; next kevin update → kevin)"
+      else
+        warn "revision lacks publish-agent=kevin (or legacy hermes)"
       fi
     else
       fail_hard "missing skills revision — run: kevin setup / kevin update"

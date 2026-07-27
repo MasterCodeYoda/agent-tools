@@ -1,6 +1,6 @@
 # kevin-hermes Docker pack
 
-Image **`kevin-hermes`**, process skills from **`dist/hermes`** (baked at build).
+Image **`kevin-hermes`**, process skills from hermes **render dialect** (`dist/hermes`) stamped **product=kevin** at build (ADR-005).
 
 ## Dev (this monorepo)
 

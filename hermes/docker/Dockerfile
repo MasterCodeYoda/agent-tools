@@ -1,10 +1,10 @@
 # kevin-hermes — Kevin primary instance image
-# Process skills: baked from dist/hermes after publish (never raw src/).
+# Process skills: hermes *render dialect* → product stamp kevin (ADR-005). Never raw src/.
 #
 # Build (from agent-tools repo root):
 #   docker build -f hermes/docker/Dockerfile -t kevin-hermes:local .
 
-# ── publish: hermes dist only ───────────────────────────────────────
+# ── publish: hermes dialect, product=kevin revision ─────────────────
 FROM debian:bookworm-slim AS publish
 RUN apt-get update \
   && apt-get install -y --no-install-recommends bash ca-certificates git \
@@ -14,7 +14,7 @@ COPY . .
 RUN bash tools/publish-skills.sh --agents hermes \
   && test -d dist/hermes/skills \
   && test -n "$(ls -A dist/hermes/skills)" \
-  && printf 'agent-tools-rev=%s\ninstalled-at=%s\npublish-agent=hermes\n' \
+  && printf 'agent-tools-rev=%s\ninstalled-at=%s\npublish-agent=kevin\nrender-dialect=hermes\n' \
        "$(git rev-parse HEAD 2>/dev/null || echo unknown)" \
        "$(date -u +%Y-%m-%dT%H:%M:%SZ)" \
        > dist/hermes/skills/.agent-tools-revision

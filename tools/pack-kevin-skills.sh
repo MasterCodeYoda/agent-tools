@@ -1,11 +1,14 @@
 #!/usr/bin/env bash
 #
-# Pack dist/hermes skills into a fetchable Kevin skills artifact.
+# Pack Kevin product skills artifact (dialect × product — ADR-005).
+#
+#   dialect: publish-skills --agents hermes → dist/hermes/skills  (Hermes loader shape)
+#   product: this pack → dist/kevin-skills/ + revision publish-agent=kevin
 #
 # Usage:
 #   tools/pack-kevin-skills.sh [--no-publish] [--out-dir DIR]
 #
-# Default: run publish-skills for hermes, then pack into dist/kevin-skills/.
+# Default: publish hermes dialect, then pack into dist/kevin-skills/.
 # Outputs: kevin-skills.tar.gz, kevin-skills.sha256, manifest.json
 #
 set -euo pipefail
@@ -39,13 +42,13 @@ done
 [[ -x "$PUBLISH" ]] || die "publisher not executable: $PUBLISH"
 
 if [[ "$DO_PUBLISH" -eq 1 ]]; then
-  info "publishing hermes skills…"
+  info "publishing render dialect hermes → dist/hermes/skills…"
   env -u AGENT_TOOLS_SRC_ROOT -u AGENT_TOOLS_DIST_ROOT \
     "$PUBLISH" --agents hermes --quiet \
     || die "publish-skills failed"
 fi
 
-[[ -d "$DIST_HERMES" ]] || die "missing hermes skills tree: $DIST_HERMES"
+[[ -d "$DIST_HERMES" ]] || die "missing hermes dialect tree: $DIST_HERMES"
 skill_count="$(find "$DIST_HERMES" -mindepth 1 -maxdepth 1 -type d | wc -l | tr -d ' ')"
 [[ "$skill_count" -gt 0 ]] || die "no skill directories under $DIST_HERMES"
 
@@ -67,7 +70,8 @@ cp -a "${DIST_HERMES}/." "${PKG}/skills/"
 {
   echo "agent-tools-rev=${git_sha}"
   echo "installed-at=${created_at}"
-  echo "publish-agent=hermes"
+  echo "publish-agent=kevin"
+  echo "render-dialect=hermes"
 } > "${PKG}/.agent-tools-revision"
 # Also inside skills tree for consumers that only mount skills/
 cp "${PKG}/.agent-tools-revision" "${PKG}/skills/.agent-tools-revision"
@@ -80,7 +84,8 @@ cat > "$manifest" <<EOF
   "name": "kevin-skills",
   "git_sha": "${git_sha}",
   "created_at": "${created_at}",
-  "publish_agent": "hermes",
+  "publish_agent": "kevin",
+  "render_dialect": "hermes",
   "skill_count": ${skill_count}
 }
 EOF

@@ -26,7 +26,8 @@ gives one stable URL while the monorepo remains SoT.
 
 ## How to apply
 
-1. Pack with `tools/pack-kevin-skills.sh` (publish hermes → tar + sha256 + manifest).
+1. Pack with `tools/pack-kevin-skills.sh` (dialect hermes → product kevin stamp → tar + sha256 + manifest).
 2. CI: `.github/workflows/kevin-skills-dist.yml` upserts release assets.
+3. Revision: `publish-agent=kevin`, `render-dialect=hermes` (ADR-005) — not host-named product.
 3. Install interim: `tools/install-kevin-skills.sh --from-url` → `~/.kevin/skills` (copy).
 4. Do **not** document `setup.sh` → `~/.hermes/skills` as the Kevin product path.

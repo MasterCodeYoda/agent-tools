@@ -39,7 +39,9 @@ DIST_ROOT="${AGENT_TOOLS_DIST_ROOT:-${REPO_ROOT}/dist}"
 # Directories under src/ that are not skills and should be ignored during publishing
 SKIP_DIRS="pdf-build"
 
-# factory = Factory coding agent (~/.factory). hermes = Hermes host for Kevin etc. (~/.hermes).
+# Each name is a *render dialect* (skill loader shape), not a product identity.
+# factory = Factory coding agent (~/.factory). hermes = Hermes loader dialect
+# (Kevin product pack is built *from* hermes dialect — see ADR-005 / pack-kevin-skills).
 DEFAULT_AGENTS="claude,grok,factory,hermes,codex,opencode"
 
 # Leaf skills (no sub-skills) that should be emitted only as direct commands for OpenCode

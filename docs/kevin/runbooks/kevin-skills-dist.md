@@ -2,13 +2,14 @@
 
 **Status:** Active — AGNT-13  
 **Decisions:** [ADR-004](../decisions/004-workstation-cli-and-skills-distribution.md)  
-**Package SoT:** monorepo `src/` → `tools/publish-skills.sh --agents hermes` → pack
+**Package SoT:** monorepo `src/` → publish **dialect** `hermes` → pack **product** `kevin`  
+**Axes:** [ADR-005](../decisions/005-skills-dialect-vs-product.md)
 
 ## Intent
 
 Workstation Kevin installs process skills from a **published tarball**, not by cloning this monorepo and not via multi-agent `./setup.sh` → `~/.hermes/skills`.
 
-Isolated Kevin continues to bake the same `dist/hermes` family into the image (`/opt/kevin/skills`).
+Isolated Kevin bakes the same **product** skills (hermes dialect tree, `publish-agent=kevin`) into the image (`/opt/kevin/skills`).
 
 ## Stable download URL
 
@@ -30,8 +31,8 @@ Channel: **rolling** GitHub Release tag `kevin-skills` (updated on each `main` p
 
 ```text
 kevin-skills/
-  skills/                   # dist/hermes/skills contents
-  .agent-tools-revision     # agent-tools-rev, installed-at, publish-agent=hermes
+  skills/                   # hermes dialect tree (from dist/hermes/skills)
+  .agent-tools-revision     # publish-agent=kevin, render-dialect=hermes
   manifest.json
 ```
 
@@ -41,9 +42,10 @@ kevin-skills/
 # From agent-tools checkout
 ./tools/pack-kevin-skills.sh
 # → dist/kevin-skills/kevin-skills.tar.gz
+# publish-agent=kevin · render-dialect=hermes
 ```
 
-`--no-publish` reuses an existing `dist/hermes/skills` tree.
+`--no-publish` reuses an existing `dist/hermes/skills` dialect tree.
 
 ## Install into Kevin skills root
 
@@ -73,7 +75,7 @@ Profile `kevin` must set `external_dirs` to this root (`kevin setup` does this).
 Workflow: [`.github/workflows/kevin-skills-dist.yml`](../../../.github/workflows/kevin-skills-dist.yml)
 
 - Trigger: push to `main`, `workflow_dispatch`
-- Job: publish hermes → pack → upsert release `kevin-skills`
+- Job: publish dialect hermes → pack product kevin → upsert release `kevin-skills`
 
 ## What not to use for Kevin product path
 

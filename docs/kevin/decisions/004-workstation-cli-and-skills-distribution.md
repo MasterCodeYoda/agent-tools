@@ -46,8 +46,8 @@ Profile `kevin` must set `external_dirs` to the **Kevin skills root** (CLI sets 
 
 | Piece | Policy |
 |-------|--------|
-| **Source** | `src/` → `tools/publish-skills.sh --agents hermes` → `dist/hermes` |
-| **Package** | Tarball/zip of skills tree + `.agent-tools-revision` (and minimal manifest: git SHA, created-at) |
+| **Source** | `src/` → publish **dialect** `hermes` → `dist/hermes` → pack **product** `kevin` (see [ADR-005](./005-skills-dialect-vs-product.md)) |
+| **Package** | Tarball of skills tree + `.agent-tools-revision` (`publish-agent=kevin`, `render-dialect=hermes`) + manifest |
 | **Publish** | GitHub-hosted fetchable artifact on green `main` (Release asset and/or workflow artifact URL pattern—exact channel chosen at implement time; prefer stable download URL for CLI) |
 | **Consume** | `kevin setup` / `kevin update` download → extract → copy into Kevin skills root |
 | **SoT** | Monorepo remains SoT; artifact is derived (same as Docker bake) |
