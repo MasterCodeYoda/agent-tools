@@ -19,7 +19,7 @@
 | **Adaptive state backup** | Secrets + host cron | `JARVIS_BACKUP_REPO`, `JARVIS_BACKUP_GITHUB_TOKEN` (**write one private repo only**) | Durable full setup | Missing on `jarvis-setup` / push |
 | **OMG GitHub read** | Secrets (runtime) | `JARVIS_GITHUB_READ_TOKEN` (**read selected repos; NOT backup token**) | CoS familiarity / digests | Missing when integrations required |
 | **Linear read** | Secrets (runtime) | `JARVIS_LINEAR_API_KEY` | Correlate issues with research | Missing when integrations required |
-| **Jira read** | Secrets (runtime) | `JARVIS_JIRA_BASE_URL`, `JARVIS_JIRA_EMAIL`, `JARVIS_JIRA_API_TOKEN` | Correlate issues with research | Missing when integrations required |
+| **Jira read** | Secrets (runtime) | `JARVIS_JIRA_BASE_URL`, `JARVIS_JIRA_EMAIL`, `JARVIS_JIRA_API_TOKEN` | Optional single-site correlate | Optional — multi-account not modeled yet; skip for v1 |
 
 ### Future capabilities (declare before build)
 
@@ -74,7 +74,7 @@ Collects, as **required** for durable install:
 2. Backup repo + write-scoped GitHub PAT  
 3. OMG GitHub **read** token  
 4. Linear API key  
-5. Jira base URL + email + API token  
+5. Jira (optional — multi-account deferred)
 
 Then: first adaptive-state backup + nightly host cron.
 

@@ -4,7 +4,7 @@
 #
 #   --in-container
 #   --require-backup          full setup: backup PAT+repo required
-#   --require-integrations    full setup: GitHub read + Linear + Jira required
+#   --require-integrations    full setup: GitHub read + Linear required (Jira optional)
 #   --check
 #
 set -euo pipefail
@@ -298,29 +298,23 @@ else
   fi
 fi
 
-section "5) Research correlation — Jira Cloud READ"
+section "5) Research correlation — Jira Cloud READ (optional)"
 howto <<'EOF'
 Purpose: correlate digests/research with Jira issues (read-only usage).
 
-Mint:
+OPTIONAL for now — multi-account Jira setups are not modeled yet; leave unconfigured
+until we support account selection. Linear + GitHub read cover issue correlation for v1.
+
+If you still want a single-account Jira later:
   1. API token: https://id.atlassian.com/manage-profile/security/api-tokens → Create API token
-     Label e.g. jarvis-cos-read. Copy once.
-  2. Base URL: your site, e.g. https://YOUR-DOMAIN.atlassian.net  (no path suffix)
-  3. Email: the Atlassian account email that owns the token
-  4. Product access: that account needs browse permission on the projects Jarvis should see.
+  2. Base URL: https://YOUR-DOMAIN.atlassian.net
+  3. Email: Atlassian account that owns the token
 EOF
-if [[ "$REQUIRE_INTEGRATIONS" -eq 1 ]]; then
+# Always optional (including full setup) — multi-account needs a later design
+if ask_yn "Configure Jira read now? (recommended: n until multi-account support)" "n"; then
   ask_val JARVIS_JIRA_BASE_URL "JARVIS_JIRA_BASE_URL (https://….atlassian.net)" 0
   ask_val JARVIS_JIRA_EMAIL "JARVIS_JIRA_EMAIL" 0
   ask_val JARVIS_JIRA_API_TOKEN "JARVIS_JIRA_API_TOKEN" 1
-  [[ -n "${CUR[JARVIS_JIRA_BASE_URL]:-}" && -n "${CUR[JARVIS_JIRA_EMAIL]:-}" && -n "${CUR[JARVIS_JIRA_API_TOKEN]:-}" ]] \
-    || die "Jira URL + email + API token required — mint with steps above"
-else
-  if ask_yn "Configure Jira read now?" "y"; then
-    ask_val JARVIS_JIRA_BASE_URL "JARVIS_JIRA_BASE_URL" 0
-    ask_val JARVIS_JIRA_EMAIL "JARVIS_JIRA_EMAIL" 0
-    ask_val JARVIS_JIRA_API_TOKEN "JARVIS_JIRA_API_TOKEN" 1
-  fi
 fi
 
 # ── Optional channels ──────────────────────────────────────────────
@@ -362,8 +356,7 @@ if ask_yn "Write .env now?" "y"; then
   fi
   if [[ "$REQUIRE_INTEGRATIONS" -eq 1 ]]; then
     has JARVIS_GITHUB_READ_TOKEN && has JARVIS_LINEAR_API_KEY \
-      && has JARVIS_JIRA_BASE_URL && has JARVIS_JIRA_EMAIL && has JARVIS_JIRA_API_TOKEN \
-      || die "research integration fields missing after write"
+      || die "research integration fields missing after write (GitHub read + Linear required; Jira optional)"
   fi
   if has JARVIS_BACKUP_GITHUB_TOKEN && has JARVIS_GITHUB_READ_TOKEN; then
     if [[ "${CUR[JARVIS_BACKUP_GITHUB_TOKEN]}" == "${CUR[JARVIS_GITHUB_READ_TOKEN]}" ]]; then

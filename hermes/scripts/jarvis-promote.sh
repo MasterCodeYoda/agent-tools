@@ -108,11 +108,12 @@ export_secrets_from_local() {
   for k in JARVIS_BACKUP_REPO JARVIS_BACKUP_GITHUB_TOKEN; do
     grep -qE "^${k}=.+" "${dest_dir}/.env" || die "exported .env missing required $k"
   done
-  for k in JARVIS_GITHUB_READ_TOKEN JARVIS_LINEAR_API_KEY JARVIS_JIRA_BASE_URL JARVIS_JIRA_EMAIL JARVIS_JIRA_API_TOKEN; do
+  for k in JARVIS_GITHUB_READ_TOKEN JARVIS_LINEAR_API_KEY; do
     if ! grep -qE "^${k}=.+" "${dest_dir}/.env"; then
       info "warning: $k not set in lab .env"
     fi
   done
+  # Jira is optional (multi-account deferred)
 }
 
 # Inject .env + auth.json from a secrets directory into the Docker volume
