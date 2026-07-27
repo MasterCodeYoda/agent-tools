@@ -15,6 +15,7 @@ corpus (evidence that the skill text is wrong/missing) before a proposal is writ
 | Yield glance | `.agent-tools/runs/yield.md` (from `/work:maintain`) |
 | Process memory | `.agent-tools/memory/entries/*` with `type: process` and `related:` run_ids |
 | Soft-checks | thrash_bound, review theater, missing compound (session-state) |
+| Jarvis adaptive-state backup | Private git `state/` digests / tracking notes from durable Jarvis host ([jarvis-state-backup.md](../../../../docs/agents/runbooks/jarvis-state-backup.md)) — observation only; promote into `src/` via evolve/import, never auto-merge |
 
 ## Seed shape (include in gap report)
 
