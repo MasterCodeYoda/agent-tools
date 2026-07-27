@@ -87,10 +87,10 @@ export_secrets_from_local() {
   chmod 600 "${dest_dir}/.env"
   [[ -f "${dest_dir}/auth.json" ]] && chmod 600 "${dest_dir}/auth.json"
 
-  grep -qE '^[A-Za-z_][A-Za-z0-9_]*=' "${dest_dir}/.env" || die "exported .env does not look like env file"
+  # Hermes may ship a comment-only .env until the secrets wizard writes keys
   local n
   n="$(grep -cE '^[A-Za-z_][A-Za-z0-9_]*=' "${dest_dir}/.env" || true)"
-  info "exported .env ($n keys) → ${dest_dir}/.env (values not shown)"
+  info "exported .env ($n key line(s)) → ${dest_dir}/.env (values not shown)"
 
   if [[ -f "${dest_dir}/auth.json" ]]; then
     # structure check only — no token dump
