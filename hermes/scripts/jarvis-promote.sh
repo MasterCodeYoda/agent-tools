@@ -211,6 +211,14 @@ case "$CMD" in
       fi
     fi
 
+    if [[ "$DRY_RUN" -eq 1 ]]; then
+      info "dry-run: would export .env (or use --env-file), scp to $SSH_TARGET,"
+      info "  ssh finish-remote on $REMOTE_REPO with image=$IMAGE volume=$VOLUME_NAME,"
+      info "  then purge local (unless --skip-purge-local)"
+      info "PROMOTE dry-run OK"
+      exit 0
+    fi
+
     TMP_ENV="$(mktemp "${TMPDIR:-/tmp}/jarvis-promote.XXXXXX.env")"
     chmod 600 "$TMP_ENV"
     # shellcheck disable=SC2064
@@ -229,23 +237,19 @@ case "$CMD" in
 
     REMOTE_ENV="/tmp/jarvis-promote-$$.env"
     info "=== scp .env → ${SSH_TARGET} (path only; values not logged) ==="
-    if [[ "$DRY_RUN" -eq 1 ]]; then
-      info "dry-run: would scp + ssh finish-remote on $SSH_TARGET"
-    else
-      scp -o StrictHostKeyChecking=accept-new "$TMP_ENV" "${SSH_TARGET}:${REMOTE_ENV}"
-      ssh "$SSH_TARGET" "chmod 600 '${REMOTE_ENV}'"
-      info "=== remote finish-remote ==="
-      # shellcheck disable=SC2029
-      ssh "$SSH_TARGET" \
-        "set -euo pipefail; cd '${REMOTE_REPO}'; \
-         export JARVIS_HERMES_IMAGE='${IMAGE}'; \
-         export JARVIS_VOLUME_NAME='${VOLUME_NAME}'; \
-         export JARVIS_VOLUME_SPEC='${VOLUME_NAME}'; \
-         ./hermes/scripts/jarvis-promote.sh finish-remote \
-           --env-file '${REMOTE_ENV}' --image '${IMAGE}' --volume '${VOLUME_NAME}'; \
-         if command -v shred >/dev/null 2>&1; then shred -u '${REMOTE_ENV}' 2>/dev/null || rm -f '${REMOTE_ENV}'; \
-         else rm -f '${REMOTE_ENV}'; fi"
-    fi
+    scp -o StrictHostKeyChecking=accept-new "$TMP_ENV" "${SSH_TARGET}:${REMOTE_ENV}"
+    ssh "$SSH_TARGET" "chmod 600 '${REMOTE_ENV}'"
+    info "=== remote finish-remote ==="
+    # shellcheck disable=SC2029
+    ssh "$SSH_TARGET" \
+      "set -euo pipefail; cd '${REMOTE_REPO}'; \
+       export JARVIS_HERMES_IMAGE='${IMAGE}'; \
+       export JARVIS_VOLUME_NAME='${VOLUME_NAME}'; \
+       export JARVIS_VOLUME_SPEC='${VOLUME_NAME}'; \
+       ./hermes/scripts/jarvis-promote.sh finish-remote \
+         --env-file '${REMOTE_ENV}' --image '${IMAGE}' --volume '${VOLUME_NAME}'; \
+       if command -v shred >/dev/null 2>&1; then shred -u '${REMOTE_ENV}' 2>/dev/null || rm -f '${REMOTE_ENV}'; \
+       else rm -f '${REMOTE_ENV}'; fi"
 
     shred_file "$TMP_ENV"
     trap - EXIT
@@ -254,11 +258,7 @@ case "$CMD" in
       info "skip local purge — purge lab when durable is confirmed: jarvis-local-smoke.sh --purge"
     else
       info "=== purge local disposable instance ==="
-      if [[ "$DRY_RUN" -eq 1 ]]; then
-        info "dry-run: would purge local"
-      else
-        "$SMOKE" --purge || info "local purge non-zero (ok if already down)"
-      fi
+      "$SMOKE" --purge || info "local purge non-zero (ok if already down)"
     fi
 
     info "PROMOTE COMPLETE → ${SSH_TARGET}"
