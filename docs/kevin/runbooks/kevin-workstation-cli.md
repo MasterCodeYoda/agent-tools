@@ -58,6 +58,17 @@ kevin update
 kevin update --force-profile
 ```
 
+### Channel check (stale skills)
+
+Published skills live on the rolling release tag `kevin-skills` (CI on green `main`). On **`kevin start`** / bare `kevin`, the CLI compares local `~/.kevin/skills/.agent-tools-revision` to the channel `manifest.json`. If they differ:
+
+- **TTY:** prompt `update skills from channel now? [Y/n]` → runs `kevin update` on yes  
+- **Non-TTY:** warn only (`run: kevin update`)  
+- **`KEVIN_SKILLS_AUTO_UPDATE=1`:** update without prompt  
+- **`KEVIN_SKILLS_AUTO_CHECK=0`:** skip check  
+
+`kevin doctor` reports **skills channel current / stale** under its channel section.
+
 ## Credentials (use kevin — not raw hermes)
 
 You do **not** need a profile `.env` if OAuth / pooled login already covers your default model.

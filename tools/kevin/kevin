@@ -26,6 +26,9 @@ INSTALLED_CONFIG="${PROFILE_HOME}/config.yaml"
 PROFILE_ENV="${PROFILE_HOME}/.env"
 PROFILE_AUTH="${PROFILE_HOME}/auth.json"
 
+# Rolling skills channel (AGNT-13) — manifest next to tarball on release tag kevin-skills
+DEFAULT_MANIFEST_URL="${KEVIN_SKILLS_MANIFEST_URL:-https://github.com/MasterCodeYoda/agent-tools/releases/download/kevin-skills/manifest.json}"
+
 die() { echo "${CMD_NAME}: error: $*" >&2; exit 1; }
 info() { echo "${CMD_NAME}: $*" >&2; }
 ok() { echo "  OK   $*"; }
@@ -65,8 +68,12 @@ Environment
   KEVIN_SKILLS_ROOT   default $KEVIN_HOME/skills
   KEVIN_PROFILE_SRC   staged profile distribution
   KEVIN_SKILLS_URL    skills tarball URL override
+  KEVIN_SKILLS_MANIFEST_URL  channel manifest (default: release manifest.json)
+  KEVIN_SKILLS_AUTO_CHECK    0 to skip channel check on start (default 1)
+  KEVIN_SKILLS_AUTO_UPDATE   1 to update without prompt when stale (default 0)
 
 Skills install into the Kevin skills root (not multi-agent setup.sh → ~/.hermes/skills).
+On start, kevin checks the published skills channel and offers kevin update when stale.
 EOF
 }
 
@@ -293,6 +300,129 @@ auth_summary_lines() {
   fi
   # Show provider headers only (e.g. "anthropic (1 credentials):")
   echo "$listing" | grep -E '^[a-zA-Z0-9_-]+[[:space:]]*\(' | sed 's/^/         /' || true
+}
+
+# --- skills channel (published release vs local install) ----------------------
+
+local_skills_rev() {
+  if [[ -f "${SKILLS_ROOT}/.agent-tools-revision" ]]; then
+    grep -E '^agent-tools-rev=' "${SKILLS_ROOT}/.agent-tools-revision" 2>/dev/null \
+      | head -1 | cut -d= -f2- || true
+  fi
+}
+
+# Prints remote git_sha from channel manifest, or empty on failure.
+fetch_channel_git_sha() {
+  local url="${KEVIN_SKILLS_MANIFEST_URL:-$DEFAULT_MANIFEST_URL}"
+  local body
+  if ! command -v curl >/dev/null 2>&1; then
+    return 0
+  fi
+  body="$(curl -fsSL --max-time 8 "$url" 2>/dev/null)" || return 0
+  if command -v python3 >/dev/null 2>&1; then
+    printf '%s' "$body" | python3 -c 'import json,sys
+try:
+  print(json.load(sys.stdin).get("git_sha",""))
+except Exception:
+  pass' 2>/dev/null || true
+  return 0
+  fi
+  # minimal fallback
+  printf '%s' "$body" | sed -n 's/.*"git_sha"[[:space:]]*:[[:space:]]*"\([^"]*\)".*/\1/p' | head -1
+}
+
+# Sets globals: CHANNEL_STATUS=current|stale|unknown  CHANNEL_LOCAL  CHANNEL_REMOTE
+# current = local matches published channel; stale = both known and differ; unknown = can't tell
+assess_skills_channel() {
+  CHANNEL_STATUS="unknown"
+  CHANNEL_LOCAL="$(local_skills_rev)"
+  CHANNEL_REMOTE="$(fetch_channel_git_sha)"
+  CHANNEL_LOCAL="${CHANNEL_LOCAL:-}"
+  CHANNEL_REMOTE="${CHANNEL_REMOTE:-}"
+
+  if [[ -z "$CHANNEL_LOCAL" || -z "$CHANNEL_REMOTE" || "$CHANNEL_REMOTE" == "unknown" ]]; then
+    CHANNEL_STATUS="unknown"
+    return 0
+  fi
+  # prefix match (full or abbreviated shas)
+  if [[ "$CHANNEL_LOCAL" == "$CHANNEL_REMOTE" \
+     || "$CHANNEL_LOCAL" == "$CHANNEL_REMOTE"* \
+     || "$CHANNEL_REMOTE" == "$CHANNEL_LOCAL"* ]]; then
+    CHANNEL_STATUS="current"
+  else
+    CHANNEL_STATUS="stale"
+  fi
+}
+
+# Doctor / start messaging. Returns 0 always (soft).
+report_skills_channel() {
+  # mode: doctor | start
+  local mode="${1:-doctor}"
+  assess_skills_channel
+  case "$CHANNEL_STATUS" in
+    current)
+      ok "skills channel current (${CHANNEL_LOCAL:0:12}…)"
+      ;;
+    stale)
+      warn "skills channel has a different package"
+      soft_note "local:   ${CHANNEL_LOCAL:0:12}…"
+      soft_note "channel: ${CHANNEL_REMOTE:0:12}…"
+      soft_note "sync:    kevin update"
+      ;;
+    *)
+      if [[ -n "$CHANNEL_LOCAL" ]]; then
+        soft_note "skills channel check skipped or offline (local ${CHANNEL_LOCAL:0:12}…)"
+      else
+        soft_note "skills channel check skipped (no local revision)"
+      fi
+      ;;
+  esac
+  if [[ "$mode" == "start" && "$CHANNEL_STATUS" == "stale" ]]; then
+    return 2
+  fi
+  return 0
+}
+
+# Interactive (or auto) offer to pull channel. No-op if not stale / check disabled.
+maybe_offer_skills_update() {
+  if [[ "${KEVIN_SKILLS_AUTO_CHECK:-1}" == "0" ]]; then
+    return 0
+  fi
+  assess_skills_channel
+  if [[ "$CHANNEL_STATUS" != "stale" ]]; then
+    if [[ "$CHANNEL_STATUS" == "current" ]]; then
+      info "skills channel current (${CHANNEL_LOCAL:0:12}…)"
+    fi
+    return 0
+  fi
+
+  warn "installed skills differ from published channel"
+  info "  local:   ${CHANNEL_LOCAL}"
+  info "  channel: ${CHANNEL_REMOTE}"
+
+  if [[ "${KEVIN_SKILLS_AUTO_UPDATE:-0}" == "1" ]]; then
+    info "KEVIN_SKILLS_AUTO_UPDATE=1 — running kevin update"
+    cmd_update
+    return 0
+  fi
+
+  # Prompt only on a real TTY
+  if [[ ! -t 0 || ! -t 1 ]]; then
+    info "run: kevin update   # then re-launch"
+    return 0
+  fi
+
+  local ans
+  printf '%s' "kevin: update skills from channel now? [Y/n] " >&2
+  read -r ans || ans="n"
+  case "${ans:-Y}" in
+    ""|y|Y|yes|YES)
+      cmd_update
+      ;;
+    *)
+      info "skipped — run kevin update when ready"
+      ;;
+  esac
 }
 
 # --- profile / skills bootstrap ----------------------------------------------
@@ -549,6 +679,14 @@ cmd_doctor() {
   fi
 
   echo
+  echo "Skills channel (published release vs local)"
+  echo "-------------------------------------------"
+  report_skills_channel doctor || true
+  if [[ "${CHANNEL_STATUS:-}" == "stale" ]]; then
+    soft_note "after CI pack of main: kevin update pulls the live bundle"
+  fi
+
+  echo
   echo "Credentials (soft — needed for chat, not for stack install)"
   echo "-----------------------------------------------------------"
 
@@ -696,6 +834,9 @@ cmd_start() {
     info "attach credentials: kevin auth add ${provider} --type oauth"
     info "                or: kevin model"
   fi
+
+  # Offer channel sync before session (TTY prompt / AUTO_UPDATE)
+  maybe_offer_skills_update
 
   cd "$project" || die "cannot cd to ${project}"
   # Hint identity envelope for work-family hosts (runs-ledger capture)
