@@ -36,13 +36,13 @@ With a second Hermes-based product identity (**Jarvis**) that deliberately does 
 ### Non-Kevin Hermes
 
 - Multi-agent `./setup.sh` install into `~/.hermes/skills` remains a **dialect=hermes** maintainer path — **not** the Kevin product channel.  
-- **Jarvis** (Hermes profile, non-factory): **no** process pack as product path. Profile/Docker only until an explicit jarvis product pack is designed.
+- **Jarvis** (Hermes profile, non-factory): **no** process pack as product path. **Jarvis product pack** is implemented separately (`tools/pack-jarvis-skills.sh`, stamp `publish-agent=jarvis`, image bake `/opt/jarvis/skills`). Kevin pack **filters out** `jarvis*` skill dirs so products do not cross-contaminate.
 
 ### Explicit non-goals (this decision)
 
 - Renaming `dist/hermes` → `dist/kevin` (optional later; high churn).  
 - Changing Hermes markup rules.  
-- Implementing a Jarvis skill pack.
+- Loading Kevin process pack onto Jarvis (still forbidden).
 
 ---
 

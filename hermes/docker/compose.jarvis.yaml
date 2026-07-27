@@ -1,0 +1,25 @@
+# Jarvis CoS — single remote instance (one data volume)
+#
+#   export JARVIS_HERMES_DATA=$HOME/.jarvis/hermes-data
+#   docker build -f hermes/docker/Dockerfile.jarvis -t jarvis-hermes:local .
+#   export JARVIS_HERMES_IMAGE=jarvis-hermes:local
+#   docker compose -f hermes/docker/compose.jarvis.yaml up -d
+#
+# No product-repo mount required. Terminal is ops-only; talk via Slack; digest via email.
+# Topology: docs/kevin/runbooks/multi-agent-config-lanes.md
+
+name: jarvis-hermes
+
+services:
+  jarvis:
+    image: ${JARVIS_HERMES_IMAGE:-ghcr.io/mastercodeyoda/jarvis-hermes:main}
+    container_name: jarvis-hermes
+    restart: unless-stopped
+    environment:
+      HERMES_UID: ${HERMES_UID:-1000}
+      HERMES_GID: ${HERMES_GID:-1000}
+      HERMES_HOME: /opt/data
+    volumes:
+      # Single production home: secrets, sessions, adaptive state, installed profile
+      - ${JARVIS_HERMES_DATA:-${HOME}/.jarvis/hermes-data}:/opt/data
+    # Socket Mode Slack needs no published ports.

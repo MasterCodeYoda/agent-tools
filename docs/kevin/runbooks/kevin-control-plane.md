@@ -114,20 +114,26 @@ If a provider API later exposes remaining quota cleanly, adapters can attach wit
 
 ## 6. Config-as-code sync story
 
+**Path of record (Kevin + Jarvis):** [multi-agent-config-lanes.md](./multi-agent-config-lanes.md) — three lanes (policy / secrets & bindings / adaptive state), promotion rules, unattended policy-mutation deny, and **instance topology** (Kevin dual install OK; Jarvis single remote only).
+
 ```text
-git: hermes/profile/     = policy SoT (versioned)
-         │
-         ▼  ./scripts/apply-kevin-profile.sh [--force]
-~/.hermes/profiles/kevin/  = live profile (secrets + optional UI overrides)
-         │
-         ▼  dashboard / hermes config edit
-local edits (not auto-exported to git)
+git: hermes/profile/     = policy SoT (versioned)     ─┐
+         │                                              │  three-lane doctrine
+         ▼  ./hermes/scripts/apply-kevin-profile.sh     │
+~/.hermes/profiles/kevin/  = live profile               │
+  · secrets (.env, auth.json)     preserved on apply    │
+  · adaptive state (if any)       preserved on apply    │
+  · policy (config.yaml)          reset only with       │
+         │                          --force-config      │
+         ▼  dashboard / hermes config edit              │
+local policy edits = experiments until promoted to git ─┘
 ```
 
 | Direction | How |
 |-----------|-----|
-| **SoT → live** | Edit `hermes/profile/*` in git → `./scripts/apply-kevin-profile.sh --force` (Hermes preserves `.env` / `auth.json`) |
-| **Live → SoT** | Manual: copy intentional policy deltas into git; **never** copy secrets |
+| **SoT → live (policy)** | Edit `hermes/profile/*` in git → apply (`--force` / `--force-config` when resetting policy) |
+| **Secrets** | Live profile only; apply **preserves**; never commit values — [kevin-auth-packaging.md](./kevin-auth-packaging.md) |
+| **Live policy → SoT** | Manual promote via PR only; **never** copy secrets |
 | **UI-only tweak** | OK for experiments; re-apply from git before treating policy as shared |
 
 **Rule:** UI must not become the only SoT. Control plane substrate is not continuity storage for process.

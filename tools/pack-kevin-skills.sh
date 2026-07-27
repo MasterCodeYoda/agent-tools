@@ -67,6 +67,29 @@ mkdir -p "${PKG}/skills"
 # Copy tree (no symlinks into package — portable install)
 cp -a "${DIST_HERMES}/." "${PKG}/skills/"
 
+# Product isolation (ADR-005 / multi-agent lanes): never ship Jarvis CoS skills in Kevin pack.
+# Publish emits full hermes dialect; packs stamp product. See tools/pack-jarvis-skills.sh.
+removed=0
+while IFS= read -r -d '' d; do
+  base="$(basename "$d")"
+  case "$base" in
+    jarvis|jarvis-*)
+      info "excluding jarvis product skill from kevin pack: ${base}"
+      rm -rf "$d"
+      removed=$((removed + 1))
+      ;;
+  esac
+done < <(find "${PKG}/skills" -mindepth 1 -maxdepth 1 -type d -print0 2>/dev/null || true)
+
+skill_count="$(find "${PKG}/skills" -mindepth 1 -maxdepth 1 -type d | wc -l | tr -d ' ')"
+[[ "$skill_count" -gt 0 ]] || die "no skill directories left after jarvis filter"
+
+# Fail closed if any jarvis* path remains
+if find "${PKG}/skills" -mindepth 1 -maxdepth 1 -type d -name 'jarvis*' | grep -q .; then
+  die "jarvis skills still present after filter"
+fi
+info "jarvis skills excluded: ${removed}"
+
 {
   echo "agent-tools-rev=${git_sha}"
   echo "installed-at=${created_at}"

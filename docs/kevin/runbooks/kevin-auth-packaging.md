@@ -2,7 +2,7 @@
 
 **Status:** Active — path of record for portable secrets  
 **Profile name:** `kevin` only  
-**Related:** [hermes-kevin.md](./hermes-kevin.md) (bring-up) · [kevin-control-plane.md](./kevin-control-plane.md) · [hermes/profile](../../hermes/profile/) · Slack packaging [AGNT-8](https://linear.app/overlund-media/issue/AGNT-8) / [packs/factory-slack.env.example](../../packs/factory-slack.env.example) (cross-ref only)
+**Related:** [hermes-kevin.md](./hermes-kevin.md) (bring-up) · [kevin-control-plane.md](./kevin-control-plane.md) · [multi-agent-config-lanes.md](./multi-agent-config-lanes.md) (secrets = live lane) · [hermes/profile](../../hermes/profile/) · Slack packaging [AGNT-8](https://linear.app/overlund-media/issue/AGNT-8) / [packs/factory-slack.env.example](../../packs/factory-slack.env.example) (cross-ref only)
 
 ---
 

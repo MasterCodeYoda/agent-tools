@@ -1,0 +1,40 @@
+# jarvis-hermes — Jarvis CoS instance image
+# Product skills: hermes dialect → product stamp jarvis (ADR-005). Never raw src/.
+# No Kevin process pack.
+#
+# Build (from agent-tools repo root):
+#   docker build -f hermes/docker/Dockerfile.jarvis -t jarvis-hermes:local .
+
+# ── publish: hermes dialect, product=jarvis pack ───────────────────
+FROM debian:bookworm-slim AS publish
+RUN apt-get update \
+  && apt-get install -y --no-install-recommends bash ca-certificates git \
+  && rm -rf /var/lib/apt/lists/*
+WORKDIR /src
+COPY . .
+RUN bash tools/pack-jarvis-skills.sh \
+  && test -f dist/jarvis-skills/jarvis-skills.tar.gz \
+  && mkdir -p /out/skills \
+  && tar -xzf dist/jarvis-skills/jarvis-skills.tar.gz -C /tmp \
+  && cp -a /tmp/jarvis-skills/skills/. /out/skills/ \
+  && test -n "$(ls -A /out/skills)" \
+  && test -f /out/skills/.agent-tools-revision \
+  && grep -q 'publish-agent=jarvis' /out/skills/.agent-tools-revision
+
+# ── runtime ─────────────────────────────────────────────────────────
+FROM nousresearch/hermes-agent:latest
+
+USER root
+COPY --from=publish /out/skills /opt/jarvis/skills
+COPY hermes/jarvis-profile /opt/jarvis/profile
+COPY hermes/docker/entrypoint-jarvis.sh /opt/jarvis/entrypoint.sh
+RUN chmod 755 /opt/jarvis/entrypoint.sh \
+  && chmod -R a+rX /opt/jarvis/skills /opt/jarvis/profile \
+  && test -f /opt/jarvis/skills/.agent-tools-revision \
+  && ! find /opt/jarvis/skills -mindepth 1 -maxdepth 1 -type d -name 'work*' | grep -q .
+
+LABEL org.jarvis.image="jarvis-hermes" \
+      org.jarvis.skills_path="/opt/jarvis/skills" \
+      org.jarvis.profile_path="/opt/jarvis/profile"
+
+CMD ["/opt/jarvis/entrypoint.sh"]

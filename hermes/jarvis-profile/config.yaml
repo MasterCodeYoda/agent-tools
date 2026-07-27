@@ -1,0 +1,62 @@
+# Jarvis Hermes profile policy (versioned in agent-tools).
+# Secrets do NOT belong here — use profile .env / auth.json after install.
+# Adaptive state (project list, etc.) lives under live profile state/ — not here.
+# Apply substitutes __HERMES_SKILLS_DIR__ with the absolute jarvis skills path.
+# Docker image: placeholder becomes /opt/jarvis/skills (baked jarvis product pack).
+
+model:
+  default: claude-sonnet-4-5
+  provider: anthropic
+
+memory:
+  # CoS may enable later; v1 project lens uses explicit state/ files (adaptive lane).
+  memory_enabled: false
+  user_profile_enabled: false
+  write_approval: true
+
+skills:
+  write_approval: true
+  creation_nudge_interval: 0
+  # Image: /opt/jarvis/skills · Host packaging: JARVIS_SKILLS_ROOT (default ~/.jarvis/skills)
+  external_dirs:
+    - __HERMES_SKILLS_DIR__
+
+approvals:
+  mode: manual
+  deny:
+    - "rm -rf /*"
+    - "git push --force*"
+    - "*curl*|*bash*"
+    - "*curl*|*sh*"
+
+terminal:
+  backend: local
+  # No fixed product-repo cwd — CoS is not factory-bound to a single git root.
+
+platform_toolsets:
+  cli:
+    - file
+    - terminal
+    - skills
+    - web
+  slack:
+    - file
+    - terminal
+    - skills
+    - web
+
+# Ops: replace placeholders before live Slack smoke (never commit real IDs).
+slack:
+  channel_skill_bindings:
+    - id: "REPLACE_WITH_JARVIS_HOME_CHANNEL_ID"
+      skills:
+        - jarvis-research-digest
+
+auxiliary:
+  compression:
+    provider: anthropic
+    model: claude-haiku-4-5
+    reasoning_effort: low
+  title_generation:
+    provider: anthropic
+    model: claude-haiku-4-5

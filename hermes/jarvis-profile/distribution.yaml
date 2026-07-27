@@ -1,0 +1,56 @@
+# Hermes profile distribution — Jarvis (personal chief of staff)
+# Install: hermes profile install ./hermes/jarvis-profile --name jarvis
+# Or:      ./hermes/scripts/apply-jarvis-profile.sh
+# Product topology: single remote instance only — see multi-agent-config-lanes.md
+name: jarvis
+version: 0.1.0
+description: "Jarvis Hermes CoS profile (config-as-code; agent-tools monorepo)"
+author: "Overlund Media"
+license: "UNLICENSED"
+env_requires:
+  # Names only; values live in profile .env / auth.json — never commit.
+  - name: ANTHROPIC_API_KEY
+    description: "Anthropic API key when not using OAuth / profile auth.json"
+    required: false
+  - name: OPENAI_API_KEY
+    description: "OpenAI-compatible providers if used"
+    required: false
+  - name: OPENROUTER_API_KEY
+    description: "OpenRouter if used"
+    required: false
+  - name: JARVIS_SMTP_HOST
+    description: "SMTP host for morning digest email"
+    required: false
+  - name: JARVIS_SMTP_PORT
+    description: "SMTP port (e.g. 587)"
+    required: false
+  - name: JARVIS_SMTP_USER
+    description: "SMTP username"
+    required: false
+  - name: JARVIS_SMTP_PASSWORD
+    description: "SMTP password / app password"
+    required: false
+  - name: JARVIS_DIGEST_TO
+    description: "Digest recipient email address"
+    required: false
+  - name: JARVIS_DIGEST_FROM
+    description: "Digest From: address"
+    required: false
+  - name: SLACK_BOT_TOKEN
+    description: "Slack bot token (Socket Mode) for CoS chat"
+    required: false
+  - name: SLACK_APP_TOKEN
+    description: "Slack app-level token (xapp-) for Socket Mode"
+    required: false
+  - name: SLACK_ALLOWED_USERS
+    description: "Allowlisted Slack member IDs"
+    required: false
+  - name: SLACK_HOME_CHANNEL
+    description: "Optional home channel ID for CoS"
+    required: false
+distribution_owned:
+  - SOUL.md
+  - config.yaml
+  - .env.template
+  - skills
+  - distribution.yaml

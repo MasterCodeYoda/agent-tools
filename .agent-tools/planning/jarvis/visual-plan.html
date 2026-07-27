@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Jarvis — Visual plan</title>
+  <style>
+    :root {
+      --bg: #0f1419; --panel: #1a2332; --panel-2: #243044; --text: #e7ecf3;
+      --muted: #9aa8bc; --accent: #6cb6ff; --accent-2: #7ee0a8; --warn: #f0b429;
+      --risk: #f07178; --border: #2e3a4d;
+      --mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      --sans: "Segoe UI", system-ui, -apple-system, sans-serif;
+    }
+    * { box-sizing: border-box; }
+    body { margin: 0; font-family: var(--sans); background: var(--bg); color: var(--text); line-height: 1.55; }
+    a { color: var(--accent); }
+    .banner { background: #243b1f; color: var(--accent-2); border-bottom: 1px solid #355a2c; padding: 0.65rem 1.25rem; font-size: 0.9rem; }
+    .layout { display: grid; grid-template-columns: 220px minmax(0, 1fr); min-height: 100vh; }
+    nav { position: sticky; top: 0; height: 100vh; overflow: auto; padding: 1.25rem 1rem; background: var(--panel); border-right: 1px solid var(--border); font-size: 0.9rem; }
+    nav .brand { font-weight: 700; } nav .sub { color: var(--muted); font-size: 0.8rem; margin-bottom: 1rem; }
+    nav a { display: block; text-decoration: none; color: var(--muted); padding: 0.3rem 0.4rem; border-radius: 6px; }
+    nav a:hover { background: var(--panel-2); color: var(--text); }
+    main { padding: 1.5rem 1.75rem 3rem; max-width: 960px; }
+    h1 { font-size: 1.75rem; margin: 0 0 0.35rem; }
+    .meta { color: var(--muted); font-size: 0.9rem; margin-bottom: 1.5rem; }
+    section { background: var(--panel); border: 1px solid var(--border); border-radius: 12px; padding: 1.1rem 1.25rem; margin: 0 0 1rem; }
+    section h2 { margin: 0 0 0.75rem; font-size: 1.1rem; color: var(--accent); }
+    table { width: 100%; border-collapse: collapse; font-size: 0.92rem; }
+    th, td { border-bottom: 1px solid var(--border); text-align: left; padding: 0.45rem 0.4rem; vertical-align: top; }
+    th { color: var(--muted); }
+    code { font-family: var(--mono); font-size: 0.88em; background: var(--panel-2); padding: 0.1rem 0.35rem; border-radius: 4px; }
+    .pill { display: inline-block; font-size: 0.75rem; font-weight: 600; padding: 0.1rem 0.45rem; border-radius: 999px; border: 1px solid var(--border); color: var(--muted); }
+    .pill.add { color: var(--accent-2); border-color: #2f6b4a; }
+    .pill.mod { color: var(--warn); border-color: #7a5a16; }
+    .callout { border-left: 3px solid var(--accent); background: var(--panel-2); padding: 0.65rem 0.85rem; border-radius: 0 8px 8px 0; margin: 0.5rem 0; }
+    .callout.decision { border-left-color: var(--warn); }
+    .callout.risk { border-left-color: var(--risk); }
+    pre.mermaid { background: #0b1016; border: 1px solid var(--border); border-radius: 8px; padding: 1rem; overflow: auto; }
+    footer { color: var(--muted); font-size: 0.85rem; margin-top: 1.5rem; }
+    @media (max-width: 860px) { .layout { grid-template-columns: 1fr; } nav { position: relative; height: auto; } }
+  </style>
+</head>
+<body>
+  <div class="banner"><strong>Presentation only.</strong> Executable SoT after approve: <code>implementation-plan.md</code>.</div>
+  <div class="layout">
+    <nav>
+      <div class="brand">Jarvis</div>
+      <div class="sub">Visual plan · deliverable-partition</div>
+      <a href="#overview">Overview</a>
+      <a href="#research">Research</a>
+      <a href="#design">Design</a>
+      <a href="#structure">Structure</a>
+      <a href="#architecture">Architecture</a>
+      <a href="#slices">Deliverables</a>
+      <a href="#files">Files</a>
+      <a href="#intended">Intended changes</a>
+      <a href="#decisions">Decisions</a>
+      <a href="#risks">Risks</a>
+      <a href="#questions">Open questions</a>
+    </nav>
+    <main>
+      <h1>Jarvis — CoS wedge + multi-agent spine</h1>
+      <div class="meta">Source: <code>.agent-tools/planning/jarvis/requirements.md</code> · Mode: deliverable-partition · File mode</div>
+
+      <section id="overview">
+        <h2>Overview</h2>
+        <p>Ship <strong>one remote Jarvis</strong> (Hermes profile + sibling Docker image + durable volume): morning research→email digest, day-1 Slack DM/home chat on the same brain, no local dual install. Land shared <strong>three-lane config doctrine</strong> and parallel Kevin doc/pack filters so product packs do not cross-contaminate skills.</p>
+      </section>
+
+      <section id="research">
+        <h2>Research grounding</h2>
+        <p>Source: <code>.agent-tools/planning/jarvis/codebase-research.md</code> @ ad87e6d</p>
+        <ul>
+          <li><code>hermes/docker/*</code> — kevin-hardcoded image/entrypoint/compose</li>
+          <li><code>hermes/profile/*</code> — config-as-code; user-owned .env/auth preserved</li>
+          <li><code>tools/pack-kevin-skills.sh</code> — packs <em>entire</em> hermes dialect (must filter when jarvis skills exist)</li>
+          <li>No email product path in-repo; Slack Socket Mode is proven transport</li>
+          <li>ADR-005 already names jarvis as future non-process-pack product</li>
+        </ul>
+      </section>
+
+      <section id="design">
+        <h2>Design confirm</h2>
+        <p>Source: <code>design-discussion.md</code> — holds for ACs. No refine re-entry needed.</p>
+        <ul>
+          <li><strong>Accept:</strong> Kevin profile/apply/Slack Socket Mode patterns; three-lane ownership; email digest + Slack interactive</li>
+          <li><strong>Reject:</strong> dual local/remote Jarvis; terminal as CoS UX; factory process pack on Jarvis; Kevin pre-wake for research</li>
+        </ul>
+      </section>
+
+      <section id="structure">
+        <h2>Structure outline</h2>
+        <ol>
+          <li><strong>Wave 0 — Doctrine (D1)</strong> — three lanes + topology docs<br/><span style="color:var(--muted)">Verify: docs review; no Kevin/Jarvis SoT contradictions</span></li>
+          <li><strong>Wave 1 — Parallel spine</strong> — D2 profile, D4 skills+pack filter, D5 secrets matrix, D7 Kevin parity<br/><span style="color:var(--muted)">Verify: profile files valid; jarvis pack only jarvis skills; kevin pack excludes jarvis; templates list secrets</span></li>
+          <li><strong>Wave 2 — Runtime (D3)</strong> — jarvis-hermes image + gateway + volume + cron shape<br/><span style="color:var(--muted)">Verify: docker build; hermes -p jarvis profile show; gateway starts</span></li>
+          <li><strong>Wave 3 — Product surfaces</strong> — D6 research→email + D8 Slack (parallel)<br/><span style="color:var(--muted)">Verify: dry-run digest; email smoke or residual; Slack reply smoke</span></li>
+        </ol>
+      </section>
+
+      <section id="architecture">
+        <h2>Architecture</h2>
+        <pre class="mermaid">
+flowchart TB
+  subgraph git["agent-tools repo SoT"]
+    DOC[Three-lane doctrine]
+    PROF[hermes/jarvis-profile]
+    SK[src/jarvis/* skills]
+    PACK[pack-jarvis-skills + pack-kevin filter]
+  end
+  subgraph remote["Single remote host"]
+    IMG[jarvis-hermes image]
+    VOL["Data volume HERMES_HOME\nprofile/state/secrets/sessions"]
+    GW[Gateway Slack Socket Mode]
+    CRON[Cron morning research]
+  end
+  YOU[You]
+  DOC --> PROF
+  SK --> PACK
+  PACK --> IMG
+  PROF --> IMG
+  IMG --> VOL
+  IMG --> GW
+  IMG --> CRON
+  YOU -->|Slack DM/home| GW
+  CRON -->|Email digest| YOU
+  YOU -.->|ops only| IMG
+        </pre>
+      </section>
+
+      <section id="slices">
+        <h2>Deliverables (D1–D8)</h2>
+        <table>
+          <tr><th>ID</th><th>Name</th><th>ACs</th><th>Deps</th></tr>
+          <tr><td>D1</td><td>Config lanes doctrine</td><td>1,2,10,16</td><td>—</td></tr>
+          <tr><td>D2</td><td>Jarvis profile dist</td><td>3,4,16</td><td>D1</td></tr>
+          <tr><td>D4</td><td>Skills product pack</td><td>7,8</td><td>D1</td></tr>
+          <tr><td>D5</td><td>Secrets/capability UX</td><td>9,11,17</td><td>D1</td></tr>
+          <tr><td>D7</td><td>Kevin parallel + pack filter</td><td>1,2,10,11,16</td><td>D1</td></tr>
+          <tr><td>D3</td><td>Docker + gateway host</td><td>5,6,16</td><td>D2,D4</td></tr>
+          <tr><td>D6</td><td>Research→email ritual</td><td>12–15</td><td>D2–D5</td></tr>
+          <tr><td>D8</td><td>Slack chat transport</td><td>17,18</td><td>D2,D3,D5</td></tr>
+        </table>
+      </section>
+
+      <section id="files">
+        <h2>Files (planned)</h2>
+        <ul>
+          <li><span class="pill add">add</span> <code>docs/kevin/runbooks/multi-agent-config-lanes.md</code> (or decisions/)</li>
+          <li><span class="pill add">add</span> <code>hermes/jarvis-profile/*</code></li>
+          <li><span class="pill add">add</span> <code>hermes/docker/Dockerfile.jarvis</code>, <code>entrypoint-jarvis.sh</code>, <code>compose.jarvis.yaml</code></li>
+          <li><span class="pill add">add</span> <code>src/jarvis/</code> research skills · <code>tools/pack-jarvis-skills.sh</code></li>
+          <li><span class="pill mod">mod</span> <code>tools/pack-kevin-skills.sh</code> — exclude jarvis product skills</li>
+          <li><span class="pill add">add</span> docs/runbooks jarvis docker + slack + auth</li>
+          <li><span class="pill mod">mod</span> Kevin control-plane / profile README three-lane language</li>
+        </ul>
+      </section>
+
+      <section id="intended">
+        <h2>Intended changes (highlights)</h2>
+        <div class="callout">
+          <strong>Product pack filter:</strong> Kevin pack currently <code>cp -a dist/hermes/skills</code> wholesale.
+          After jarvis skills exist, both packs must allowlist/denylist so factory and CoS skills never bake into the wrong image.
+        </div>
+        <div class="callout">
+          <strong>Entrypoint:</strong> sibling of kevin entrypoint with profile name <code>jarvis</code>, skills <code>/opt/jarvis/skills</code>, no required product-repo mount.
+        </div>
+        <div class="callout">
+          <strong>State:</strong> <code>$HERMES_HOME/profiles/jarvis/state/projects.md</code> — adaptive lane; not distribution_owned.
+        </div>
+      </section>
+
+      <section id="decisions">
+        <h2>Plan-time decisions</h2>
+        <ul>
+          <li>Image name: <code>jarvis-hermes</code> (sibling of kevin-hermes)</li>
+          <li>Profile path: <code>hermes/jarvis-profile/</code></li>
+          <li>Sibling Docker files (not multi-ARG Dockerfile v1)</li>
+          <li>Email: SMTP env names + send helper in ritual (no in-repo email product today)</li>
+          <li>Slack: home channel + DM, allowlisted user(s), Socket Mode</li>
+          <li>Skills root under <code>src/jarvis/</code>; product stamp jarvis</li>
+        </ul>
+        <div class="callout decision"><strong>Key insight:</strong> Land pack allowlists in the same change as the first jarvis skill (D4/D7), before D3 image bake — otherwise kevin-hermes would ship CoS skills by accident.</div>
+      </section>
+
+      <section id="risks">
+        <h2>Risks</h2>
+        <table>
+          <tr><th>Risk</th><th>Mitigation</th></tr>
+          <tr><td>Kevin pack includes jarvis skills</td><td>Filter packs before image CI</td></tr>
+          <tr><td>Email transport unknown upstream</td><td>SMTP env + dry-run; residual OK if blocked</td></tr>
+          <tr><td>Hermes X/web tools variance</td><td>Skill documents tool fallbacks; smoke with available tools</td></tr>
+          <tr><td>Dual-instance temptation</td><td>Docs + runbook forbid product local install</td></tr>
+        </table>
+      </section>
+
+      <section id="questions">
+        <h2>Open (non-blocking)</h2>
+        <ul>
+          <li>Exact SMTP provider in operator env</li>
+          <li>GHCR owner path (same as kevin)</li>
+          <li>Cron timezone expression on first host</li>
+        </ul>
+      </section>
+
+      <footer>Presentation only · executable plan is implementation-plan.md after Approve &amp; Save</footer>
+    </main>
+  </div>
+  <script type="module">
+    import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs";
+    mermaid.initialize({ startOnLoad: true, theme: "dark" });
+  </script>
+</body>
+</html>

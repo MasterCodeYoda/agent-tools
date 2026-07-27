@@ -1,11 +1,14 @@
-# Kevin / Hermes packaging (agent-tools monorepo)
+# Kevin + Jarvis / Hermes packaging (agent-tools monorepo)
 
 | Path | Role |
 |------|------|
 | [`dev.sh`](dev.sh) | **Source-tree dev runner** — always builds `kevin-hermes:local` from this checkout, then compose up |
-| [`profile/`](profile/) | Hermes profile distribution **`kevin`** |
-| [`docker/`](docker/) | Dockerfile + compose used by `dev.sh` and CI |
-| [`scripts/`](scripts/) | Host helpers (secondary to Docker) |
+| [`profile/`](profile/) | Hermes profile distribution **`kevin`** (coding factory) |
+| [`jarvis-profile/`](jarvis-profile/) | Hermes profile distribution **`jarvis`** (CoS; single remote) |
+| [`docker/`](docker/) | Kevin Dockerfile + compose; **Jarvis:** `Dockerfile.jarvis`, `compose.jarvis.yaml`, `entrypoint-jarvis.sh` |
+| [`scripts/`](scripts/) | Host helpers (`apply-*-profile.sh`, jarvis digest send, factory-wake, …) |
+
+**Shared config doctrine:** [docs/kevin/runbooks/multi-agent-config-lanes.md](../docs/kevin/runbooks/multi-agent-config-lanes.md)
 
 ```bash
 # From agent-tools checkout — build image from this tree and run it
