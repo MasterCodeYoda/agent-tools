@@ -30,18 +30,20 @@ None — epic packaging complete for merge review.
 
 | # | Residual | Status |
 |---|----------|--------|
-| R1 | Rename `docs/kevin/` → `docs/agents/` + full path sweep | **done** (this session) |
-| R2 | Idempotent volume install + guided secrets script (no LLM chat) | **done** — `jarvis-bring-up.sh`, `jarvis-secrets-wizard.sh` |
-| R3 | Operator: run bring-up on real volume + secrets wizard (you run; not chat paste) | open |
-| R4 | Operator: Slack reply smoke on production volume | open |
-| R5 | Operator: live SMTP digest send (or accept dry-run residual) | open |
-| R6 | Review/merge `feat/jarvis` | open |
+| R1 | Rename docs/kevin → docs/agents + path sweep | done |
+| R2 | Idempotent install + secrets scripts | done |
+| R3 | Local Docker Desktop automated smoke | done (jarvis-local-smoke) |
+| R4 | Operator Slack reply smoke (durable host) | open |
+| R5 | Operator live SMTP digest | open |
+| R6 | Review/merge feat/jarvis | open |
+| R7 | Adaptive-state private git backup + host cron as **required** full setup; GitHub PAT in secrets wizard; skill-evolution note | **done** (scripts + docs; needs real PAT on durable host) |
 
 ## Next Steps
 
-1. You: `./hermes/scripts/jarvis-bring-up.sh` then `./hermes/scripts/jarvis-secrets-wizard.sh` on the real host  
-2. R4 Slack smoke · R5 email smoke  
-3. Merge branch when ready  
+1. Local: `./hermes/scripts/jarvis-local-smoke.sh` then optional `--secrets` for model only  
+2. Durable (Portainer host): `./hermes/scripts/jarvis-setup.sh` with backup repo + fine-grained PAT  
+3. R4/R5 on durable instance  
+4. Merge feat/jarvis  
 
 ## Last Session Summary
 

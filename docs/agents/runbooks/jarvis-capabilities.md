@@ -15,6 +15,7 @@
 | **Research (web/X)** | Policy toolsets + host tools | Provider keys as above; no extra v1 names | Digest ritual | Tools unavailable (document residual) |
 | **Email digest** | Secrets | `JARVIS_SMTP_*`, `JARVIS_DIGEST_TO`, `JARVIS_DIGEST_FROM` | Morning send | Missing env and not `--dry-run` |
 | **Slack CoS chat** | Secrets + bindings | `SLACK_BOT_TOKEN`, `SLACK_APP_TOKEN`, `SLACK_ALLOWED_USERS`, optional `SLACK_HOME_CHANNEL` | Interactive UX | Gateway cannot connect / allowlist empty |
+| **Adaptive state backup** | Secrets (token) + host cron | `JARVIS_BACKUP_REPO`, `JARVIS_BACKUP_GITHUB_TOKEN` (fine-grained PAT to that repo only), optional branch | Full-fidelity durable setup | Missing on `jarvis-setup.sh` / backup push |
 
 ### Future capabilities (declare before build)
 
@@ -33,29 +34,32 @@ Each new capability adds **names** to `.env.template` / `env_requires`, a row he
 | What | Where |
 |------|--------|
 | Names in git | `hermes/jarvis-profile/.env.template`, `distribution.yaml` |
-| Live values | Single remote volume: `$JARVIS_HERMES_DATA` → `/opt/data` → `profiles/jarvis/.env` and/or `auth.json` |
-| Adaptive project list | `profiles/jarvis/state/projects.md` on the same volume |
+| Live values | Docker volume → `/opt/data/profiles/jarvis/.env` and/or `auth.json` |
+| Adaptive state | `profiles/jarvis/state/**` on the volume; **nightly git backup** of text allowlist |
 
 **Never** commit secret values. **Never** blind-overwrite live `.env` from templates without operator intent.
 
 ---
 
-## Operator fill (single remote)
+## Operator fill (full-fidelity — path of record)
 
-1. **Idempotent install:** `./hermes/scripts/jarvis-bring-up.sh`  
-2. **Secrets (guided, no LLM):** `./hermes/scripts/jarvis-secrets-wizard.sh`  
-   - Interactive prompts; secret fields hidden; values never echoed in summary  
-   - Writes mode-600 live `.env` on the data volume only  
-   - `--check` reports set/missing per key without printing values  
-3. Restart container if it was already up so env reloads.  
-4. `docker exec jarvis-hermes hermes -p jarvis doctor`  
-5. Capability checklist: model works; Slack connects; digest dry-run works; then enable send.
+```bash
+./hermes/scripts/jarvis-setup.sh
+```
+
+This is the durable install: bring-up + secrets (**including required GitHub backup PAT + private repo**) + first backup + **nightly host cron**. Not an optional add-on.
+
+See [jarvis-state-backup.md](./jarvis-state-backup.md).
+
+Local packaging only (no backup): `./hermes/scripts/jarvis-local-smoke.sh`.
 
 Helpers:
 
-- `hermes/scripts/jarvis-bring-up.sh` — volume + image + compose  
-- `hermes/scripts/jarvis-secrets-wizard.sh` — secrets lane only  
-- `hermes/scripts/jarvis-send-digest.sh --file … --dry-run` — email path
+- `hermes/scripts/jarvis-setup.sh` — full fidelity  
+- `hermes/scripts/jarvis-local-smoke.sh` — automated local validate  
+- `hermes/scripts/jarvis-backup-state.sh` / `jarvis-restore-state.sh`  
+- `hermes/scripts/jarvis-install-backup-cron.sh`  
+- `hermes/scripts/jarvis-send-digest.sh --file … --dry-run`
 
 ---
 

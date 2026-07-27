@@ -39,7 +39,9 @@ Permanent options, not a migration ladder — [ADR-003](./decisions/003-workstat
 | **Capabilities / secrets** | [runbooks/jarvis-capabilities.md](./runbooks/jarvis-capabilities.md) |
 | **Slack CoS chat** | [runbooks/jarvis-slack.md](./runbooks/jarvis-slack.md) |
 | **Profile dist** | [`hermes/jarvis-profile/`](../../hermes/jarvis-profile/) |
-| **Bring-up script** | [`hermes/scripts/jarvis-bring-up.sh`](../../hermes/scripts/jarvis-bring-up.sh) (idempotent volume + optional secrets wizard) |
+| **Full setup** | [`hermes/scripts/jarvis-setup.sh`](../../hermes/scripts/jarvis-setup.sh) — bring-up + secrets (incl. backup PAT) + nightly cron |
+| **Local smoke** | [`hermes/scripts/jarvis-local-smoke.sh`](../../hermes/scripts/jarvis-local-smoke.sh) |
+| **State backup** | [runbooks/jarvis-state-backup.md](./runbooks/jarvis-state-backup.md) |
 
 ## Layout
 

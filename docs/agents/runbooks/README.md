@@ -10,6 +10,7 @@
 | [jarvis-capabilities.md](./jarvis-capabilities.md) | Jarvis capability / secrets spine |
 | [jarvis-hermes-docker.md](./jarvis-hermes-docker.md) | Jarvis single-remote Docker + gateway + cron |
 | [jarvis-slack.md](./jarvis-slack.md) | Jarvis Slack CoS transport |
+| [jarvis-state-backup.md](./jarvis-state-backup.md) | Adaptive-state private git backup + cron (required full setup) |
 | [kevin-controller.md](./kevin-controller.md) | Project chrome / decide CLI |
 | [kevin-unattended-wake.md](./kevin-unattended-wake.md) | Wake / pre-wake |
 | [kevin-coding-confidence.md](./kevin-coding-confidence.md) | Coding-loop gate |

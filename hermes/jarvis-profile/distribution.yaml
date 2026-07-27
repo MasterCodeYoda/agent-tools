@@ -48,6 +48,15 @@ env_requires:
   - name: SLACK_HOME_CHANNEL
     description: "Optional home channel ID for CoS"
     required: false
+  - name: JARVIS_BACKUP_REPO
+    description: "Private git remote for adaptive-state backup (HTTPS GitHub URL)"
+    required: false
+  - name: JARVIS_BACKUP_GITHUB_TOKEN
+    description: "Fine-grained GitHub PAT scoped to backup repo only (contents:write)"
+    required: false
+  - name: JARVIS_BACKUP_BRANCH
+    description: "Backup branch (default main)"
+    required: false
 distribution_owned:
   - SOUL.md
   - config.yaml

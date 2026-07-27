@@ -85,14 +85,25 @@ Agent-proposed policy changes → human review → git → apply.
 
 ## Capability spine (secrets UX)
 
-Each **capability** (model auth, Slack, email, future calendar, …) declares:
+Each **capability** (model auth, Slack, email, state backup, future calendar, …) declares:
 
 1. **Secret names** in git (`.env.template`, `env_requires`) — never values  
 2. **Lane** for each setting (secrets vs adaptive vs policy)  
 3. **Fail-loud** when required capability is missing for a ritual that needs it  
 
 Kevin packaging path of record for auth names: [kevin-auth-packaging.md](./kevin-auth-packaging.md).  
-Jarvis capability matrix: [jarvis-capabilities.md](./jarvis-capabilities.md) (lands with Jarvis packaging).
+Jarvis capability matrix: [jarvis-capabilities.md](./jarvis-capabilities.md).
+
+### Adaptive state backup (Jarvis full setup)
+
+Durable Jarvis installs **must** install nightly allowlisted backup of adaptive **text** state to a private git repo ([jarvis-state-backup.md](./jarvis-state-backup.md)):
+
+- Secrets lane holds `JARVIS_BACKUP_GITHUB_TOKEN` + `JARVIS_BACKUP_REPO` (fine-grained PAT to that repo only)  
+- Host cron runs `jarvis-backup-state.sh` (not chat-driven git)  
+- Never backs up `.env` / sessions / DBs  
+- Backup corpus is a signal stream for **agent-tools skill evolution** (observation → human/process promote into `src/`); it is not skill SoT  
+
+Installed by `hermes/scripts/jarvis-setup.sh` (required path for production).
 
 ---
 

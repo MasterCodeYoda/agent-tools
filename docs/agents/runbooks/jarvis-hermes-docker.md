@@ -23,47 +23,35 @@ One always-on Jarvis for:
 
 ---
 
-## Local smoke (path of record — automated)
+## Production / durable setup (path of record)
 
-Jarvis is **container-native**. Data lives in Docker volume `jarvis-hermes-data` →
-`/opt/data` inside the container. There is **no host project directory** and no
-Kevin-style product-repo mount.
+**Full fidelity** — includes adaptive-state git backup + nightly host cron (not optional):
 
 ```bash
 cd /path/to/agent-tools
+./hermes/scripts/jarvis-setup.sh
+```
 
-# One command: build if needed, up, validate profile/gateway/skills
-./hermes/scripts/jarvis-local-smoke.sh
+Collects model keys **and** `JARVIS_BACKUP_REPO` + fine-grained `JARVIS_BACKUP_GITHUB_TOKEN`, runs first backup, installs cron.  
+Details: [jarvis-state-backup.md](./jarvis-state-backup.md).
 
-# Optional: interactive secrets inside the container (your TTY; not chat)
-./hermes/scripts/jarvis-local-smoke.sh --secrets
+Jarvis is **container-native**. Data: Docker volume `jarvis-hermes-data` → `/opt/data`. No Kevin-style product-repo mount.
 
-# Wipe disposable local instance (volume included)
-./hermes/scripts/jarvis-local-smoke.sh --purge
+## Local packaging smoke (no durable backup required)
+
+```bash
+./hermes/scripts/jarvis-local-smoke.sh          # up + validate
+./hermes/scripts/jarvis-local-smoke.sh --purge  # wipe disposable instance
 ```
 
 | Check (automated) | Pass |
 |-------------------|------|
-| Container | `jarvis-hermes` running |
-| Profile | `jarvis` installed |
-| Gateway | running |
-| Skill | `jarvis-research-digest` enabled |
+| Container / profile / gateway / skill | as listed by the script |
 
 Env: `JARVIS_HERMES_IMAGE` (default `jarvis-hermes:local`).  
-Optional bind mount for servers: `JARVIS_VOLUME_SPEC=/host/path` (Portainer-friendly).
+Portainer bind mount: `JARVIS_VOLUME_SPEC=/host/path`.
 
----
-
-## Secrets (interactive, in-container)
-
-Do **not** paste tokens into agent chat. After smoke is green:
-
-```bash
-./hermes/scripts/jarvis-local-smoke.sh --secrets
-```
-
-Writes mode-600 `/opt/data/profiles/jarvis/.env` on the Docker volume, then restarts.
-Names only in git: [jarvis-capabilities.md](./jarvis-capabilities.md).
+Do **not** paste tokens into agent chat. Secrets via setup wizard or `jarvis-local-smoke.sh --secrets` for ad-hoc local only.
 
 ---
 
