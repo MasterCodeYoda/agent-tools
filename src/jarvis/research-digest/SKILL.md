@@ -1,9 +1,9 @@
 ---
-name: jarvis-research-digest
+name: jarvis:research-digest
 description: >
   Morning external research sweep for Jarvis CoS — web + X signal mapped to in-flight
-  projects; short ranked digest with non-obvious pattern matches; email or dry-run.
-  Use when running the daily ritual, seeding projects, or composing the digest.
+  work; short ranked digest with non-obvious pattern matches; email or dry-run.
+  Use when running the daily ritual or composing the digest.
 user-invocable: true
 ---
 

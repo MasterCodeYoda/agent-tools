@@ -2,9 +2,12 @@
 #
 # Pack Jarvis product skills artifact (dialect × product — ADR-005).
 #
-#   dialect: publish-skills --agents hermes → dist/hermes/skills
-#   product: this pack → dist/jarvis-skills/ + revision publish-agent=jarvis
-#   allowlist: only jarvis* skill directories (never factory/work process pack)
+#   src/ layout stays nested family trees (e.g. src/jarvis/research-digest/)
+#   publish-skills (hermes dialect) emits colon-named leaves as flat dirs
+#     (jarvis:research-digest → dist/hermes/skills/jarvis-research-digest/)
+#   this pack copies only those product flat dirs into dist/jarvis-skills/
+#
+# Install/image never reads src/ — only this pack / baked /opt/jarvis/skills.
 #
 # Usage:
 #   tools/pack-jarvis-skills.sh [--no-publish] [--out-dir DIR]
@@ -18,9 +21,9 @@ DIST_HERMES="${AGENT_TOOLS_DIST_ROOT:-${REPO_ROOT}/dist}/hermes/skills"
 OUT_DIR="${REPO_ROOT}/dist/jarvis-skills"
 DO_PUBLISH=1
 
-# Product allowlist: directory names under dist/hermes/skills (published skill ids).
-# Expand as new Jarvis skill families land. Never include work / work-* / git process pack.
-# Top-level dirs under dist/hermes/skills after publish (flat skill ids).
+# Allowlist: flat skill ids under dist/hermes/skills after publish (not src paths).
+# Colon names in src SKILL.md frontmatter are required for publish flatten.
+# Expand as new Jarvis leaves land. Never include work / work-* process pack.
 JARVIS_SKILL_ALLOWLIST=(
   jarvis-research-digest
 )

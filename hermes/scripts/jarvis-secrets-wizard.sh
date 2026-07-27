@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Interactive secrets fill for Jarvis — host or in-container.
-# Values never printed back.
+# Values never printed back. Each section prints brief minting instructions first.
 #
 #   --in-container
 #   --require-backup          full setup: backup PAT+repo required
@@ -17,6 +17,16 @@ ENV_FILE=""
 
 die() { echo "jarvis-secrets-wizard: error: $*" >&2; exit 1; }
 info() { echo "jarvis-secrets-wizard: $*" >&2; }
+section() {
+  echo "" >&2
+  echo "────────────────────────────────────────────────────────" >&2
+  echo "$*" >&2
+  echo "────────────────────────────────────────────────────────" >&2
+}
+howto() {
+  # brief minting instructions (stderr so not mixed with prompts oddly)
+  while IFS= read -r line; do echo "  $line" >&2; done
+}
 
 while [[ $# -gt 0 ]]; do
   case "$1" in
@@ -113,13 +123,13 @@ write_env() {
     [[ -n "${CUR[OPENAI_API_KEY]:-}" ]] && echo "OPENAI_API_KEY=${CUR[OPENAI_API_KEY]}"
     [[ -n "${CUR[OPENROUTER_API_KEY]:-}" ]] && echo "OPENROUTER_API_KEY=${CUR[OPENROUTER_API_KEY]}"
     echo ""
-    echo "# --- Adaptive state backup (host cron only; write one private repo) ---"
+    echo "# --- Adaptive state backup (host cron; write one private repo) ---"
     [[ -n "${CUR[JARVIS_BACKUP_REPO]:-}" ]] && echo "JARVIS_BACKUP_REPO=${CUR[JARVIS_BACKUP_REPO]}"
     [[ -n "${CUR[JARVIS_BACKUP_GITHUB_TOKEN]:-}" ]] && echo "JARVIS_BACKUP_GITHUB_TOKEN=${CUR[JARVIS_BACKUP_GITHUB_TOKEN]}"
     [[ -n "${CUR[JARVIS_BACKUP_BRANCH]:-}" ]] && echo "JARVIS_BACKUP_BRANCH=${CUR[JARVIS_BACKUP_BRANCH]}"
     [[ -n "${CUR[JARVIS_BACKUP_WORKDIR]:-}" ]] && echo "JARVIS_BACKUP_WORKDIR=${CUR[JARVIS_BACKUP_WORKDIR]}"
     echo ""
-    echo "# --- OMG GitHub read (runtime CoS; NOT backup token) ---"
+    echo "# --- OMG GitHub read (runtime; NOT backup token) ---"
     [[ -n "${CUR[JARVIS_GITHUB_READ_TOKEN]:-}" ]] && echo "JARVIS_GITHUB_READ_TOKEN=${CUR[JARVIS_GITHUB_READ_TOKEN]}"
     echo ""
     echo "# --- Linear read ---"
@@ -152,62 +162,127 @@ write_env() {
   info "wrote $ENV_FILE (mode 600)"
 }
 
-info "Jarvis secrets. Tokens are split by job — never reuse backup write PAT for org read."
+info "Jarvis secrets. Mint credentials before each section if you do not have them yet."
+info "Tokens are split by job — never reuse the backup write PAT for org read."
 check_report
-echo ""
 
-if ask_yn "Configure model API key(s)?" "y"; then
+# ── Model ──────────────────────────────────────────────────────────
+section "1) Model API key"
+howto <<'EOF'
+Mint (pick one path that matches your default model):
+  • Anthropic: https://console.anthropic.com/ → API keys → Create key
+  • OpenAI:    https://platform.openai.com/api-keys
+  • OpenRouter: https://openrouter.ai/keys
+Paste the key below (hidden). You only need one working provider.
+EOF
+if ask_yn "Configure model API key(s) now?" "y"; then
   ask_val ANTHROPIC_API_KEY "ANTHROPIC_API_KEY" 1
   ask_val OPENAI_API_KEY "OPENAI_API_KEY" 1
   ask_val OPENROUTER_API_KEY "OPENROUTER_API_KEY" 1
 fi
 
+# ── Backup write ───────────────────────────────────────────────────
+section "2) Adaptive-state backup (GitHub write — ONE private repo only)"
+howto <<'EOF'
+Purpose: nightly commit of non-secret CoS state (digests/notes) for restore + skill evolution.
+Do NOT use this token for OMG org repo access.
+
+Mint:
+  1. Create empty private repo (e.g. org/jarvis-state) on GitHub if it does not exist.
+  2. GitHub → Settings → Developer settings → Fine-grained personal access tokens → Generate.
+  3. Resource owner: your user/org. Repository access: Only select repositories → jarvis-state.
+  4. Permissions: Repository → Contents: Read and write. (Metadata read is automatic.)
+  5. Generate and copy the token once (ghp_… / github_pat_…).
+EOF
 if [[ "$REQUIRE_BACKUP" -eq 1 ]]; then
-  info "Backup (required): private repo + fine-grained PAT with contents:write to THAT repo only."
-  ask_val JARVIS_BACKUP_REPO "JARVIS_BACKUP_REPO (https://github.com/org/jarvis-state.git)" 0
+  info "Required for full durable setup."
+  ask_val JARVIS_BACKUP_REPO "JARVIS_BACKUP_REPO (https://github.com/ORG/jarvis-state.git)" 0
   ask_val JARVIS_BACKUP_GITHUB_TOKEN "JARVIS_BACKUP_GITHUB_TOKEN" 1
   ask_val JARVIS_BACKUP_BRANCH "JARVIS_BACKUP_BRANCH" 0 "main"
   [[ -n "${CUR[JARVIS_BACKUP_REPO]:-}" && -n "${CUR[JARVIS_BACKUP_GITHUB_TOKEN]:-}" ]] \
-    || die "backup repo + token required"
+    || die "backup repo + token required — mint them using the steps above, then re-run"
 else
-  if ask_yn "Configure adaptive-state git backup?" "y"; then
+  if ask_yn "Configure adaptive-state git backup now?" "y"; then
     ask_val JARVIS_BACKUP_REPO "JARVIS_BACKUP_REPO" 0
     ask_val JARVIS_BACKUP_GITHUB_TOKEN "JARVIS_BACKUP_GITHUB_TOKEN" 1
     ask_val JARVIS_BACKUP_BRANCH "JARVIS_BACKUP_BRANCH" 0 "main"
   fi
 fi
 
-# Research correlation integrations — separate credentials
+# ── Research correlation integrations ──────────────────────────────
+section "3) Research correlation — OMG GitHub READ (separate token)"
+howto <<'EOF'
+Purpose: Jarvis runtime read of selected OMG repos (familiarity / digests). Not backup.
+
+Mint (fine-grained PAT v1; GitHub App later if preferred):
+  1. Fine-grained PAT → Repository access: Only select repositories → choose OMG repos.
+  2. Permissions: Contents: Read-only. (Optional: Issues/Metadata read if you want.)
+  3. Do NOT grant this token Contents:write. Do NOT reuse the backup token.
+EOF
 if [[ "$REQUIRE_INTEGRATIONS" -eq 1 ]]; then
-  info "Research correlation (required for full CoS setup): read-only GitHub (OMG) + Linear + Jira."
-  info "JARVIS_GITHUB_READ_TOKEN must NOT be the backup write token."
-  ask_val JARVIS_GITHUB_READ_TOKEN "JARVIS_GITHUB_READ_TOKEN (read selected OMG repos)" 1
-  ask_val JARVIS_LINEAR_API_KEY "JARVIS_LINEAR_API_KEY (Linear read)" 1
+  info "Required for full CoS setup."
+  ask_val JARVIS_GITHUB_READ_TOKEN "JARVIS_GITHUB_READ_TOKEN" 1
+  [[ -n "${CUR[JARVIS_GITHUB_READ_TOKEN]:-}" ]] || die "JARVIS_GITHUB_READ_TOKEN required — mint with steps above"
+  if [[ -n "${CUR[JARVIS_BACKUP_GITHUB_TOKEN]:-}" && "${CUR[JARVIS_GITHUB_READ_TOKEN]}" == "${CUR[JARVIS_BACKUP_GITHUB_TOKEN]}" ]]; then
+    die "Read token must differ from backup write token — create a second fine-grained PAT"
+  fi
+else
+  if ask_yn "Configure OMG GitHub read access now?" "y"; then
+    ask_val JARVIS_GITHUB_READ_TOKEN "JARVIS_GITHUB_READ_TOKEN" 1
+  fi
+fi
+
+section "4) Research correlation — Linear READ"
+howto <<'EOF'
+Purpose: correlate digests/research with Linear issues (read-only).
+
+Mint:
+  1. Linear → Settings → Account → Security & access → Personal API keys
+     (or https://linear.app/settings/account/security )
+  2. Create key; label e.g. jarvis-cos-read. Copy once.
+  3. Prefer a key used only for Jarvis; revoke if leaked.
+EOF
+if [[ "$REQUIRE_INTEGRATIONS" -eq 1 ]]; then
+  ask_val JARVIS_LINEAR_API_KEY "JARVIS_LINEAR_API_KEY" 1
+  [[ -n "${CUR[JARVIS_LINEAR_API_KEY]:-}" ]] || die "JARVIS_LINEAR_API_KEY required — mint with steps above"
+else
+  if ask_yn "Configure Linear read now?" "y"; then
+    ask_val JARVIS_LINEAR_API_KEY "JARVIS_LINEAR_API_KEY" 1
+  fi
+fi
+
+section "5) Research correlation — Jira Cloud READ"
+howto <<'EOF'
+Purpose: correlate digests/research with Jira issues (read-only usage).
+
+Mint:
+  1. API token: https://id.atlassian.com/manage-profile/security/api-tokens → Create API token
+     Label e.g. jarvis-cos-read. Copy once.
+  2. Base URL: your site, e.g. https://YOUR-DOMAIN.atlassian.net  (no path suffix)
+  3. Email: the Atlassian account email that owns the token
+  4. Product access: that account needs browse permission on the projects Jarvis should see.
+EOF
+if [[ "$REQUIRE_INTEGRATIONS" -eq 1 ]]; then
   ask_val JARVIS_JIRA_BASE_URL "JARVIS_JIRA_BASE_URL (https://….atlassian.net)" 0
   ask_val JARVIS_JIRA_EMAIL "JARVIS_JIRA_EMAIL" 0
   ask_val JARVIS_JIRA_API_TOKEN "JARVIS_JIRA_API_TOKEN" 1
-  [[ -n "${CUR[JARVIS_GITHUB_READ_TOKEN]:-}" ]] || die "JARVIS_GITHUB_READ_TOKEN required"
-  [[ -n "${CUR[JARVIS_LINEAR_API_KEY]:-}" ]] || die "JARVIS_LINEAR_API_KEY required"
   [[ -n "${CUR[JARVIS_JIRA_BASE_URL]:-}" && -n "${CUR[JARVIS_JIRA_EMAIL]:-}" && -n "${CUR[JARVIS_JIRA_API_TOKEN]:-}" ]] \
-    || die "Jira base URL + email + API token required"
-  if [[ -n "${CUR[JARVIS_BACKUP_GITHUB_TOKEN]:-}" && "${CUR[JARVIS_GITHUB_READ_TOKEN]}" == "${CUR[JARVIS_BACKUP_GITHUB_TOKEN]}" ]]; then
-    die "JARVIS_GITHUB_READ_TOKEN must differ from JARVIS_BACKUP_GITHUB_TOKEN (split credentials)"
-  fi
+    || die "Jira URL + email + API token required — mint with steps above"
 else
-  if ask_yn "Configure OMG GitHub read access (separate from backup)?" "y"; then
-    ask_val JARVIS_GITHUB_READ_TOKEN "JARVIS_GITHUB_READ_TOKEN" 1
-  fi
-  if ask_yn "Configure Linear read-only?" "y"; then
-    ask_val JARVIS_LINEAR_API_KEY "JARVIS_LINEAR_API_KEY" 1
-  fi
-  if ask_yn "Configure Jira read-only?" "y"; then
+  if ask_yn "Configure Jira read now?" "y"; then
     ask_val JARVIS_JIRA_BASE_URL "JARVIS_JIRA_BASE_URL" 0
     ask_val JARVIS_JIRA_EMAIL "JARVIS_JIRA_EMAIL" 0
     ask_val JARVIS_JIRA_API_TOKEN "JARVIS_JIRA_API_TOKEN" 1
   fi
 fi
 
-if ask_yn "Configure email SMTP?" "n"; then
+# ── Optional channels ──────────────────────────────────────────────
+section "6) Email SMTP (optional until testing digests)"
+howto <<'EOF'
+Mint depends on provider (Gmail app password, SES SMTP user, etc.).
+Need: host, port (often 587), user, password, From and To addresses.
+EOF
+if ask_yn "Configure email SMTP now?" "n"; then
   ask_val JARVIS_SMTP_HOST "SMTP host" 0
   ask_val JARVIS_SMTP_PORT "SMTP port" 0 "587"
   ask_val JARVIS_SMTP_USER "SMTP user" 0
@@ -216,11 +291,20 @@ if ask_yn "Configure email SMTP?" "n"; then
   ask_val JARVIS_DIGEST_TO "Digest To" 0
   ask_val JARVIS_DIGEST_FROM "Digest From" 0
 fi
-if ask_yn "Configure Slack?" "n"; then
-  ask_val SLACK_BOT_TOKEN "SLACK_BOT_TOKEN" 1
-  ask_val SLACK_APP_TOKEN "SLACK_APP_TOKEN" 1
-  ask_val SLACK_ALLOWED_USERS "SLACK_ALLOWED_USERS" 0
-  ask_val SLACK_HOME_CHANNEL "SLACK_HOME_CHANNEL" 0
+
+section "7) Slack Socket Mode (optional until testing chat)"
+howto <<'EOF'
+Mint:
+  1. https://api.slack.com/apps → Create app (manifest) branded Jarvis — see docs/agents/runbooks/jarvis-slack.md
+  2. Enable Socket Mode → create App-Level Token (xapp-…) with connections:write
+  3. OAuth → Bot token (xoxb-…) after install to workspace
+  4. Your Slack member ID for SLACK_ALLOWED_USERS (profile → … → Copy member ID)
+EOF
+if ask_yn "Configure Slack now?" "n"; then
+  ask_val SLACK_BOT_TOKEN "SLACK_BOT_TOKEN (xoxb-…)" 1
+  ask_val SLACK_APP_TOKEN "SLACK_APP_TOKEN (xapp-…)" 1
+  ask_val SLACK_ALLOWED_USERS "SLACK_ALLOWED_USERS (member IDs)" 0
+  ask_val SLACK_HOME_CHANNEL "SLACK_HOME_CHANNEL (optional C…)" 0
 fi
 
 echo ""
@@ -233,6 +317,11 @@ if ask_yn "Write .env now?" "y"; then
     has JARVIS_GITHUB_READ_TOKEN && has JARVIS_LINEAR_API_KEY \
       && has JARVIS_JIRA_BASE_URL && has JARVIS_JIRA_EMAIL && has JARVIS_JIRA_API_TOKEN \
       || die "research integration fields missing after write"
+  fi
+  if has JARVIS_BACKUP_GITHUB_TOKEN && has JARVIS_GITHUB_READ_TOKEN; then
+    if [[ "${CUR[JARVIS_BACKUP_GITHUB_TOKEN]}" == "${CUR[JARVIS_GITHUB_READ_TOKEN]}" ]]; then
+      die "backup and read GitHub tokens must differ"
+    fi
   fi
   check_report
 else

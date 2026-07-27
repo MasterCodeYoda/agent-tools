@@ -50,6 +50,7 @@ slack:
   channel_skill_bindings:
     - id: "REPLACE_WITH_JARVIS_HOME_CHANNEL_ID"
       skills:
+        # Flat install id after pack (src uses jarvis:research-digest → publish flatten)
         - jarvis-research-digest
 
 auxiliary:
