@@ -84,22 +84,8 @@ ensure_profile() {
 
 ensure_profile
 
-# Adaptive-state lane (not distribution-owned): project list + digests
-STATE_DIR="${PROFILE_HOME}/state"
-mkdir -p "${STATE_DIR}/digests"
-if [[ ! -f "${STATE_DIR}/projects.md" ]]; then
-  cat > "${STATE_DIR}/projects.md" <<'EOF'
-# In-flight projects
-
-<!-- Seed projects here. Survives profile re-apply (adaptive state lane). -->
-<!-- Example:
-- **agent-tools** — skills/process factory for multi-agent harnesses
-  - keywords: agents, hermes, skills
-  - notes: CoS research should watch agent runtime and packaging trends
--->
-EOF
-  log "seeded adaptive state ${STATE_DIR}/projects.md"
-fi
+# Adaptive-state lane (not distribution-owned). CoS is not Kevin-style project-repo bound.
+mkdir -p "${PROFILE_HOME}/state"
 
 # Fail closed: install paths may use soft fallbacks for hermes CLI flag variance,
 # but we must not start gateway without a resolvable jarvis profile.

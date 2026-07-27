@@ -1,11 +1,12 @@
-# Jarvis CoS — single remote instance (one data volume)
+# Jarvis CoS — single instance (one data volume inside Docker)
 #
-#   export JARVIS_HERMES_DATA=$HOME/.jarvis/hermes-data
-#   docker build -f hermes/docker/Dockerfile.jarvis -t jarvis-hermes:local .
-#   export JARVIS_HERMES_IMAGE=jarvis-hermes:local
-#   docker compose -f hermes/docker/compose.jarvis.yaml up -d
+# Default: named volume `jarvis-hermes-data` (no host path to manage).
+# Optional bind mount (e.g. Portainer host path):
+#   JARVIS_VOLUME_SPEC=/path/on/host docker compose -f hermes/docker/compose.jarvis.yaml up -d
 #
-# No product-repo mount required. Terminal is ops-only; talk via Slack; digest via email.
+# Local smoke (preferred):
+#   ./hermes/scripts/jarvis-local-smoke.sh
+#
 # Topology: docs/agents/runbooks/multi-agent-config-lanes.md
 
 name: jarvis-hermes
@@ -20,6 +21,10 @@ services:
       HERMES_GID: ${HERMES_GID:-1000}
       HERMES_HOME: /opt/data
     volumes:
-      # Single production home: secrets, sessions, adaptive state, installed profile
-      - ${JARVIS_HERMES_DATA:-${HOME}/.jarvis/hermes-data}:/opt/data
+      # Named volume by default. Override with absolute host path via JARVIS_VOLUME_SPEC.
+      - ${JARVIS_VOLUME_SPEC:-jarvis-hermes-data}:/opt/data
     # Socket Mode Slack needs no published ports.
+
+volumes:
+  jarvis-hermes-data:
+    name: jarvis-hermes-data

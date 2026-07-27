@@ -23,55 +23,47 @@ One always-on Jarvis for:
 
 ---
 
-## Bring-up (path of record — idempotent)
+## Local smoke (path of record — automated)
 
-Volume creation and compose up are **install steps**, not chat ceremony:
+Jarvis is **container-native**. Data lives in Docker volume `jarvis-hermes-data` →
+`/opt/data` inside the container. There is **no host project directory** and no
+Kevin-style product-repo mount.
 
 ```bash
 cd /path/to/agent-tools
 
-# Creates $HOME/.jarvis/hermes-data if missing, seeds state/projects.md,
-# builds image only if missing, compose up -d
-./hermes/scripts/jarvis-bring-up.sh
+# One command: build if needed, up, validate profile/gateway/skills
+./hermes/scripts/jarvis-local-smoke.sh
 
-# Status / stop (volume preserved)
-./hermes/scripts/jarvis-bring-up.sh --status
-./hermes/scripts/jarvis-bring-up.sh --down
+# Optional: interactive secrets inside the container (your TTY; not chat)
+./hermes/scripts/jarvis-local-smoke.sh --secrets
+
+# Wipe disposable local instance (volume included)
+./hermes/scripts/jarvis-local-smoke.sh --purge
 ```
 
-Env overrides: `JARVIS_HERMES_DATA`, `JARVIS_HERMES_IMAGE` (default `jarvis-hermes:local`).
+| Check (automated) | Pass |
+|-------------------|------|
+| Container | `jarvis-hermes` running |
+| Profile | `jarvis` installed |
+| Gateway | running |
+| Skill | `jarvis-research-digest` enabled |
 
-Pass checks:
-
-| Step | Pass |
-|------|------|
-| Bring-up | Container `jarvis-hermes` running; volume path printed |
-| Profile | `docker exec jarvis-hermes hermes -p jarvis profile show jarvis` |
-| State | `$JARVIS_HERMES_DATA/profiles/jarvis/state/projects.md` present |
-
-Manual docker build/compose remains available for packaging debug; prefer the script for daily install.
+Env: `JARVIS_HERMES_IMAGE` (default `jarvis-hermes:local`).  
+Optional bind mount for servers: `JARVIS_VOLUME_SPEC=/host/path` (Portainer-friendly).
 
 ---
 
-## Secrets on the volume (guided script — no LLM)
+## Secrets (interactive, in-container)
 
-Do **not** paste tokens into chat history. Use the interactive wizard:
+Do **not** paste tokens into agent chat. After smoke is green:
 
 ```bash
-./hermes/scripts/jarvis-secrets-wizard.sh
-# or after bring-up:
-./hermes/scripts/jarvis-bring-up.sh --secrets
-
-# Non-interactive capability presence report (no values printed):
-./hermes/scripts/jarvis-secrets-wizard.sh --check
+./hermes/scripts/jarvis-local-smoke.sh --secrets
 ```
 
-Writes mode-600 live `.env` under the data volume (default
-`$JARVIS_HERMES_DATA/profiles/jarvis/.env`). Names: [jarvis-capabilities.md](./jarvis-capabilities.md).
-
-Never commit values. Apply/`profile update` preserves `.env` / `auth.json`.  
-Restart after fill if the container was already running:  
-`docker compose -f hermes/docker/compose.jarvis.yaml restart`
+Writes mode-600 `/opt/data/profiles/jarvis/.env` on the Docker volume, then restarts.
+Names only in git: [jarvis-capabilities.md](./jarvis-capabilities.md).
 
 ---
 

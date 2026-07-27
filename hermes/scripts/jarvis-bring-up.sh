@@ -1,17 +1,18 @@
 #!/usr/bin/env bash
-# Idempotent Jarvis single-remote bring-up (volume + image + compose).
-# Secrets: optional guided wizard (no LLM) — see jarvis-secrets-wizard.sh
+# Idempotent Jarvis bring-up: image + compose + named Docker volume.
+# Default data home is Docker volume `jarvis-hermes-data` (inside the container at /opt/data).
+# You do not need a host project directory — Jarvis is not Kevin.
 #
-# Usage (from agent-tools repo root or any cwd):
-#   ./hermes/scripts/jarvis-bring-up.sh              # ensure volume, build if needed, up
-#   ./hermes/scripts/jarvis-bring-up.sh --no-build   # reuse existing image
-#   ./hermes/scripts/jarvis-bring-up.sh --secrets     # bring-up then secrets wizard
-#   ./hermes/scripts/jarvis-bring-up.sh --status      # print paths + container status
+# Usage:
+#   ./hermes/scripts/jarvis-bring-up.sh
+#   ./hermes/scripts/jarvis-bring-up.sh --no-build
+#   ./hermes/scripts/jarvis-bring-up.sh --status
 #   ./hermes/scripts/jarvis-bring-up.sh --down
+#   ./hermes/scripts/jarvis-bring-up.sh --purge   # down + delete named volume (disposable test)
 #
 # Env:
-#   JARVIS_HERMES_DATA   default: $HOME/.jarvis/hermes-data  (production volume)
-#   JARVIS_HERMES_IMAGE  default: jarvis-hermes:local
+#   JARVIS_HERMES_IMAGE   default jarvis-hermes:local
+#   JARVIS_VOLUME_SPEC    default jarvis-hermes-data (named vol); set absolute path to bind-mount
 #
 set -euo pipefail
 
@@ -20,27 +21,24 @@ HERMES_DIR="$(cd "${SCRIPT_DIR}/.." && pwd)"
 REPO_ROOT="$(cd "${HERMES_DIR}/.." && pwd)"
 COMPOSE_FILE="${HERMES_DIR}/docker/compose.jarvis.yaml"
 DOCKERFILE="${HERMES_DIR}/docker/Dockerfile.jarvis"
-WIZARD="${SCRIPT_DIR}/jarvis-secrets-wizard.sh"
 
-DATA_DIR="${JARVIS_HERMES_DATA:-${HOME}/.jarvis/hermes-data}"
 IMAGE="${JARVIS_HERMES_IMAGE:-jarvis-hermes:local}"
+VOLUME_SPEC="${JARVIS_VOLUME_SPEC:-jarvis-hermes-data}"
 NO_BUILD=0
-RUN_SECRETS=0
 DO_DOWN=0
 DO_STATUS=0
+DO_PURGE=0
 
 die() { echo "jarvis-bring-up: error: $*" >&2; exit 1; }
 info() { echo "jarvis-bring-up: $*" >&2; }
 
-usage() {
-  sed -n '2,20p' "$0" | sed 's/^# \?//'
-}
+usage() { sed -n '2,18p' "$0" | sed 's/^# \?//'; }
 
 while [[ $# -gt 0 ]]; do
   case "$1" in
     --no-build) NO_BUILD=1; shift ;;
-    --secrets) RUN_SECRETS=1; shift ;;
     --down) DO_DOWN=1; shift ;;
+    --purge) DO_PURGE=1; shift ;;
     --status) DO_STATUS=1; shift ;;
     -h|--help) usage; exit 0 ;;
     *) die "unknown option: $1" ;;
@@ -50,105 +48,69 @@ done
 command -v docker >/dev/null 2>&1 || die "docker not on PATH"
 [[ -f "$COMPOSE_FILE" ]] || die "missing compose: $COMPOSE_FILE"
 
-export JARVIS_HERMES_DATA="$DATA_DIR"
 export JARVIS_HERMES_IMAGE="$IMAGE"
+export JARVIS_VOLUME_SPEC="$VOLUME_SPEC"
 
-compose() {
-  docker compose -f "$COMPOSE_FILE" "$@"
-}
-
-profile_env_path() {
-  # Hermes may nest under profiles/jarvis or similar after first start.
-  local candidates=(
-    "${DATA_DIR}/profiles/jarvis/.env"
-    "${DATA_DIR}/hermes/profiles/jarvis/.env"
-  )
-  local c
-  for c in "${candidates[@]}"; do
-    if [[ -f "$c" ]] || [[ -d "$(dirname "$c")" ]]; then
-      echo "$c"
-      return 0
-    fi
-  done
-  # Default path we will create after first up if missing
-  echo "${DATA_DIR}/profiles/jarvis/.env"
-}
+compose() { docker compose -f "$COMPOSE_FILE" "$@"; }
 
 if [[ "$DO_STATUS" -eq 1 ]]; then
-  info "JARVIS_HERMES_DATA=$DATA_DIR"
-  info "JARVIS_HERMES_IMAGE=$IMAGE"
-  info "compose=$COMPOSE_FILE"
-  if [[ -d "$DATA_DIR" ]]; then
-    info "volume: present ($(du -sh "$DATA_DIR" 2>/dev/null | awk '{print $1}'))"
-  else
-    info "volume: missing (will create on bring-up)"
-  fi
+  info "image=$IMAGE"
+  info "volume_spec=$VOLUME_SPEC  (container path always /opt/data)"
   compose ps 2>/dev/null || true
-  envf="$(profile_env_path)"
-  if [[ -f "$envf" ]]; then
-    info "live .env: $envf (exists; contents not shown)"
-  else
-    info "live .env: not yet at $envf"
+  if docker ps --format '{{.Names}}' | grep -qx jarvis-hermes; then
+    docker exec jarvis-hermes hermes -p jarvis profile show jarvis 2>&1 | head -20 || true
+    if docker exec jarvis-hermes test -f /opt/data/profiles/jarvis/.env 2>/dev/null; then
+      info ".env: present inside container (values not shown)"
+    else
+      info ".env: missing inside container — run: ./hermes/scripts/jarvis-local-smoke.sh --secrets"
+    fi
   fi
+  exit 0
+fi
+
+if [[ "$DO_PURGE" -eq 1 ]]; then
+  info "purge: compose down -v (removes named volume data)"
+  compose down -v 2>/dev/null || true
+  docker rm -f jarvis-hermes 2>/dev/null || true
+  # Named volume may remain if not attached
+  docker volume rm jarvis-hermes-data 2>/dev/null || true
+  info "purge complete — disposable local data gone"
   exit 0
 fi
 
 if [[ "$DO_DOWN" -eq 1 ]]; then
-  info "stopping compose (volume preserved at $DATA_DIR)"
+  info "stopping container (volume preserved)"
   compose down
   exit 0
 fi
 
-# ── Idempotent volume ──────────────────────────────────────────────
-if [[ ! -d "$DATA_DIR" ]]; then
-  mkdir -p "$DATA_DIR"
-  info "created volume directory: $DATA_DIR"
-else
-  info "volume directory exists: $DATA_DIR"
-fi
-# Pre-seed adaptive state on host so it is visible even before entrypoint (optional)
-STATE_SEED="${DATA_DIR}/profiles/jarvis/state"
-if [[ ! -f "${STATE_SEED}/projects.md" ]]; then
-  mkdir -p "${STATE_SEED}/digests"
-  cat > "${STATE_SEED}/projects.md" <<'EOF'
-# In-flight projects
-
-<!-- Seed projects here. Survives profile re-apply (adaptive state lane). -->
-EOF
-  info "seeded ${STATE_SEED}/projects.md"
-fi
-
-# ── Image ──────────────────────────────────────────────────────────
 if [[ "$NO_BUILD" -eq 0 ]]; then
   if ! docker image inspect "$IMAGE" >/dev/null 2>&1; then
-    info "image $IMAGE missing — building from $DOCKERFILE"
+    info "building $IMAGE"
     docker build -f "$DOCKERFILE" -t "$IMAGE" "$REPO_ROOT"
   else
-    info "image $IMAGE present (use rebuild: docker build -f hermes/docker/Dockerfile.jarvis -t $IMAGE .)"
+    info "image $IMAGE present"
   fi
 else
-  docker image inspect "$IMAGE" >/dev/null 2>&1 || die "image $IMAGE missing; omit --no-build to build"
+  docker image inspect "$IMAGE" >/dev/null 2>&1 || die "image $IMAGE missing"
 fi
 
-# ── Up ─────────────────────────────────────────────────────────────
-info "compose up -d"
+info "compose up -d (data at volume_spec=$VOLUME_SPEC → /opt/data)"
 compose up -d
 
-# Brief wait for entrypoint
-sleep 2
-if compose ps | grep -q jarvis; then
-  info "container running"
+# Wait for profile + gateway (entrypoint may retry once)
+for i in 1 2 3 4 5 6 7 8 9 10; do
+  if docker exec jarvis-hermes hermes -p jarvis profile show jarvis >/dev/null 2>&1; then
+    break
+  fi
+  sleep 1
+done
+
+if docker ps --format '{{.Names}}' | grep -qx jarvis-hermes; then
+  info "container jarvis-hermes is up"
 else
-  info "warning: container not listed as running — check: docker compose -f $COMPOSE_FILE logs"
+  die "container not running — docker logs jarvis-hermes"
 fi
 
-info "volume SoT: $DATA_DIR"
-info "ops: docker exec jarvis-hermes hermes -p jarvis doctor"
-info "talk: Slack (see docs/agents/runbooks/jarvis-slack.md) — not terminal"
-
-if [[ "$RUN_SECRETS" -eq 1 ]]; then
-  [[ -x "$WIZARD" ]] || die "secrets wizard missing or not executable: $WIZARD"
-  exec "$WIZARD" --data-dir "$DATA_DIR"
-fi
-
-info "secrets: run ./hermes/scripts/jarvis-secrets-wizard.sh  (or re-run bring-up with --secrets)"
+info "done. Validate: ./hermes/scripts/jarvis-local-smoke.sh"
+info "Secrets (interactive in container): ./hermes/scripts/jarvis-local-smoke.sh --secrets"

@@ -28,7 +28,9 @@ USER root
 COPY --from=publish /out/skills /opt/jarvis/skills
 COPY hermes/jarvis-profile /opt/jarvis/profile
 COPY hermes/docker/entrypoint-jarvis.sh /opt/jarvis/entrypoint.sh
-RUN chmod 755 /opt/jarvis/entrypoint.sh \
+COPY hermes/scripts/jarvis-secrets-wizard.sh /opt/jarvis/bin/jarvis-secrets-wizard.sh
+COPY hermes/scripts/jarvis-send-digest.sh /opt/jarvis/bin/jarvis-send-digest.sh
+RUN chmod 755 /opt/jarvis/entrypoint.sh /opt/jarvis/bin/jarvis-secrets-wizard.sh /opt/jarvis/bin/jarvis-send-digest.sh \
   && chmod -R a+rX /opt/jarvis/skills /opt/jarvis/profile \
   && test -f /opt/jarvis/skills/.agent-tools-revision \
   && ! find /opt/jarvis/skills -mindepth 1 -maxdepth 1 -type d -name 'work*' | grep -q .

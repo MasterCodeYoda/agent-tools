@@ -20,9 +20,9 @@ DO_PUBLISH=1
 
 # Product allowlist: directory names under dist/hermes/skills (published skill ids).
 # Expand as new Jarvis skill families land. Never include work / work-* / git process pack.
-# Top-level dirs under dist/hermes/skills after publish (src/jarvis/ → jarvis/).
+# Top-level dirs under dist/hermes/skills after publish (flat skill ids).
 JARVIS_SKILL_ALLOWLIST=(
-  jarvis
+  jarvis-research-digest
 )
 
 die() { echo "pack-jarvis-skills: error: $*" >&2; exit 1; }
