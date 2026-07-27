@@ -79,18 +79,19 @@ else
   fail "baked skill missing"
 fi
 
-# Skills list can lag after gateway start; capture full output (rich/table + pipefail-safe)
+# Skills list can lag after gateway start. Hermes may show colon name (jarvis:research-digest)
+# while the on-disk pack dir is jarvis-research-digest.
 SKILL_OK=0
 for _ in 1 2 3 4 5 6 7 8; do
   out="$(docker exec jarvis-hermes hermes -p jarvis skills list 2>&1 || true)"
-  if printf '%s' "$out" | grep -qi 'jarvis-research-digest'; then
+  if printf '%s' "$out" | grep -qiE 'jarvis[: -]research-digest'; then
     SKILL_OK=1
     break
   fi
   sleep 1
 done
 if [[ "$SKILL_OK" -eq 1 ]]; then
-  pass "skill jarvis-research-digest enabled"
+  pass "skill jarvis research-digest enabled"
 else
   fail "skill not listed (external_dirs?)"
   info "  last skills list (truncated): $(docker exec jarvis-hermes hermes -p jarvis skills list 2>&1 | tr -d '\\000' | head -c 200)"
