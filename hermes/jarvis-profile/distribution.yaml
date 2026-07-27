@@ -57,6 +57,21 @@ env_requires:
   - name: JARVIS_BACKUP_BRANCH
     description: "Backup branch (default main)"
     required: false
+  - name: JARVIS_GITHUB_READ_TOKEN
+    description: "GitHub read-only token/App for selected OMG repos (NOT the backup write PAT)"
+    required: false
+  - name: JARVIS_LINEAR_API_KEY
+    description: "Linear API key (read-only for CoS correlation)"
+    required: false
+  - name: JARVIS_JIRA_BASE_URL
+    description: "Jira Cloud base URL (e.g. https://org.atlassian.net)"
+    required: false
+  - name: JARVIS_JIRA_EMAIL
+    description: "Atlassian account email for Jira API token auth"
+    required: false
+  - name: JARVIS_JIRA_API_TOKEN
+    description: "Jira API token (read-only usage for CoS correlation)"
+    required: false
 distribution_owned:
   - SOUL.md
   - config.yaml

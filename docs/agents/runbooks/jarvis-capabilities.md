@@ -3,7 +3,8 @@
 **Status:** Active  
 **Profile:** `jarvis`  
 **Doctrine:** [multi-agent-config-lanes.md](./multi-agent-config-lanes.md)  
-**Templates:** `hermes/jarvis-profile/.env.template` · `distribution.yaml` `env_requires`
+**Templates:** `hermes/jarvis-profile/.env.template` · `distribution.yaml` `env_requires`  
+**Full setup:** `hermes/scripts/jarvis-setup.sh`
 
 ---
 
@@ -11,11 +12,14 @@
 
 | Capability | Lane | Secret / config names (git = names only) | Required for | Fail loud when |
 |------------|------|------------------------------------------|--------------|----------------|
-| **Model auth** | Secrets | `ANTHROPIC_API_KEY` / `OPENAI_*` / `OPENROUTER_*` or `auth.json` via `hermes -p jarvis auth` | Chat + research | No working model path for live runs |
-| **Research (web/X)** | Policy toolsets + host tools | Provider keys as above; no extra v1 names | Digest ritual | Tools unavailable (document residual) |
-| **Email digest** | Secrets | `JARVIS_SMTP_*`, `JARVIS_DIGEST_TO`, `JARVIS_DIGEST_FROM` | Morning send | Missing env and not `--dry-run` |
-| **Slack CoS chat** | Secrets + bindings | `SLACK_BOT_TOKEN`, `SLACK_APP_TOKEN`, `SLACK_ALLOWED_USERS`, optional `SLACK_HOME_CHANNEL` | Interactive UX | Gateway cannot connect / allowlist empty |
-| **Adaptive state backup** | Secrets (token) + host cron | `JARVIS_BACKUP_REPO`, `JARVIS_BACKUP_GITHUB_TOKEN` (fine-grained PAT to that repo only), optional branch | Full-fidelity durable setup | Missing on `jarvis-setup.sh` / backup push |
+| **Model auth** | Secrets | `ANTHROPIC_API_KEY` / `OPENAI_*` / `OPENROUTER_*` or `auth.json` | Chat + research | No working model path |
+| **Research (web/X)** | Policy toolsets + host tools | Model keys above | Digest ritual | Tools unavailable |
+| **Email digest** | Secrets | `JARVIS_SMTP_*`, `JARVIS_DIGEST_TO` / `FROM` | Morning send | Missing env and not dry-run |
+| **Slack CoS chat** | Secrets + bindings | `SLACK_BOT_TOKEN`, `SLACK_APP_TOKEN`, `SLACK_ALLOWED_USERS`, optional home channel | Interactive UX | Gateway cannot connect |
+| **Adaptive state backup** | Secrets + host cron | `JARVIS_BACKUP_REPO`, `JARVIS_BACKUP_GITHUB_TOKEN` (**write one private repo only**) | Durable full setup | Missing on `jarvis-setup` / push |
+| **OMG GitHub read** | Secrets (runtime) | `JARVIS_GITHUB_READ_TOKEN` (**read selected repos; NOT backup token**) | CoS familiarity / digests | Missing when integrations required |
+| **Linear read** | Secrets (runtime) | `JARVIS_LINEAR_API_KEY` | Correlate issues with research | Missing when integrations required |
+| **Jira read** | Secrets (runtime) | `JARVIS_JIRA_BASE_URL`, `JARVIS_JIRA_EMAIL`, `JARVIS_JIRA_API_TOKEN` | Correlate issues with research | Missing when integrations required |
 
 ### Future capabilities (declare before build)
 
@@ -24,8 +28,25 @@
 | Calendar | Secrets + adaptive | Later CoS |
 | Mail triage | Secrets | Later CoS |
 | Tasks / follow-ups | Adaptive + secrets | Later CoS |
+| GitHub write / PRs | Separate token later | Do not expand read or backup PATs |
 
-Each new capability adds **names** to `.env.template` / `env_requires`, a row here, and fail-loud checks in its ritual — no ad-hoc snowflakes.
+Each capability: names in git, values live only, fail-loud when a ritual needs it.
+
+---
+
+## Token split (non-negotiable)
+
+```text
+JARVIS_BACKUP_GITHUB_TOKEN  → host cron only → write jarvis-state repo
+JARVIS_GITHUB_READ_TOKEN    → container runtime → read selected OMG repos
+JARVIS_LINEAR_API_KEY       → container runtime → Linear API read
+JARVIS_JIRA_*               → container runtime → Jira API read
+```
+
+- **Never** use one GitHub credential for backup write + org read.  
+- Wizard **refuses** full setup if backup token equals read token.  
+- Prefer fine-grained PAT or GitHub App for read (contents:read on selected repos).  
+- Prefer Linear/Jira keys with least privilege (read-only roles where the product allows).
 
 ---
 
@@ -33,11 +54,11 @@ Each new capability adds **names** to `.env.template` / `env_requires`, a row he
 
 | What | Where |
 |------|--------|
-| Names in git | `hermes/jarvis-profile/.env.template`, `distribution.yaml` |
-| Live values | Docker volume → `/opt/data/profiles/jarvis/.env` and/or `auth.json` |
-| Adaptive state | `profiles/jarvis/state/**` on the volume; **nightly git backup** of text allowlist |
+| Names in git | `.env.template`, `distribution.yaml` |
+| Live values | Docker volume → `/opt/data/profiles/jarvis/.env` |
+| Adaptive state | `profiles/jarvis/state/**`; nightly git backup of text allowlist |
 
-**Never** commit secret values. **Never** blind-overwrite live `.env` from templates without operator intent.
+**Never** commit secret values.
 
 ---
 
@@ -47,24 +68,33 @@ Each new capability adds **names** to `.env.template` / `env_requires`, a row he
 ./hermes/scripts/jarvis-setup.sh
 ```
 
-This is the durable install: bring-up + secrets (**including required GitHub backup PAT + private repo**) + first backup + **nightly host cron**. Not an optional add-on.
+Collects, as **required** for durable install:
+
+1. Model key(s)  
+2. Backup repo + write-scoped GitHub PAT  
+3. OMG GitHub **read** token  
+4. Linear API key  
+5. Jira base URL + email + API token  
+
+Then: first adaptive-state backup + nightly host cron.
+
+Local packaging only: `./hermes/scripts/jarvis-local-smoke.sh` (integrations optional).
 
 See [jarvis-state-backup.md](./jarvis-state-backup.md).
 
-Local packaging only (no backup): `./hermes/scripts/jarvis-local-smoke.sh`.
+---
 
-Helpers:
+## How integrations are used (intent)
 
-- `hermes/scripts/jarvis-setup.sh` — full fidelity  
-- `hermes/scripts/jarvis-local-smoke.sh` — automated local validate  
-- `hermes/scripts/jarvis-backup-state.sh` / `jarvis-restore-state.sh`  
-- `hermes/scripts/jarvis-install-backup-cron.sh`  
-- `hermes/scripts/jarvis-send-digest.sh --file … --dry-run`
+Read-only access lets Jarvis **correlate** external research and digests with in-flight OMG work:
+
+- GitHub: code/docs familiarity across selected OMG repos (not “project-bound” like Kevin)  
+- Linear / Jira: issue titles, status, links for relevance scoring and brief context  
+
+Runtime wiring (MCP/`gh`/HTTP) may land after auth spine; **secrets names and setup are in scope now**.
 
 ---
 
 ## Kevin vocabulary parity
 
-Kevin auth packaging uses the same **lanes** language (secrets preserved on apply; policy in git).  
-Kevin path of record for factory auth: [kevin-auth-packaging.md](./kevin-auth-packaging.md).  
-Do not re-home Kevin Slack ownership here — only share terms (secrets lane, fail loud, names in git).
+Same three-lane language as Kevin auth packaging. Do not re-home Kevin Slack ownership here.

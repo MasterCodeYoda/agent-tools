@@ -46,6 +46,9 @@ Collected by `jarvis-secrets-wizard.sh --require-backup` during **`jarvis-setup.
 Create the empty private repo on GitHub first. Prefer fine-grained over classic PAT.  
 Token is stored on the Jarvis volume `.env` (secrets lane) and read by the **host** backup script via a one-shot volume mount — not logged, not committed.
 
+**Do not** grant this PAT read on OMG org repos. CoS repo familiarity uses a **separate**
+`JARVIS_GITHUB_READ_TOKEN` (see [jarvis-capabilities.md](./jarvis-capabilities.md)).
+
 ---
 
 ## Full setup (installs cron)

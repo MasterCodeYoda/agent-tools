@@ -3,7 +3,8 @@
 #
 # Installs as one flow (not optional add-ons):
 #   1. Image + container + named volume (bring-up)
-#   2. Secrets wizard (model + **required** GitHub backup token/repo + optional email/slack)
+#   2. Secrets wizard (model + required backup write token + required read integrations
+#      GitHub OMG / Linear / Jira + optional email/slack)
 #   3. Backup repo init + first backup
 #   4. Nightly host cron for adaptive-state git push
 #
@@ -62,15 +63,12 @@ fi
 info "=== 1/4 bring-up ==="
 "$BRING_UP" "${NO_BUILD[@]}"
 
-info "=== 2/4 secrets (includes required GitHub backup PAT + repo) ==="
-# Prefer in-container wizard (baked in image)
-if docker exec jarvis-hermes test -x /opt/jarvis/bin/jarvis-secrets-wizard.sh 2>/dev/null; then
-  docker exec -it jarvis-hermes /opt/jarvis/bin/jarvis-secrets-wizard.sh --in-container --require-backup
-else
-  docker cp "$WIZARD" jarvis-hermes:/opt/jarvis/bin/jarvis-secrets-wizard.sh
-  docker exec jarvis-hermes chmod 755 /opt/jarvis/bin/jarvis-secrets-wizard.sh
-  docker exec -it jarvis-hermes /opt/jarvis/bin/jarvis-secrets-wizard.sh --in-container --require-backup
-fi
+info "=== 2/4 secrets (backup write PAT + OMG GitHub read + Linear + Jira) ==="
+# Prefer in-container wizard (baked in image); always refresh script from repo for latest prompts
+docker cp "$WIZARD" jarvis-hermes:/opt/jarvis/bin/jarvis-secrets-wizard.sh
+docker exec jarvis-hermes chmod 755 /opt/jarvis/bin/jarvis-secrets-wizard.sh
+docker exec -it jarvis-hermes /opt/jarvis/bin/jarvis-secrets-wizard.sh \
+  --in-container --require-backup --require-integrations
 docker restart jarvis-hermes
 sleep 4
 
