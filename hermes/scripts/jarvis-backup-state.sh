@@ -50,8 +50,10 @@ command -v docker >/dev/null 2>&1 || die "docker required"
 command -v git >/dev/null 2>&1 || die "git required"
 
 # ── Load secrets from jarvis volume .env (never print values) ───────
+# Do NOT `source` the file: passwords often contain shell metacharacters
+# ($ ` " ' spaces) and break with cryptic errors (e.g. "zwin: not found").
 load_env_from_volume() {
-  local tmp
+  local tmp line key val
   tmp="$(mktemp)"
   # shellcheck disable=SC2064
   trap "rm -f '$tmp'" RETURN
@@ -59,10 +61,28 @@ load_env_from_volume() {
       cat /data/profiles/jarvis/.env >"$tmp" 2>/dev/null; then
     die "cannot read /data/profiles/jarvis/.env from volume ${VOLUME_NAME} (is jarvis set up?)"
   fi
-  set -a
-  # shellcheck disable=SC1090
-  source "$tmp"
-  set +a
+  while IFS= read -r line || [[ -n "$line" ]]; do
+    # skip blank / comments
+    [[ -z "${line//[[:space:]]/}" || "$line" =~ ^[[:space:]]*# ]] && continue
+    [[ "$line" == *=* ]] || continue
+    key="${line%%=*}"
+    val="${line#*=}"
+    # trim key whitespace; strip optional surrounding quotes on value
+    key="${key%"${key##*[![:space:]]}"}"
+    key="${key#"${key%%[![:space:]]*}"}"
+    [[ "$key" =~ ^[A-Za-z_][A-Za-z0-9_]*$ ]] || continue
+    if [[ "$val" =~ ^\"(.*)\"$ ]]; then
+      val="${BASH_REMATCH[1]}"
+    elif [[ "$val" =~ ^\'(.*)\'$ ]]; then
+      val="${BASH_REMATCH[1]}"
+    fi
+    # Only export keys we need for backup (avoid polluting env with SMTP etc.)
+    case "$key" in
+      JARVIS_BACKUP_GITHUB_TOKEN|JARVIS_BACKUP_REPO|JARVIS_BACKUP_WORKDIR|JARVIS_BACKUP_BRANCH|JARVIS_BACKUP_GIT_NAME|JARVIS_BACKUP_GIT_EMAIL|JARVIS_VOLUME_NAME)
+        export "$key=$val"
+        ;;
+    esac
+  done <"$tmp"
 }
 
 if [[ -z "${JARVIS_BACKUP_GITHUB_TOKEN:-}" || -z "${JARVIS_BACKUP_REPO:-}" ]]; then
