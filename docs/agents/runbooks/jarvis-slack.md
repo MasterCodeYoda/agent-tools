@@ -28,29 +28,67 @@ Pattern class matches Kevin Socket Mode packaging; **brand and allowlists are Ja
 3. Bot token `xoxb-…` with messaging scopes sufficient for DM + home channel (mirror Kevin app scopes as a starting point; tighten to least privilege).
 4. Install to workspace; note your member user id for allowlist.
 
-Example manifest skeleton (edit before use):
+Example **valid** manifest (edit before use).  
+**Note:** `bot_user` / Messages tab require `oauth_config.scopes.bot` — without bot scopes Slack errors with *“Bot user requires bot scope”*.
 
 ```json
 {
   "display_information": {
     "name": "Jarvis",
-    "description": "Personal chief of staff — Hermes profile jarvis; transport only"
+    "description": "Personal chief of staff — Hermes profile jarvis; transport only",
+    "background_color": "#1a1a2e"
   },
   "features": {
+    "app_home": {
+      "home_tab_enabled": false,
+      "messages_tab_enabled": true,
+      "messages_tab_read_only_enabled": false
+    },
     "bot_user": {
       "display_name": "Jarvis",
       "always_online": true
-    },
-    "app_home": {
-      "messages_tab_enabled": true,
-      "messages_tab_read_only_enabled": false
+    }
+  },
+  "oauth_config": {
+    "scopes": {
+      "bot": [
+        "app_mentions:read",
+        "channels:history",
+        "channels:read",
+        "chat:write",
+        "groups:history",
+        "groups:read",
+        "im:history",
+        "im:read",
+        "im:write",
+        "mpim:history",
+        "mpim:read",
+        "users:read"
+      ]
     }
   },
   "settings": {
-    "socket_mode_enabled": true
+    "event_subscriptions": {
+      "bot_events": [
+        "app_home_opened",
+        "app_mention",
+        "message.channels",
+        "message.groups",
+        "message.im",
+        "message.mpim"
+      ]
+    },
+    "interactivity": {
+      "is_enabled": true
+    },
+    "org_deploy_enabled": false,
+    "socket_mode_enabled": true,
+    "token_rotation_enabled": false
   }
 }
 ```
+
+Socket Mode: after create, **Settings → Socket Mode → Enable**, then create an **App-Level Token** (`xapp-…`) with scope `connections:write` (not always in the YAML for new apps).
 
 Generate a full manifest with Hermes when available, e.g.:
 
