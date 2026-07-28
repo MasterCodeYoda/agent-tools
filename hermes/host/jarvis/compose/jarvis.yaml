@@ -1,0 +1,20 @@
+# Jarvis CoS — single instance (host kit embed)
+# Image/volume defaults match hermes/docker/compose.jarvis.yaml
+
+name: jarvis-hermes
+
+services:
+  jarvis:
+    image: ${JARVIS_HERMES_IMAGE:-ghcr.io/mastercodeyoda/jarvis-hermes:main}
+    container_name: jarvis-hermes
+    restart: unless-stopped
+    environment:
+      HERMES_UID: ${HERMES_UID:-1000}
+      HERMES_GID: ${HERMES_GID:-1000}
+      HERMES_HOME: /opt/data
+    volumes:
+      - ${JARVIS_VOLUME_SPEC:-jarvis-hermes-data}:/opt/data
+
+volumes:
+  jarvis-hermes-data:
+    name: jarvis-hermes-data

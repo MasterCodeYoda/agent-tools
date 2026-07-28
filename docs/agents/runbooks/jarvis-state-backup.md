@@ -3,7 +3,8 @@
 **Status:** Active — **required** for full-fidelity setup (`jarvis-setup.sh`)  
 **Not optional** on durable/production hosts. Local packaging smoke may skip.  
 **Doctrine:** [multi-agent-config-lanes.md](./multi-agent-config-lanes.md)  
-**Scripts:** `hermes/scripts/jarvis-backup-state.sh` · `jarvis-restore-state.sh` · `jarvis-install-backup-cron.sh` · `jarvis-setup.sh`
+**Operator path of record:** [jarvis-host.md](./jarvis-host.md) — `jarvis-host backup` + `jarvis-host schedule install`  
+**Developer scripts (monorepo):** `hermes/scripts/jarvis-backup-state.sh` · `jarvis-restore-state.sh` · `jarvis-install-backup-cron.sh` · `jarvis-setup.sh` · kit sources `hermes/host/jarvis/`
 
 ---
 

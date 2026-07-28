@@ -1,0 +1,107 @@
+#!/usr/bin/env bash
+# jarvis-host — durable host ops CLI (install under /opt/jarvis-host).
+# Does not require an agent-tools git clone at runtime.
+set -euo pipefail
+
+KIT_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+# shellcheck source=../lib/common.sh
+source "${KIT_ROOT}/lib/common.sh"
+
+usage() {
+  cat <<EOF
+jarvis-host $(kit_version) — Jarvis durable host operations
+
+Usage:
+  jarvis-host version
+  jarvis-host status
+  jarvis-host backup [--init|--dry-run]
+  jarvis-host schedule install|status|remove [--system]
+  jarvis-host setup [--from-secrets-dir DIR] [--image IMAGE]
+  jarvis-host update [--check] [--yes]
+  jarvis-host help
+
+Paths:
+  kit:    ${KIT_ROOT}
+  prefix: ${JARVIS_HOST_PREFIX}
+  state:  ${JARVIS_HOST_STATE_DIR}
+  image:  ${JARVIS_HERMES_IMAGE}
+  volume: ${JARVIS_VOLUME_NAME}
+
+See: docs/agents/runbooks/jarvis-host.md (in agent-tools) or kit README.
+EOF
+}
+
+cmd_version() {
+  echo "jarvis-host $(kit_version)"
+  if [[ -f "${KIT_ROOT}/manifest.json" ]]; then
+    cat "${KIT_ROOT}/manifest.json"
+  fi
+}
+
+cmd_status() {
+  require_docker
+  echo "kit_version=$(kit_version)"
+  echo "kit_root=${KIT_ROOT}"
+  echo "image_config=${JARVIS_HERMES_IMAGE}"
+  echo "volume=${JARVIS_VOLUME_NAME}"
+  if docker ps --format '{{.Names}}' | grep -qx "${JARVIS_CONTAINER_NAME}"; then
+    echo "container=${JARVIS_CONTAINER_NAME} running"
+    docker inspect --format 'image_id={{.Image}}' "${JARVIS_CONTAINER_NAME}" 2>/dev/null || true
+    docker inspect --format 'image={{.Config.Image}}' "${JARVIS_CONTAINER_NAME}" 2>/dev/null || true
+  else
+    echo "container=${JARVIS_CONTAINER_NAME} not running"
+  fi
+  if systemctl is-enabled jarvis-backup-state.timer >/dev/null 2>&1; then
+    echo "backup_timer=enabled"
+  else
+    echo "backup_timer=missing_or_disabled"
+  fi
+  if systemctl is-enabled jarvis-update-check.timer >/dev/null 2>&1; then
+    echo "update_check_timer=enabled"
+  else
+    echo "update_check_timer=missing_or_disabled"
+  fi
+  if volume_cat "$(ops_dir_rel)/update-status.json" >/tmp/jarvis-host-status-$$.json 2>/dev/null; then
+    echo "update_status:"
+    cat /tmp/jarvis-host-status-$$.json
+    rm -f /tmp/jarvis-host-status-$$.json
+  else
+    echo "update_status=absent"
+  fi
+}
+
+main() {
+  local cmd="${1:-help}"
+  shift || true
+  case "$cmd" in
+    version|--version|-V) cmd_version ;;
+    status) cmd_status ;;
+    help|-h|--help) usage ;;
+    backup)
+      # shellcheck source=../lib/backup.sh
+      source "${KIT_ROOT}/lib/backup.sh"
+      jarvis_host_backup "$@"
+      ;;
+    schedule)
+      # shellcheck source=../lib/schedule.sh
+      source "${KIT_ROOT}/lib/schedule.sh"
+      jarvis_host_schedule "$@"
+      ;;
+    setup)
+      # shellcheck source=../lib/setup.sh
+      source "${KIT_ROOT}/lib/setup.sh"
+      jarvis_host_setup "$@"
+      ;;
+    update)
+      # shellcheck source=../lib/update.sh
+      source "${KIT_ROOT}/lib/update.sh"
+      jarvis_host_update "$@"
+      ;;
+    *)
+      usage
+      die "unknown command: $cmd"
+      ;;
+  esac
+}
+
+main "$@"

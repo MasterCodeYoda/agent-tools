@@ -1,0 +1,91 @@
+# Pack and publish jarvis-host ops kit on main (rolling GitHub Release).
+# Stable URL:
+#   https://github.com/MasterCodeYoda/agent-tools/releases/download/jarvis-host/jarvis-host.tar.gz
+#   https://github.com/MasterCodeYoda/agent-tools/releases/download/jarvis-host/install.sh
+
+name: jarvis-host dist
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "hermes/host/jarvis/**"
+      - "tools/pack-jarvis-host.sh"
+      - ".github/workflows/jarvis-host-dist.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: jarvis-host-dist-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  pack-release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Pack jarvis-host kit
+        run: |
+          chmod +x tools/pack-jarvis-host.sh hermes/host/jarvis/bin/jarvis-host hermes/host/jarvis/install.sh hermes/host/jarvis/migrate-from-legacy.sh
+          tools/pack-jarvis-host.sh
+          ls -la dist/jarvis-host/
+          cat dist/jarvis-host/manifest.json
+
+      - name: Publish rolling release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          TAG=jarvis-host
+          NOTES="Jarvis host ops kit — durable install/update/backup without cloning agent-tools.
+
+          Rolling package updated when kit sources change on \`main\`.
+
+          **Download (stable):**
+          - https://github.com/${{ github.repository }}/releases/download/${TAG}/jarvis-host.tar.gz
+          - https://github.com/${{ github.repository }}/releases/download/${TAG}/install.sh
+
+          **Install:**
+          \`\`\`bash
+          curl -fsSL https://github.com/${{ github.repository }}/releases/download/${TAG}/install.sh | sudo bash
+          sudo jarvis-host setup --from-secrets-dir /path/to/secrets
+          \`\`\`
+
+          **Existing host (one-shot):**
+          \`\`\`bash
+          sudo /opt/jarvis-host/migrate-from-legacy.sh
+          \`\`\`
+          "
+          if gh release view "$TAG" >/dev/null 2>&1; then
+            gh release upload "$TAG" \
+              dist/jarvis-host/jarvis-host.tar.gz \
+              dist/jarvis-host/jarvis-host.sha256 \
+              dist/jarvis-host/manifest.json \
+              dist/jarvis-host/install.sh \
+              --clobber
+            gh release edit "$TAG" --notes "$NOTES" --title "Jarvis host ops kit"
+          else
+            gh release create "$TAG" \
+              dist/jarvis-host/jarvis-host.tar.gz \
+              dist/jarvis-host/jarvis-host.sha256 \
+              dist/jarvis-host/manifest.json \
+              dist/jarvis-host/install.sh \
+              --title "Jarvis host ops kit" \
+              --notes "$NOTES"
+          fi
+
+      - name: Summary
+        run: |
+          {
+            echo "### jarvis-host dist"
+            echo ""
+            echo "Stable install:"
+            echo "\`curl -fsSL …/jarvis-host/install.sh | sudo bash\`"
+            echo ""
+            echo '```json'
+            cat dist/jarvis-host/manifest.json
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"

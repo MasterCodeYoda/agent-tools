@@ -25,6 +25,9 @@ One always-on Jarvis for:
 
 ## Production / durable setup (path of record)
 
+**Operators:** prefer the **jarvis-host** kit — [jarvis-host.md](./jarvis-host.md) — install without cloning agent-tools.  
+Monorepo scripts below remain valid for developers and lab→promote.
+
 ### Preferred: lab → promote (no second secrets wizard)
 
 Mint secrets once on Docker Desktop, validate, then **blind-copy `.env`** and finish remote non-interactively:
