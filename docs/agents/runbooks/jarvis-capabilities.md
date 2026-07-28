@@ -16,7 +16,8 @@
 | **Research (web/X)** | Policy toolsets + host tools | Model keys above | Digest ritual | Tools unavailable |
 | **Email digest** | Secrets | `JARVIS_SMTP_*`, `JARVIS_DIGEST_TO` / `FROM` (optional `FROM_NAME`) | Morning send | Missing env and not dry-run |
 
-**Email notes:** Digests send as **multipart** plain + HTML (markdown rendered for clients).  
+**Email notes:** Digests send as **multipart** plain + HTML via **`jarvis-send-digest.sh` only** (image: `/opt/jarvis/bin/jarvis-send-digest.sh`).  
+Agents must **not** invent ad-hoc `smtplib` or use Hermes `email/himalaya` — that yields plain markdown and skips branding.  
 `JARVIS_DIGEST_FROM` may be a Workspace **alias** while `JARVIS_SMTP_USER` is the primary mailbox.  
 Google rewrites visible From to the primary unless that alias is **Send mail as** for the authenticated account (Gmail → Settings → Accounts). Script cannot override provider rewrite.
 | **Slack CoS chat** | Secrets + bindings | `SLACK_BOT_TOKEN`, `SLACK_APP_TOKEN`, `SLACK_ALLOWED_USERS`, optional home channel | Interactive UX | Gateway cannot connect |

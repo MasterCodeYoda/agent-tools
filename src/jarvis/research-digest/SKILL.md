@@ -226,13 +226,34 @@ When live access exists later: refresh or propose updates to `portfolio.md` only
 
 Write `$HERMES_HOME/profiles/jarvis/state/digests/YYYY-MM-DD.md` — print path; do not send.
 
-### Email
+### Email (mandatory helper — no ad-hoc SMTP)
 
-Required: `JARVIS_SMTP_*`, `JARVIS_DIGEST_TO`, `JARVIS_DIGEST_FROM`  
+**Sole send path:** `jarvis-send-digest.sh`. It loads branded **multipart** plain+HTML.  
+Do **not** invent `smtplib` / `MIMEText` / “python email tests.” Do **not** use Hermes `email/himalaya` or other mail skills (not in the jarvis pack).
+
+**Binary location (try in order):**
+
+1. `/opt/jarvis/bin/jarvis-send-digest.sh` (Docker image — production)  
+2. `hermes/scripts/jarvis-send-digest.sh` (monorepo lab only)
+
+**Required env (secrets lane — already on durable volume when configured):**  
+`JARVIS_SMTP_HOST`, `JARVIS_SMTP_PORT`, `JARVIS_SMTP_USER`, `JARVIS_SMTP_PASSWORD`,  
+`JARVIS_DIGEST_TO`, `JARVIS_DIGEST_FROM`  
 Optional: `JARVIS_SMTP_STARTTLS`, `JARVIS_DIGEST_FROM_NAME`, Slack footer deep-link env  
 
-Use `jarvis-send-digest.sh` when present.  
-Subject: `Morning brief — YYYY-MM-DD` (**no** agent name).
+**How to treat “is email configured?”**
+
+1. Confirm helper exists and is executable.  
+2. Export `JARVIS_*` from profile `.env` into the shell **without printing values** (line-wise `export KEY=…` from `profiles/jarvis/.env`, or rely on container env if already injected).  
+3. Optional once:  
+   `jarvis-send-digest.sh --file $DIGEST_PATH --dry-run`  
+   If dry-run prints `would send` and From/To placeholders (not “missing env”), config is ready — **do not** write python probes.  
+4. Send:  
+   `jarvis-send-digest.sh --file $HERMES_HOME/profiles/jarvis/state/digests/YYYY-MM-DD.md`  
+5. If helper missing or dry-run fails missing env → **fail loud** to the operator. Never fall back to raw SMTP.
+
+Subject: `Morning brief — YYYY-MM-DD` (**no** agent name).  
+Markdown on disk is SoT; **HTML packaging is the helper’s job** — skipping it produces plain markdown mail (regression).
 
 ## Continuous improvement
 
@@ -245,8 +266,8 @@ Subject: `Morning brief — YYYY-MM-DD` (**no** agent name).
 
 ## Unattended safety
 
-- **May:** research, compose digests, send email when configured.  
-- **Must not:** commit secrets; irreversible non-email acts; invent holdings; give trade instructions as advice.  
+- **May:** research, compose digests, send email **only** via `jarvis-send-digest.sh` when configured.  
+- **Must not:** ad-hoc SMTP/python email; himalaya or non-jarvis mail skills; commit secrets; irreversible non-email acts; invent holdings; give trade instructions as advice.  
 
 ## Cron shape
 
