@@ -100,7 +100,12 @@ fi
 # Secrets: Hermes may create an empty .env on install — only "configured" if a model key is set
 if docker exec jarvis-hermes test -f /opt/data/profiles/jarvis/.env 2>/dev/null; then
   MODEL_SET=0
-  for key in ANTHROPIC_API_KEY OPENAI_API_KEY OPENROUTER_API_KEY; do
+  if docker exec jarvis-hermes test -f /opt/data/profiles/jarvis/auth.json \
+    && docker exec jarvis-hermes sh -c "grep -q xai-oauth /opt/data/profiles/jarvis/auth.json 2>/dev/null"; then
+    pass "model auth: Grok OAuth (auth.json xai-oauth)"
+    MODEL_SET=1
+  fi
+  for key in XAI_API_KEY ANTHROPIC_API_KEY OPENAI_API_KEY OPENROUTER_API_KEY; do
     if docker exec jarvis-hermes sh -c "grep -qE '^${key}=.+' /opt/data/profiles/jarvis/.env 2>/dev/null"; then
       pass "model key configured ($key)"
       MODEL_SET=1
@@ -108,7 +113,7 @@ if docker exec jarvis-hermes test -f /opt/data/profiles/jarvis/.env 2>/dev/null;
     fi
   done
   if [[ "$MODEL_SET" -eq 0 ]]; then
-    info "  INFO  .env exists but no model key yet — run: $0 --secrets"
+    info "  INFO  no model OAuth/API key yet — run secrets / hermes auth add xai-oauth"
   fi
 else
   info "  INFO  .env not set yet — run: $0 --secrets"
