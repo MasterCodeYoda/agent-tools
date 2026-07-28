@@ -51,7 +51,15 @@ command -v docker >/dev/null 2>&1 || die "docker not on PATH"
 export JARVIS_HERMES_IMAGE="$IMAGE"
 export JARVIS_VOLUME_SPEC="$VOLUME_SPEC"
 
-compose() { docker compose -f "$COMPOSE_FILE" "$@"; }
+# Prefer Compose V2 plugin (`docker compose`); fall back to standalone `docker-compose`
+# (common on hosts where the plugin is not installed, e.g. some Portainer/Docker CE boxes).
+if docker compose version >/dev/null 2>&1; then
+  compose() { docker compose -f "$COMPOSE_FILE" "$@"; }
+elif command -v docker-compose >/dev/null 2>&1; then
+  compose() { docker-compose -f "$COMPOSE_FILE" "$@"; }
+else
+  die "need Docker Compose: install the compose plugin (docker compose) or docker-compose binary"
+fi
 
 if [[ "$DO_STATUS" -eq 1 ]]; then
   info "image=$IMAGE"
