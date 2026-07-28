@@ -142,7 +142,7 @@ If `portfolio.md` is missing: seed/use the **default index + BTC/ETH** lens abov
 2. **Keywords are hints, not filters.** Start from **trending** queries in the domains above, *then* score against projects / interests / portfolio.  
 3. **Direct vs non-obvious:** Prefer some **non-obvious** links (why this story matters for a builder **or** a capital holder).  
 4. **Provenance required:** Every entry must include a **source URL**.  
-   - Numbered items: title + `— url` (or `[title](url)`).  
+   - Numbered items: title + bare `https://…` URL (or markdown link with a real URL).  
    - **Also notable** is **not** exempt.  
    - No credible link → **drop** the item.  
    - Prefer primary sources over aggregators when both exist.  
