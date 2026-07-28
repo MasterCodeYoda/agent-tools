@@ -3,7 +3,7 @@ project: jarvis
 requirements_source: file
 work_item: null
 pm_tool: manual
-session_count: 3
+session_count: 4
 status: in_progress
 progress:
   total_tasks: 36
@@ -24,24 +24,40 @@ handoff: true
 **Packaging + lab validation + durable Portainer host bring-up largely complete.**  
 Jarvis is the **production CoS brain on skynet** (`jarvis-hermes` + volume `jarvis-hermes-data`). Lab Mac instance should stay **down** (same Slack tokens + SuperGrok OAuth — dual gateways fight).
 
-Epic implementation (D1–D8) is on **`main`**. Remaining work is **ops residuals**, not greenfield packaging.
+Epic implementation (D1–D8) is on **`main`**. **Host ops kit shipped** on `main` @ `be7ed5a` (CI green; rolling release `jarvis-host`).
 
-**R8 host backup schedule:** **done.** System timer on skynet (`/etc/systemd/system/jarvis-backup-state.timer`, `run_as=moverlund`, ~03:15 local). Re-smoke 08:50: `status=0/SUCCESS`, pushed `bd63d19..456327c` to `jarvis-state`.
+**R8 host backup schedule:** **done** (system timer). Prefer migrating skynet to kit paths next.
 
 ## Handoff pointer (start here next session)
 
 ```text
 Read: .agent-tools/planning/jarvis/session-state.md
-Then: docs/agents/runbooks/jarvis-hermes-docker.md
-      docs/agents/runbooks/jarvis-slack.md
-      docs/agents/runbooks/jarvis-state-backup.md
+Operator path of record: docs/agents/runbooks/jarvis-host.md
+  Release: https://github.com/MasterCodeYoda/agent-tools/releases/tag/jarvis-host
+  Install: curl -fsSL …/jarvis-host/install.sh | sudo bash
+  Existing host: sudo /opt/jarvis-host/migrate-from-legacy.sh
+
+Ops runbooks:
+  docs/agents/runbooks/jarvis-host.md
+  docs/agents/runbooks/jarvis-hermes-docker.md
+  docs/agents/runbooks/jarvis-slack.md
+  docs/agents/runbooks/jarvis-state-backup.md
 Host:  ssh skynet-server
 Image: ghcr.io/mastercodeyoda/jarvis-hermes:main
 Volume: jarvis-hermes-data → /opt/data
-Repo on host: ~/Source/OMG/agent-tools (main)
 ```
 
 **Do not** start a second daily Jarvis on Docker Desktop with the same Slack app + xAI OAuth.
+
+### Host ops kit (shipped)
+
+| Item | Status |
+|------|--------|
+| Code | `hermes/host/jarvis/` on `main` @ `be7ed5a` |
+| CI | jarvis-host dist + jarvis-hermes image + CI green |
+| Release | tag `jarvis-host` (install.sh, tar.gz, manifest) |
+| Skill | `src/jarvis/host-update` (baked after image rebuild — done with image CI) |
+| Skynet migrate | **open** — run migrate-from-legacy on durable host |
 
 ---
 
@@ -135,12 +151,11 @@ Email subject: `Morning brief — YYYY-MM-DD` (no agent name)
 
 ## Next steps (suggested for new session)
 
-1. **Land script/docs on main** — commit + pull on skynet so host clone matches `ExecStart` / push retries / docs.  
-2. **Optional** — after pull, `sudo ./hermes/scripts/jarvis-install-backup-cron.sh --system` to pick up unit `ExecStartPre` DNS wait.  
-3. **R9** — Register Hermes morning brief job on durable (`hermes -p jarvis cron …`) with TZ + prompt from skill.  
-4. **Optional R5** — One research-digest + email from skynet to prove full ritual on production volume.  
-5. **R12** — Purge lab volume when ready.  
-6. **R11** — Later: Hermes `mcp_servers.robinhood` → `https://agent.robinhood.com/mcp/trading` + OAuth; disable trade tools.
+1. **Skynet migrate** — install jarvis-host kit + `migrate-from-legacy.sh`; smoke status/backup/update --check.  
+2. **R9** — Register Hermes morning brief job on durable (`hermes -p jarvis cron …`) with TZ + prompt from skill.  
+3. **Optional R5** — One research-digest + email from skynet to prove full ritual on production volume.  
+4. **R12** — Purge lab volume when ready.  
+5. **R11** — Later: Hermes `mcp_servers.robinhood` → `https://agent.robinhood.com/mcp/trading` + OAuth; disable trade tools.
 
 ### Useful commands
 
@@ -172,14 +187,20 @@ ssh skynet-server 'cd ~/Source/OMG/agent-tools && export JARVIS_HERMES_IMAGE=ghc
 - Merge to `main`, delete `feat/jarvis`, CI green for **jarvis-hermes** + **kevin-hermes** images  
 - Portainer Path A promote to skynet: compose fallback, shell-safe backup env load, state seed, Slack dual-instance gotcha, OAuth re-inject  
 
-### Session 3 — 2026-07-28 (this handoff)
+### Session 3 — 2026-07-28
 
 - Decided: adaptive backup stays **host-side** (write PAT isolation); not in `jarvis-hermes`  
 - Prefer **systemd system timer** over cron package and over user-timer+linger on headless hosts  
 - Mis-step: first installed **user** timer (needs login/linger) — not viable for headless skynet; corrected installer default to **system** scope  
 - Extended `jarvis-install-backup-cron.sh`: system default, `--user` refuses without Linger, removes user units on system install, R14 stage uid fix  
 - Docs: `jarvis-state-backup.md` (+ capabilities / docker / multi-agent-config-lanes)  
-- **Remaining:** interactive `sudo … --system` on skynet, land on main, R9, optional R5/R12  
+- R8 done on skynet; host ops kit unit framed (brainstorm)
+
+### Session 4 — 2026-07-28 (this handoff)
+
+- Host ops kit: refine → plan → execute → merge `be7ed5a` to main; CI all green  
+- Rolling release `jarvis-host` published  
+- **Remaining:** skynet `migrate-from-legacy`, R9 morning Hermes cron, optional R5/R12
 
 ---
 
