@@ -14,7 +14,11 @@
 |------------|------|------------------------------------------|--------------|----------------|
 | **Model auth (Grok OAuth preferred)** | Secrets (`auth.json`) | `hermes -p jarvis auth add xai-oauth --type oauth` (SuperGrok/Premium+ device+browser PKCE). Optional env: `XAI_API_KEY`, Anthropic/OpenAI/OpenRouter | Chat + research | No OAuth session and no API key |
 | **Research (web/X)** | Policy toolsets + host tools | Model keys above | Digest ritual | Tools unavailable |
-| **Email digest** | Secrets | `JARVIS_SMTP_*`, `JARVIS_DIGEST_TO` / `FROM` | Morning send | Missing env and not dry-run |
+| **Email digest** | Secrets | `JARVIS_SMTP_*`, `JARVIS_DIGEST_TO` / `FROM` (optional `FROM_NAME`) | Morning send | Missing env and not dry-run |
+
+**Email notes:** Digests send as **multipart** plain + HTML (markdown rendered for clients).  
+`JARVIS_DIGEST_FROM` may be a Workspace **alias** while `JARVIS_SMTP_USER` is the primary mailbox.  
+Google rewrites visible From to the primary unless that alias is **Send mail as** for the authenticated account (Gmail → Settings → Accounts). Script cannot override provider rewrite.
 | **Slack CoS chat** | Secrets + bindings | `SLACK_BOT_TOKEN`, `SLACK_APP_TOKEN`, `SLACK_ALLOWED_USERS`, optional home channel | Interactive UX | Gateway cannot connect |
 | **Adaptive state backup** | Secrets + host cron | `JARVIS_BACKUP_REPO`, `JARVIS_BACKUP_GITHUB_TOKEN` (**write one private repo only**) | Durable full setup | Missing on `jarvis-setup` / push |
 | **OMG GitHub read** | Secrets (runtime) | `JARVIS_GITHUB_READ_TOKEN` (**read selected repos; NOT backup token**) | CoS familiarity / digests | Missing when integrations required |

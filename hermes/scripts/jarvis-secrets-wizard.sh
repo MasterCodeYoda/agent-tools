@@ -320,17 +320,27 @@ fi
 # ── Optional channels ──────────────────────────────────────────────
 section "6) Email SMTP (optional until testing digests)"
 howto <<'EOF'
-Mint depends on provider (Gmail app password, SES SMTP user, etc.).
+Mint depends on provider (Gmail/Workspace app password, SES SMTP user, etc.).
 Need: host, port (often 587), user, password, From and To addresses.
+
+Google Workspace alias From (preferred vs second license):
+  1. Create alias/group e.g. jarvis@yourdomain that may send
+  2. Primary Gmail (app-password account) → Settings → Accounts → Send mail as
+     → Add alias → complete verification if prompted
+  3. JARVIS_SMTP_USER = primary mailbox; JARVIS_DIGEST_FROM = alias;
+     JARVIS_DIGEST_TO = your inbox; optional JARVIS_DIGEST_FROM_NAME=Jarvis
+  Without Send-as, Google rewrites visible From to the primary even when
+  JARVIS_DIGEST_FROM is set correctly. Digests are HTML multipart (not raw md).
 EOF
 if ask_yn "Configure email SMTP now?" "n"; then
   ask_val JARVIS_SMTP_HOST "SMTP host" 0
   ask_val JARVIS_SMTP_PORT "SMTP port" 0 "587"
-  ask_val JARVIS_SMTP_USER "SMTP user" 0
+  ask_val JARVIS_SMTP_USER "SMTP user (auth / primary)" 0
   ask_val JARVIS_SMTP_PASSWORD "SMTP password" 1
   ask_val JARVIS_SMTP_STARTTLS "STARTTLS 1/0" 0 "1"
   ask_val JARVIS_DIGEST_TO "Digest To" 0
-  ask_val JARVIS_DIGEST_FROM "Digest From" 0
+  ask_val JARVIS_DIGEST_FROM "Digest From (alias ok if Send-as)" 0
+  ask_val JARVIS_DIGEST_FROM_NAME "Digest From display name" 0 "Jarvis"
 fi
 
 section "7) Slack Socket Mode (optional until testing chat)"

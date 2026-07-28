@@ -1,124 +1,262 @@
 ---
 name: research-digest
 description: >
-  Morning external research sweep for Jarvis CoS — web + X signal mapped to in-flight
-  work; short ranked digest with non-obvious pattern matches; email or dry-run.
-  Use when running the daily ritual or composing the digest.
+  Morning external research & trending brief for Jarvis CoS — world/politics, AI/tech,
+  venture insights, and portfolio & markets, ranked to the operator lens. Use for the
+  daily ritual, dry-run, or email digest composition.
 user-invocable: true
 ---
 
-# Jarvis research digest
+# Research digest (morning brief)
 
-Unattended-friendly ritual for **Jarvis** (not Kevin). Scans the **external** internet for
-research, trends, announcements, and discussions that are **directly or non-obviously**
-related to the operator's in-flight projects. Delivers a short ranked digest.
+Unattended-friendly morning brief for **Jarvis** (not Kevin).
 
-## Inputs
+This is **not** a monorepo news scraper. It is a **short executive briefing**:
 
-### Project lens (adaptive state)
+1. What is moving in the world (politics, AI/tech, markets).  
+2. What of that **matters for this operator** — in-flight projects, standing interests, **and** investment portfolio.  
+3. Non-obvious connections (pattern match), not keyword dumps about a single tool/repo.
 
-Read (and never invent a second SoT for):
+**Voice:** The operator runs **startup-shaped** ventures (sometimes inside a corporate or multi-entity shell) and also holds a **capital portfolio**. Do **not** call them “founder” in section titles unless their lens files say so. Reserve the word **portfolio** for **capital / markets**, not for “list of software projects.”
+
+## Inputs (adaptive state — all under profile `state/`)
+
+Read every file that exists. **Do not invent a second SoT.** Prefer:
 
 ```text
-$HERMES_HOME/profiles/jarvis/state/projects.md
+$HERMES_HOME/profiles/jarvis/state/projects.md     # in-flight ventures / products (required for full ritual)
+$HERMES_HOME/profiles/jarvis/state/interests.md    # standing themes / beat (strongly recommended)
+$HERMES_HOME/profiles/jarvis/state/priorities.md   # optional: this-week focus
+$HERMES_HOME/profiles/jarvis/state/portfolio.md    # capital portfolio lens (recommended for Portfolio & markets)
 ```
 
-If `HERMES_HOME` unset, prefer the live profile home for this process
-(`~/.hermes/profiles/jarvis/state/projects.md` on host layouts).
+If `HERMES_HOME` unset, use the live profile home for this process  
+(`…/profiles/jarvis/state/` on host or Docker volume layouts).
 
-**Seed format** (markdown):
+### `projects.md` (project / venture lens)
+
+Things being **built or operated** — not investment holdings.
 
 ```markdown
 # In-flight projects
 
-- **project-slug** — one-line mission / what "related" means
-  - keywords: optional comma list (not the only relevance signal)
-  - notes: optional adjacency themes
+- **project-slug** — one-line mission / what “related” means
+  - keywords: optional (hints only — not the only relevance signal)
+  - notes: adjacency, stakeholders, risks
 ```
 
-If missing: create a stub and **fail loud** for unattended send (dry-run may continue with a
-warning). Optional **auto-suggest**: propose additions at end of digest; do not write without
-operator intent unless they asked to apply suggestions.
+### `interests.md` (standing lens)
 
-### Sources (v1)
-
-| In scope | Out of scope (v1) |
-|----------|-------------------|
-| Web search / open web | HN/Reddit/forums as primary |
-| X (public posts/threads) | Internal repo code scans as primary signal |
-| | RSS/newsletter firehose (later) |
-
-## Quality bar
-
-- **Short ranked list:** about **5–10** items (not a dump).
-- Each item: title/link, **why it matters** to which project(s), **direct vs non-obvious** tag.
-- Prefer **high-leverage opportunity** and **pattern-overlap** over keyword hits.
-- Skip noise the operator would ignore after one glance.
-
-## Digest schema
+Broader than active tickets. Topics for **ongoing ambient awareness**.
 
 ```markdown
-# Jarvis research digest — YYYY-MM-DD
+# Standing interests
 
-## Top picks
-1. **Title** — url
-   - Projects: …
-   - Relevance: direct | non-obvious
-   - Why: …
+## Domains (always scan)
+- AI / agents / models / infra
+- Developer tooling & platforms
+- Technology industry & regulation
+- News & politics (operator-relevant geopolitics, policy, elections)
+- Public markets & macro (as context for Portfolio & markets)
+- …
 
-## Also notable
-…
+## People / orgs to watch (optional)
+- …
 
-## Project-list suggestions (optional)
+## Explicit deprioritize (optional)
+- Topics to skip or rank last (e.g. pure meme-coin noise)
+```
+
+### `priorities.md` (optional temporary boost)
+
+```markdown
+# This week
 - …
 ```
 
-## Delivery
+### `portfolio.md` (capital / investment lens)
 
-### Dry-run (default when email incomplete or `--dry-run`)
+**Reserved meaning:** investable assets and market themes — **not** the software venture list.
 
-Write digest to:
+**Default when seeding a new instance** (operator may edit): major **US indexes** (S&P 500, Nasdaq-100, Russell 2000, Dow) + **BTC/ETH** (and broader crypto only when material). No account numbers.
 
-```text
-$HERMES_HOME/profiles/jarvis/state/digests/YYYY-MM-DD.md
+```markdown
+# Capital portfolio lens
+
+## Holdings & themes (names/tickers OK; no account numbers or secrets)
+### Major US indexes
+- **SPY / S&P 500** — broad US large-cap beta
+- **QQQ / Nasdaq-100** — growth / mega-cap tech beta
+- **IWM / Russell 2000** — small-cap / domestic cycle
+- **DIA / Dow** — blue-chip tone
+
+### Crypto
+- **BTC** — bitcoin
+- **ETH** — ethereum
+- **Theme: broader crypto beta** — only when material to BTC/ETH or policy
+
+### Cross-cutting (optional)
+- **Theme: AI infra / semis**, **rates & USD**, …
+
+## Explicit deprioritize
+- Meme-coin / day-trading noise; illiquid microcaps unless listed
+
+## Access notes (optional)
+- v1: manual file SoT (Robinhood MCP deferred)
 ```
 
-Print path; **do not send**.
+If `portfolio.md` is missing: seed/use the **default index + BTC/ETH** lens above for **Portfolio & markets**, and note “using defaults” in **Meta**. Do **not** invent personal holdings beyond that public default book.
 
-### Email (happy path, unattended)
+### Missing files
 
-Required env (live profile `.env` — names only in git templates):
+| File | Dry-run | Unattended email |
+|------|---------|------------------|
+| `projects.md` missing | Warn; continue with interests if present | Prefer **fail loud** |
+| `interests.md` missing | Warn; stub + defaults | Proceed with defaults; note in Meta |
+| `portfolio.md` missing | Markets-only subsection; note in Meta | Same — never invent positions |
 
-- `JARVIS_SMTP_HOST`, `JARVIS_SMTP_PORT`, `JARVIS_SMTP_USER`, `JARVIS_SMTP_PASSWORD`
-- `JARVIS_DIGEST_TO`, `JARVIS_DIGEST_FROM`
-- Optional: `JARVIS_SMTP_STARTTLS=1`
+**Default domains** when interests are thin: AI & agents, developer platforms, major tech/regulatory news, material political news, macro/markets that affect tech or listed themes.
 
-If any required var missing and not dry-run: **fail loud** (non-zero / clear error). Do not
-claim success with empty send.
+## Research method (anti-narrowing)
 
-Send subject: `Jarvis digest — YYYY-MM-DD`. Body: markdown or plain text of the digest.
+### Must cover (every run)
 
-Implementation may use a small helper script under `hermes/scripts/` when present; otherwise
-compose with available host tools. Never log SMTP passwords.
+| Bucket | Intent | Rough share |
+|--------|--------|-------------|
+| **World & politics** | Material headlines an informed operator should know | ≥ 1–2 if anything real moved |
+| **AI & technology** | Models, infra, platforms, regulation, labs, big vendors | ~25–35% |
+| **Venture insights** | Startup-shaped **build/operate** signal mapped to `projects.md` (product, GTM, talent, packaging, leverage) — **not** capital portfolio | ~20–30% |
+| **Portfolio & markets** | Macro/markets **plus** relevance to `portfolio.md` holdings/themes | ~15–25% when lens exists; thinner if not |
+| **Also notable** | Overflow with **required** source links | rest |
+
+**Do not** use section titles:
+
+- “Work-adjacent” (corporate IC framing)  
+- “Founder insights” (not accurate for all ventures)  
+- “Project signal” (superseded by **Venture insights**)  
+- “Portfolio insights” alone for **venture/project** news (**portfolio** = capital)
+
+### Hard rules
+
+1. **Project balance:** If ≥3 top picks all cite the **same software project** (or the same product name, e.g. only Hermes/agent-tools), **rewrite**.  
+2. **Keywords are hints, not filters.** Start from **trending** queries in the domains above, *then* score against projects / interests / portfolio.  
+3. **Direct vs non-obvious:** Prefer some **non-obvious** links (why this story matters for a builder **or** a capital holder).  
+4. **Provenance required:** Every entry must include a **source URL**.  
+   - Numbered items: title + `— url` (or `[title](url)`).  
+   - **Also notable** is **not** exempt.  
+   - No credible link → **drop** the item.  
+   - Prefer primary sources over aggregators when both exist.  
+5. **Skip** listicle spam, pure vendor SEO, and one-glance noise.  
+6. **Sources (v1):** web + X when available. Live brokerage balances are **out of band** unless a configured read-only path exists (see Access below) — never paste secrets into digests.  
+7. **No position advice:** Portfolio section is situational awareness, not buy/sell recommendations.
+
+### Query pattern (suggested)
+
+- World/politics last 24–48h  
+- AI/tech / infra / regulation  
+- 1–2 searches per **distinct** project theme (not five monorepo variants)  
+- Markets/macro + **one search per major holding or theme** in `portfolio.md`  
+- Interest-domain deep dives as needed  
+
+## Quality bar
+
+- **~8–14** items across sections (short enough for ~3 minutes).  
+- Each item: **title + source URL**, lens tags, **direct | non-obvious**, one-line **why**.  
+- High-leverage pattern-overlap over keyword hits.
+
+## Digest schema (markdown SoT)
+
+```markdown
+# Morning brief — YYYY-MM-DD
+
+> One-sentence executive line (what mattered today).
+
+## World & politics
+1. **Title** — url
+   - Lens: …
+   - Relevance: direct | non-obvious
+   - Why: …
+
+## AI & technology
+1. **Title** — url
+   - Lens: …
+   - Relevance: …
+   - Why: …
+
+## Venture insights
+1. **Title** — url
+   - Projects: slug-a, slug-b (optional)
+   - Relevance: …
+   - Why: …
+
+## Portfolio & markets
+1. **Title** — url
+   - Holdings/themes: TICKER, theme-name (from portfolio.md when known)
+   - Relevance: …
+   - Why: …
+
+## Also notable
+- **Title or claim** — url   ← link required
+
+## Meta
+Reflection **on this brief itself** (not another news item).
+
+- Coverage gaps today: …
+- Suggested lens edits (projects / interests / portfolio — do not write unless asked): …
+- Feedback for next run: …
+```
+
+Omit empty sections rather than padding. Do **not** title Meta as “Lens notes.”
+
+## Access: capital portfolio data (how Jarvis learns holdings)
+
+| Tier | Mechanism | Secrets? | Notes |
+|------|-----------|----------|--------|
+| **A — Day-1 (always on)** | Operator-maintained `state/portfolio.md` (tickers, themes, one-line thesis) | No | Adaptive lane; backup with other state text; good enough for relevance ranking |
+| **B — Structured export** | Periodic CSV/JSON drop into `state/portfolio-holdings.json` (or similar) from brokerage export | File on volume only | Cron or manual; skill reads allowlisted paths; **no** account numbers |
+| **C — Live read-only API / MCP** | e.g. brokerage MCP or API token with **read-only** scopes | Secrets lane (`.env` / auth) | Optional; fail soft to Tier A if unavailable; never trade |
+
+**Jarvis product pack** does not require live brokerage for v1. Prefer Tier A with the **default US indexes + BTC/ETH** seed; promote to B/C (e.g. Robinhood MCP) later when the operator enables it.
+
+When live access exists later: refresh or propose updates to `portfolio.md` only with operator intent; digests cite **public** news URLs, not raw account payloads.
+
+## Delivery
+
+### Dry-run
+
+Write `$HERMES_HOME/profiles/jarvis/state/digests/YYYY-MM-DD.md` — print path; do not send.
+
+### Email
+
+Required: `JARVIS_SMTP_*`, `JARVIS_DIGEST_TO`, `JARVIS_DIGEST_FROM`  
+Optional: `JARVIS_SMTP_STARTTLS`, `JARVIS_DIGEST_FROM_NAME`, Slack footer deep-link env  
+
+Use `jarvis-send-digest.sh` when present.  
+Subject: `Morning brief — YYYY-MM-DD` (**no** agent name).
+
+## Continuous improvement
+
+| Horizon | Mechanism |
+|---------|-----------|
+| **Same day** | Slack: “care more about X / less about Y” → adaptive lens files |
+| **Weekly** | Review **Meta**; prune projects; update portfolio themes |
+| **Skill evolution** | agent-tools pack when process quality drifts |
+| **Never silent** | No silent policy commits |
 
 ## Unattended safety
 
-- **May:** research, compose, write adaptive state digests, send email when configured.
-- **Must not:** rewrite policy `config.yaml` / `SOUL.md`; commit secrets; irreversible non-email acts.
-- Policy changes: propose for human promotion to git only.
+- **May:** research, compose digests, send email when configured.  
+- **Must not:** commit secrets; irreversible non-email acts; invent holdings; give trade instructions as advice.  
 
-## Cron shape (host)
+## Cron shape
 
 ```text
-# Example — morning local time; adjust TZ on host
-hermes -p jarvis cron …  # or script:
-#   hermes -p jarvis chat -q "Run research-digest for today; send email unless dry-run"
+hermes -p jarvis chat -q "Run research-digest for today; buckets: world, AI/tech, venture insights, portfolio & markets; every item needs a source URL; write state/digests; send email unless dry-run"
 ```
-
-Prefer invoking this skill explicitly in the cron prompt. Gateway may already be running for Slack.
 
 ## Related
 
 - Profile: `hermes/jarvis-profile/`
 - Lanes: `docs/agents/runbooks/multi-agent-config-lanes.md`
 - Capabilities: `docs/agents/runbooks/jarvis-capabilities.md`
+- Email helper: `hermes/scripts/jarvis-send-digest.sh`

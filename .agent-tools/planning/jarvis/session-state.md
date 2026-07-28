@@ -33,8 +33,8 @@ None — epic packaging complete for merge review.
 | R1 | Rename docs/kevin → docs/agents + path sweep | done |
 | R2 | Idempotent install + secrets scripts | done |
 | R3 | Local Docker Desktop automated smoke | done (jarvis-local-smoke) |
-| R4 | Operator Slack reply smoke (durable host) | open |
-| R5 | Operator live SMTP digest | open |
+| R4 | Operator Slack reply smoke (durable host) | open (lab PASS; durable still open) |
+| R5 | Operator live SMTP digest | lab PASS 2026-07-28 (live send) |
 | R6 | Review/merge feat/jarvis | open |
 | R7 | Adaptive-state private git backup + host cron as **required** full setup; GitHub PAT in secrets wizard; skill-evolution note | **done** (scripts + docs; needs real PAT on durable host) |
 

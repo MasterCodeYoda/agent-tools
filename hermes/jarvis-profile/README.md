@@ -35,10 +35,17 @@ Config lanes (policy / secrets / adaptive state):
 After install, maintain under the **live** profile home (volume):
 
 ```text
-$HERMES_HOME/profiles/jarvis/state/projects.md
+$HERMES_HOME/profiles/jarvis/state/projects.md     # in-flight ventures / products
+$HERMES_HOME/profiles/jarvis/state/interests.md    # standing themes / beat
+$HERMES_HOME/profiles/jarvis/state/priorities.md   # optional this-week boost
+$HERMES_HOME/profiles/jarvis/state/portfolio.md    # capital holdings/themes (not software projects)
+$HERMES_HOME/profiles/jarvis/state/digests/        # written digests
 ```
 
-Survives `profile update`. Not distribution-owned.
+Morning **research-digest** buckets: world/politics, AI/tech, **venture insights**,
+**portfolio & markets**. “Portfolio” means capital — not the venture/project list.
+
+Survives `profile update`. Not distribution-owned. Tune via Slack (“care more about X”).
 
 ## Apply (packaging / single home)
 

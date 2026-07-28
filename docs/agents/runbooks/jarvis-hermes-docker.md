@@ -115,7 +115,7 @@ to move hosts. Do not invent a second laptop Jarvis for daily use.
 1. Seed projects on the volume:
 
    ```bash
-   # edit $JARVIS_HERMES_DATA/.../profiles/jarvis/state/projects.md
+   # edit state/projects.md + state/interests.md (work lens + standing beat)
    ```
 
 2. Dry-run digest (no SMTP required):
