@@ -115,6 +115,34 @@ if docker exec jarvis-hermes test -f /opt/data/profiles/jarvis/.env 2>/dev/null;
   if [[ "$MODEL_SET" -eq 0 ]]; then
     info "  INFO  no model OAuth/API key yet — run secrets / hermes auth add xai-oauth"
   fi
+
+  # Slack: Socket Mode can connect with a thin token, but DMs stay silent without im:* scopes.
+  # Probe without printing the token. conversations.list types=im requires im:read — reliable
+  # (a dummy channel_id can return channel_not_found without ever checking im:history).
+  if docker exec jarvis-hermes sh -c "grep -qE '^SLACK_BOT_TOKEN=.+' /opt/data/profiles/jarvis/.env 2>/dev/null"; then
+    SCOPE_JSON="$(docker exec jarvis-hermes sh -c '
+      while IFS= read -r line; do
+        case "$line" in SLACK_BOT_TOKEN=*) export "$line" ;; esac
+      done < /opt/data/profiles/jarvis/.env
+      curl -sS -H "Authorization: Bearer ${SLACK_BOT_TOKEN}" \
+        "https://slack.com/api/conversations.list" \
+        --data-urlencode "types=im" --data-urlencode "limit=1" 2>/dev/null || true
+    ')"
+    if printf '%s' "$SCOPE_JSON" | grep -q '"ok":true'; then
+      pass "Slack bot token has im:read (DM-capable list)"
+    elif printf '%s' "$SCOPE_JSON" | grep -q 'missing_scope'; then
+      provided="$(printf '%s' "$SCOPE_JSON" | sed -n 's/.*"provided":"\([^"]*\)".*/\1/p' | head -1)"
+      fail "Slack bot token missing DM scopes (provided: ${provided:-unknown})"
+      info "  Need im:history,im:read,im:write (+ users:read, chat:write) and Event Subscriptions message.im"
+      info "  Fix: api.slack.com/apps → OAuth scopes from jarvis-slack.md → Reinstall → new xoxb- in .env"
+    elif printf '%s' "$SCOPE_JSON" | grep -q 'invalid_auth\|token_revoked\|not_authed'; then
+      fail "Slack bot token rejected by Slack API"
+    else
+      info "  INFO  Slack scope probe inconclusive (network?); manual DM still required"
+    fi
+  else
+    info "  INFO  SLACK_BOT_TOKEN not set — skip Slack scope probe"
+  fi
 else
   info "  INFO  .env not set yet — run: $0 --secrets"
 fi

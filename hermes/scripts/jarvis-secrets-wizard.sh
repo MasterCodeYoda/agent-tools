@@ -336,10 +336,16 @@ fi
 section "7) Slack Socket Mode (optional until testing chat)"
 howto <<'EOF'
 Mint:
-  1. https://api.slack.com/apps → Create app (manifest) branded Jarvis — see docs/agents/runbooks/jarvis-slack.md
-  2. Enable Socket Mode → create App-Level Token (xapp-…) with connections:write
-  3. OAuth → Bot token (xoxb-…) after install to workspace
-  4. Your Slack member ID for SLACK_ALLOWED_USERS (profile → … → Copy member ID)
+  1. https://api.slack.com/apps → Create app from the full manifest in docs/agents/runbooks/jarvis-slack.md
+     (must include bot scopes im:history, im:read, im:write, users:read, chat:write, …)
+  2. Enable Socket Mode → App-Level Token (xapp-…) with connections:write
+  3. Event Subscriptions must include message.im (and app_mention / message.channels if used)
+  4. Install / Reinstall to workspace → copy Bot User OAuth Token (xoxb-…)
+     After ANY scope change you must reinstall and paste the NEW xoxb- token
+  5. Your Slack member ID for SLACK_ALLOWED_USERS (profile → … → Copy member ID)
+
+Silent-DM failure mode: Socket Mode can show "connected" with only channels:history+chat:write.
+  DMs never reach Hermes until im:* scopes are on the installed token. Smoke probes this.
 EOF
 if ask_yn "Configure Slack now?" "n"; then
   ask_val SLACK_BOT_TOKEN "SLACK_BOT_TOKEN (xoxb-…)" 1

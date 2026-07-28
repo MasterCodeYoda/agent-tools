@@ -30,7 +30,12 @@ COPY hermes/jarvis-profile /opt/jarvis/profile
 COPY hermes/docker/entrypoint-jarvis.sh /opt/jarvis/entrypoint.sh
 COPY hermes/scripts/jarvis-secrets-wizard.sh /opt/jarvis/bin/jarvis-secrets-wizard.sh
 COPY hermes/scripts/jarvis-send-digest.sh /opt/jarvis/bin/jarvis-send-digest.sh
-RUN chmod 755 /opt/jarvis/entrypoint.sh /opt/jarvis/bin/jarvis-secrets-wizard.sh /opt/jarvis/bin/jarvis-send-digest.sh \
+COPY hermes/docker/patches/fix-slack-sethome-hint.py /opt/jarvis/bin/fix-slack-sethome-hint.py
+# Upstream suggests "/hermes sethome" on Slack; that requires a registered slash
+# command. Patch to "!sethome" (Hermes bang rewrite) so day-1 Socket Mode apps work.
+RUN python3 /opt/jarvis/bin/fix-slack-sethome-hint.py \
+  && chmod 755 /opt/jarvis/entrypoint.sh /opt/jarvis/bin/jarvis-secrets-wizard.sh \
+       /opt/jarvis/bin/jarvis-send-digest.sh /opt/jarvis/bin/fix-slack-sethome-hint.py \
   && chmod -R a+rX /opt/jarvis/skills /opt/jarvis/profile \
   && test -f /opt/jarvis/skills/.agent-tools-revision \
   && ! find /opt/jarvis/skills -mindepth 1 -maxdepth 1 -type d -name 'work*' | grep -q .

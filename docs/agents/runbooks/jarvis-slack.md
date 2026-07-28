@@ -90,7 +90,22 @@ Example **valid** manifest (edit before use).
 
 Socket Mode: after create, **Settings → Socket Mode → Enable**, then create an **App-Level Token** (`xapp-…`) with scope `connections:write` (not always in the YAML for new apps).
 
-Generate a full manifest with Hermes when available, e.g.:
+### Gateway commands in Slack (home channel, etc.)
+
+Slack treats messages that start with `/` as **workspace slash commands**. If the
+command is not registered on the Jarvis app, Slack swallows it and Hermes never
+sees the text.
+
+| What you want | Type this in the DM | Notes |
+|---------------|---------------------|--------|
+| Set home channel | `!sethome` | **Preferred.** Hermes rewrites `!` → `/` for known gateway commands. |
+| Set home (native slash) | `/sethome` | Only if the app has slash command `/sethome` installed. |
+| Legacy parent slash | `/hermes sethome` | Only if `/hermes` is registered (full Hermes-generated manifest). |
+
+The jarvis-hermes image patches Hermes’ first-DM home-channel hint to recommend
+`!sethome` (upstream says `/hermes sethome`, which fails on event-only apps).
+
+Optional: generate a full slash-command manifest and reinstall so `/sethome` works natively:
 
 ```bash
 hermes -p jarvis slack manifest --agent-view \
@@ -147,6 +162,45 @@ slack:
 2. From Slack, DM Jarvis (or post in home channel).  
 3. Expect a CoS-style reply without using terminal chat.  
 4. Confirm `JARVIS_HERMES_DATA` is the only instance you use for follow-ups.
+
+`jarvis-local-smoke.sh` (when `SLACK_BOT_TOKEN` is set) probes the bot token via `conversations.list?types=im` (requires **`im:read`**). Socket Mode “connected” alone is not enough.
+
+---
+
+## Failure: DM silent, gateway still “✓ slack connected”
+
+**Symptom:** Jarvis shows online; you DM “hello”; no reply. Gateway logs show Socket Mode connected; often a session seed from opening the DM tab, but **zero** agent messages/tokens.
+
+**Cause (lab confirmed):** Bot User OAuth Token installed with incomplete scopes, e.g. only:
+
+```text
+provided: channels:history,chat:write
+needed for DMs: im:history (and typically im:read, im:write, users:read, …)
+```
+
+Socket Mode uses the **app-level** `xapp-` token to connect; inbound `message.im` delivery requires the **bot** token’s OAuth scopes + Event Subscriptions. A thin token can authenticate the bot while never delivering DMs.
+
+**Fix:**
+
+1. [api.slack.com/apps](https://api.slack.com/apps) → **Jarvis** app.  
+2. **OAuth & Permissions → Bot Token Scopes** — match the manifest in this runbook (at minimum for DMs: `im:history`, `im:read`, `im:write`, `chat:write`, `users:read`).  
+3. **Event Subscriptions → Subscribe to bot events** — include `message.im` (and `app_home_opened` if used).  
+4. **Reinstall to workspace** (required after scope changes).  
+5. Copy the **new** `xoxb-…` Bot User OAuth Token into the live profile `.env` (`SLACK_BOT_TOKEN`). App-level `xapp-` usually stays the same.  
+6. Restart gateway (`docker restart jarvis-hermes` or bring-up).  
+7. DM again; expect a reply. Re-run smoke to confirm `im:history` present.
+
+**Not the cause (when this mode matches):** `SLACK_ALLOWED_USERS` mismatch (would log early reject), or Grok OAuth (CLI `hermes -p jarvis chat -q …` still works).
+
+---
+
+## Failure: bot says type `/hermes sethome`, Slack says not a valid command
+
+**Cause:** Upstream Hermes hardcodes that hint for Slack, assuming a registered
+`/hermes` parent slash command. Minimal/event-only apps do not have it.
+
+**Fix (packaging):** jarvis-hermes image rewrites the hint to `!sethome`. Rebuild
+the image to pick up the patch. Until then, type `!sethome` yourself (works today).
 
 ---
 
