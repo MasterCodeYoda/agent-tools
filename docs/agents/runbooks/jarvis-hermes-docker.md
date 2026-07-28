@@ -91,7 +91,7 @@ With gateway running, register a job under profile `jarvis` (exact Hermes cron C
 ```text
 # Conceptual — use hermes -p jarvis cron create … on the host/container
 # Schedule: morning local TZ
-# Prompt / skill: run jarvis-research-digest for today; send email unless dry-run
+# Prompt / skill: run research-digest for today; send email unless dry-run
 # Workdir: not a product repo (CoS)
 ```
 
@@ -122,7 +122,7 @@ to move hosts. Do not invent a second laptop Jarvis for daily use.
 
    ```bash
    # Inside container or host with hermes -p jarvis:
-   # Invoke skill jarvis-research-digest with dry-run; write state/digests/YYYY-MM-DD.md
+   # Invoke skill research-digest with dry-run; write state/digests/YYYY-MM-DD.md
    hermes/scripts/jarvis-send-digest.sh --file /path/to/digest.md --dry-run
    ```
 

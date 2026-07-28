@@ -50,11 +50,15 @@ platform_toolsets:
 
 # Ops: replace placeholders before live Slack smoke (never commit real IDs).
 slack:
+  # Lab/redeploy churn otherwise pings every "active" Slack session (and home
+  # channel) with "Gateway shutting down — task interrupted." CoS home is often
+  # a personal DM — keep those quiet; Hermes still drains cleanly without the ping.
+  gateway_restart_notification: false
   channel_skill_bindings:
     - id: "REPLACE_WITH_JARVIS_HOME_CHANNEL_ID"
       skills:
-        # Flat install id after pack (src uses jarvis:research-digest → publish flatten)
-        - jarvis-research-digest
+        # Flat install id after pack (src/jarvis/research-digest → product leaf research-digest)
+        - research-digest
 
 auxiliary:
   compression:

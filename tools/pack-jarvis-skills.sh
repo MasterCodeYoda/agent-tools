@@ -2,10 +2,10 @@
 #
 # Pack Jarvis product skills artifact (dialect × product — ADR-005).
 #
-#   src/ layout stays nested family trees (e.g. src/jarvis/research-digest/)
-#   publish-skills (hermes dialect) emits colon-named leaves as flat dirs
-#     (jarvis:research-digest → dist/hermes/skills/jarvis-research-digest/)
-#   this pack copies only those product flat dirs into dist/jarvis-skills/
+#   src/ layout: product namespace under src/jarvis/<leaf>/ (no parent SKILL.md)
+#   publish-skills (hermes dialect) → dist/hermes/skills/jarvis/<leaf>/
+#   this pack lifts leaves flat into dist/jarvis-skills/skills/<leaf>/
+#     (skill id = leaf name; no jarvis: frontmatter prefix)
 #
 # Install/image never reads src/ — only this pack / baked /opt/jarvis/skills.
 #
@@ -21,11 +21,11 @@ DIST_HERMES="${AGENT_TOOLS_DIST_ROOT:-${REPO_ROOT}/dist}/hermes/skills"
 OUT_DIR="${REPO_ROOT}/dist/jarvis-skills"
 DO_PUBLISH=1
 
-# Allowlist: flat skill ids under dist/hermes/skills after publish (not src paths).
-# Colon names in src SKILL.md frontmatter are required for publish flatten.
+# Product leaves under src/jarvis/<leaf>/ after dialect publish at
+# dist/hermes/skills/jarvis/<leaf>/. Install id is the leaf name (flat).
 # Expand as new Jarvis leaves land. Never include work / work-* process pack.
-JARVIS_SKILL_ALLOWLIST=(
-  jarvis-research-digest
+JARVIS_SKILL_LEAVES=(
+  research-digest
 )
 
 die() { echo "pack-jarvis-skills: error: $*" >&2; exit 1; }
@@ -72,21 +72,36 @@ PKG="${STAGE}/jarvis-skills"
 mkdir -p "${PKG}/skills"
 
 copied=0
-for name in "${JARVIS_SKILL_ALLOWLIST[@]}"; do
-  src="${DIST_HERMES}/${name}"
+for leaf in "${JARVIS_SKILL_LEAVES[@]}"; do
+  # Nested under product namespace in dialect dist (src/jarvis/<leaf>/)
+  src="${DIST_HERMES}/jarvis/${leaf}"
   if [[ ! -d "$src" ]]; then
-    die "allowlisted skill missing after publish: ${name} (expected ${src})"
+    die "allowlisted leaf missing after publish: jarvis/${leaf} (expected ${src})"
   fi
-  cp -a "${src}" "${PKG}/skills/"
+  if [[ ! -f "${src}/SKILL.md" ]]; then
+    die "missing SKILL.md for leaf: jarvis/${leaf}"
+  fi
+  # Frontmatter must not use jarvis: product prefix (product stamp is pack revision)
+  declared="$(grep -m1 '^name:' "${src}/SKILL.md" | cut -d: -f2- | tr -d ' \t\r\n' || true)"
+  if [[ "$declared" == jarvis:* ]]; then
+    die "leaf ${leaf} still uses jarvis: name prefix (${declared}); use bare skill id"
+  fi
+  if [[ -n "$declared" && "$declared" != "$leaf" ]]; then
+    die "leaf ${leaf} frontmatter name=${declared} must match install id ${leaf}"
+  fi
+  dest="${PKG}/skills/${leaf}"
+  rm -rf "$dest"
+  cp -a "${src}" "$dest"
   copied=$((copied + 1))
+  info "packed leaf ${leaf} ← jarvis/${leaf}"
 done
 
-# Fail closed: no work/continue process skills
+# Fail closed: no work/continue process skills; no accidental jarvis- prefix flats
 while IFS= read -r -d '' d; do
   base="$(basename "$d")"
   case "$base" in
-    work|work-*|git|git-*)
-      die "refusing to pack process skill: ${base}"
+    work|work-*|git|git-*|jarvis|jarvis-*)
+      die "refusing to pack process/product-prefix skill: ${base}"
       ;;
   esac
 done < <(find "${PKG}/skills" -mindepth 1 -maxdepth 1 -type d -print0 2>/dev/null || true)

@@ -1,5 +1,5 @@
 ---
-name: jarvis:research-digest
+name: research-digest
 description: >
   Morning external research sweep for Jarvis CoS — web + X signal mapped to in-flight
   work; short ranked digest with non-obvious pattern matches; email or dry-run.
@@ -112,7 +112,7 @@ compose with available host tools. Never log SMTP passwords.
 ```text
 # Example — morning local time; adjust TZ on host
 hermes -p jarvis cron …  # or script:
-#   hermes -p jarvis chat -q "Run jarvis-research-digest for today; send email unless dry-run"
+#   hermes -p jarvis chat -q "Run research-digest for today; send email unless dry-run"
 ```
 
 Prefer invoking this skill explicitly in the cron prompt. Gateway may already be running for Slack.

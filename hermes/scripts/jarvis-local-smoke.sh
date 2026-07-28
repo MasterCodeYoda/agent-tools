@@ -73,27 +73,30 @@ else
   fi
 fi
 
-if docker exec jarvis-hermes test -f /opt/jarvis/skills/jarvis-research-digest/SKILL.md; then
-  pass "baked skill present at /opt/jarvis/skills"
+if docker exec jarvis-hermes test -f /opt/jarvis/skills/research-digest/SKILL.md; then
+  pass "baked skill present at /opt/jarvis/skills/research-digest"
 else
-  fail "baked skill missing"
+  fail "baked skill missing (expected research-digest, not jarvis-research-digest)"
+fi
+# Fail closed: product pack must not ship jarvis: prefix flats
+if docker exec jarvis-hermes test -d /opt/jarvis/skills/jarvis-research-digest 2>/dev/null; then
+  fail "legacy jarvis-research-digest dir still baked (should be flat research-digest)"
 fi
 
-# Skills list can lag after gateway start. Hermes may show colon name (jarvis:research-digest)
-# while the on-disk pack dir is jarvis-research-digest.
+# Skills list can lag after gateway start. Product id is bare research-digest.
 SKILL_OK=0
 for _ in 1 2 3 4 5 6 7 8; do
   out="$(docker exec jarvis-hermes hermes -p jarvis skills list 2>&1 || true)"
-  if printf '%s' "$out" | grep -qiE 'jarvis[: -]research-digest'; then
+  if printf '%s' "$out" | grep -qiE '(^|[^[:alnum:]-])research-digest([^[:alnum:]-]|$)'; then
     SKILL_OK=1
     break
   fi
   sleep 1
 done
 if [[ "$SKILL_OK" -eq 1 ]]; then
-  pass "skill jarvis research-digest enabled"
+  pass "skill research-digest enabled"
 else
-  fail "skill not listed (external_dirs?)"
+  fail "skill research-digest not listed (external_dirs?)"
   info "  last skills list (truncated): $(docker exec jarvis-hermes hermes -p jarvis skills list 2>&1 | tr -d '\\000' | head -c 200)"
 fi
 

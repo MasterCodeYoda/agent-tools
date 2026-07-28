@@ -90,6 +90,17 @@ Example **valid** manifest (edit before use).
 
 Socket Mode: after create, **Settings → Socket Mode → Enable**, then create an **App-Level Token** (`xapp-…`) with scope `connections:write` (not always in the YAML for new apps).
 
+### Restart / shutdown notices
+
+Jarvis profile sets `slack.gateway_restart_notification: false` so container
+redeploys do **not** post “Gateway shutting down — Your current task will be
+interrupted” into Slack DMs/threads (or the home channel). Upstream default is
+`true`, which is noisy when home is a personal DM and you redeploy often.
+
+Hermes only notifies sessions it still has in the in-process “running agents”
+map (plus optional home-channel broadcast). An idle-looking thread can still get
+a ping if a turn was interrupted mid-flight or home is that same DM.
+
 ### Gateway commands in Slack (home channel, etc.)
 
 Slack treats messages that start with `/` as **workspace slash commands**. If the
@@ -139,7 +150,7 @@ slack:
   channel_skill_bindings:
     - id: "C…"   # real home channel
       skills:
-        - jarvis-research-digest   # and other jarvis skills as added
+        - research-digest   # flat product leaf (src/jarvis/research-digest)
 ```
 
 ---
