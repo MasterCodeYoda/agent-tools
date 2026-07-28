@@ -6,14 +6,15 @@
 #   2. Secrets wizard (model + required backup write token + required read integrations
 #      GitHub OMG / Linear / Jira + optional email/slack)
 #   3. Backup repo init + first backup
-#   4. Nightly host cron for adaptive-state git push
+#   4. Nightly host schedule for adaptive-state git push
+#      (systemd timer preferred; crontab fallback — see jarvis-install-backup-cron.sh)
 #
 # Usage:
 #   ./hermes/scripts/jarvis-setup.sh                 # full setup (interactive secrets)
 #   ./hermes/scripts/jarvis-setup.sh --from-env-file PATH       # legacy .env only
 #   ./hermes/scripts/jarvis-setup.sh --from-secrets-dir DIR     # .env + auth.json (preferred)
 #   ./hermes/scripts/jarvis-setup.sh --no-build
-#   ./hermes/scripts/jarvis-setup.sh --skip-cron     # emergency only
+#   ./hermes/scripts/jarvis-setup.sh --skip-cron     # emergency only (skips host backup schedule)
 #   ./hermes/scripts/jarvis-setup.sh --check
 #
 # Prefer lab→durable promote: ./hermes/scripts/jarvis-promote.sh --ssh … --image …
@@ -58,10 +59,16 @@ done
 if [[ "$CHECK_ONLY" -eq 1 ]]; then
   "$SMOKE" || true
   info "backup worktree: ${JARVIS_BACKUP_WORKDIR:-$HOME/.jarvis/backup-repo}"
-  if crontab -l 2>/dev/null | grep -q jarvis-backup-state; then
-    info "cron: installed"
+  if [[ -x "$CRON_INSTALL" ]]; then
+    "$CRON_INSTALL" --status || true
+  fi
+  if systemctl --user is-enabled jarvis-backup-state.timer >/dev/null 2>&1 \
+    || systemctl is-enabled jarvis-backup-state.timer >/dev/null 2>&1 \
+    || crontab -l 2>/dev/null | grep -q jarvis-backup-state \
+    || [[ -f /etc/cron.d/jarvis-backup-state ]]; then
+    info "backup schedule: installed"
   else
-    info "cron: MISSING"
+    info "backup schedule: MISSING (run jarvis-install-backup-cron.sh)"
   fi
   docker exec jarvis-hermes /opt/jarvis/bin/jarvis-secrets-wizard.sh --in-container --check 2>/dev/null \
     || info "secrets check: run wizard if container has no wizard yet"
@@ -103,7 +110,7 @@ info "=== 3/4 backup repo init + first push ==="
 "$BACKUP" --init
 "$BACKUP"
 
-info "=== 4/4 nightly cron ==="
+info "=== 4/4 nightly host backup schedule (systemd timer preferred) ==="
 if [[ "$SKIP_CRON" -eq 1 ]]; then
   info "WARNING: --skip-cron used — full fidelity incomplete until:"
   info "  $CRON_INSTALL"
@@ -116,6 +123,6 @@ info "=== validate ==="
 info "FULL SETUP COMPLETE"
 info "  container: jarvis-hermes"
 info "  volume: ${JARVIS_VOLUME_SPEC}"
-info "  backup: nightly via host cron → private git (adaptive state only)"
+info "  backup: nightly host schedule → private git (adaptive state only; not in-container)"
 info "  agent-tools: backup text is evolution signal (digests/state), not skill SoT"
 info "  promote lab→server: hermes/scripts/jarvis-promote.sh --ssh user@host --remote-repo … --image …"

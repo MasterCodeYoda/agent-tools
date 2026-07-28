@@ -3,56 +3,189 @@ project: jarvis
 requirements_source: file
 work_item: null
 pm_tool: manual
-session_count: 1
-status: completed
+session_count: 3
+status: in_progress
 progress:
   total_tasks: 36
   completed: 36
   percent: 100%
 current_layer: not_started
 track: feature
-branch: feat/jarvis
+branch: main
 worktree: null
 visual_plan: ".agent-tools/planning/jarvis/visual-plan.html | mode=static-html | status=published"
 created: 2026-07-27
-updated: 2026-07-27
+updated: 2026-07-28
+handoff: true
 ---
 
 ## Status
 
-Session 1 complete — D1–D8 landed on `feat/jarvis`. Operator live smokes (real Slack reply, real SMTP send) remain host-specific residuals documented in runbooks.
+**Packaging + lab validation + durable Portainer host bring-up largely complete.**  
+Jarvis is the **production CoS brain on skynet** (`jarvis-hermes` + volume `jarvis-hermes-data`). Lab Mac instance should stay **down** (same Slack tokens + SuperGrok OAuth — dual gateways fight).
 
-## Current Focus
+Epic implementation (D1–D8) is on **`main`**. Remaining work is **ops residuals**, not greenfield packaging.
 
-None — epic packaging complete for merge review.
+**R8 host backup schedule:** **done.** System timer on skynet (`/etc/systemd/system/jarvis-backup-state.timer`, `run_as=moverlund`, ~03:15 local). Re-smoke 08:50: `status=0/SUCCESS`, pushed `bd63d19..456327c` to `jarvis-state`.
 
-## Residuals (work through in order)
+## Handoff pointer (start here next session)
 
-| # | Residual | Status |
-|---|----------|--------|
-| R1 | Rename docs/kevin → docs/agents + path sweep | done |
-| R2 | Idempotent install + secrets scripts | done |
-| R3 | Local Docker Desktop automated smoke | done (jarvis-local-smoke) |
-| R4 | Operator Slack reply smoke (durable host) | open (lab PASS; durable still open) |
-| R5 | Operator live SMTP digest | lab PASS 2026-07-28 (live send) |
-| R6 | Review/merge feat/jarvis | open |
-| R7 | Adaptive-state private git backup + host cron as **required** full setup; GitHub PAT in secrets wizard; skill-evolution note | **done** (scripts + docs; needs real PAT on durable host) |
+```text
+Read: .agent-tools/planning/jarvis/session-state.md
+Then: docs/agents/runbooks/jarvis-hermes-docker.md
+      docs/agents/runbooks/jarvis-slack.md
+      docs/agents/runbooks/jarvis-state-backup.md
+Host:  ssh skynet-server
+Image: ghcr.io/mastercodeyoda/jarvis-hermes:main
+Volume: jarvis-hermes-data → /opt/data
+Repo on host: ~/Source/OMG/agent-tools (main)
+```
 
-## Next Steps
+**Do not** start a second daily Jarvis on Docker Desktop with the same Slack app + xAI OAuth.
 
-1. Local: `./hermes/scripts/jarvis-local-smoke.sh` then optional `--secrets` for model only  
-2. Durable (Portainer host): `./hermes/scripts/jarvis-setup.sh` with backup repo + fine-grained PAT  
-3. R4/R5 on durable instance  
-4. Merge feat/jarvis  
+---
 
-## Last Session Summary
+## Current topology
 
-Implemented multi-agent config lanes, jarvis profile/image/pack, kevin pack filter, capabilities + Slack + docker runbooks, research-digest skill, SMTP helper. Residual pass: docs→`docs/agents/`, bring-up + secrets wizard scripts.
+| Surface | Where | Notes |
+|---------|--------|--------|
+| **Durable Jarvis** | `skynet-server` (192.168.1.250), x86_64 | Portainer/Docker; `docker-compose` binary (not `docker compose` plugin) |
+| Container | `jarvis-hermes` | Image `ghcr.io/mastercodeyoda/jarvis-hermes:main` |
+| Data | Docker volume **`jarvis-hermes-data`** | Secrets + adaptive state |
+| Lab Mac | **Stopped** (confirm with `docker ps`) | Do not restart unless rotating secrets carefully |
+| Git | `main` @ agent-tools | `feat/jarvis` deleted after merge |
+| Backup git | `https://github.com/MasterCodeYoda/jarvis-state.git` | Host worktree `~/.jarvis/backup-repo` |
 
-## Session History
+### Proven on durable (2026-07-28)
+
+- Promote Path A: secrets (`.env` + `auth.json`) injected; smoke **ALL PASSED**
+- Adaptive state seeded: `projects.md`, `interests.md`, `priorities.md`, `portfolio.md`, digests
+- Backup push works (after env parse fix); exported files > 0 after seed
+- Slack Socket Mode from **skynet only** after lab down
+- Model chat after **re-export of fresh auth.json** from lab volume (see OAuth note)
+
+### Lab-proven earlier (same day)
+
+- Full research-digest multi-bucket brief + branded HTML email (“Morning brief”)
+- SMTP From alias + Send-as; Slack footer deep-link
+- Skill: `research-digest` flat id under `/opt/jarvis/skills/`
+
+---
+
+## Residuals (ordered)
+
+| # | Residual | Status | Notes |
+|---|----------|--------|--------|
+| R1–R3 | Packaging / local smoke | **done** | |
+| R4 | Durable Slack chat | **done** | Confirmed with lab down; retest after auth re-inject |
+| R5 | Live SMTP digest | **lab done**; durable not re-proven | Optional: one CLI/email run on skynet |
+| R6 | Merge `feat/jarvis` | **done** | On `main`; branch removed |
+| R7 | Adaptive backup scripts | **done** | |
+| R8 | Host backup schedule | **done** | System timer on skynet; re-smoke 2026-07-28 08:50 exit 0 (export + push `jarvis-state`) |
+| R9 | Morning brief Hermes cron | **open** | Never scheduled; gateway cron empty (in-container Hermes cron, not host) |
+| R10 | OAuth single-writer discipline | **ops** | Only one instance may refresh SuperGrok; dual instances revoke refresh tokens |
+| R11 | Robinhood MCP | **deferred** | URL `https://agent.robinhood.com/mcp/trading`; use `state/portfolio.md` defaults for now |
+| R12 | Lab purge | **optional** | `./hermes/scripts/jarvis-local-smoke.sh --purge` when durable trusted |
+| R13 | Portainer stack UI | **optional** | Stack may be compose-CLI only today; can mirror in Portainer for visibility |
+| R14 | Fix backup temp cleanup perms | **done** | Export container now `-u host uid`; cleanup trap tolerates leftovers |
+
+---
+
+## Critical ops notes
+
+### SuperGrok OAuth (`auth.json`)
+
+- Lives on volume: `/opt/data/profiles/jarvis/auth.json`
+- Promote used a **stale** export once → `invalid_grant` / refresh revoked after lab rotated tokens
+- Fix used: copy **fresh** auth.json from lab volume → inject into skynet volume → restart
+- **Going forward:** keep lab stopped; if re-auth needed, run `hermes -p jarvis auth add xai-oauth` **on skynet only**
+
+### Secrets
+
+- Laptop export (may need refresh of auth): `~/secure/jarvis-secrets/` (`.env` + `auth.json`)
+- Adaptive seed tarball: `~/secure/jarvis-adaptive-state/state.tgz`
+- Never commit; never paste values into chat
+- `.env` must not be `source`d raw — backup script parses line-wise (`5ae5775`)
+
+### Compose on skynet
+
+- Use **`docker-compose`** (standalone v2.40.1), not `docker compose` plugin
+- `jarvis-bring-up.sh` has fallback (`346fe97`)
+
+### Adaptive backup schedule (host)
+
+- **Not** in-container cron; write PAT stays on host (see `docs/agents/runbooks/jarvis-state-backup.md`)
+- Path of record: **systemd system timer** under `/etc/systemd/system/` (headless; no login, no linger)
+- **Not** user timer + linger — same root cost as system units, wrong semantics for skynet
+- Install: `sudo ./hermes/scripts/jarvis-install-backup-cron.sh --system` (default scope is system; `--user` refuses without Linger)
+- Verify: `./hermes/scripts/jarvis-install-backup-cron.sh --status`
+- Smoke: `sudo systemctl start jarvis-backup-state.service`
+
+### Portfolio lens
+
+- `state/portfolio.md`: major US indexes (SPY/QQQ/IWM/DIA) + BTC/ETH (+ themes)
+- Not personal brokerage positions until Robinhood MCP later
+
+### Research skill buckets
+
+World & politics → AI & technology → **Venture insights** → **Portfolio & markets** → Also notable → **Meta**  
+Email subject: `Morning brief — YYYY-MM-DD` (no agent name)
+
+---
+
+## Next steps (suggested for new session)
+
+1. **Land script/docs on main** — commit + pull on skynet so host clone matches `ExecStart` / push retries / docs.  
+2. **Optional** — after pull, `sudo ./hermes/scripts/jarvis-install-backup-cron.sh --system` to pick up unit `ExecStartPre` DNS wait.  
+3. **R9** — Register Hermes morning brief job on durable (`hermes -p jarvis cron …`) with TZ + prompt from skill.  
+4. **Optional R5** — One research-digest + email from skynet to prove full ritual on production volume.  
+5. **R12** — Purge lab volume when ready.  
+6. **R11** — Later: Hermes `mcp_servers.robinhood` → `https://agent.robinhood.com/mcp/trading` + OAuth; disable trade tools.
+
+### Useful commands
+
+```bash
+# Durable status
+ssh skynet-server 'docker ps --filter name=jarvis-hermes; docker exec jarvis-hermes tail -20 /opt/data/profiles/jarvis/logs/gateway.log'
+
+# Backup schedule status / on-demand / timer smoke
+ssh skynet-server 'cd ~/Source/OMG/agent-tools && ./hermes/scripts/jarvis-install-backup-cron.sh --status'
+ssh skynet-server 'cd ~/Source/OMG/agent-tools && export JARVIS_VOLUME_NAME=jarvis-hermes-data && ./hermes/scripts/jarvis-backup-state.sh'
+ssh skynet-server 'systemctl --user start jarvis-backup-state.service; journalctl --user -u jarvis-backup-state.service -n 20 --no-pager'
+
+# Smoke on host
+ssh skynet-server 'cd ~/Source/OMG/agent-tools && export JARVIS_HERMES_IMAGE=ghcr.io/mastercodeyoda/jarvis-hermes:main && ./hermes/scripts/jarvis-local-smoke.sh'
+```
+
+---
+
+## Session history
 
 ### Session 1 — 2026-07-27
 
-- Approved plan; execute D1–D8
-- jarvis-hermes:local build green
-- Packs isolated (kevin excludes jarvis)
+- Plan + execute D1–D8 packaging spine on `feat/jarvis`
+
+### Session 2 — 2026-07-28
+
+- Lab: Slack silent-DM (scopes), `!sethome`, quiet restart pings, flat `research-digest` skill id  
+- Morning brief productization: HTML email, multi-lens skill, portfolio defaults, Meta section, Slack deep-link footer  
+- Merge to `main`, delete `feat/jarvis`, CI green for **jarvis-hermes** + **kevin-hermes** images  
+- Portainer Path A promote to skynet: compose fallback, shell-safe backup env load, state seed, Slack dual-instance gotcha, OAuth re-inject  
+
+### Session 3 — 2026-07-28 (this handoff)
+
+- Decided: adaptive backup stays **host-side** (write PAT isolation); not in `jarvis-hermes`  
+- Prefer **systemd system timer** over cron package and over user-timer+linger on headless hosts  
+- Mis-step: first installed **user** timer (needs login/linger) — not viable for headless skynet; corrected installer default to **system** scope  
+- Extended `jarvis-install-backup-cron.sh`: system default, `--user` refuses without Linger, removes user units on system install, R14 stage uid fix  
+- Docs: `jarvis-state-backup.md` (+ capabilities / docker / multi-agent-config-lanes)  
+- **Remaining:** interactive `sudo … --system` on skynet, land on main, R9, optional R5/R12  
+
+---
+
+## Open questions / operator prefs
+
+- Morning brief time / timezone on skynet  
+- ~~Prefer systemd timer vs install `cron` package for backups~~ → **systemd timer** (path of record)  
+- Whether Portainer UI stack is required or compose-CLI is enough  
+- When to enable Robinhood MCP vs stay on `portfolio.md` defaults  

@@ -45,7 +45,8 @@ Mint secrets once on Docker Desktop, validate, then **blind-copy `.env`** and fi
 ```
 
 Promote secrets bundle is **`.env` + `auth.json`** (Grok SuperGrok OAuth is in `auth.json`, not `.env`).  
-Never logged; scp → inject both → restart → backup init/push → host cron → local purge.
+Never logged; scp → inject both → restart → backup init/push → **host** backup schedule (systemd timer preferred; not in-container) → local purge.  
+See [jarvis-state-backup.md](./jarvis-state-backup.md).
 
 Manual halves:
 
@@ -86,14 +87,18 @@ Do **not** paste tokens into agent chat. Secrets via setup wizard or `jarvis-loc
 
 ## Morning cron (shape)
 
+**Product ritual** — Hermes/gateway cron **inside** the durable instance (not host systemd, not the adaptive-state backup timer).
+
 With gateway running, register a job under profile `jarvis` (exact Hermes cron CLI may vary by version):
 
 ```text
-# Conceptual — use hermes -p jarvis cron create … on the host/container
+# Conceptual — use hermes -p jarvis cron create … on the durable host/container
 # Schedule: morning local TZ
 # Prompt / skill: run research-digest for today; send email unless dry-run
 # Workdir: not a product repo (CoS)
 ```
+
+Adaptive-state **git** backup remains a separate host schedule: [jarvis-state-backup.md](./jarvis-state-backup.md).
 
 Digest helper (from repo, executable in container if copied or mounted):
 

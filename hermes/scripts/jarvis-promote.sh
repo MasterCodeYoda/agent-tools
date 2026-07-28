@@ -204,7 +204,7 @@ finish_remote_here() {
   elif [[ "$DRY_RUN" -eq 1 ]]; then
     info "dry-run: would backup --init + backup + install cron"
   else
-    info "=== finish-remote: backup + cron ==="
+    info "=== finish-remote: backup + host schedule ==="
     "$BACKUP" --init
     "$BACKUP"
     "$CRON_INSTALL"
@@ -384,6 +384,6 @@ case "$CMD" in
     info "PROMOTE COMPLETE → ${SSH_TARGET}"
     info "  image=${IMAGE} volume=${VOLUME_NAME}"
     info "  secrets: .env + auth.json (OAuth) injected"
-    info "  next: durable Slack/email smokes; crontab -l | grep jarvis-backup"
+    info "  next: durable Slack/email smokes; ./hermes/scripts/jarvis-install-backup-cron.sh --status"
     ;;
 esac

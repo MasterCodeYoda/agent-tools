@@ -142,7 +142,7 @@ write_env() {
     [[ -n "${CUR[OPENAI_API_KEY]:-}" ]] && echo "OPENAI_API_KEY=${CUR[OPENAI_API_KEY]}"
     [[ -n "${CUR[OPENROUTER_API_KEY]:-}" ]] && echo "OPENROUTER_API_KEY=${CUR[OPENROUTER_API_KEY]}"
     echo ""
-    echo "# --- Adaptive state backup (host cron; write one private repo) ---"
+    echo "# --- Adaptive state backup (host schedule; write one private repo) ---"
     [[ -n "${CUR[JARVIS_BACKUP_REPO]:-}" ]] && echo "JARVIS_BACKUP_REPO=${CUR[JARVIS_BACKUP_REPO]}"
     [[ -n "${CUR[JARVIS_BACKUP_GITHUB_TOKEN]:-}" ]] && echo "JARVIS_BACKUP_GITHUB_TOKEN=${CUR[JARVIS_BACKUP_GITHUB_TOKEN]}"
     [[ -n "${CUR[JARVIS_BACKUP_BRANCH]:-}" ]] && echo "JARVIS_BACKUP_BRANCH=${CUR[JARVIS_BACKUP_BRANCH]}"

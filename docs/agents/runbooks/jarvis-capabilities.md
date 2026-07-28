@@ -20,7 +20,7 @@
 `JARVIS_DIGEST_FROM` may be a Workspace **alias** while `JARVIS_SMTP_USER` is the primary mailbox.  
 Google rewrites visible From to the primary unless that alias is **Send mail as** for the authenticated account (Gmail → Settings → Accounts). Script cannot override provider rewrite.
 | **Slack CoS chat** | Secrets + bindings | `SLACK_BOT_TOKEN`, `SLACK_APP_TOKEN`, `SLACK_ALLOWED_USERS`, optional home channel | Interactive UX | Gateway cannot connect |
-| **Adaptive state backup** | Secrets + host cron | `JARVIS_BACKUP_REPO`, `JARVIS_BACKUP_GITHUB_TOKEN` (**write one private repo only**) | Durable full setup | Missing on `jarvis-setup` / push |
+| **Adaptive state backup** | Secrets + **host schedule** (systemd timer preferred) | `JARVIS_BACKUP_REPO`, `JARVIS_BACKUP_GITHUB_TOKEN` (**write one private repo only**) | Durable full setup | Missing on `jarvis-setup` / push |
 | **OMG GitHub read** | Secrets (runtime) | `JARVIS_GITHUB_READ_TOKEN` (**read selected repos; NOT backup token**) | CoS familiarity / digests | Missing when integrations required |
 | **Linear read** | Secrets (runtime) | `JARVIS_LINEAR_API_KEY` | Correlate issues with research | Missing when integrations required |
 | **Jira read** | Secrets (runtime) | `JARVIS_JIRA_BASE_URL`, `JARVIS_JIRA_EMAIL`, `JARVIS_JIRA_API_TOKEN` | Optional single-site correlate | Optional — multi-account not modeled yet; skip for v1 |
@@ -41,16 +41,18 @@ Each capability: names in git, values live only, fail-loud when a ritual needs i
 ## Token split (non-negotiable)
 
 ```text
-JARVIS_BACKUP_GITHUB_TOKEN  → host cron only → write jarvis-state repo
+JARVIS_BACKUP_GITHUB_TOKEN  → host schedule only (systemd timer / cron) → write jarvis-state repo
 JARVIS_GITHUB_READ_TOKEN    → container runtime → read selected OMG repos
 JARVIS_LINEAR_API_KEY       → container runtime → Linear API read
 JARVIS_JIRA_*               → container runtime → Jira API read
 ```
 
 - **Never** use one GitHub credential for backup write + org read.  
+- **Never** move the backup write PAT into the agent container for convenience.  
 - Wizard **refuses** full setup if backup token equals read token.  
 - Prefer fine-grained PAT or GitHub App for read (contents:read on selected repos).  
-- Prefer Linear/Jira keys with least privilege (read-only roles where the product allows).
+- Prefer Linear/Jira keys with least privilege (read-only roles where the product allows).  
+- Host schedule install: [jarvis-state-backup.md](./jarvis-state-backup.md) (systemd timer path of record).
 
 ---
 
@@ -80,7 +82,7 @@ Collects, as **required** for durable install:
 4. Linear API key  
 5. Jira (optional — multi-account deferred)
 
-Then: first adaptive-state backup + nightly host cron.
+Then: first adaptive-state backup + nightly host schedule (systemd timer preferred).
 
 Local packaging only: `./hermes/scripts/jarvis-local-smoke.sh` (integrations optional).
 

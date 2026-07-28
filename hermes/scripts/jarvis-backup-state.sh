@@ -141,12 +141,19 @@ fi
 # ── Export allowlisted paths from volume ───────────────────────────
 EXPORT_ROOT="${WORKDIR}/state"
 STAGE="$(mktemp -d "${TMPDIR:-/tmp}/jarvis-backup.XXXXXX")"
-cleanup() { rm -rf "$STAGE"; }
+cleanup() {
+  # Tolerate root-owned leftovers from older exports; never fail the successful backup.
+  rm -rf "$STAGE" 2>/dev/null \
+    || docker run --rm -v "$(dirname "$STAGE"):/p" alpine:3.20 \
+         rm -rf "/p/$(basename "$STAGE")" 2>/dev/null \
+    || true
+}
 trap cleanup EXIT
 
 info "exporting allowlisted adaptive text from volume ${VOLUME_NAME}"
-# Copy only state/ tree
+# Copy only state/ tree. Run as host uid so STAGE cleanup (rm -rf) does not fail under set -e.
 docker run --rm \
+  -u "$(id -u):$(id -g)" \
   -v "${VOLUME_NAME}:/data:ro" \
   -v "${STAGE}:/out" \
   alpine:3.20 \
@@ -213,9 +220,22 @@ fi
 
 git -C "$WORKDIR" commit -m "chore(jarvis-state): backup $(date -u +%Y-%m-%dT%H%MZ) (${file_count} files)"
 
-# Push with token only in process env (not stored in remote URL on disk)
-git -C "$WORKDIR" -c "http.extraHeader=Authorization: Bearer ${JARVIS_BACKUP_GITHUB_TOKEN}" \
-  push "$remote_url" "HEAD:${BRANCH}" 2>/dev/null \
-  || git -C "$WORKDIR" push "$remote_url" "HEAD:${BRANCH}"
+# Push with token only in process env (not stored in remote URL on disk).
+# Retry: headless hosts sometimes hit transient DNS right after network-online.
+push_backup() {
+  git -C "$WORKDIR" -c "http.extraHeader=Authorization: Bearer ${JARVIS_BACKUP_GITHUB_TOKEN}" \
+    push "$remote_url" "HEAD:${BRANCH}" 2>/dev/null \
+    || git -C "$WORKDIR" push "$remote_url" "HEAD:${BRANCH}"
+}
+attempt=1
+max_attempts="${JARVIS_BACKUP_PUSH_RETRIES:-5}"
+until push_backup; do
+  if [[ "$attempt" -ge "$max_attempts" ]]; then
+    die "git push failed after ${max_attempts} attempts (check DNS/network to GitHub)"
+  fi
+  info "git push failed (attempt ${attempt}/${max_attempts}); retrying in $((attempt * 3))s…"
+  sleep $((attempt * 3))
+  attempt=$((attempt + 1))
+done
 
 info "pushed to backup repo (branch ${BRANCH})"
