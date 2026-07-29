@@ -92,13 +92,25 @@ fi
 chmod 755 "${PREFIX}/bin/jarvis-host" "${PREFIX}/install.sh" "${PREFIX}/migrate-from-legacy.sh" 2>/dev/null || true
 find "${PREFIX}/lib" -name '*.sh' -exec chmod 644 {} \; 2>/dev/null || true
 
-# PATH wrapper (not a symlink — avoids wrong KIT_ROOT)
+# PATH entry: never write through a symlink (that overwrote bin/jarvis-host once
+# and created an infinite exec loop). Remove any existing link/file first.
 mkdir -p /usr/local/bin
+rm -f /usr/local/bin/jarvis-host
+# Prefer a real file wrapper, not ln -s (symlink + resolve bugs on some hosts).
 cat >/usr/local/bin/jarvis-host <<EOF
 #!/usr/bin/env bash
 exec "${PREFIX}/bin/jarvis-host" "\$@"
 EOF
 chmod 755 /usr/local/bin/jarvis-host
+# Sanity: kit binary must not be a self-wrapper
+if head -5 "${PREFIX}/bin/jarvis-host" | grep -q "exec \"${PREFIX}/bin/jarvis-host\""; then
+  die "kit bin/jarvis-host was overwritten by PATH wrapper — re-run after upgrade (symlink write-through bug)"
+fi
+# Confirm CLI works
+if ! "${PREFIX}/bin/jarvis-host" version >/dev/null; then
+  die "post-install jarvis-host version failed"
+fi
+
 
 if [[ ! -f "${STATE_DIR}/config.env" ]]; then
   cat >"${STATE_DIR}/config.env" <<EOF
