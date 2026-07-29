@@ -44,9 +44,11 @@ jarvis-host status
 jarvis-host backup --init    # once
 jarvis-host backup
 jarvis-host update --check
-# Operator force:
+# Operator force apply:
 jarvis-host update --yes
-# CoS path: Jarvis notifies in Slack → reply "yes" → host poll enacts
+# CoS path (normal):
+#   !update in Slack → host checks within ~1m → Jarvis reports
+#   if available → you yes → host applies within ~1m
 sudo jarvis-host schedule status
 ```
 
@@ -55,22 +57,33 @@ sudo jarvis-host schedule status
 | Unit | Role |
 |------|------|
 | `jarvis-backup-state.timer` | Nightly adaptive-state git backup |
-| `jarvis-update-check.timer` | Hourly image check → `state/ops/update-status.json` |
-| `jarvis-update-poll.timer` | Every 5m: valid `update-request.json` → enact |
+| `jarvis-update-check.timer` | Every **20m**: image check → `state/ops/update-status.json` |
+| `jarvis-update-poll.timer` | Every **1m**: honor `!update` check-request + apply `update-request` |
 
 ---
 
-## Update approve protocol
+## Update protocol (product UX)
+
+```text
+!update (or 20m timer) → host check → status.json
+Jarvis tells you if available
+you: yes → request.json
+host poll (~1m) → pull + recreate → result.json
+Jarvis reports result
+```
 
 On volume (`profiles/jarvis/state/ops/`):
 
 | File | Writer |
 |------|--------|
 | `update-status.json` | Host check |
-| `update-request.json` | Jarvis on user approve |
+| `update-check-request.json` | Jarvis on **`!update`** (check now) |
+| `update-request.json` | Jarvis on user **apply** approve |
 | `update-result.json` | Host after enact |
 
 No Docker socket in the chat container.
+
+After kit upgrade on a host already migrated: `sudo jarvis-host schedule install` to refresh timer intervals.
 
 ---
 

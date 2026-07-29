@@ -129,8 +129,25 @@ cmd_update_enact() {
   fi
 }
 
+_clear_check_request() {
+  printf '%s\n' '{"schema":"jarvis-host.update-check-request/v1","cleared":true}' \
+    | volume_write "$(_ops_rel)/update-check-request.json" || true
+}
+
 cmd_update_poll() {
   require_docker
+
+  # !update / CoS "check now" → immediate check (then clear the nudge)
+  local check_req
+  check_req="$(volume_cat "$(_ops_rel)/update-check-request.json" 2>/dev/null || true)"
+  if [[ -n "$check_req" ]] && ! printf '%s' "$check_req" | grep -q '"cleared": true'; then
+    if printf '%s' "$check_req" | grep -qE '"action"[[:space:]]*:[[:space:]]*"check"'; then
+      info "update-check-request present — running check now"
+      cmd_update_check || true
+      _clear_check_request
+    fi
+  fi
+
   local req
   req="$(volume_cat "$(_ops_rel)/update-request.json" 2>/dev/null || true)"
   [[ -n "$req" ]] || { info "no update-request"; return 0; }

@@ -70,12 +70,12 @@ EOF
   cat >"/etc/systemd/system/${UNIT_CHECK}.timer" <<EOF
 # Managed by jarvis-host schedule
 [Unit]
-Description=Hourly Jarvis image update check
+Description=Jarvis image update check every 20 minutes
 
 [Timer]
-OnCalendar=hourly
+OnCalendar=*:0/20
 Persistent=true
-RandomizedDelaySec=10m
+RandomizedDelaySec=2m
 Unit=${UNIT_CHECK}.service
 
 [Install]
@@ -108,10 +108,10 @@ EOF
   cat >"/etc/systemd/system/${UNIT_POLL}.timer" <<EOF
 # Managed by jarvis-host schedule
 [Unit]
-Description=Jarvis update request poll every 5 minutes
+Description=Jarvis update request poll every 1 minute (apply + !update check-now)
 
 [Timer]
-OnCalendar=*:0/5
+OnCalendar=minutely
 Persistent=true
 Unit=${UNIT_POLL}.service
 
