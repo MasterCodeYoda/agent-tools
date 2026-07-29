@@ -3,7 +3,19 @@
 # Does not require an agent-tools git clone at runtime.
 set -euo pipefail
 
-KIT_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+# Resolve kit root even when invoked via /usr/local/bin/jarvis-host symlink.
+_self="${BASH_SOURCE[0]:-$0}"
+if command -v readlink >/dev/null 2>&1; then
+  _resolved="$(readlink -f "$_self" 2>/dev/null || true)"
+  [[ -n "${_resolved}" ]] && _self="$_resolved"
+elif command -v realpath >/dev/null 2>&1; then
+  _self="$(realpath "$_self" 2>/dev/null || echo "$_self")"
+fi
+KIT_ROOT="$(cd "$(dirname "$_self")/.." && pwd)"
+# Prefer install prefix when this is a broken/odd layout
+if [[ ! -f "${KIT_ROOT}/lib/common.sh" && -f "${JARVIS_HOST_PREFIX:-/opt/jarvis-host}/lib/common.sh" ]]; then
+  KIT_ROOT="${JARVIS_HOST_PREFIX:-/opt/jarvis-host}"
+fi
 # shellcheck source=../lib/common.sh
 source "${KIT_ROOT}/lib/common.sh"
 
