@@ -2,10 +2,10 @@
 # Install jarvis-host kit to /opt/jarvis-host (or JARVIS_HOST_PREFIX).
 #
 #   sudo ./install.sh
-#   sudo ./install.sh --prefix /opt/jarvis-host
 #   curl -fsSL …/jarvis-host/install.sh | sudo bash
 #
-set -euo pipefail
+# Note: under `curl | bash`, BASH_SOURCE is unreliable — never require it with set -u.
+set -eo pipefail
 
 PREFIX="${JARVIS_HOST_PREFIX:-/opt/jarvis-host}"
 STATE_DIR="${JARVIS_HOST_STATE_DIR:-/var/lib/jarvis-host}"
@@ -14,10 +14,10 @@ BOOTSTRAP_URL="${JARVIS_HOST_TARBALL_URL:-https://github.com/MasterCodeYoda/agen
 die() { echo "jarvis-host-install: error: $*" >&2; exit 1; }
 info() { echo "jarvis-host-install: $*" >&2; }
 
-# BASH_SOURCE is empty/unusable when run as `curl | bash` — do not require it.
-SELF_DIR=""
-if [[ -n "${BASH_SOURCE[0]:-}" && "${BASH_SOURCE[0]}" != "bash" && "${BASH_SOURCE[0]}" != "-" ]]; then
-  SELF_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd 2>/dev/null)" || SELF_DIR=""
+# Safe optional BASH_SOURCE (curl|bash leaves it unset; set -u must not see [0]).
+_script_path=""
+if [[ -n "${BASH_SOURCE+x}" ]] && [[ "${#BASH_SOURCE[@]}" -gt 0 ]]; then
+  _script_path="${BASH_SOURCE[0]}"
 fi
 
 while [[ $# -gt 0 ]]; do
@@ -33,11 +33,16 @@ while [[ $# -gt 0 ]]; do
   esac
 done
 
+set -u
+
 [[ "$(id -u)" -eq 0 ]] || die "run as root (sudo ./install.sh)"
 
 SRC=""
-if [[ -n "$SELF_DIR" && -x "${SELF_DIR}/bin/jarvis-host" ]]; then
-  SRC="$SELF_DIR"
+if [[ -n "$_script_path" && "$_script_path" != "bash" && "$_script_path" != "-" ]]; then
+  _dir="$(cd "$(dirname "$_script_path")" && pwd 2>/dev/null || true)"
+  if [[ -n "$_dir" && -x "${_dir}/bin/jarvis-host" ]]; then
+    SRC="$_dir"
+  fi
 fi
 
 STAGE=""
@@ -68,7 +73,7 @@ fi
 info "installing kit → ${PREFIX}"
 mkdir -p "$PREFIX" "$STATE_DIR"
 
-# Prefer rsync when present; otherwise atomic-ish cp (skynet has no rsync).
+# skynet has no rsync — always use cp path unless rsync exists
 if command -v rsync >/dev/null 2>&1; then
   rsync -a --delete --exclude '.git' "${SRC}/" "${PREFIX}/"
 else
@@ -77,7 +82,7 @@ else
   mkdir -p "$TMP_NEW"
   cp -a "${SRC}/." "$TMP_NEW/"
   rm -rf "${PREFIX}.bak"
-  if [[ -d "$PREFIX" ]]; then
+  if [[ -e "$PREFIX" ]]; then
     mv "$PREFIX" "${PREFIX}.bak"
   fi
   mv "$TMP_NEW" "$PREFIX"
@@ -87,7 +92,7 @@ fi
 chmod 755 "${PREFIX}/bin/jarvis-host" "${PREFIX}/install.sh" "${PREFIX}/migrate-from-legacy.sh" 2>/dev/null || true
 find "${PREFIX}/lib" -name '*.sh' -exec chmod 644 {} \; 2>/dev/null || true
 
-# Wrapper on PATH (not a raw symlink): resolves kit root correctly.
+# PATH wrapper (not a symlink — avoids wrong KIT_ROOT)
 mkdir -p /usr/local/bin
 cat >/usr/local/bin/jarvis-host <<EOF
 #!/usr/bin/env bash
@@ -104,6 +109,7 @@ EOF
   chmod 644 "${STATE_DIR}/config.env"
 fi
 
-info "installed jarvis-host $(cat "${PREFIX}/VERSION" 2>/dev/null || echo unknown)"
+ver="$(cat "${PREFIX}/VERSION" 2>/dev/null || echo unknown)"
+info "installed jarvis-host ${ver}"
 info "verify: jarvis-host version && jarvis-host status"
-info "timers: sudo env JARVIS_BACKUP_RUN_AS=\${SUDO_USER:-moverlund} jarvis-host schedule install"
+info "timers: sudo env JARVIS_BACKUP_RUN_AS=\${SUDO_USER:-\$USER} jarvis-host schedule install"
