@@ -144,7 +144,7 @@ Spawn 3 parallel agents:
 3. AI review bot on every PR
 4. One author can merge without extra approval (with CI gates)
 5. Failed CI → agent gets feedback and retries ("one loop")
-6. Mutation testing or equivalent quality gate
+6. Mutation testing **or equivalent** quality signal on critical/domain paths (incremental optional CI or process evidence via sabotage/domain verification — not whole-tree mutation as a required gate)
 7. No manual QA gate in the deploy pipeline
 8. Deployment is automated (merge → deploy)
 9. Monitoring and alerting catch production issues
@@ -243,7 +243,7 @@ Calculate from findings:
 [Missing CODEOWNERS, no coverage thresholds, incomplete agent docs, manual deployment steps]
 
 #### P3 — Suggestions (Maturity Improvements)
-[Action pinning, matrix testing, ADRs, mutation testing, stale branch cleanup]
+[Action pinning, matrix testing, ADRs, mutation or domain-verification signal, stale branch cleanup]
 
 ### Quick Wins
 
@@ -262,7 +262,7 @@ Calculate from findings:
 | 3 | AI review on every PR | [Met/Partial/Not Met] | |
 | 4 | Single author can merge (with gates) | [Met/Partial/Not Met] | |
 | 5 | Failed CI → agent retries | [Met/Partial/Not Met] | |
-| 6 | Mutation testing or equivalent | [Met/Partial/Not Met] | |
+| 6 | Mutation **or equivalent** on critical paths (optional incremental CI / process evidence; not whole-tree gate) | [Met/Partial/Not Met] | |
 | 7 | No manual QA gate | [Met/Partial/Not Met] | |
 | 8 | Automated deployment | [Met/Partial/Not Met] | |
 | 9 | Monitoring catches production issues | [Met/Partial/Not Met] | |

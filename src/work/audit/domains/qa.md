@@ -122,3 +122,14 @@ If spec coverage is low, recommend running `/qa:discover` to author NL specs for
 ### With @test-strategy
 
 The spec quality assessment draws on test-strategy's principles: behavioral vs. implementation-coupled tests, assertion quality, and single-behavior focus.
+
+### Unit-level handoff checklist (always consider before closing QA-only findings)
+
+E2E green does not close these classes — flag a **handoff** to `@test-strategy` / `--focus tests` (do not invent more NL specs as the only fix):
+
+- [ ] Critical flow depends on pure domain rules or calculations with no unit/property signal → hand off mutation/sabotage or property
+- [ ] Flow includes parse/serialize/codec of structured input with example-only or no unit tests → hand off property-based testing
+- [ ] Flow accepts untrusted uploads, raw body bytes, or external file formats with no robustness story → hand off selective fuzz / trust-boundary tests (`fuzzing.md`)
+- [ ] Specs assert UI outcomes only while kill-power of underlying logic is unknown → note related tests-domain finding
+
+Tag handoffs `[qa → test-strategy]` so the unified audit can cross-reference without merging into a false E2E gap.

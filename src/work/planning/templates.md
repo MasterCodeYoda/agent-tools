@@ -53,6 +53,9 @@ As a [user type], I want [capability] so that [benefit].
   - [ ] Response formatting
 
 #### 5. Testing Strategy
+- **Approach**: [see @test-strategy strategy table]
+- **Properties** (if parsers/transforms/roundtrips): [named invariants — discovery recipe in property-testing.md]
+- **Domain quality signal**: mutation (if tool) **or** sabotage **or** N/A reason
 - **Unit Tests**
   - [ ] Domain entity tests
   - [ ] Use case tests
@@ -510,7 +513,9 @@ Items not required by acceptance criteria but worth noting for future iterations
 
 ## Testing Strategy
 
-- **Approach**: [Select testing strategy — see @test-strategy]
+- **Approach**: [Select testing strategy — see @test-strategy strategy table]
+- **Properties** (if parsers/transforms/roundtrips/invariants): [named properties + anchors]
+- **Domain quality signal**: mutation (if tool) **or** sabotage **or** N/A with reason
 - **Unit Tests**: [Approach for domain/use case testing]
 - **Integration Tests**: [Approach for infrastructure testing]
 - **E2E Tests**: [Approach for complete flow testing]
@@ -536,6 +541,7 @@ Items not required by acceptance criteria but worth noting for future iterations
 
 - [ ] All layers implemented for this slice
 - [ ] Tests passing for this slice
+- [ ] Domain verification evidence when domain/pure logic changed (mutation summary **or** sabotage notes **or** skip reason)
 - [ ] Code committed with issue reference
 - [ ] PM tool updated (issue → Done)
 

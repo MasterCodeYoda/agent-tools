@@ -32,26 +32,30 @@ Two hypotheses underpin why mutation testing works:
 
 ## The AI Agent Advantage
 
-Mutation testing was historically impractical — too slow to run, too tedious to analyze. AI agents change this:
+Mutation testing was often **uneconomical to own** — not impossible to compute, but too slow for full-repo daily use and too tedious for humans to triage survivors. AI agents change the **analysis and kill-loop** economics when scope stays incremental:
 
-- **Automated execution**: Agents run mutation tools incrementally on changed files, not the full codebase
+- **Automated execution**: Agents run mutation tools incrementally on changed/domain files, not the full codebase
 - **Survivor analysis**: Agents read surviving mutant diffs, classify them (real gap vs. equivalent), and explain the untested behavior
 - **Test generation**: Agents write minimal tests that kill surviving mutants, then re-run to confirm
 - **Equivalent mutant filtering**: Agents apply heuristics to skip mutations with no observable behavior change
 
+**Unlock ≠ always-run.** Agents do not shrink wall-clock for full-suite mutation, do not replace tool install, and must not invent kill tests that are tautological. Soft gate: domain/changed files when a tool is present; sabotage when not; never block merges solely on score theater or demand full-repo mutation on every PR.
+
 ### The Mutation-Kill Loop
 
 ```
-1. Run mutation tool on changed/targeted files
+1. Run mutation tool on changed/targeted files (domain-first; timebox the session)
 2. Parse results → identify survivors
-3. For each survivor:
+3. For each survivor (cap analysis effort — prioritize domain/high-risk lines):
    a. Read the mutant diff
    b. Classify: equivalent (skip) or real gap (act)
    c. If real gap: identify the untested behavior
-   d. Write a minimal test that kills the mutant
+   d. Write a minimal test that kills the mutant (strong assertions — no tautologies)
 4. Re-run to confirm all new tests kill their targets
-5. Report final mutation score
+5. Report final mutation score + evidence (files mutated, survivors remaining, skips)
 ```
+
+**No tool path:** do not skip quality verification. Use sabotage on 3–5 critical domain paths (see `test-quality.md`) and record which paths were sabotaged and whether tests caught them. Recommend tool setup as a follow-up, not as a substitute for this slice’s evidence.
 
 ## Tool Configuration by Language
 
@@ -209,17 +213,21 @@ cargo mutants $(git diff --name-only main -- '*.rs' | sed 's/^/--file /')
 
 ### When to Run
 
-- **During `/work:execute`**: On each vertical slice, mutate the domain files you changed
-- **During `/work:audit --focus tests`**: On the targeted scope (directory or file glob)
-- **In CI**: As a PR gate on domain/critical paths only — not infrastructure or framework layers
+- **During `/work:execute`**: When domain/pure-logic files changed — incremental mutate if tool present; otherwise sabotage (see execute `quality-checkpoints.md` › Domain verification path). Not every task if no domain in the diff.
+- **During `/work:audit --focus tests`**: On the targeted scope (directory or file glob), tool path or sabotage fallback
+- **In CI** (optional, project-chosen): incremental mutate on domain/critical paths only — report score/survivors as signal. Do **not** treat mutation score as a universal merge breaker; prefer process evidence (execute DoD) + review P2 over score theater. Never full-repo mutation as a default required check.
 
 ## Mutation Score Thresholds
+
+These severities apply **only when mutation was run** on in-scope files. Missing tool → use sabotage evidence (execute DoD); do not invent a score. No full-repo run just to “have a number.”
+
+**Severity SoT:** `test-quality.md` › Advanced-technique severity (process evidence vs review/audit severity vs optional CI). This table is the layer target guide; do not invent harder gates here.
 
 Apply thresholds appropriate to each architectural layer:
 
 | Layer | Target | Below Target | Rationale |
 |-------|--------|-------------|-----------|
-| Domain | 80%+ | P2 if 60-79%, P1 if <60% | Business logic correctness is critical |
+| Domain | 80%+ | P2 if 60–79% or real survivors unaddressed; **P1** if under 60% *and* survivors look real on critical domain (else P2) | Business logic correctness is critical — score alone is not automatic P1 |
 | Application | 70%+ | P2 if 50-69%, flag below 50% | Orchestration conditionals (retry logic, failure handling, workflow branching) carry real bug risk |
 | Infrastructure | Skip | N/A | Integration tests cover differently; mutations are often equivalent |
 | Framework | Skip (with exceptions) | N/A | Thin layer; E2E tests provide the real signal. See note below |

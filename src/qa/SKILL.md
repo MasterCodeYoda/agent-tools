@@ -125,11 +125,23 @@ Author NL specs by scanning the app, importing existing docs, or guided interact
 
 **Drift detection** (specs vs. generated tests vs. app behavior) is performed by `/work:audit` (qa domain). A dedicated `/qa:audit` command is referenced in some docs but is not yet implemented as a standalone leaf skill.
 
+## Unit-level handoff (E2E is not enough)
+
+E2E / NL specs prove **user journeys**. They do **not** replace unit-level techniques for:
+
+| Failure class E2E often misses | Hand off to @test-strategy |
+|--------------------------------|----------------------------|
+| Weak assertions / tests that would not catch logic faults | Mutation or sabotage (`mutation-testing.md`, `test-quality.md`) |
+| Wide input space / pure transforms (parse, encode, price rules) | Property-based testing (`property-testing.md`) |
+| Crashes on malformed or hostile input at a trust boundary | Selective fuzzing (`fuzzing.md`) — rare |
+
+When discover or audit finds a critical flow that is “E2E green” but rests on untested pure logic, parsers, or untrusted decode paths, **record a handoff**: name the surface and the recommended technique — do not only add more NL scenarios. Do **not** absorb mutation/PBT/fuzz into `@qa`; keep the E2E boundary clean.
+
 ## Related Skills
 
-- **test-strategy**: Testing methodology and strategy selection. **E2E boundary**: qa owns NL spec authoring and Playwright pipeline for E2E tests; test-strategy owns testing philosophy, strategy selection, and unit/integration test design. When deciding *what* E2E scenarios to write, consult qa. When deciding *how* to design test assertions and structure, consult test-strategy.
+- **test-strategy**: Testing methodology and strategy selection. **E2E boundary**: qa owns NL spec authoring and Playwright pipeline for E2E tests; test-strategy owns testing philosophy, strategy selection, and unit/integration test design (including property, mutation, selective fuzz). When deciding *what* E2E scenarios to write, consult qa. When deciding *how* to design test assertions and structure — or when E2E cannot prove an invariant/kill-power/crash class — consult test-strategy.
 - **use-browser**: Browser automation tools used by qa:discover for app scanning
-- **audit**: QA coverage domain (@work `audit/domains/qa.md`) audits spec completeness and drift
+- **audit**: QA coverage domain (@work `audit/domains/qa.md`) audits spec completeness and drift; tests domain covers unit-level advanced techniques
 
 ## References
 

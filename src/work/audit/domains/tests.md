@@ -47,7 +47,8 @@ For each distinct test layer found (unit, integration, E2E, contract, property-b
 ### Step 4: Verify quality tool presence
 - Coverage: Search for coverage configs AND CI coverage steps
 - Mutation: Search for mutation testing configs AND actual usage in test code
-- Property-based: Search for `proptest!`, `prop_assert`, `@given`, `hypothesis`, `quickcheck` in actual test code (not just Cargo.toml/package.json dependencies)
+- Property-based: Search for `proptest!`, `prop_assert`, `@given`, `hypothesis`, `quickcheck`, `fast-check` in actual test code (not just Cargo.toml/package.json dependencies)
+- Fuzz: Search for harnesses/configs (`cargo fuzz`, `libfuzzer`, Atheris, `go test -fuzz`, Jazzer) — absence is not a defect unless untrusted parsers exist without any robustness story (see @test-strategy `references/fuzzing.md`)
 
 ### Step 5: Cross-check CI execution
 - Read CI workflow files to determine which test layers execute in CI vs. local-only
@@ -103,30 +104,39 @@ Spawn 2 parallel agents that read test files:
 - Identify uncovered paths (not just percentages — which functions/branches)
 - Flag coverage without verification (high coverage + weak assertions)
 
-**mutation-scout** — References @test-strategy (`references/mutation-testing.md`, `references/test-quality.md`):
+**mutation-scout** — References @test-strategy (`references/mutation-testing.md`, `references/test-quality.md` › Advanced-technique severity):
+
+Scope: **changed/targeted domain (and pure-logic) files only** — not full codebase. Cap survivor analysis effort; prioritize high-risk lines.
 
 **If mutation tool detected** (mutmut, Stryker, cargo-mutants, Stryker.NET):
-1. Run incrementally on changed/targeted files only (not full codebase)
+1. Run incrementally on changed/targeted files only
 2. Parse results to identify surviving mutants
 3. For each survivor:
    - Classify: equivalent mutant (no observable behavior change) vs. real gap
    - If real gap: identify the untested behavior and suggest a specific test
 4. Identify redundant tests (P3): tests that kill no unique mutants — they are either redundant with other tests, assertion-free, or testing compiler-enforced properties. Flag as candidates for deletion or rewriting with stronger assertions.
-5. Report mutation score with layer-appropriate interpretation:
-   - Domain 80%+: Excellent | 60-79%: Gaps exist (P2) | <60%: Significant issues (P1)
+5. Report mutation score with layer-appropriate interpretation (severities apply **only when mutation was run** — see Advanced-technique severity):
+   - Domain 80%+: Excellent | 60-79%: Gaps exist (P2) | <60%: Significant issues (P1 when survivors look real on critical domain)
    - Application 70%+: Good | 50-69%: Gaps exist (P2) | <50%: Flag for review
    - Infrastructure (internal): 60%+ Good | 40-59%: Gaps (P2) | <40%: Flag for review
    - Infrastructure (external): skip entirely — mutation testing external service wrappers has near-zero value
    - Framework: skip, unless non-trivial validation/parsing logic exists — run targeted mutations on those files
 
 **If no mutation tool detected**:
-1. Perform AI-driven sabotage test on 3-5 critical code paths:
+1. Perform AI-driven sabotage analysis on 3–5 critical code paths (reason-trace OK at audit scale; cite tests):
    - Identify the most important business logic in scope
    - For each: describe a specific mutation (boundary change, removed guard, negated condition, altered return value)
    - Trace existing tests to assess whether they would catch it (cite specific test files and assertions)
    - Report which mutations would survive with confidence level
-2. Recommend the appropriate mutation testing tool for the detected language (see @test-strategy `references/mutation-testing.md`)
-3. Provide the one-line setup command
+2. **Optional P3:** recommend the language’s mutation tool + one-line setup when domain work is recurring — **not** a P1/P2 for missing install alone; sabotage analysis satisfies the audit signal
+
+**property-scout** — References @test-strategy (`references/property-testing.md`, `references/test-quality.md` › Advanced-technique severity). Runs with Tier 2 when pure transforms exist in scope (or always at Tier 3 if Tier 2 skipped):
+
+1. Inventory pure parsers, serializers, codecs, normalizers, and wide-range pure rules in scope
+2. For each pure surface in the inventory (prioritize high-value if scope is large), check whether tests use property-based libraries **or** only fixed examples
+3. Example-only → **P3** with a suggested property (pattern + tool); escalate to **P2** if high-value / money-auth-adjacent pure logic
+4. Never P1 for missing PBT alone; never recommend installing a property library for CRUD or I/O-heavy glue
+5. If properties exist, spot-check for weak properties (not-null only, restate implementation) → P2/P3 per assertion strength
 
 ### Tier 3 — Heuristic Analysis (AI judgment)
 
@@ -145,18 +155,19 @@ Spawn 2 parallel agents that read test files:
 - Report worst examples by SCRAP score, highest-pressure blocks, and specific extraction recommendations with line ranges
 - If a SCRAP baseline exists (sidecar JSON in `target/scrap/` or similar), compare against it and report verdict (improved / worse / mixed / unchanged) with metric deltas
 
-**behavior-coverage-reviewer** — References @test-strategy (SKILL.md philosophy + `references/test-design.md`):
+**behavior-coverage-reviewer** — References @test-strategy (SKILL.md philosophy + `references/test-design.md` + Advanced-technique severity):
 - Read test + production code side-by-side for the scoped area
 - Identify behaviors tested vs. behaviors present
 - Flag missing edge cases (empty inputs, boundary values, error paths)
 - Assess refactoring resilience ("would renaming a private method break tests?")
 - Evaluate "Would this test catch a subtle bug introduced by someone else?"
 - Static guarantee waste ("are tests spending effort verifying properties the type system or linter already enforce?")
-- Strategy-fit assessment (ref: @test-strategy SKILL.md, "Strategy Selection" table):
-  - Parsers/transformations tested with examples only → suggest property-based testing
+- Strategy-fit assessment (ref: @test-strategy SKILL.md, "Strategy Selection" table + severity table):
+  - Parsers/transformations tested with examples only → property-scout severities (P3 default / P2 high-value); do not only "suggest" without severity
   - Service boundaries tested without contract tests → suggest contract testing
   - Legacy/AI-generated code tested without characterization baseline → flag risk
   - Evolving interfaces tested spec-first → suggest TDD for design feedback
+  - Untrusted parsers/codecs with no robustness story → cite `fuzzing.md` (P3 / P2 security-sensitive); not a default find for ordinary apps
 - Suggest strategy improvements with specific tool recommendations per language
 
 ## Output: Prioritized Report
@@ -180,6 +191,7 @@ Present findings using the same P1/P2/P3 structure as `/work:review`:
 | Weak assertions (level 0-2) | N | [ok/warning] |
 | Coverage (domain) | X% | [above/below 85% floor] |
 | Mutation score | X% | [if available: domain 80%+/app 70%+/framework validation if applicable] |
+| Property-fit pure surfaces | N example-only / M with properties | [ok/warning] |
 | Mock boundary violations | N | [ok/warning] |
 | SCRAP avg / max | X / Y | [focused/normal/questionable/poor] |
 | SCRAP pressure | X (LEVEL) | [STABLE/LOW/MEDIUM/HIGH/CRITICAL] |
@@ -239,7 +251,8 @@ vs "external" (supabase, onnx, llm) based on whether they wrap network services.
 ### Recommended Actions
 1. [Highest-impact fix — usually P1 items]
 2. [Second priority]
-3. [Tool recommendation if mutation testing not available]
+3. [Highest-impact strategy fix — e.g. property for pure parser, kill real survivors]
+4. [Optional tool install only if domain work is recurring and sabotage is the only path]
 ```
 
 ## Actionable Next Steps
@@ -252,7 +265,7 @@ After presenting the report, offer:
 1. **Fix critical findings** — Address P1 items (assertion-free and tautological tests)
 2. **Create follow-up tasks** — Track P2/P3 improvements
 3. **Re-audit after fixes** — Run `/work:audit --focus tests [same scope]` to verify
-4. **Install quality tools** — [if mutation testing not available: recommend tool for language]
+4. **Optional tools** — mutation/PBT install when domain/pure surfaces are recurring (P3 hygiene, not a hard gate)
 5. **Save report** — Export findings to `./planning/test-audit-report.md`
 ```
 

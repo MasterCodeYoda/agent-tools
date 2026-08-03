@@ -26,12 +26,14 @@ Not every situation calls for the same testing approach. Select based on what yo
 |-----------|----------|-----|
 | Interface is unclear or evolving | **TDD (Red-Green-Refactor)** | Tests drive the design; each cycle reveals the next interface decision |
 | Contract is well-known upfront | **Spec-First Testing** | Write tests from the specification, then implement to satisfy them |
-| Data transformations / parsers | **Property-Based Testing** | Generates edge cases humans miss; verifies invariants across input space |
+| Data transformations / parsers | **Property-Based Testing** (preferred when fit) | Generates edge cases humans miss; verifies invariants across input space. One or two real properties beat large example matrices for pure transforms. |
 | Service boundaries / APIs | **Contract Testing** | Ensures producer and consumer agree on the interface shape |
 | Legacy code, original authors gone | **Characterization Testing** | Intent unknown — capture what it does as proxy before making changes |
 | AI-generated code, not fully reviewed | **Characterization → Specification** | Intent unverified — capture what it does, then validate against intended behavior |
 | Refactoring code with known intent | **Specification Testing** | Intent known — encode what it *should* do, not what it currently does. Catches bugs too. |
 | Straightforward CRUD | **Example-Based Tests** | Simple input/output cases are sufficient; don't over-engineer |
+| Domain logic correctness signal | **Mutation testing** (incremental) or **sabotage** | Measures whether tests catch faults; not a universal CI gate — see agent economics below |
+| Untrusted parsers / codecs / crash-or-not surfaces | **Fuzzing** (rare, selective) | Hostile or malformed inputs; not business invariants — see `references/fuzzing.md` |
 
 ### Characterization vs. Specification: The Intent Decision
 
@@ -56,6 +58,26 @@ Pre-refactoring investment: specification tests for planned components → trans
 - **Tests as documentation** — names read as specifications  
 - **Respect static guarantees** — don't re-test the compiler/linter  
 
+### Agent economics (unlock ≠ always-run)
+
+Agents lower the **human analysis and iteration tax** on advanced techniques — they do not erase wall-clock, CI budgets, or the need for true oracles. Depth-tiered load of references; never cargo-cult full-repo runs.
+
+| Technique | What agents unlock | Dominant remaining cost | Default posture |
+|-----------|--------------------|-------------------------|-----------------|
+| **Property-based** | Invariant invention from examples; generators; shrink interpretation | Finding *true* invariants (skill), not CPU | **Encouraged when fit** (parsers, transforms, roundtrips, wide-range rules) |
+| **Mutation** | Survivor triage, equivalent-mutant heuristics, kill-test authoring, incremental mutate-on-diff | Suite × mutant wall-clock; tool setup | **Situational** — domain/changed files when tool present; else sabotage. Not every task. |
+| **Fuzzing** | Harness stubs, seed ideas, crash triage summaries | Harness craft, corpus, campaign runtime | **Rare** — untrusted-input boundaries / security-shaped surfaces only |
+
+**Barriers differ by technique** — do not treat them as one “resource constraints” story:
+
+- Mutation was limited by **survivor analysis tedium** (agents help most).
+- Property was limited by **invariant design skill** (agents draft; humans ratify).
+- Fuzz was limited by **harness and process** (agents assist; do not default into execute/QA).
+
+Anti-goals: full-repo mutation every PR, property tests for every CRUD behavior, fuzz as a workflow default, mutation-score theater as universal DoD. Prefer scoped signals with recorded evidence over ritual tooling installs.
+
+Detail: `references/property-testing.md`, `references/mutation-testing.md`, `references/fuzzing.md`, `references/test-quality.md`. Shared severity for review/audit: `references/test-quality.md` › Advanced-technique severity.
+
 ### AI-Specific Discipline
 
 Guard against: tautological tests, assertion-free tests, context leakage, unverified intent (characterize AI code first), untested mutations (`references/mutation-testing.md`), structural complexity creep (SCRAP: `references/scrap-scoring.md`). Full quality framework: `references/test-quality.md`.
@@ -66,10 +88,10 @@ When the interface is unclear or tests should drive design, use TDD. **Load** `r
 
 ## Testing with Vertical Slices
 
-1. **Planning** — list behaviors the slice must exhibit  
+1. **Planning** — list behaviors the slice must exhibit; name properties when strategy-fit  
 2. **Tracer bullet** — one end-to-end test for the simplest behavior; minimum code across layers  
 3. **Incremental** — remaining behaviors with the appropriate strategy each  
-4. **Slice complete** — full suite green; refactor; commit  
+4. **Slice complete** — full suite green; refactor; domain verification evidence when domain/pure logic changed (mutate **or** sabotage **or** skip reason — execute `quality-checkpoints.md`); commit  
 
 ## Anti-Patterns & Debugging
 
@@ -87,6 +109,7 @@ When the interface is unclear or tests should drive design, use TDD. **Load** `r
 | Property-based testing | `references/property-testing.md` |
 | Quality / coverage trap | `references/test-quality.md` |
 | Mutation testing ops | `references/mutation-testing.md` |
+| Fuzzing (selective) | `references/fuzzing.md` |
 | SCRAP scoring / duplication | `references/scrap-scoring.md`, `references/scrap-duplication.md` |
 | TDD cycle detail | `references/tdd-cycle.md` |
 | Anti-pattern examples | `references/anti-patterns.md` |

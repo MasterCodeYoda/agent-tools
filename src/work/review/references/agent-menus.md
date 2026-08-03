@@ -45,12 +45,19 @@ Run in parallel:
 - Pattern consistency
 - Coupling/cohesion
 
-**test-reviewer** — References @test-strategy:
+**test-reviewer** — References @test-strategy (`references/test-quality.md` › Advanced-technique severity as the severity SoT):
 - Test coverage for changed code
 - Test quality and assertion strength (see @test-strategy `references/test-quality.md`)
 - Edge cases for changed logic
 - Regression risk assessment
-- If mutation tool available: flag domain logic changes lacking mutation testing coverage
+- **Domain quality signal** (standard+ depth when domain/pure business logic is in the diff):
+  - Apply the shared Advanced-technique severity table (process evidence vs review P2 vs optional CI)
+  - Same predicate as execute Domain verification path: domain/pure-logic in diff → look for
+    `domain_verification: mutate|sabotage|skip` evidence (session notes, commit body, or PR text)
+  - Missing evidence → **P2** should-fix per table (not automatic REQUEST CHANGES; no hard gate for missing tool install alone)
+  - Mutation tool present with unaddressed real survivors → P2 / P1 per table
+  - Example-only parsers/transforms → P3 / P2 per table; cite `property-testing.md` discovery recipe
+  - New untrusted parser/codec with no robustness story → P3 / P2 per table; cite `fuzzing.md` (rare — do not demand continuous fuzz CI)
 - SCRAP structural analysis on changed test files (see @test-strategy `references/scrap-scoring.md`):
   - Score each changed/added test function and report any with SCRAP > 12 (questionable) or > 20 (poor)
   - Flag smell penalties: no-assertions, low-assertion-density, multiple-phases, high-mocking, large-example

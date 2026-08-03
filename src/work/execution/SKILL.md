@@ -95,8 +95,11 @@ deliverable-partition.
 
 ### Quality triggers (before task complete)
 
-Matches plan · tests pass · no new lint/type errors · focused patterns · mutation on domain if
-tool. Full checklists: `quality-checkpoints.md`. Update plan + session-state at milestones.
+Matches plan · tests pass · no new lint/type errors · focused patterns · **domain verification**
+when domain/pure logic changed: incremental mutation **or** sabotage 3–5 paths **or** skip
+with reason (see `quality-checkpoints.md` › Domain verification path). Property-based tests
+when strategy-fit (parsers/transforms). Full checklists: `quality-checkpoints.md`. Update plan
++ session-state at milestones.
 
 ## Completion verification
 
@@ -104,7 +107,8 @@ tool. Full checklists: `quality-checkpoints.md`. Update plan + session-state at 
 **Skip when:** user stop; question-only; plan/review-only.
 
 Checklist: request vs delivered · TodoWrite clean · plan checkboxes · tests/lint/types green ·
-no half-edited files. Finish remaining if possible; else handoff or document block.
+no half-edited files · domain verification evidence when applicable (mutation summary **or**
+sabotage notes **or** skip reason). Finish remaining if possible; else handoff or document block.
 
 ## Session handoff (end-of-item)
 
@@ -128,8 +132,9 @@ blocked, or lost context. Provisional plans: emit `PROBLEM_REFRAMED` / `DESIGN_F
 ## Definition of Done
 
 **Per task:** implemented + tests green + plan checkbox + session-state + focused changes +
-mutation survivors (domain, if tool) + slice commit + decision-reconciliation
-(`quality-checkpoints.md`) + PM when applicable.
+domain verification evidence when applicable (mutation summary **or** sabotage notes **or**
+skip reason) + slice commit + decision-reconciliation (`quality-checkpoints.md`) + PM when
+applicable.
 
 **Per session:** verification · tasks done/documented · ACs checked · state updated · committed ·
 compound offered · handoff summary.

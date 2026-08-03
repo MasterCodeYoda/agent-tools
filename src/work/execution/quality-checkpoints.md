@@ -21,6 +21,7 @@ Verify work meets standards at the right granularity for its decomposition mode 
 - [ ] Validation edge cases tested
 - [ ] Business rule scenarios covered
 - [ ] No mocking required (pure logic)
+- [ ] Domain verification evidence when this layer changed (mutation summary **or** sabotage notes **or** skip reason) — see Domain verification path
 
 **Common Issues:**
 - Anemic domain models (logic in wrong layer)
@@ -107,6 +108,7 @@ Verify work meets standards at the right granularity for its decomposition mode 
 - [ ] No new warnings
 - [ ] Code follows patterns
 - [ ] Behavioral diff against main confirms only expected changes (when relevant)
+- [ ] Domain verification evidence when domain/pure logic changed (mutation summary **or** sabotage notes **or** skip reason) — see Domain verification path
 
 ## Deliverable-Partition Quality Gates (deliverable-partition mode)
 
@@ -144,6 +146,7 @@ Per-deliverable gates replace per-layer gates. Each deliverable's shape determin
 - [ ] No new warnings
 - [ ] Code follows patterns
 - [ ] Behavioral diff against main confirms only expected changes (when relevant)
+- [ ] Domain verification evidence when domain/pure logic changed (mutation summary **or** sabotage notes **or** skip reason) — see Domain verification path
 
 **Gap-prevention (project-level audit):**
 - [ ] No parent AC has been silently weakened during decomposition
@@ -260,12 +263,45 @@ Coverage is a **floor** (find untested code), not a goal. Use quality verificati
 
 | Layer | Coverage Floor | Quality Verification | Mutation Target |
 |-------|---------------|---------------------|-----------------|
-| Domain | 85% | Mutation testing — verify tests catch injected faults | 80%+ mutation score |
-| Application | 75% | Sabotage test — manually break logic, confirm tests fail | 70%+ (P2 if 50-69%) |
+| Domain | 85% | Mutation **or** sabotage (see Domain verification path) | 80%+ when tool run; else sabotage evidence |
+| Application | 75% | Sabotage test — manually break logic, confirm tests fail | 70%+ if tool used (P2 if 50-69%); else sabotage |
 | Infrastructure | 60% | Integration completeness — all repository paths exercised | N/A |
-| Framework | 50% | E2E happy path — critical user journeys covered | Targeted on validation logic only |
+| Framework | 50% | E2E happy path — critical user journeys covered | Targeted on validation logic only if tool |
 
-See @test-strategy (`references/test-quality.md`, `references/mutation-testing.md`) for mutation testing tools, configuration, and the sabotage test technique.
+See @test-strategy (`references/test-quality.md`, `references/mutation-testing.md`) for mutation testing tools, configuration, and the sabotage test technique. Strategy fit (including property-based tests for parsers/transforms): @test-strategy SKILL + `references/property-testing.md`.
+
+### Domain verification path (slice / task complete)
+
+**Vocabulary (do not conflate):**
+
+| Term | Meaning |
+|------|---------|
+| **Process evidence (execute DoD)** | Before unit complete: record mutation summary **or** sabotage notes **or** skip reason |
+| **Review P2** | Missing that evidence on domain/pure-logic changes → should-fix finding; not automatic REQUEST CHANGES / merge block |
+| **CI signal (optional)** | Project may report incremental mutation on critical paths; not a universal score breaker |
+
+When the change touches **domain** (or other pure business logic — including pure application rules with real conditionals; thin orchestration stays sabotage/example only), record quality evidence before calling the unit done. Prefer the cheapest path that still verifies tests catch faults:
+
+**Predicate (shared with review):** if domain/pure-logic files are in the diff → evidence or explicit skip reason. Express “triviality” only via skip reason (e.g. rename-only, pure type renames, comment-only) — do not invent a separate “non-trivial” gate.
+
+```
+IF mutation tool available AND domain/pure-logic files changed:
+  1. Incremental mutate on those files only (not full repo)
+  2. Timebox: classify survivors (equivalent vs real gap); kill real gaps with minimal strong tests
+  3. Record: files mutated, score or survivor summary, remaining accepted skips
+ELSE:
+  1. Sabotage 3–5 critical paths in the changed domain logic
+     (boundary ops, guards, return values — see test-quality.md)
+  2. Confirm tests fail under sabotage; revert; strengthen tests if any sabotage survived
+  3. Record: paths sabotaged, caught/missed, tests added
+SKIP (with one-line reason) when:
+  - No domain/pure-logic in the diff (docs-only, config-only, pure wiring)
+  - Change is infrastructure/external wrappers where mutation has near-zero value
+```
+
+This is a **process gate with evidence**, not a universal CI mutation-score threshold. Do not install mutation tools mid-slice solely for ceremony; sabotage + recorded evidence satisfies DoD for that unit. Recommend tool install as follow-up when domain work is recurring.
+
+**Property-fit:** if the slice owns parsers, codecs, serializers, or wide-range pure rules, prefer property-based tests (+ few example anchors) per @test-strategy — do not force PBT on CRUD.
 
 ## Pre-Commit Checklist
 
@@ -277,6 +313,7 @@ Before committing a slice:
 - [ ] No console errors
 - [ ] Plan checkbox updated
 - [ ] Session state reflects progress
+- [ ] Domain verification evidence recorded when domain/pure logic changed (mutation summary **or** sabotage notes **or** skip reason)
 
 ## Quality Questions
 

@@ -28,18 +28,37 @@ Both tests produce the same coverage number. Only one would catch a bug in the t
 Use coverage to find **untested code**, not to measure test quality:
 
 - **Below the floor** → you have gaps. Write tests for uncovered paths.
-- **Above the floor** → tells you nothing about quality. Use mutation testing instead.
+- **Above the floor** → tells you nothing about quality. Use **incremental mutation** (when a tool is present) **or sabotage** — coverage does not prove verification.
 
 | Layer | Coverage Floor | Quality Verification |
 |-------|---------------|---------------------|
-| Domain | 85% | Mutation testing |
-| Application | 75% | Sabotage test |
+| Domain | 85% | Mutation **or** sabotage (execute Domain verification path) |
+| Application | 75% | Sabotage (mutation optional if tool + pure rules) |
 | Infrastructure | 60% | Integration completeness |
 | Framework | 50% | E2E happy path |
 
+**Agent economics and process DoD:** see @test-strategy SKILL › Agent economics, and `@work` execute `quality-checkpoints.md` › Domain verification path. Mutation score is not universal CI merge policy.
+
+### Advanced-technique severity (shared: review + audit)
+
+One table for `/work:review` and `/work:audit --focus tests`. Columns separate **process evidence**, **review/audit severity**, and **CI**.
+
+| Situation | Execute evidence required? | Review / audit severity if missing or weak | CI may break on? |
+|-----------|----------------------------|--------------------------------------------|------------------|
+| Domain/pure logic in diff; no mutation, sabotage, or skip reason | Yes (mutate **or** sabotage **or** skip) | **P2** should-fix | No (not universal) |
+| Mutation run: domain score 60–79% or real survivors unaddressed | Record score + plan for survivors | **P2** | Optional project policy only |
+| Mutation run: domain score under 60% or critical money/auth survivors real | Record + kill or defer with reason | **P1** if survivors look real on critical domain; else P2 | Optional project policy only |
+| Parsers/transforms example-only (no property) | Prefer property when fit | **P3**; **P2** if high-value / money-auth-adjacent pure logic | No |
+| Missing PBT alone | No | Never **P1** | No |
+| Untrusted parser/codec with no robustness story | Situational (fuzz rare) | **P3**; **P2** if security-sensitive and no tests at all | Only if project owns a harness |
+| No mutation tool installed | Sabotage satisfies execute DoD | **P3** recommend install when domain work is recurring — not P1/P2 for missing install alone | No |
+
+**Evidence shape (preferred):** one line agents and reviewers can find — e.g. session note or commit body  
+`domain_verification: mutate|sabotage|skip — <files or paths>; <score or caught/missed summary>`.
+
 ## Mutation Testing
 
-The most reliable way to measure test quality. Mutation testing makes small changes to your code (mutants) and checks whether your tests catch them.
+The most reliable *tool-assisted* way to measure test quality when available. Mutation testing makes small changes to your code (mutants) and checks whether your tests catch them. When no tool is available, **sabotage** (below) is the execute DoD path — not optional theater.
 
 ### How It Works
 
@@ -70,12 +89,12 @@ Mutation score = killed / total mutants
 
 ### When to Run Mutation Tests
 
-- After completing a vertical slice (before commit)
+- After completing a vertical slice that changed domain/pure logic (before commit) — if a tool is present
 - When coverage is high but confidence is low
 - On domain logic where correctness is critical
-- As a quality gate in CI for critical paths
+- Optionally in CI on domain/critical paths as a **signal** (not a universal merge-breaking score gate)
 
-Don't run on the entire codebase every time — target the code you changed.
+Don't run on the entire codebase every time — target the code you changed. Soft/process evidence model: `mutation-testing.md` (Unlock ≠ always-run) + execute Domain verification path.
 
 For tool configuration, incremental strategies, and agent-driven survivor analysis, see `references/mutation-testing.md`.
 
@@ -107,11 +126,13 @@ Scan your test files for these warning signs:
 
 ## The Sabotage Test
 
-A manual alternative to mutation testing. Use it when:
+A live, manual alternative to mutation testing. **Default when no mutation tool is available**, and always acceptable as execute DoD evidence for a unit (with recorded paths and outcomes). Use it when:
 
-- Mutation testing tools aren't available for your language
+- Mutation testing tools aren't available for your language or project
 - You want a quick check on a specific piece of logic
-- You're reviewing someone else's tests
+- You're reviewing someone else's tests and need a fast kill-power probe
+
+**Execute vs audit:** under `/work:execute`, sabotage must **actually** introduce the bug, run tests, confirm fail/pass, and revert. Under `/work:audit` without tools, agents may reason-trace whether existing tests would catch a described mutant when a live run is impractical — still cite specific tests; prefer live sabotage when scope is small.
 
 ### How to Sabotage Test
 
