@@ -85,6 +85,25 @@ get_agent_skills_dir() {
     fi
 }
 
+# Stamp skills root so runs-ledger skills_rev can attribute process IP without archaeology.
+# Format consumed by work/references/runs-ledger.md › Resolving skills_rev.
+write_skills_revision() {
+    local agent="$1"
+    local skills_dir="$2"
+    [ -n "$skills_dir" ] || return 0
+    mkdir -p "$skills_dir" 2>/dev/null || return 0
+    local rev="unknown"
+    if command -v git >/dev/null 2>&1; then
+        rev="$(git -C "$SCRIPT_DIR" rev-parse HEAD 2>/dev/null || echo unknown)"
+    fi
+    {
+        echo "agent-tools-rev=${rev}"
+        echo "installed-at=$(date -u +%Y-%m-%dT%H:%M:%SZ)"
+        echo "publish-agent=${agent}"
+    } > "${skills_dir}/.agent-tools-revision"
+    echo -e "${GREEN}✓${NC} Wrote ${skills_dir}/.agent-tools-revision"
+}
+
 # ── Helpers ─────────────────────────────────────────────────────────
 
 # Create a symlink with proper error handling (used for ~/.claude only)
@@ -571,39 +590,31 @@ echo
 # Codex detection uses ~/.codex (its home for AGENTS.md/config; skills install to ~/.codex/skills/ per current support choice).
 if [ -d "$CLAUDE_DIR" ]; then
     install_skills_for_agent "claude"
+    write_skills_revision "claude" "$(get_agent_skills_dir claude user)"
 fi
 
 # Grok detection is slightly more lenient because the .grok directory
 # layout is newer and some users have ~/.grok/skills directly.
 if [ -d "$GROK_DIR" ] || [ -d "$GROK_SKILLS_DIR" ]; then
     install_skills_for_agent "grok"
+    write_skills_revision "grok" "$(get_agent_skills_dir grok user)"
 fi
 
 if [ -d "$FACTORY_DIR" ]; then
     install_skills_for_agent "factory"
+    write_skills_revision "factory" "$(get_agent_skills_dir factory user)"
 fi
 
 # Hermes: detect host install dir (or existing skills path). Install managed
 # skills alongside any Hermes-native hub trees; prune only .agent-tools-marked entries.
 if [ -d "$HERMES_DIR" ] || [ -d "$HERMES_SKILLS_DIR" ]; then
     install_skills_for_agent "hermes"
-    # Revision stamp for doctor / control plane (agent-tools SHA at install time).
-    if [ -d "$HERMES_SKILLS_DIR" ] || mkdir -p "$HERMES_SKILLS_DIR" 2>/dev/null; then
-        rev="unknown"
-        if command -v git >/dev/null 2>&1; then
-            rev="$(git -C "$SCRIPT_DIR" rev-parse HEAD 2>/dev/null || echo unknown)"
-        fi
-        {
-            echo "agent-tools-rev=${rev}"
-            echo "installed-at=$(date -u +%Y-%m-%dT%H:%M:%SZ)"
-            echo "publish-agent=hermes"
-        } > "${HERMES_SKILLS_DIR}/.agent-tools-revision"
-        echo -e "${GREEN}✓${NC} Wrote ${HERMES_SKILLS_DIR}/.agent-tools-revision"
-    fi
+    write_skills_revision "hermes" "$(get_agent_skills_dir hermes user)"
 fi
 
 if [ -d "$CODEX_DIR" ]; then
     install_skills_for_agent "codex"
+    write_skills_revision "codex" "$(get_agent_skills_dir codex user)"
 fi
 
 # OpenCode detection: look for the global config dir or a local .opencode project dir.
@@ -611,6 +622,7 @@ fi
 if [ -d "$OPENCODE_CONFIG_DIR" ] || [ -d "${SCRIPT_DIR}/.opencode" ]; then
     install_skills_for_agent "opencode"
     install_commands_for_agent "opencode"
+    write_skills_revision "opencode" "$(get_agent_skills_dir opencode user)"
 fi
 
 # Clean up legacy factory-commands/ directory in the repo (one-time)
@@ -631,16 +643,19 @@ if [ -d "$CLAUDE_DIR" ]; then
     echo "  Claude:"
     echo "    - User profile : ~/.claude/skills/"
     echo "    - This project : ./.claude/skills/   (project-scoped skills only)"
+    echo "    - Revision     : ~/.claude/skills/.agent-tools-revision"
 fi
 if [ -d "$GROK_DIR" ] || [ -d "$GROK_SKILLS_DIR" ]; then
     echo "  Grok:"
     echo "    - User profile : ~/.grok/skills/"
     echo "    - This project : ./.grok/skills/     (project-scoped skills only)"
+    echo "    - Revision     : ~/.grok/skills/.agent-tools-revision"
 fi
 if [ -d "$FACTORY_DIR" ]; then
     echo "  Factory (coding agent — not Kevin):"
     echo "    - User profile : ~/.factory/skills/"
     echo "    - This project : ./.factory/skills/  (project-scoped skills only)"
+    echo "    - Revision     : ~/.factory/skills/.agent-tools-revision"
 fi
 if [ -d "$HERMES_DIR" ] || [ -d "$HERMES_SKILLS_DIR" ]; then
     echo "  Hermes (multi-agent / maintainer — not Kevin product path):"
@@ -657,6 +672,7 @@ fi
 if [ -d "$CODEX_DIR" ]; then
     echo "  Codex:"
     echo "    - User profile : ~/.codex/skills/"
+    echo "    - Revision     : ~/.codex/skills/.agent-tools-revision"
     echo "    - This project : ./.codex/skills/  (project-scoped skills only)"
 fi
 if [ -d "$OPENCODE_CONFIG_DIR" ] || [ -d "${SCRIPT_DIR}/.opencode" ]; then
@@ -665,6 +681,7 @@ if [ -d "$OPENCODE_CONFIG_DIR" ] || [ -d "${SCRIPT_DIR}/.opencode" ]; then
     echo "    - Skills (project) : .opencode/skills/   (project-scoped only)"
     echo "    - Commands (user)  : ~/.config/opencode/commands/"
     echo "    - Commands (project): .opencode/commands/ (project-scoped only)"
+    echo "    - Revision         : ~/.config/opencode/skills/.agent-tools-revision"
     echo "    Note: OpenCode sub-skills are published both as loadable skills (skill tool)"
     echo "          and as native commands (for direct /name slash triggers)."
 fi

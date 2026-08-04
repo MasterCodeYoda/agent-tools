@@ -47,7 +47,8 @@ One table for `/work:review` and `/work:audit --focus tests`. Columns separate *
 |-----------|----------------------------|--------------------------------------------|------------------|
 | Domain/pure logic in diff; no mutation, sabotage, or skip reason | Yes (mutate **or** sabotage **or** skip) | **P2** should-fix | No (not universal) |
 | Mutation run: domain score 60–79% or real survivors unaddressed | Record score + plan for survivors | **P2** | Optional project policy only |
-| Mutation run: domain score under 60% or critical money/auth survivors real | Record + kill or defer with reason | **P1** if survivors look real on critical domain; else P2 | Optional project policy only |
+| Mutation run: domain score under 60% or critical money/auth survivors real | Record + kill or defer with reason | **P1** only when survivors are **applied-confirmed** (tool result or sabotage re-run); else P2 | Optional project policy only |
+| Audit reason-trace “would survive” on critical path, not yet applied | N/A (audit) | Cap at **P2** until applied sabotage confirms | No |
 | Parsers/transforms example-only (no property) | Prefer property when fit | **P3**; **P2** if high-value / money-auth-adjacent pure logic | No |
 | Missing PBT alone | No | Never **P1** | No |
 | Untrusted parser/codec with no robustness story | Situational (fuzz rare) | **P3**; **P2** if security-sensitive and no tests at all | Only if project owns a harness |

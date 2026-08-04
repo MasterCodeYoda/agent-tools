@@ -172,10 +172,25 @@ Good frameworks shrink automatically. If yours doesn't, consider switching.
 
 | Phase | Expectation |
 |-------|-------------|
-| **Plan** | For parsers/transforms/invariants, name properties in the test approach (not only example lists) |
-| **Execute** | Prefer property + few anchors when fit; do not force PBT on CRUD or I/O-heavy glue |
+| **Plan** | List pure surfaces; for each, commit to a **deliverable**: property, exhaustive table/reflection theory, or skip reason — not invariant names alone |
+| **Execute** | Ship that deliverable before slice complete: property + few anchors **or** finite exhaustive/reflection coverage. Do not force PBT on CRUD or I/O-heavy glue |
 | **Review / audit** | Example-only on pure transforms → **P3** default; **P2** if high-value pure logic / money-auth-adjacent. Cite discovery recipe. Never P1 for missing PBT alone. |
 
-Do not install a property library solely to satisfy ritual. Use it when an invariant is real and the surface is pure enough to generate.
+**Execute default when fit** (pick one; record which):
+
+```text
+// A — property (wide or infinite input space)
+for all valid inputs generated from G:
+  assert invariant(process(input))
+
+// keep 1–2 fixed examples as named regression anchors
+
+// B — exhaustive / reflection (finite closed set)
+for each member M in registered_set():   // enums, codecs, mappers, known keys
+  assert roundtrip_or_rule(M)
+// exclusion list for one-way fields must be explicit and reviewable
+```
+
+Do not install a property library solely to satisfy ritual. Use A or B when an invariant is real and the surface is pure enough; B often needs no extra dependency.
 
 Hostile or crash-or-not oracles (untrusted bytes, “must not panic”) are **fuzzing**, not weak properties — see `fuzzing.md`.

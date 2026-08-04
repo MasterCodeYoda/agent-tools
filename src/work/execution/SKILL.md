@@ -97,8 +97,10 @@ deliverable-partition.
 
 Matches plan · tests pass · no new lint/type errors · focused patterns · **domain verification**
 when domain/pure logic changed: incremental mutation **or** sabotage 3–5 paths **or** skip
-with reason (see `quality-checkpoints.md` › Domain verification path). Property-based tests
-when strategy-fit (parsers/transforms). Full checklists: `quality-checkpoints.md`. Update plan
+with reason (see `quality-checkpoints.md` › Domain verification path). **Property deliverable**
+when strategy-fit (parsers/transforms/mappers): ship a property **or** exhaustive
+table/reflection theory **or** skip reason — not example-only when an invariant is real
+(`quality-checkpoints.md` › Property-fit). Full checklists: `quality-checkpoints.md`. Update plan
 + session-state at milestones.
 
 ## Completion verification

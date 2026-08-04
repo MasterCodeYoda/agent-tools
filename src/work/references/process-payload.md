@@ -18,7 +18,8 @@ evidence). Soft doc polish does not bump.
 **v2 (runs identity):** adapters must stamp claim-time identity envelope on session-state and
 events (`harness`, `agent_surface`, `model`, `skills_rev`, `profile`, `workspace_kind`,
 `task_shape`); use strict `rework` vs `review_fix_cycles` on close; wall-clock `ts` at append.
-See `runs-ledger.md`.
+Resolve `skills_rev` from env or skills-root `.agent-tools-revision` before falling back to
+`unknown` — see `runs-ledger.md` › Resolving `skills_rev`.
 
 ## Must implement (adapter surface)
 

@@ -13,7 +13,7 @@ source_channel: [cli|linear|github|chat|other]
 harness: [grok-build|claude-code|kevin-hermes|codex|cursor|other|unknown]
 agent_surface: [work-continue|work-phase|kevin-start|swarm-worker|unattended|other]
 model: [model-id-or-unknown]
-skills_rev: [sha|unknown|dirty]
+skills_rev: [sha from skills .agent-tools-revision or env | unknown | dirty]  # resolve at claim — see runs-ledger.md
 profile: [kevin|null]
 workspace_kind: [skill_source|product_repo|sandbox|unknown]
 task_shape: [packaging|bug|multi_file|recovery|research|docs|other|unknown]

@@ -301,7 +301,21 @@ SKIP (with one-line reason) when:
 
 This is a **process gate with evidence**, not a universal CI mutation-score threshold. Do not install mutation tools mid-slice solely for ceremony; sabotage + recorded evidence satisfies DoD for that unit. Recommend tool install as follow-up when domain work is recurring.
 
-**Property-fit:** if the slice owns parsers, codecs, serializers, or wide-range pure rules, prefer property-based tests (+ few example anchors) per @test-strategy — do not force PBT on CRUD.
+**Property-fit (execute deliverable, not plan-only naming):** if the slice owns parsers, codecs, serializers, formatters, mappers, or wide-range pure rules:
+
+```
+IF pure surface in this slice:
+  Prefer ONE of:
+    A. Property-based test(s) for a named invariant + 1–2 fixed example anchors
+    B. Exhaustive / reflection-driven table (e.g. all enum members, all registered codecs)
+       when the input space is finite and small enough to enumerate
+  Do NOT close the slice with only ad-hoc examples when an invariant is real and pure
+  Skip with one-line reason when: CRUD, no stable invariant, I/O-heavy glue, generators would
+    mostly discard invalid input
+  Do NOT install a property library solely for ceremony — A or B above with the stack you have
+```
+
+Detail: @test-strategy `references/property-testing.md` › Agent workflow hooks.
 
 ## Pre-Commit Checklist
 

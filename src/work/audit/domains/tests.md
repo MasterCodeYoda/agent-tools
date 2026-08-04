@@ -122,13 +122,18 @@ Scope: **changed/targeted domain (and pure-logic) files only** — not full code
    - Infrastructure (external): skip entirely — mutation testing external service wrappers has near-zero value
    - Framework: skip, unless non-trivial validation/parsing logic exists — run targeted mutations on those files
 
-**If no mutation tool detected**:
-1. Perform AI-driven sabotage analysis on 3–5 critical code paths (reason-trace OK at audit scale; cite tests):
-   - Identify the most important business logic in scope
-   - For each: describe a specific mutation (boundary change, removed guard, negated condition, altered return value)
-   - Trace existing tests to assess whether they would catch it (cite specific test files and assertions)
-   - Report which mutations would survive with confidence level
-2. **Optional P3:** recommend the language’s mutation tool + one-line setup when domain work is recurring — **not** a P1/P2 for missing install alone; sabotage analysis satisfies the audit signal
+**If no mutation tool detected** (sabotage path):
+1. Identify 3–5 critical pure-logic / money / auth / safety paths in scope
+2. For each path: name a specific mutation (boundary change, removed guard, negated condition, altered return value)
+3. **Bulk / non-critical:** reason-trace is OK — cite the test files and assertions that would (or would not) catch it; confidence low/med/high
+4. **Critical claims require applied sabotage** before ranking:
+   - You may **not** report **P1**, “would fail open”, “survives entire suite”, or “tests do not discriminate” on reason-trace alone
+   - For each such claim: apply the mutation in a throwaway edit (or tool-apply), run the focused suite, record pass/fail counts, **revert**
+   - If the suite stays green under the mutation → confirmed SURVIVES (rank per severity)
+   - If tests fail → KILLED; drop or demote the finding (reason-trace over-credited the gap)
+5. **Optional P3:** recommend the language’s mutation tool + one-line setup when domain work is recurring — **not** a P1/P2 for missing install alone; applied + reason-trace sabotage satisfies the audit signal
+
+**Kill-test verification (tool or sabotage, audit remediation / execute):** when writing a test claimed to kill a survivor, **re-apply that mutation and confirm the new test fails**, then restore. A green suite under the mutant means the test does not discriminate — see `mutation-testing.md` › False kills.
 
 **property-scout** — References @test-strategy (`references/property-testing.md`, `references/test-quality.md` › Advanced-technique severity). Runs with Tier 2 when pure transforms exist in scope (or always at Tier 3 if Tier 2 skipped):
 

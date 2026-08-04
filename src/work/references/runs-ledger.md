@@ -47,7 +47,7 @@ source_channel: cli | linear | github | chat | other   # ingress only — not ha
 harness: grok-build | claude-code | kevin-hermes | codex | cursor | other | unknown
 agent_surface: work-continue | work-phase | kevin-start | swarm-worker | unattended | other
 model: "<provider model id or unknown>"
-skills_rev: "<git sha from skills .agent-tools-revision | unknown | dirty>"
+skills_rev: "<short sha | full agent-tools-rev=… stamp | unknown | dirty>"
 profile: kevin | null          # host profile name when applicable
 workspace_kind: skill_source | product_repo | sandbox | unknown
 task_shape: packaging | bug | multi_file | recovery | research | docs | other | unknown
@@ -58,13 +58,44 @@ task_shape: packaging | bug | multi_file | recovery | research | docs | other | 
 | `harness` | Which coding host ran the line (Kevin vs Grok vs Claude …) |
 | `agent_surface` | How process was invoked (continue vs freeform start vs swarm) |
 | `model` | Fair comparison / scorecard bands |
-| `skills_rev` | Published process IP attribution |
+| `skills_rev` | Published process IP attribution — **resolve at claim**, do not leave blank or habitually `unknown` when a stamp exists |
 | `profile` | e.g. Hermes profile `kevin` |
 | `workspace_kind` | Monorepo skill-source vs product dogfood vs sandbox |
 | `task_shape` | Coarse use-case for clustering with coding-confidence tracers |
 
-**Detection defaults (host):** best-effort; `unknown` is valid. Prefer env `KEVIN_RUN_HARNESS` /
-Kevin skills root revision when present. Do **not** invent a second orchestrator file.
+### Resolving `skills_rev` (claim-time recipe)
+
+Prefer the **first hit**. Record the short git SHA when present; include `installed-at=` in evidence or ledger note when useful for effectiveness review.
+
+```text
+1. Env (adapters may set these):
+   KEVIN_RUN_SKILLS_REV
+   AGENT_TOOLS_SKILLS_REV
+2. Skills-root revision stamp (file content: agent-tools-rev=<sha> and installed-at=<ISO-UTC>):
+   ~/.kevin/skills/.agent-tools-revision
+   ~/.hermes/skills/.agent-tools-revision
+   ~/.claude/skills/.agent-tools-revision
+   ~/.grok/skills/.agent-tools-revision
+   ~/.factory/skills/.agent-tools-revision
+   ~/.codex/skills/.agent-tools-revision
+   ~/.opencode/skills/.agent-tools-revision   # or project .opencode/skills/ when that is the install root
+3. Skill-source workspace (only when workspace_kind = skill_source and you are editing this monorepo):
+   git rev-parse --short HEAD  → skills_rev
+   if working tree has uncommitted changes under src/ → append or use dirty (e.g. abc1234-dirty)
+4. Else: skills_rev: unknown
+```
+
+**Stamp format** (written by `./setup.sh` / pack-install scripts):
+
+```text
+agent-tools-rev=<full or short git sha of agent-tools at publish/install>
+installed-at=<YYYY-MM-DDTHH:MM:SSZ>
+publish-agent=<claude|grok|factory|hermes|codex|opencode|kevin>
+```
+
+Hosts **must** attempt steps 1–3 before writing `unknown`. Soft-fail to `unknown` only when no stamp and not in skill-source. Do **not** invent a second orchestrator file.
+
+**Detection defaults (host):** best-effort for other envelope fields; prefer env `KEVIN_RUN_HARNESS` when present.
 
 **Thrash bound is per `run_id`**, not per `/continue` invocation. Soft-check: if counters
 already meet the bound when claiming, diagnose before burning another loop.
@@ -133,9 +164,11 @@ not L3 memory.
 
 ```text
 1. Mint run_id if missing; ensure .agent-tools/runs/ scaffold in this workspace
-2. Stamp identity envelope on session-state (harness, agent_surface, model, skills_rev,
-   profile, workspace_kind, task_shape) — unknown allowed; do not skip keys silently
-3. Optional: first event status=started with full envelope (honest ts)
+2. Resolve skills_rev (recipe above) — prefer stamp/env over unknown
+3. Stamp identity envelope on session-state (harness, agent_surface, model, skills_rev,
+   profile, workspace_kind, task_shape) — unknown allowed only after resolution attempt;
+   do not skip keys silently
+4. Optional: first event status=started with full envelope (honest ts)
 ```
 
 ### Host recipe (after each phase-return)

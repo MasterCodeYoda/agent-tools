@@ -130,11 +130,14 @@ source_channel: cli | linear | github | chat | other
 harness: grok-build | claude-code | kevin-hermes | codex | cursor | other | unknown
 agent_surface: work-continue | work-phase | kevin-start | swarm-worker | unattended | other
 model: unknown
-skills_rev: unknown
+skills_rev: <sha from .agent-tools-revision / KEVIN_RUN_SKILLS_REV | unknown | dirty>
 profile: null
 workspace_kind: skill_source | product_repo | sandbox | unknown
 task_shape: packaging | bug | multi_file | recovery | research | docs | other | unknown
 ```
+
+Resolve `skills_rev` via @work `references/runs-ledger.md` › Resolving `skills_rev` — do not default
+to `unknown` when a skills-root stamp or env is present.
 
 Do not create a second per-unit orchestrator-state file. Prefer re-derive; write only what
 classify cannot reconstruct.

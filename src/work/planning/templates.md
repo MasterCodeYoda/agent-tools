@@ -54,11 +54,16 @@ As a [user type], I want [capability] so that [benefit].
 
 #### 5. Testing Strategy
 - **Approach**: [see @test-strategy strategy table]
-- **Properties** (if parsers/transforms/roundtrips): [named invariants — discovery recipe in property-testing.md]
+- **Pure surfaces** (parsers / codecs / formatters / mappers / wide-range pure rules): list each, or `none`
+- **Property deliverable** (required when pure surfaces ≠ none — not names only):
+  - For each pure surface: **property** *or* **exhaustive table / reflection-driven theory** *or* skip reason (CRUD / no stable invariant / I/O-bound)
+  - Prefer one real invariant + 1–2 example anchors over a large example matrix
+  - Discovery recipe: @test-strategy `property-testing.md`
 - **Domain quality signal**: mutation (if tool) **or** sabotage **or** N/A reason
 - **Unit Tests**
   - [ ] Domain entity tests
   - [ ] Use case tests
+  - [ ] Property or exhaustive pure-surface tests when listed above
 - **Integration Tests**
   - [ ] Repository tests
 - **E2E Tests**
@@ -181,7 +186,8 @@ For simpler stories in vertical-slice mode that don't need full layer breakdown:
 - Infrastructure: [What persistence]
 - Framework: [What endpoints/UI]
 
-**Tests**: [Testing approach]
+**Tests**: [Approach + domain verification path]
+**Pure surfaces**: [none | list] → for each: property **or** exhaustive table/theory **or** skip reason
 
 **Risks**: [Main concerns]
 ```

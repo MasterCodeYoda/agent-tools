@@ -17,13 +17,18 @@ story/slice or sub-issue/deliverable independently.
    - no tool → sabotage 3–5 critical paths and strengthen tests that miss, **or**
    - skip with one-line reason (no domain in diff / infra-only)  
    Record evidence in session notes or commit body (files, score/summary, or sabotage list).
-4. Mark TodoWrite complete  
-5. **Deliverable-partition only:** verify every **inherited verbatim parent AC** against
+   Kill tests: re-apply the mutant and confirm failure before claiming a kill.
+4. **Property deliverable** (when pure transforms in the slice) — load
+   `quality-checkpoints.md` › Property-fit: property **or** exhaustive table/reflection
+   **or** skip reason. Do not close with ad-hoc examples only when an invariant is real.
+5. Mark TodoWrite complete  
+6. **Deliverable-partition only:** verify every **inherited verbatim parent AC** against
    test/CI evidence  
-6. Commit: `feat(scope): description (ISSUE-ID)`  
-7. Update PM story/sub-issue Done  
-8. Next unit  
+7. Commit: `feat(scope): description (ISSUE-ID)`  
+8. Update PM story/sub-issue Done  
+9. Next unit  
 
 **Anti-patterns:** one big commit at the end; closing a sub-issue with a **paraphrased** AC
 instead of the verbatim parent AC; green suite with **no** mutation/sabotage/skip evidence when
-domain/pure logic changed; full-repo mutation as default.
+domain/pure logic changed; claiming a kill without re-applying the mutant; pure transforms closed
+with only ad-hoc examples when an invariant is real; full-repo mutation as default.

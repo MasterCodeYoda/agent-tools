@@ -51,11 +51,14 @@ Mutation testing was often **uneconomical to own** — not impossible to compute
    b. Classify: equivalent (skip) or real gap (act)
    c. If real gap: identify the untested behavior
    d. Write a minimal test that kills the mutant (strong assertions — no tautologies)
+   e. Re-apply THAT mutant and confirm the new test fails; then restore
 4. Re-run to confirm all new tests kill their targets
 5. Report final mutation score + evidence (files mutated, survivors remaining, skips)
 ```
 
 **No tool path:** do not skip quality verification. Use sabotage on 3–5 critical domain paths (see `test-quality.md`) and record which paths were sabotaged and whether tests caught them. Recommend tool setup as a follow-up, not as a substitute for this slice’s evidence.
+
+**Audit ranking rule:** reason-trace is enough for bulk P2/P3 candidate lists. Before ranking a finding **P1**, “fail-open”, or “survives the whole suite,” **apply** the mutant once, run the focused suite, record the result, revert. Static “would survive” is not evidence at that severity.
 
 ## Tool Configuration by Language
 
@@ -260,53 +263,111 @@ When analyzing a surviving mutant, ask:
 - If **yes** → real gap. Proceed to write a killing test.
 - If **uncertain** → investigate. Trace the mutated code path to its observable outputs.
 
+## False kills (tests that pass under the mutant)
+
+A test can look correct and still **not discriminate** the fault. Treat a “kill” as unproven until the suite fails under the applied mutant.
+
+### Default-set / full-mask no-op
+
+Production merges a narrow flag set into a **default that already contains those flags**. Dropping the merge is a no-op at the default, so a test that only exercises the default path stays green under the mutant.
+
+```text
+// production (intent: always include PHONE when searching)
+search_fields = DEFAULT_FIELDS | PHONE_FIELDS
+
+// mutant under test: drop the OR
+search_fields = DEFAULT_FIELDS
+
+// false-kill test setup (looks related, does not discriminate)
+fields = DEFAULT_FIELDS          // already includes PHONE
+result = search(query, fields)
+assert result includes phone_match
+
+// why it stays green: DEFAULT_FIELDS already has PHONE_FIELDS bits;
+// removing "| PHONE_FIELDS" changes nothing on this path
+```
+
+**Discriminating setup:** drive a deliberately **narrow** mask that would miss the behavior unless the production merge runs.
+
+```text
+// kill test: start from a mask that does NOT already include PHONE
+fields = NAME_ONLY               // subset of DEFAULT_FIELDS, no phone bits
+// production path must still OR PHONE_FIELDS for this search mode
+result = search(query, fields)   // or assert the composed mask contains PHONE
+assert composed_mask has PHONE_BITS
+// under mutant (no OR): assertion fails → real kill
+```
+
+### Other false-kill shapes (check these before trusting reason-trace)
+
+| Shape | Why the suite stays green |
+|-------|---------------------------|
+| Asserting only on a field the mutant never touches | Wrong observable |
+| Using a fixture whose “valid” state already satisfies every disjunct | Dropping one disjunct is equivalent for that fixture |
+| Matching a superset / “contains any of” when the bug is which member was set | Assertion too loose |
+| Integration double always returns success | Mutant in real code path never runs |
+
+**Rule:** after authoring a kill test, apply the mutant, run the focused test, require failure, restore. No exception for audit remediation or execute DoD.
+
 ## Agent-Driven Survivor Analysis Workflow
 
 Step-by-step protocol for agents analyzing surviving mutants:
 
 ### 1. Read the Surviving Mutant Diff
 
-Examine what the mutation tool changed. Example:
+Examine what the mutation tool (or sabotage edit) changed. Example:
 
-```diff
-- if (order.total > 100):
-+ if (order.total >= 100):
-    applyDiscount(order)
+```text
+// original
+if order.total > THRESHOLD:
+    apply_discount(order)
+
+// mutant (boundary)
+if order.total >= THRESHOLD:
+    apply_discount(order)
 ```
 
 ### 2. Classify: Equivalent or Real Gap?
 
-Ask: "Is there any input where `> 100` and `>= 100` produce different results?"
+Ask: "Is there any input where `>` and `>=` produce different results at THRESHOLD?"
 
-Yes — when `order.total == 100`. With `>`, no discount. With `>=`, discount applied. This is a real gap.
+Yes — when `order.total == THRESHOLD`. With `>`, no discount. With `>=`, discount applied. Real gap.
 
 ### 3. Identify the Untested Behavior
 
-The boundary condition `total == 100` is not tested. Existing tests likely cover `total = 50` (no discount) and `total = 200` (discount), but miss the exact boundary.
+The boundary `total == THRESHOLD` is not tested. Existing tests likely cover below-threshold (no discount) and well-above (discount), but miss the exact boundary.
 
 ### 4. Write a Minimal Killing Test
 
-```python
-def test_discount_not_applied_at_exact_threshold():
-    order = create_order(total=100)
-    process_order(order)
-    assert order.discount == 0  # boundary: 100 is NOT above threshold
+```text
+test discount_not_applied_at_exact_threshold:
+  order = create_order(total = 100)
+  process_order(order)
+  assert order.discount == 0   // boundary: 100 is NOT above threshold
 ```
 
-### 5. Re-Run to Confirm the Kill
+### 5. Confirm the Kill Under the Applied Mutant
 
-```bash
-mutmut run --paths-to-mutate=src/domain/order.py
-# Verify: the boundary mutant is now killed
+Do not stop at “new test is green on clean code.”
+
+```text
+1. Apply the boundary mutant (tool apply, or temporary edit: > becomes >=)
+2. Run only the new test (or its small focus set)
+3. Require: FAIL under mutant
+4. Restore production code
+5. Require: PASS on clean code
 ```
+
+If step 3 is still green, the test is a **false kill** — strengthen the fixture/assertion (see False kills above), do not report Killed.
 
 ### 6. Report
 
-```
-Survivor: src/domain/order.py:42 (boundary: > → >=)
+```text
+Survivor: order.pricing (boundary: > → >=)
 Classification: Real gap — boundary condition at threshold value
-Fix: Added test_discount_not_applied_at_exact_threshold
-Result: Killed ✓
+Fix: discount_not_applied_at_exact_threshold
+Evidence: 1 failed under applied mutant; green after restore
+Result: Killed
 ```
 
 ## Redundant Test Identification

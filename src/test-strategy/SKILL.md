@@ -88,10 +88,10 @@ When the interface is unclear or tests should drive design, use TDD. **Load** `r
 
 ## Testing with Vertical Slices
 
-1. **Planning** — list behaviors the slice must exhibit; name properties when strategy-fit  
+1. **Planning** — list behaviors the slice must exhibit; for pure surfaces, plan a property **or** exhaustive table/theory deliverable (not names only)  
 2. **Tracer bullet** — one end-to-end test for the simplest behavior; minimum code across layers  
 3. **Incremental** — remaining behaviors with the appropriate strategy each  
-4. **Slice complete** — full suite green; refactor; domain verification evidence when domain/pure logic changed (mutate **or** sabotage **or** skip reason — execute `quality-checkpoints.md`); commit  
+4. **Slice complete** — full suite green; refactor; domain verification evidence when domain/pure logic changed (mutate **or** sabotage **or** skip reason — execute `quality-checkpoints.md`); property deliverable when fit; commit  
 
 ## Anti-Patterns & Debugging
 
