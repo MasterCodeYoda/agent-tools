@@ -8,10 +8,11 @@ asks for yield. This is the production-line scoreboard — not product-code logg
 
 ```text
 .agent-tools/runs/
-  README.md        # short: who writes / do not hand-edit vanity
-  events.ndjson    # append-only event spine
-  ledger.yml       # closed-run rollup rows
-  yield.md         # optional regenerated glance (overwrite OK)
+  README.md             # short: who writes / do not hand-edit vanity
+  events.ndjson         # append-only event spine
+  ledger.yml            # closed-run rollup rows
+  yield.md              # optional regenerated glance (overwrite OK)
+  .check-runs-ignore    # optional: run_ids / work-item keys the check should not flag
 ```
 
 Scaffold via `/work:setup`. Prefer this path always (independent of planning-root migration).
@@ -252,7 +253,45 @@ Yield **rework rate** uses `rework` only — not `review_fix_cycles`. Healthy P2
 7. effectiveness_ref if scorecard/tracer linked; else omit/null
 8. Append row to ledger.yml (create file with version: 1 if missing)
 9. Clear open thrash urgency on session-state; keep run_id for history
+10. Run `scripts/check-runs.sh` — it fails if step 8 did not happen
 ```
+
+## Verifying the ledger (`scripts/check-runs.sh`)
+
+**Step 8 is the step that gets skipped.** It is last, it is manual, and a missing row has no
+symptom: the work shipped, the gates passed, nobody notices. Every yield number is then computed
+on a short denominator — and a run that ends badly is the one most likely to skip its own close,
+so the loss is biased, not random. On one project six units shipped without a row before anyone
+looked; four had left no trace anywhere but git. A reminder cannot fix that. A check can.
+
+```bash
+scripts/check-runs.sh              # from anywhere inside the project
+scripts/check-runs.sh --no-git     # skip the git cross-check
+scripts/check-runs.sh --quiet      # errors and warnings only
+scripts/check-runs.sh --path DIR   # start the search somewhere else
+```
+
+Project-agnostic: it walks up from the working directory to find `.agent-tools/runs/ledger.yml`,
+and derives work-item key prefixes (`DAY-`, `SPEC-`, `LIN-`, …) from the ledger's own `unit`
+values, so it needs no per-project configuration. Bash and coreutils only — no node, no jq.
+
+| Check | Level | Catches |
+|-------|-------|---------|
+| Row starts with `run_id:` | **error** | Key drift (`id:`), which makes any run_id-keyed tool drop the row silently |
+| No duplicate `run_id` | **error** | Two closes writing the same id |
+| `unit` / `opened` / `closed` / `outcome` present | **error** | Half-written rows |
+| `outcome` in the known set | **error** | Typos that break rate math |
+| Terminal event with no row | **error** | **The main one** — a run that reached compound/integrate and was never appended |
+| Work-item key in git with no row | warning | Units that left no trace but commits; also epics and follow-on work, which is why it is a warning |
+
+A run still mid-flight is not flagged — only one that reached a terminal phase owes a row.
+
+**`.check-runs-ignore`** (optional, one entry per line, `#` comments) suppresses a `run_id` or a
+work-item key. Use it for epics, follow-on commits filed under a parent key, and pre-ledger
+history — not to silence a real omission. Give each entry a comment saying why.
+
+**Run it** at close (step 10 above), and during the `/work:maintain` yield job before regenerating
+`yield.md` — regenerating from an incomplete ledger just launders the gap into a number.
 
 ## Yield glance (`yield.md`)
 

@@ -149,15 +149,22 @@ prune only / cancel.
 
 1. If `.agent-tools/runs/` missing → report “runs scaffold missing — `/work:setup`” and
    continue to next selected job. Do **not** invent KPIs.
-2. If `ledger.yml` has fewer than 5 closed runs → write or update `yield.md` with honest
+2. **Run `scripts/check-runs.sh` first.** Regenerating from an incomplete ledger launders the gap
+   into a number, so validate before you compute. Errors mean rows are missing or malformed —
+   reconstruct them from `events.ndjson` and git before step 4, mark reconstructed rows
+   `reconstructed: true` with a note naming the evidence, and set fields you cannot evidence to
+   `unknown` rather than guessing. Report what you repaired.
+3. If `ledger.yml` has fewer than 5 closed runs → write or update `yield.md` with honest
    “insufficient sample (N closed)” table (no fake rates), summarize, set `last_yield_at` only
    if you regenerated the file.
-3. Else regenerate `.agent-tools/runs/yield.md` from `ledger.yml` (+ cheap open-run peek from
+4. Else regenerate `.agent-tools/runs/yield.md` from `ledger.yml` (+ cheap open-run peek from
    `events.ndjson` if useful) per **Yield document shape** in `runs-ledger.md`.
-4. Summarize KPIs to the user. Flag structural notes (thrash/rework clusters, fidelity dips).
+5. Summarize KPIs to the user. Flag structural notes (thrash/rework clusters, fidelity dips).
    **Rework rate** uses ledger `rework` only (execute/review→refine/plan or thrash) — not
    `review_fix_cycles`. When identity fields exist, include a short by-harness glance.
-5. **Never** hand-edit vanity numbers — only regenerate from ledger.
+   If any rows were reconstructed, say so and report fidelity as a share of **known** values with
+   the unknowns stated separately — an unknown is a gap in the record, not a skipped phase.
+6. **Never** hand-edit vanity numbers — only regenerate from ledger.
 
 ## Job 3 — Memory
 

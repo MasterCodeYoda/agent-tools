@@ -334,6 +334,10 @@ Append-only production-line events (`events.ndjson`) and closed-run rollups (`le
 Written by `/work:continue` from phase-return. Do not hand-edit vanity metrics.
 See agent-tools work skill: `references/runs-ledger.md`.
 Regenerate `yield.md` via `/work:maintain` (or `--yield`).
+
+Validate with the work skill's `scripts/check-runs.sh` — it fails when a run reached a terminal
+phase without a ledger row, which is the failure this tree cannot show you on its own. Suppress
+known non-units in `.check-runs-ignore` (one `run_id` or work-item key per line, `#` comments).
 ```
 
 **Default `ledger.yml`** (only when missing):
