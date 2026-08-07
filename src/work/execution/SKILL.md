@@ -26,6 +26,7 @@ Extract `--worktree` → `WORKTREE_MODE=true` and strip from `$ARGUMENTS`; else 
 | `--worktree continue` | Cannot create worktree for existing session — cd to worktree, run execute continue |
 | Nested worktree (CWD already worktree) | Cannot nest — run without `--worktree` |
 | `--worktree` but `session-state` already has `worktree:` | Omit flag; enter existing path |
+| Production-class ops without explicit user request | Do not run production/prod secret resolution, deploys, or destructive live-prod mutations unless the **current** user message names that environment. Prefer non-production secret sets; when ambiguous, ask. Project tools that take a "target" often select *which secrets to resolve*, not which host you call — check the tool's meaning before choosing production. |
 
 | Input | Meaning |
 |-------|---------|
