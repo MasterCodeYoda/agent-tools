@@ -98,6 +98,22 @@ on success:
 Each ad-hoc fix function is **one-shot**: a second failure → `TERMINAL_PAUSE`. Ad-hoc functions
 have no `BLOCKED`/`NEEDS_CONTEXT` — only `DONE`/`FAILED`.
 
+### Merge-gate isolation (timeouts and siblings)
+
+Post-merge suite runs are **per merging item** and must not cancel independent sibling work.
+
+1. **Timeout ≠ test failure.** If the suite command times out, is killed, or the host aborts the
+   command before a real exit code: treat as **merge-gate incomplete** for *this* item — capture
+   diagnostics (command, timeout, last output), leave `main` as the merge left it, and prefer
+   `TERMINAL_PAUSE` with a resume recipe (re-run suite with a longer budget / split gate) over
+   inventing a fix-integration from a partial log.
+2. **Never cancel sibling dispatches.** A hung or timed-out merge gate for item A must not
+   cancel, skip, or mark FAILED an in-flight review/implement for item B. Sibling stages stay
+   where classification put them; only item A's merge path pauses.
+3. **Resume contract.** On `TERMINAL_PAUSE` after a gate timeout, `last_handoff` names: which
+   item was mid-merge, whether the merge commit is on `main`, what command to re-run, and which
+   siblings still need their next function (e.g. final review).
+
 ## Session logs
 
 Per-dispatch files at `.agent-tools/parallel/sessions/<run-id>/<item>/<function>-<n>.md` (orchestrator
