@@ -2,6 +2,29 @@
 
 Historical, append-only run log from the legacy `/evolve` command era (predates `/skills:evolve` and the src/ layout); paths and command names are preserved as written.
 
+## 2026-08-07
+
+- **Score**: 84 → ~100/100 on addressed process seeds (4 P2 closed; residual multi-file recommendations only)
+- **Iterations**: 2 of 5 (stopped: no remaining single-file P1/P2 from seeds; structural Tier 1 clean)
+- **Gaps**: 0 P1, 4 P2 process-seed + 1 residual P2 (continue refuse alignment), 0 new structural
+- **Proposals**: 6 applied (6 validated; doc_lint 0 findings)
+- **Branch**: `evolve/2026-08-07`
+- **Status**: merged (2026-08-07)
+- **Tier 0 seeds**: Cross-project process review — test-hardening rework cluster (unmeasured audit claims), parallel `terminal_pause` after a merge-gate timeout cancelled sibling review, production-class ops without explicit environment request, ledger/yield lag under-capturing closed work
+- **Key changes**:
+  - `work:audit` Agent Reasoning Standards — measure claims before promoting findings/tickets
+  - `test-strategy` sabotage — require build/compile before treating as survivor
+  - `work:parallel` merge orchestration — isolate gate timeouts from sibling dispatches
+  - `work:maintain` yield — flag `terminal_pause` active parallel runs
+  - `work:execute` + `work:continue` refuse — production-class ops hard refuse without explicit ask
+- **Recommendations (not applied — multi-file / judgment)**:
+  - Roadmap NEXT vs session-state contradiction check as a dedicated maintain prune signal (partial
+    coverage via parallel stuck-run peek)
+  - File-from-audit ticket templates in refine/PM writing (measure-before-claim lives on audit;
+    PM writing is project-local)
+  - Prior open history recs: planning-root hard-codes, session-state dual residence, Testing-by-Layer
+    dual authority — still open multi-file
+
 ## 2026-07-22
 
 - **Score**: not scored end-to-end (focused remediation of residual dual-residence / grounding gaps from 2026-07-21 recommendations)
