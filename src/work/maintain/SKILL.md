@@ -164,7 +164,12 @@ prune only / cancel.
    `review_fix_cycles`. When identity fields exist, include a short by-harness glance.
    If any rows were reconstructed, say so and report fidelity as a share of **known** values with
    the unknowns stated separately — an unknown is a gap in the record, not a skipped phase.
-6. **Never** hand-edit vanity numbers — only regenerate from ledger.
+6. **Parallel stuck-run peek (structural, not a KPI).** If `.agent-tools/parallel/active-run`
+   exists, read the pointed session `state.yml`. When `status` / `exit_state` is
+   `terminal_pause` (or equivalent paused), **flag it in the yield summary**: run_id, reason from
+   `exit_reason` / `last_handoff`, and that `/work:continue` should prefer **parallel_resume**
+   over inventing NEXT from the roadmap. Do not clear `active-run` from maintain.
+7. **Never** hand-edit vanity numbers — only regenerate from ledger.
 
 ## Job 3 — Memory
 
