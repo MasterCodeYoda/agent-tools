@@ -139,9 +139,10 @@ A live, manual alternative to mutation testing. **Default when no mutation tool 
 
 1. **Pick a critical line** of production code
 2. **Introduce a bug** (change a `>` to `>=`, remove a null check, alter a calculation)
-3. **Run the tests**
-4. **If all tests pass** → your tests are insufficient for that line
-5. **Revert the sabotage** and write a test that catches it
+3. **Confirm the sabotage builds.** Compile/typecheck (or the project's equivalent) must succeed before you read the suite. A patch that does not compile is **not a survivor** — it never entered the test runner (no failure line looks identical to "tests stayed green"). Discard it, pick an expressible fault, and re-run. Tool-based mutation already labels these **unviable**; manual sabotage must do the same gate by hand.
+4. **Run the tests**
+5. **If all tests pass** → your tests are insufficient for that line
+6. **Revert the sabotage** and write a test that catches it
 
 ```
 // Production code
